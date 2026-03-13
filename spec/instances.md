@@ -49,9 +49,9 @@ A conforming instance MUST use `EmbeddedArtifactKey` values that identify embedd
 
 Textual instance values MAY include language tags.
 
-Numeric and temporal instance values are represented by `Literal` values that carry datatype IRIs.
+`TextValue` is represented by `TextLiteral`, which may be either `StringLiteral` or `LangStringLiteral`.
 
-If a textual instance value carries a language tag, the contained `Literal` uses the datatype IRI `http://www.w3.org/1999/02/22-rdf-syntax-ns#langString`.
+Numeric and temporal instance values are represented by typed literals that carry datatype IRIs.
 
 Controlled term instance values SHOULD preserve both a term IRI and a human-readable label. They MAY additionally preserve notation and preferred label information from the source terminology.
 

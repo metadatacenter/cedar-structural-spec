@@ -40,17 +40,19 @@ Values in a `FieldValue` MUST satisfy the `FieldType` and any `FieldIntrinsicCon
 
 If the referenced `Field` has `TextFieldType`, each contained value MUST be `TextValue`.
 
-If a contained value is `TextValue` and carries `LanguageTag`, its `Literal` MUST use the datatype IRI `http://www.w3.org/1999/02/22-rdf-syntax-ns#langString`.
-
-If a contained value is `TextValue` and its `Literal` uses the datatype IRI `http://www.w3.org/1999/02/22-rdf-syntax-ns#langString`, the `TextValue` MUST carry a non-empty language tag.
+If a contained value is `TextValue`, it MUST contain `TextLiteral`.
 
 If the referenced `Field` has `NumericFieldType`, each contained value MUST be `NumericValue`.
 
-If a contained value is `NumericValue`, its `Literal` MUST use a numeric datatype IRI.
+If a contained value is `NumericValue`, it MUST contain `NumericLiteral`.
+
+If a contained value is `NumericLiteral`, its datatype IRI is given by `NumericDatatypeIri`.
 
 If the referenced `Field` has `TemporalFieldType`, each contained value MUST be `TemporalValue`.
 
-If a contained value is `TemporalValue`, its `Literal` MUST use a temporal datatype IRI.
+If a contained value is `TemporalValue`, it MUST contain `TemporalLiteral`.
+
+If a contained value is `TemporalLiteral`, its datatype IRI is given by `TemporalDatatypeIri`.
 
 If the referenced `Field` has `ControlledTermFieldType`, each contained value MUST be `ControlledTermValue`.
 
@@ -66,7 +68,11 @@ If the referenced `Field` has `ExternalAuthorityFieldType`, each contained value
 
 If the referenced `Field` has `AttributeValueFieldType`, each contained value MUST be `AttributeValue`.
 
-If a contained value includes `Literal`, the lexical form SHOULD be in Unicode Normalization Form C.
+If a contained value includes `DatatypeIriLiteral`, the lexical form SHOULD be in Unicode Normalization Form C.
+
+If a contained value includes `LangStringLiteral`, the lexical form SHOULD be in Unicode Normalization Form C.
+
+If a contained value includes `LangStringLiteral`, its language tag MUST be non-empty and well-formed according to BCP 47.
 
 If an `EmbeddedField` is single-valued, its corresponding `FieldValue` MUST NOT contain more than one value.
 

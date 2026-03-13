@@ -63,9 +63,13 @@ Defined terms use the terminology in this specification exactly. In particular, 
 
 `Literal` denotes an RDF literal in the grammar.
 
-`Literal` is not a concrete serialization token. It consists of lexical content together with a datatype IRI.
+The grammar distinguishes `DatatypeIriLiteral` and `LangStringLiteral` explicitly.
 
-Language information is represented by the enclosing value construct when needed. For example, `TextValue` may carry `LanguageTag`.
+`DatatypeIriLiteral` consists of lexical content together with a datatype IRI.
+
+`NumericLiteral` and `TemporalLiteral` use more specific datatype-IRI categories.
+
+`LangStringLiteral` consists of lexical content together with a language tag.
 
 The normative structure and semantics of literals are defined in the `Literals` section of [grammar.md](/Users/matthewhorridge/IdeaProjects/cedar-structural-spec/spec/grammar.md).
 

@@ -384,36 +384,69 @@ The correspondence is:
 ## Literals
 
 ```bnf
-Literal ::= literal(
-              LexicalForm
-              DatatypeIRI
-            )
+Literal ::= DatatypeIriLiteral
+          | LangStringLiteral
+
+DatatypeIriLiteral ::= datatype_iri_literal(
+                         LexicalForm
+                         DatatypeIRI
+                       )
+
+LangStringLiteral ::= lang_string_literal(
+                        LexicalForm
+                        LanguageTag
+                      )
+
+TextLiteral ::= StringLiteral
+              | LangStringLiteral
+
+StringLiteral ::= string_literal(
+                    LexicalForm
+                  )
+
+NumericLiteral ::= numeric_literal(
+                     LexicalForm
+                     NumericDatatypeIri
+                   )
+
+TemporalLiteral ::= temporal_literal(
+                      LexicalForm
+                      TemporalDatatypeIri
+                    )
 ```
 
 A `Literal` in this specification is an RDF literal.
 
-A `Literal` denotes an abstract literal value consisting of a lexical form and a datatype IRI and, in the language-tagged case, an associated language tag supplied by the enclosing `TextValue`.
+A `DatatypeIriLiteral` denotes an RDF literal consisting of a lexical form and a datatype IRI.
+
+A `LangStringLiteral` denotes an RDF literal whose lexical form is paired with a non-empty language tag. `LangStringLiteral` corresponds to an RDF literal with datatype IRI `http://www.w3.org/1999/02/22-rdf-syntax-ns#langString`.
+
+`TextLiteral` is the class of literals permitted in `TextValue`.
+
+`NumericLiteral` is the class of literals permitted in `NumericValue`.
+
+`TemporalLiteral` is the class of literals permitted in `TemporalValue`.
+
+`NumericLiteral` carries a numeric datatype IRI.
+
+`TemporalLiteral` carries a temporal datatype IRI.
 
 The lexical form is a Unicode string and SHOULD be in Unicode Normalization Form C.
 
-A `Literal` carries a language tag only through an enclosing `TextValue`.
-
-If a `TextValue` carries `LanguageTag`, the contained `Literal` MUST use the datatype IRI `http://www.w3.org/1999/02/22-rdf-syntax-ns#langString`.
-
-If a `Literal` uses the datatype IRI `http://www.w3.org/1999/02/22-rdf-syntax-ns#langString`, the enclosing `TextValue` MUST carry a non-empty language tag that is well-formed according to BCP 47.
+The language tag of a `LangStringLiteral` MUST be non-empty and well-formed according to BCP 47.
 
 Concrete syntaxes MAY use simpler surface forms that omit an explicit datatype IRI for string literals or language-tagged strings. Such forms are syntactic sugar and do not change the abstract structure defined by this specification.
 
 The literal value associated with a `Literal` is determined as follows:
 
-- If the `Literal` is language-tagged, the literal value is the pair consisting of lexical form and language tag, in that order.
-- If the datatype IRI is recognized and the lexical form is in the lexical space of that datatype, the literal value is obtained by applying the lexical-to-value mapping of that datatype to the lexical form.
-- If the datatype IRI is recognized but the lexical form is outside the lexical space of that datatype, the literal is ill-typed.
-- If the datatype IRI is not recognized, the literal value is not defined by this specification.
+- If the `Literal` is a `LangStringLiteral`, the literal value is the pair consisting of lexical form and language tag, in that order.
+- If the `Literal` is a `DatatypeIriLiteral`, the datatype IRI is recognized, and the lexical form is in the lexical space of that datatype, the literal value is obtained by applying the lexical-to-value mapping of that datatype to the lexical form.
+- If the `Literal` is a `DatatypeIriLiteral`, the datatype IRI is recognized, but the lexical form is outside the lexical space of that datatype, the literal is ill-typed.
+- If the `Literal` is a `DatatypeIriLiteral` and the datatype IRI is not recognized, the literal value is not defined by this specification.
 
 An ill-typed literal is not syntactically ill-formed, but it does not determine a valid literal value and produces a semantic inconsistency. Implementations MUST accept ill-typed literals and MAY produce warnings when encountering them.
 
-Two literals are term-equal if and only if their lexical forms, datatype IRIs, and language tags if present are equal character by character.
+Two literals are term-equal if and only if their lexical forms and their datatype IRIs or language tags compare equal character by character.
 
 ## Supporting Nonterminals
 
@@ -430,16 +463,15 @@ Value ::= TextValue
         | AttributeValue
 
 TextValue ::= text_value(
-                Literal
-                [LanguageTag]
+                TextLiteral
               )
 
 NumericValue ::= numeric_value(
-                   Literal
+                   NumericLiteral
                  )
 
 TemporalValue ::= temporal_value(
-                    Literal
+                    TemporalLiteral
                   )
 
 ControlledTermValue ::= controlled_term_value(
@@ -474,7 +506,7 @@ AttributeValue ::= attribute_value(
                   )
 ```
 
-The nonterminals `RichTextContent`, `ImageSource`, `YouTubeVideoSource`, `ChoiceOption`, `NumericDatatype`, `Unit`, `NumericPrecision`, `TemporalDatatype`, `TemporalGranularity`, `TimeFormat`, `TimezoneEnabled`, `TextConstraint`, `NumericConstraint`, `TemporalConstraint`, `ControlledTermConstraint`, `ChoiceConstraint`, `ExternalAuthorityConstraint`, `SingleLineTextRenderingHint`, `MultiLineTextRenderingHint`, `RadioRenderingHint`, `SingleSelectDropdownRenderingHint`, `CheckboxRenderingHint`, `MultiSelectDropdownRenderingHint`, `NumericRenderingHint`, `TemporalRenderingHint`, `LexicalForm`, `IRI`, `LanguageTag`, `DatatypeIRI`, `TermIRI`, `Notation`, `PreferredLabel`, `Name`, `Description`, `Identifier`, `ISODateTimeStamp`, `Version`, `Status`, `ModelVersion`, `PreviousVersion`, `DerivedFrom`, `MinCardinality`, `MaxCardinality`, `Label`, `AlternativeLabel`, `AnnotationName`, `AnnotationValue`, `AttributeName`, `Header`, `Footer`, `OntologyAcronym`, `OntologyName`, `OntologyIRI`, `RootTermIRI`, `RootTermLabel`, `MaxTraversalDepth`, `ValueSetIdentifier`, `ValueSetName`, `ValueSetIRI`, and `KeyIdentifier` are intentionally left abstract in this version.
+The nonterminals `RichTextContent`, `ImageSource`, `YouTubeVideoSource`, `ChoiceOption`, `NumericDatatype`, `Unit`, `NumericPrecision`, `TemporalDatatype`, `TemporalGranularity`, `TimeFormat`, `TimezoneEnabled`, `TextConstraint`, `NumericConstraint`, `TemporalConstraint`, `ControlledTermConstraint`, `ChoiceConstraint`, `ExternalAuthorityConstraint`, `SingleLineTextRenderingHint`, `MultiLineTextRenderingHint`, `RadioRenderingHint`, `SingleSelectDropdownRenderingHint`, `CheckboxRenderingHint`, `MultiSelectDropdownRenderingHint`, `NumericRenderingHint`, `TemporalRenderingHint`, `LexicalForm`, `IRI`, `LanguageTag`, `DatatypeIRI`, `NumericDatatypeIri`, `TemporalDatatypeIri`, `TermIRI`, `Notation`, `PreferredLabel`, `Name`, `Description`, `Identifier`, `ISODateTimeStamp`, `Version`, `Status`, `ModelVersion`, `PreviousVersion`, `DerivedFrom`, `MinCardinality`, `MaxCardinality`, `Label`, `AlternativeLabel`, `AnnotationName`, `AnnotationValue`, `AttributeName`, `Header`, `Footer`, `OntologyAcronym`, `OntologyName`, `OntologyIRI`, `RootTermIRI`, `RootTermLabel`, `MaxTraversalDepth`, `ValueSetIdentifier`, `ValueSetName`, `ValueSetIRI`, and `KeyIdentifier` are intentionally left abstract in this version.
 
 ## Open Questions
 
