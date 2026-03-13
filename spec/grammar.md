@@ -381,6 +381,40 @@ The correspondence is:
 - `ExternalAuthorityFieldType` to `ExternalAuthorityValue`
 - `AttributeValueFieldType` to `AttributeValue`
 
+## Literals
+
+```bnf
+Literal ::= literal(
+              LexicalForm
+              DatatypeIRI
+            )
+```
+
+A `Literal` in this specification is an RDF literal.
+
+A `Literal` denotes an abstract literal value consisting of a lexical form and a datatype IRI and, in the language-tagged case, an associated language tag supplied by the enclosing `TextValue`.
+
+The lexical form is a Unicode string and SHOULD be in Unicode Normalization Form C.
+
+A `Literal` carries a language tag only through an enclosing `TextValue`.
+
+If a `TextValue` carries `LanguageTag`, the contained `Literal` MUST use the datatype IRI `http://www.w3.org/1999/02/22-rdf-syntax-ns#langString`.
+
+If a `Literal` uses the datatype IRI `http://www.w3.org/1999/02/22-rdf-syntax-ns#langString`, the enclosing `TextValue` MUST carry a non-empty language tag that is well-formed according to BCP 47.
+
+Concrete syntaxes MAY use simpler surface forms that omit an explicit datatype IRI for string literals or language-tagged strings. Such forms are syntactic sugar and do not change the abstract structure defined by this specification.
+
+The literal value associated with a `Literal` is determined as follows:
+
+- If the `Literal` is language-tagged, the literal value is the pair consisting of lexical form and language tag, in that order.
+- If the datatype IRI is recognized and the lexical form is in the lexical space of that datatype, the literal value is obtained by applying the lexical-to-value mapping of that datatype to the lexical form.
+- If the datatype IRI is recognized but the lexical form is outside the lexical space of that datatype, the literal is ill-typed.
+- If the datatype IRI is not recognized, the literal value is not defined by this specification.
+
+An ill-typed literal is not syntactically ill-formed, but it does not determine a valid literal value and produces a semantic inconsistency. Implementations MUST accept ill-typed literals and MAY produce warnings when encountering them.
+
+Two literals are term-equal if and only if their lexical forms, datatype IRIs, and language tags if present are equal character by character.
+
 ## Supporting Nonterminals
 
 ```bnf
@@ -402,12 +436,10 @@ TextValue ::= text_value(
 
 NumericValue ::= numeric_value(
                    Literal
-                   [DatatypeIRI]
                  )
 
 TemporalValue ::= temporal_value(
                     Literal
-                    [DatatypeIRI]
                   )
 
 ControlledTermValue ::= controlled_term_value(
@@ -440,13 +472,7 @@ AttributeValue ::= attribute_value(
                     AttributeName
                     Value
                   )
-
-Literal ::= literal(
-              LexicalForm
-            )
 ```
-
-`Literal` denotes an abstract lexical value. It carries lexical content only. Datatype interpretation and language tagging are supplied by the enclosing value construct when applicable.
 
 The nonterminals `RichTextContent`, `ImageSource`, `YouTubeVideoSource`, `ChoiceOption`, `NumericDatatype`, `Unit`, `NumericPrecision`, `TemporalDatatype`, `TemporalGranularity`, `TimeFormat`, `TimezoneEnabled`, `TextConstraint`, `NumericConstraint`, `TemporalConstraint`, `ControlledTermConstraint`, `ChoiceConstraint`, `ExternalAuthorityConstraint`, `SingleLineTextRenderingHint`, `MultiLineTextRenderingHint`, `RadioRenderingHint`, `SingleSelectDropdownRenderingHint`, `CheckboxRenderingHint`, `MultiSelectDropdownRenderingHint`, `NumericRenderingHint`, `TemporalRenderingHint`, `LexicalForm`, `IRI`, `LanguageTag`, `DatatypeIRI`, `TermIRI`, `Notation`, `PreferredLabel`, `Name`, `Description`, `Identifier`, `ISODateTimeStamp`, `Version`, `Status`, `ModelVersion`, `PreviousVersion`, `DerivedFrom`, `MinCardinality`, `MaxCardinality`, `Label`, `AlternativeLabel`, `AnnotationName`, `AnnotationValue`, `AttributeName`, `Header`, `Footer`, `OntologyAcronym`, `OntologyName`, `OntologyIRI`, `RootTermIRI`, `RootTermLabel`, `MaxTraversalDepth`, `ValueSetIdentifier`, `ValueSetName`, `ValueSetIRI`, and `KeyIdentifier` are intentionally left abstract in this version.
 
