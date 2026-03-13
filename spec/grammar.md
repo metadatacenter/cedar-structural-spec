@@ -230,6 +230,8 @@ LabelOverride ::= label_override(
 
 ## Field Types
 
+`FieldType` denotes the semantic category of values that a `Field` may carry. The `FieldType` productions define the value structure associated with a field and, where appropriate, the typed rendering hints and field-type-specific properties that are valid for that semantic category.
+
 ```bnf
 
 FieldType ::= TextFieldType
