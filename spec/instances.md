@@ -33,6 +33,8 @@ The key identifies the embedding site within the containing `Template`, which al
 
 The permitted form of each contained value is determined by the `FieldType` of the referenced `Field`.
 
+For `ChoiceFieldType`, a contained `ChoiceValue` may represent either a literal choice token or an ontology-backed choice term.
+
 ## NestedTemplateInstance
 
 A `NestedTemplateInstance` associates an `EmbeddedArtifactKey` with nested `InstanceValue` constructs corresponding to an `EmbeddedTemplate`.

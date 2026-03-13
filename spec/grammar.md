@@ -418,8 +418,11 @@ ControlledTermValue ::= controlled_term_value(
                         )
 
 ChoiceValue ::= choice_value(
-                  Literal
+                  ChoiceSelection
                 )
+
+ChoiceSelection ::= Literal
+                  | ControlledTermValue
 
 LinkValue ::= link_value(
                 IRI

@@ -163,6 +163,8 @@ An optional `OntologyDisplayHint` may additionally record:
 
 Choice presentation is expressed through typed rendering hints rather than by multiplying semantic field types for radio, checkbox, and dropdown variants.
 
+`ChoiceValue` may represent either a literal choice token or an ontology-backed choice term.
+
 `LinkFieldType` is used for link-like values.
 
 `ContactFieldType` is used for contact-oriented values such as email addresses and phone numbers.

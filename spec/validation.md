@@ -48,6 +48,8 @@ If the referenced `Field` has `ControlledTermFieldType`, each contained value MU
 
 If the referenced `Field` has `ChoiceFieldType`, each contained value MUST be `ChoiceValue`.
 
+If a contained `ChoiceValue` is present, its `ChoiceSelection` MUST be either a `Literal` or a `ControlledTermValue`.
+
 If the referenced `Field` has `LinkFieldType`, each contained value MUST be `LinkValue`.
 
 If the referenced `Field` has `ContactFieldType`, each contained value MUST be `ContactValue`.
