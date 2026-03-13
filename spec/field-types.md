@@ -103,6 +103,22 @@ Examples of incompatible combinations include:
 - `NumericFieldType` with `CheckboxRenderingHint`
 - `TemporalFieldType` with `MultiLineTextRenderingHint`
 
+## Value Correspondence
+
+Each `FieldType` determines the form of `Value` that may appear in instance data for that field.
+
+The correspondence is:
+
+- `TextFieldType` to `TextValue`
+- `NumericFieldType` to `NumericValue`
+- `TemporalFieldType` to `TemporalValue`
+- `ControlledTermFieldType` to `ControlledTermValue`
+- `ChoiceFieldType` to `ChoiceValue`
+- `LinkFieldType` to `LinkValue`
+- `ContactFieldType` to `ContactValue`
+- `ExternalAuthorityFieldType` to `ExternalAuthorityValue`
+- `AttributeValueFieldType` to `AttributeValue`
+
 ## Variant Notes
 
 `TextFieldType` is used for textual values. Single-line and multi-line presentation are expressed through `TextRenderingHint` rather than separate semantic field types.

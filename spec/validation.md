@@ -38,6 +38,24 @@ Each `NestedTemplateInstance` in a `TemplateInstance` MUST reference the `Embedd
 
 Values in a `FieldValue` MUST satisfy the `FieldType` and any `FieldIntrinsicConstraint` of the referenced `Field`.
 
+If the referenced `Field` has `TextFieldType`, each contained value MUST be `TextValue`.
+
+If the referenced `Field` has `NumericFieldType`, each contained value MUST be `NumericValue`.
+
+If the referenced `Field` has `TemporalFieldType`, each contained value MUST be `TemporalValue`.
+
+If the referenced `Field` has `ControlledTermFieldType`, each contained value MUST be `ControlledTermValue`.
+
+If the referenced `Field` has `ChoiceFieldType`, each contained value MUST be `ChoiceValue`.
+
+If the referenced `Field` has `LinkFieldType`, each contained value MUST be `LinkValue`.
+
+If the referenced `Field` has `ContactFieldType`, each contained value MUST be `ContactValue`.
+
+If the referenced `Field` has `ExternalAuthorityFieldType`, each contained value MUST be `ExternalAuthorityValue`.
+
+If the referenced `Field` has `AttributeValueFieldType`, each contained value MUST be `AttributeValue`.
+
 If an `EmbeddedField` is single-valued, its corresponding `FieldValue` MUST NOT contain more than one value.
 
 If an `EmbeddedField` is multi-valued, the number of values in its `FieldValue` MUST satisfy the embedding cardinality constraints.

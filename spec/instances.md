@@ -31,6 +31,8 @@ The key identifies the embedding site within the containing `Template`, which al
 
 `FieldValue` may contain multiple values when the corresponding `EmbeddedField` permits multiplicity.
 
+The permitted form of each contained value is determined by the `FieldType` of the referenced `Field`.
+
 ## NestedTemplateInstance
 
 A `NestedTemplateInstance` associates an `EmbeddedArtifactKey` with nested `InstanceValue` constructs corresponding to an `EmbeddedTemplate`.

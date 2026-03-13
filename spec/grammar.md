@@ -365,6 +365,22 @@ Accordingly, `TextFieldType` is a single semantic field type whose single-line a
 
 Similarly, `ChoiceFieldType` distinguishes `SingleChoiceFieldType` from `MultipleChoiceFieldType` semantically, while the rendering hint determines whether the UI uses radio buttons, checkboxes, or dropdown presentation. Typed rendering hints make incompatible combinations structurally invalid.
 
+## Field Type And Value Correspondence
+
+The `FieldType` of a `Field` determines the permitted `Value` forms in corresponding `FieldValue` constructs.
+
+The correspondence is:
+
+- `TextFieldType` to `TextValue`
+- `NumericFieldType` to `NumericValue`
+- `TemporalFieldType` to `TemporalValue`
+- `ControlledTermFieldType` to `ControlledTermValue`
+- `ChoiceFieldType` to `ChoiceValue`
+- `LinkFieldType` to `LinkValue`
+- `ContactFieldType` to `ContactValue`
+- `ExternalAuthorityFieldType` to `ExternalAuthorityValue`
+- `AttributeValueFieldType` to `AttributeValue`
+
 ## Supporting Nonterminals
 
 ```bnf
