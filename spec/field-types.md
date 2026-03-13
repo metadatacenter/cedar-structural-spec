@@ -47,22 +47,18 @@ This specification refines several of these variants into more specific forms.
 - `RRIDFieldType`
 - `NIHGrantIDFieldType`
 
-## Intrinsic Constraints
+## Field-Type-Specific Properties
 
-A `Field` MAY define `FieldIntrinsicConstraint` constructs in addition to its `FieldType`.
+Constraints and other semantic properties that are intrinsic to the meaning of a field value are modeled directly on the compatible concrete `FieldType`. This keeps invalid combinations structurally unrepresentable rather than deferring compatibility to generic constraint validation.
 
-`FieldIntrinsicConstraint` expresses restrictions that are intrinsic to the meaning of the field value. Examples include value ranges, string length constraints, temporal bounds, and controlled value restrictions.
+Examples include:
 
-Examples of intrinsic constraints include:
+- `TextDefaultValue` on `TextFieldType`
+- `MinLength` on `TextFieldType`
+- `MaxLength` on `TextFieldType`
+- `ValidationRegex` on `TextFieldType`
 
-- minimum and maximum text length
-- regular expression constraints for textual values
-- numeric minimum and maximum bounds
-- decimal precision constraints
-- temporal bounds
-- restrictions on controlled term selection
-
-`TextFieldType` also supports text-specific properties directly on the field type: a default text value, minimum length, maximum length, and a validating regular expression.
+Additional field-type-specific properties may be introduced in later revisions for numeric, temporal, controlled-term, choice, and external-authority fields.
 
 ## Rendering Hints
 
@@ -94,7 +90,7 @@ The compatible pairings are:
 
 Rendering hints MUST be compatible with the associated `FieldType`. Invalid combinations, such as `RadioRenderingHint` on `MultipleChoiceFieldType`, MUST be rejected by conforming implementations.
 
-Rendering hints describe UI behavior only. They do not alter value semantics, intrinsic constraints, or instance interpretation.
+Rendering hints describe UI behavior only. They do not alter value semantics, field-type-specific properties, or instance interpretation.
 
 Rendering hints are therefore represented within the relevant concrete `FieldType` definitions.
 

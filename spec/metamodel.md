@@ -61,7 +61,7 @@ A `Template` MAY additionally define `Header` and `Footer` content for presentat
 
 A `Field` is a `SchemaArtifact` that specifies a kind of value that may appear in `TemplateInstance` constructs.
 
-A `Field` defines a `FieldType` and any intrinsic constraints on the permitted values.
+A `Field` defines a `FieldType` together with any field-type-specific properties on the permitted values.
 
 `TextFieldType` MAY define a reusable default text value, minimum length, maximum length, and validating regular expression.
 

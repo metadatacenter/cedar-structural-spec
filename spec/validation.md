@@ -36,7 +36,7 @@ Each `NestedTemplateInstance` in a `TemplateInstance` MUST reference the `Embedd
 
 ### Field Type Compatibility
 
-Values in a `FieldValue` MUST satisfy the `FieldType` and any `FieldIntrinsicConstraint` of the referenced `Field`.
+Values in a `FieldValue` MUST satisfy the `FieldType` and any field-type-specific properties of the referenced `Field`.
 
 If the referenced `Field` has `TextFieldType`, each contained value MUST be `TextValue`.
 
