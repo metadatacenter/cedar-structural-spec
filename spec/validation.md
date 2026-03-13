@@ -88,6 +88,12 @@ If a contained value is `TimeLiteral`, its datatype IRI is given by `TimeDatatyp
 
 If the referenced `Field` has `DateTimeFieldType`, each contained value MUST be `DateTimeValue`.
 
+If the referenced `Field` has `DateTimeFieldType` with `DateHourMinuteValueType`, each contained value MUST conform to the date-time precision required by that value type.
+
+If the referenced `Field` has `DateTimeFieldType` with `DateHourMinuteSecondValueType`, each contained value MUST conform to the date-time precision required by that value type.
+
+If the referenced `Field` has `DateTimeFieldType` with `DateHourMinuteSecondFractionValueType`, each contained value MUST conform to the date-time precision required by that value type.
+
 If a contained value is `DateTimeValue`, it MUST contain `DateTimeLiteral`.
 
 If a contained value is `DateTimeLiteral`, its datatype IRI is given by `DateTimeDatatypeIri`.

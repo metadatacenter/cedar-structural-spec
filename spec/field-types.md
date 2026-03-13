@@ -154,7 +154,7 @@ Temporal values are split into three semantic field types:
 
 `TimeFieldType` is used for time values. It may specify `TimePrecision`, timezone capture, and a compatible `TimeRenderingHint`. `TimePrecision` constrains permitted time precision at the model level, while `TimeFormat` belongs to `TimeRenderingHint` as a display and acquisition choice.
 
-`DateTimeFieldType` is used for date-time values. It may specify date-time granularity, timezone capture, and a compatible `DateTimeRenderingHint`. Where a date-time field supports 12-hour versus 24-hour presentation, that choice belongs to `DateTimeRenderingHint` through `TimeFormat`.
+`DateTimeFieldType` is used for date-time values. It specifies `DateTimeValueType`, which constrains the permitted date-time precision at the model level, and it may specify timezone capture and a compatible `DateTimeRenderingHint`. Where a date-time field supports 12-hour versus 24-hour presentation, that choice belongs to `DateTimeRenderingHint` through `TimeFormat`.
 
 `ControlledTermFieldType` is used for values drawn from a controlled terminology or ontology-backed source.
 
