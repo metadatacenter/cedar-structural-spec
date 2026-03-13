@@ -57,66 +57,6 @@ EmbeddedPresentationComponent ::= embedded_presentation_component(
                                   )
 ```
 
-## Instances
-
-`TemplateInstance` denotes instance data that conforms to a `Template`. Instance productions are separated here from schema and presentation productions so that the schema model and instance model can be read independently.
-
-```bnf
-TemplateInstance ::= template_instance(
-                       ArtifactMetadata
-                       TemplateReference
-                       InstanceValue*
-                     )
-
-InstanceValue ::= FieldValue
-                | NestedTemplateInstance
-
-FieldValue ::= field_value(
-                 EmbeddedArtifactKey
-                 Value*
-               )
-
-NestedTemplateInstance ::= nested_template_instance(
-                             EmbeddedArtifactKey
-                             InstanceValue*
-                           )
-```
-
-## Presentation Components
-
-`PresentationComponent` denotes reusable non-data-bearing content that contributes presentation or instructional structure within a `Template`. Presentation components appear in templates only through `EmbeddedPresentationComponent` and do not contribute `InstanceValue` constructs.
-
-```bnf
-PresentationComponent ::= RichTextComponent
-                        | ImageComponent
-                        | YouTubeVideoComponent
-                        | SectionBreakComponent
-                        | PageBreakComponent
-
-RichTextComponent ::= rich_text_component(
-                        ArtifactMetadata
-                        RichTextContent
-                      )
-
-ImageComponent ::= image_component(
-                     ArtifactMetadata
-                     ImageSource
-                   )
-
-YouTubeVideoComponent ::= you_tube_video_component(
-                            ArtifactMetadata
-                            YouTubeVideoSource
-                          )
-
-SectionBreakComponent ::= section_break_component(
-                            ArtifactMetadata
-                          )
-
-PageBreakComponent ::= page_break_component(
-                         ArtifactMetadata
-                       )
-```
-
 ## Artifact Metadata
 
 ```bnf
@@ -197,7 +137,7 @@ EmbeddedArtifactKey ::= embedded_artifact_key(
 
 `EmbeddedArtifactKey` values are local to a `Template` and MUST be unique within that `Template`.
 
-## Supporting Nonterminals
+## Embedding Properties
 
 ```bnf
 
@@ -599,6 +539,66 @@ The literal value associated with a `Literal` is determined as follows:
 An ill-typed literal is not syntactically ill-formed, but it does not determine a valid literal value and produces a semantic inconsistency. Implementations MUST accept ill-typed literals and MAY produce warnings when encountering them.
 
 Two literals are term-equal if and only if their lexical forms and their datatype IRIs or language tags compare equal character by character.
+
+## Instances
+
+`TemplateInstance` denotes instance data that conforms to a `Template`. Instance productions are separated here from schema and presentation productions so that the schema model and instance model can be read independently.
+
+```bnf
+TemplateInstance ::= template_instance(
+                       ArtifactMetadata
+                       TemplateReference
+                       InstanceValue*
+                     )
+
+InstanceValue ::= FieldValue
+                | NestedTemplateInstance
+
+FieldValue ::= field_value(
+                 EmbeddedArtifactKey
+                 Value*
+               )
+
+NestedTemplateInstance ::= nested_template_instance(
+                             EmbeddedArtifactKey
+                             InstanceValue*
+                           )
+```
+
+## Presentation Components
+
+`PresentationComponent` denotes reusable non-data-bearing content that contributes presentation or instructional structure within a `Template`. Presentation components appear in templates only through `EmbeddedPresentationComponent` and do not contribute `InstanceValue` constructs.
+
+```bnf
+PresentationComponent ::= RichTextComponent
+                        | ImageComponent
+                        | YouTubeVideoComponent
+                        | SectionBreakComponent
+                        | PageBreakComponent
+
+RichTextComponent ::= rich_text_component(
+                        ArtifactMetadata
+                        RichTextContent
+                      )
+
+ImageComponent ::= image_component(
+                     ArtifactMetadata
+                     ImageSource
+                   )
+
+YouTubeVideoComponent ::= you_tube_video_component(
+                            ArtifactMetadata
+                            YouTubeVideoSource
+                          )
+
+SectionBreakComponent ::= section_break_component(
+                            ArtifactMetadata
+                          )
+
+PageBreakComponent ::= page_break_component(
+                         ArtifactMetadata
+                       )
+```
 
 ## Supporting Nonterminals
 
