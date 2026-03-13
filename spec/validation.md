@@ -42,6 +42,18 @@ If the referenced `Field` has `TextFieldType`, each contained value MUST be `Tex
 
 If a contained value is `TextValue`, it MUST contain `TextLiteral`.
 
+If a `TextFieldType` defines `TextDefaultValue`, that default value MUST be a `TextValue`.
+
+If a `TextFieldType` defines both `MinLength` and `MaxLength`, the minimum length MUST NOT exceed the maximum length.
+
+If a `TextFieldType` defines `MinLength`, each contained `TextLiteral` lexical form MUST have length greater than or equal to that minimum length.
+
+If a `TextFieldType` defines `MaxLength`, each contained `TextLiteral` lexical form MUST have length less than or equal to that maximum length.
+
+If a `TextFieldType` defines `ValidationRegex`, each contained `TextLiteral` lexical form MUST match that regular expression.
+
+If a `TextFieldType` defines `TextDefaultValue`, that default value MUST satisfy any defined `MinLength`, `MaxLength`, and `ValidationRegex`.
+
 If the referenced `Field` has `NumericFieldType`, each contained value MUST be `NumericValue`.
 
 If a contained value is `NumericValue`, it MUST contain `NumericLiteral`.

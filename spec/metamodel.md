@@ -63,13 +63,17 @@ A `Field` is a `SchemaArtifact` that specifies a kind of value that may appear i
 
 A `Field` defines a `FieldType` and any intrinsic constraints on the permitted values.
 
+`TextFieldType` MAY define a reusable default text value, minimum length, maximum length, and validating regular expression.
+
 Where supported by a concrete `FieldType`, a compatible `RenderingHint` is defined as part of that `FieldType`.
 
 `RenderingHint` influences presentation behavior only and MUST be compatible with the associated concrete `FieldType`.
 
 Semantic distinctions such as single-choice versus multiple-choice belong in `FieldType`. Purely presentational distinctions such as single-line versus multi-line text entry belong in typed rendering hints.
 
-The reusable `Field` definition does not carry template-local keying, cardinality, visibility, default value, or label override. Those properties belong to `EmbeddedField`.
+The reusable `Field` definition does not carry template-local keying, cardinality, visibility, or label override. Those properties belong to `EmbeddedField`.
+
+`EmbeddedField` MAY still define an embedding-specific `DefaultValue`. Where both a reusable text default and an embedding-specific default are present, the embedding-specific default is more specific to the template context.
 
 ## PresentationComponent
 

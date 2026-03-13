@@ -56,6 +56,8 @@ Examples of intrinsic constraints include:
 - temporal bounds
 - restrictions on controlled term selection
 
+`TextFieldType` also supports text-specific properties directly on the field type: a default text value, minimum length, maximum length, and a validating regular expression.
+
 ## Rendering Hints
 
 Rendering hints influence presentation behavior but do not change the semantic meaning of a `FieldType`.
@@ -123,6 +125,15 @@ The correspondence is:
 
 `TextFieldType` is used for textual values. Single-line and multi-line presentation are expressed through `TextRenderingHint` rather than separate semantic field types.
 
+A `TextFieldType` MAY additionally define:
+
+- `TextDefaultValue`
+- `MinLength`
+- `MaxLength`
+- `ValidationRegex`
+
+These are part of the reusable text field definition rather than embedding-specific configuration.
+
 `NumericFieldType` is used for numeric values. It may specify a numeric datatype, unit association, and numeric precision.
 
 `TemporalFieldType` is used for date-like or time-like values. It may specify temporal datatype, temporal granularity, time format, and whether timezone capture is enabled.
@@ -175,13 +186,13 @@ Choice presentation is expressed through typed rendering hints rather than by mu
 
 ## Embedding-Specific Field Behavior
 
-The following properties are not intrinsic parts of a reusable `Field` and therefore belong to `EmbeddedField` rather than `Field`:
+The following properties are not intrinsic parts of a reusable `Field` and therefore belong to `EmbeddedField` rather than `Field`. `TextFieldType` is the exception for reusable text defaults, which are modeled by `TextDefaultValue`:
 
 - `EmbeddedArtifactKey`
 - value requirement
 - cardinality
 - visibility
-- default value
+- embedding-specific `DefaultValue`
 - label override
 
 ## Open Questions

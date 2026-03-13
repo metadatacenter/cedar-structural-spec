@@ -212,6 +212,10 @@ DefaultValue ::= default_value(
                    Value*
                  )
 
+TextDefaultValue ::= text_default_value(
+                      TextValue
+                    )
+
 LabelOverride ::= label_override(
                     Label
                     AlternativeLabel*
@@ -234,6 +238,10 @@ FieldType ::= TextFieldType
 
 TextFieldType ::= text_field_type(
                     [TextRenderingHint]
+                    [TextDefaultValue]
+                    [MinLength]
+                    [MaxLength]
+                    [ValidationRegex]
                   )
 
 NumericFieldType ::= numeric_field_type(
@@ -362,6 +370,8 @@ Semantic distinctions MUST remain in `FieldType` when they affect the meaning, c
 Presentation distinctions SHOULD be represented by typed rendering hints when they affect only UI behavior.
 
 Accordingly, `TextFieldType` is a single semantic field type whose single-line and multi-line display forms are represented by `TextRenderingHint`.
+
+A `TextFieldType` MAY additionally define a default text value, minimum length, maximum length, and validating regular expression.
 
 Similarly, `ChoiceFieldType` distinguishes `SingleChoiceFieldType` from `MultipleChoiceFieldType` semantically, while the rendering hint determines whether the UI uses radio buttons, checkboxes, or dropdown presentation. Typed rendering hints make incompatible combinations structurally invalid.
 
@@ -506,7 +516,7 @@ AttributeValue ::= attribute_value(
                   )
 ```
 
-The nonterminals `RichTextContent`, `ImageSource`, `YouTubeVideoSource`, `ChoiceOption`, `NumericDatatype`, `Unit`, `NumericPrecision`, `TemporalDatatype`, `TemporalGranularity`, `TimeFormat`, `TimezoneEnabled`, `TextConstraint`, `NumericConstraint`, `TemporalConstraint`, `ControlledTermConstraint`, `ChoiceConstraint`, `ExternalAuthorityConstraint`, `SingleLineTextRenderingHint`, `MultiLineTextRenderingHint`, `RadioRenderingHint`, `SingleSelectDropdownRenderingHint`, `CheckboxRenderingHint`, `MultiSelectDropdownRenderingHint`, `NumericRenderingHint`, `TemporalRenderingHint`, `LexicalForm`, `IRI`, `LanguageTag`, `DatatypeIRI`, `NumericDatatypeIri`, `TemporalDatatypeIri`, `TermIRI`, `Notation`, `PreferredLabel`, `Name`, `Description`, `Identifier`, `ISODateTimeStamp`, `Version`, `Status`, `ModelVersion`, `PreviousVersion`, `DerivedFrom`, `MinCardinality`, `MaxCardinality`, `Label`, `AlternativeLabel`, `AnnotationName`, `AnnotationValue`, `AttributeName`, `Header`, `Footer`, `OntologyAcronym`, `OntologyName`, `OntologyIRI`, `RootTermIRI`, `RootTermLabel`, `MaxTraversalDepth`, `ValueSetIdentifier`, `ValueSetName`, `ValueSetIRI`, and `KeyIdentifier` are intentionally left abstract in this version.
+The nonterminals `RichTextContent`, `ImageSource`, `YouTubeVideoSource`, `ChoiceOption`, `NumericDatatype`, `Unit`, `NumericPrecision`, `TemporalDatatype`, `TemporalGranularity`, `TimeFormat`, `TimezoneEnabled`, `TextConstraint`, `NumericConstraint`, `TemporalConstraint`, `ControlledTermConstraint`, `ChoiceConstraint`, `ExternalAuthorityConstraint`, `SingleLineTextRenderingHint`, `MultiLineTextRenderingHint`, `RadioRenderingHint`, `SingleSelectDropdownRenderingHint`, `CheckboxRenderingHint`, `MultiSelectDropdownRenderingHint`, `NumericRenderingHint`, `TemporalRenderingHint`, `LexicalForm`, `IRI`, `LanguageTag`, `DatatypeIRI`, `NumericDatatypeIri`, `TemporalDatatypeIri`, `TermIRI`, `Notation`, `PreferredLabel`, `Name`, `Description`, `Identifier`, `ISODateTimeStamp`, `Version`, `Status`, `ModelVersion`, `PreviousVersion`, `DerivedFrom`, `MinCardinality`, `MaxCardinality`, `MinLength`, `MaxLength`, `ValidationRegex`, `Label`, `AlternativeLabel`, `AnnotationName`, `AnnotationValue`, `AttributeName`, `Header`, `Footer`, `OntologyAcronym`, `OntologyName`, `OntologyIRI`, `RootTermIRI`, `RootTermLabel`, `MaxTraversalDepth`, `ValueSetIdentifier`, `ValueSetName`, `ValueSetIRI`, and `KeyIdentifier` are intentionally left abstract in this version.
 
 ## Open Questions
 
