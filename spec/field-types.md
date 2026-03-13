@@ -120,6 +120,20 @@ Controlled term sources may be defined as:
 - explicitly enumerated classes
 - curated value sets
 
+`OntologySource` permits selection from one or more identified ontologies.
+
+Each ontology descriptor records:
+
+- ontology acronym
+- ontology name
+- ontology IRI
+
+`BranchSource` restricts selection to descendants of a specified root term within an identified ontology. It may additionally define maximum traversal depth.
+
+`ClassSource` enumerates explicit permitted classes or terms. Each enumerated class records a term IRI, a label, and the ontology from which the class is drawn.
+
+`ValueSetSource` identifies a curated value set by identifier and may additionally record a name and IRI.
+
 `ChoiceFieldType` is used for values chosen from an explicit set of options.
 
 `SingleChoiceFieldType` is used when exactly one option may be selected in a given value occurrence.

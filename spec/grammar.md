@@ -217,11 +217,6 @@ ControlledTermFieldType ::= controlled_term_field_type(
                               ControlledTermSource+
                             )
 
-ControlledTermSource ::= OntologySource
-                       | BranchSource
-                       | ClassSource
-                       | ValueSetSource
-
 ChoiceFieldType ::= SingleChoiceFieldType
                   | MultipleChoiceFieldType
 
@@ -253,6 +248,48 @@ FieldIntrinsicConstraint ::= TextConstraint
                            | ControlledTermConstraint
                            | ChoiceConstraint
                            | ExternalAuthorityConstraint
+```
+
+## Controlled Term Sources
+
+```bnf
+ControlledTermSource ::= OntologySource
+                       | BranchSource
+                       | ClassSource
+                       | ValueSetSource
+
+OntologySource ::= ontology_source(
+                     OntologyDescriptor+
+                   )
+
+OntologyDescriptor ::= ontology_descriptor(
+                         OntologyAcronym
+                         OntologyName
+                         OntologyIRI
+                       )
+
+BranchSource ::= branch_source(
+                   OntologyDescriptor
+                   RootTermIRI
+                   RootTermLabel
+                   [MaxTraversalDepth]
+                 )
+
+ClassSource ::= class_source(
+                  ControlledTermClass+
+                )
+
+ControlledTermClass ::= controlled_term_class(
+                          TermIRI
+                          Label
+                          OntologyDescriptor
+                        )
+
+ValueSetSource ::= value_set_source(
+                     ValueSetIdentifier
+                     [ValueSetName]
+                     [ValueSetIRI]
+                   )
 ```
 
 ## Rendering Hints
@@ -348,7 +385,7 @@ Literal ::= literal(
 
 `Literal` denotes an abstract lexical value. It carries lexical content only. Datatype interpretation and language tagging are supplied by the enclosing value construct when applicable.
 
-The nonterminals `FieldReference`, `TemplateReference`, `PresentationComponentReference`, `RichTextContent`, `ImageSource`, `YouTubeVideoSource`, `OntologySource`, `BranchSource`, `ClassSource`, `ValueSetSource`, `ChoiceOption`, `NumericDatatype`, `Unit`, `NumericPrecision`, `TemporalDatatype`, `TemporalGranularity`, `TimeFormat`, `TimezoneEnabled`, `TextConstraint`, `NumericConstraint`, `TemporalConstraint`, `ControlledTermConstraint`, `ChoiceConstraint`, `ExternalAuthorityConstraint`, `SingleLineTextRenderingHint`, `MultiLineTextRenderingHint`, `RadioRenderingHint`, `SingleSelectDropdownRenderingHint`, `CheckboxRenderingHint`, `MultiSelectDropdownRenderingHint`, `NumericRenderingHint`, `TemporalRenderingHint`, `LexicalForm`, `IRI`, `LanguageTag`, `DatatypeIRI`, `TermIRI`, `Notation`, `PreferredLabel`, `Name`, `Description`, `Identifier`, `CreatedOn`, `CreatedBy`, `ModifiedOn`, `ModifiedBy`, `Version`, `Status`, `ModelVersion`, `PreviousVersion`, `DerivedFrom`, `Order`, `MinCardinality`, `MaxCardinality`, `Label`, `AlternativeLabel`, `AnnotationName`, `AnnotationValue`, `AttributeName`, `Header`, and `Footer` are intentionally left abstract in this version.
+The nonterminals `FieldReference`, `TemplateReference`, `PresentationComponentReference`, `RichTextContent`, `ImageSource`, `YouTubeVideoSource`, `ChoiceOption`, `NumericDatatype`, `Unit`, `NumericPrecision`, `TemporalDatatype`, `TemporalGranularity`, `TimeFormat`, `TimezoneEnabled`, `TextConstraint`, `NumericConstraint`, `TemporalConstraint`, `ControlledTermConstraint`, `ChoiceConstraint`, `ExternalAuthorityConstraint`, `SingleLineTextRenderingHint`, `MultiLineTextRenderingHint`, `RadioRenderingHint`, `SingleSelectDropdownRenderingHint`, `CheckboxRenderingHint`, `MultiSelectDropdownRenderingHint`, `NumericRenderingHint`, `TemporalRenderingHint`, `LexicalForm`, `IRI`, `LanguageTag`, `DatatypeIRI`, `TermIRI`, `Notation`, `PreferredLabel`, `Name`, `Description`, `Identifier`, `CreatedOn`, `CreatedBy`, `ModifiedOn`, `ModifiedBy`, `Version`, `Status`, `ModelVersion`, `PreviousVersion`, `DerivedFrom`, `Order`, `MinCardinality`, `MaxCardinality`, `Label`, `AlternativeLabel`, `AnnotationName`, `AnnotationValue`, `AttributeName`, `Header`, `Footer`, `OntologyAcronym`, `OntologyName`, `OntologyIRI`, `RootTermIRI`, `RootTermLabel`, `MaxTraversalDepth`, `ValueSetIdentifier`, and `ValueSetName` are intentionally left abstract in this version.
 
 ## Open Questions
 
