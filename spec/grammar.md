@@ -11,8 +11,13 @@ Artifact ::= SchemaArtifact
            | PresentationComponent
            | TemplateInstance
 
-SchemaArtifact ::= Template
-                 | Field
+SchemaArtifact ::= Field
+                 | Template
+
+Field ::= field(
+            SchemaArtifactMetadata
+            FieldType
+          )
 
 Template ::= template(
                SchemaArtifactMetadata
@@ -50,12 +55,13 @@ EmbeddedPresentationComponent ::= embedded_presentation_component(
                                     [Visibility]
                                     [LabelOverride]
                                   )
+```
 
-Field ::= field(
-            SchemaArtifactMetadata
-            FieldType
-          )
+## Instances
 
+`TemplateInstance` denotes instance data that conforms to a `Template`. Instance productions are separated here from schema and presentation productions so that the schema model and instance model can be read independently.
+
+```bnf
 TemplateInstance ::= template_instance(
                        ArtifactMetadata
                        TemplateReference
