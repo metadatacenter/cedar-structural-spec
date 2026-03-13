@@ -150,7 +150,7 @@ Temporal values are split into three semantic field types:
 - `TimeFieldType`
 - `DateTimeFieldType`
 
-`DateFieldType` is used for date values. It specifies a `DateValueType` that distinguishes year-only, year-month, and full-date values, and it may specify a compatible `DateRenderingHint`.
+`DateFieldType` is used for date values. It specifies a `DateValueType` that distinguishes year-only, year-month, and full-date values, and it may specify a compatible `DateRenderingHint`. `DateRenderingHint` may in turn specify `DateFormat`, including the component order used for acquisition and display.
 
 `TimeFieldType` is used for time values. It may specify `TimePrecision`, timezone capture, and a compatible `TimeRenderingHint`. `TimePrecision` constrains permitted time precision at the model level, while `TimeFormat` belongs to `TimeRenderingHint` as a display and acquisition choice.
 
