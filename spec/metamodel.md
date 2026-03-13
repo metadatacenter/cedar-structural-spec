@@ -69,7 +69,7 @@ Where supported by a concrete `FieldType`, a compatible `RenderingHint` is defin
 
 `RenderingHint` influences presentation behavior only and MUST be compatible with the associated concrete `FieldType`.
 
-Semantic distinctions such as single-choice versus multiple-choice belong in `FieldType`. Purely presentational distinctions such as single-line versus multi-line text entry belong in typed rendering hints.
+Semantic distinctions such as single-choice versus multiple-choice and date versus time versus date-time belong in `FieldType`. Purely presentational distinctions such as single-line versus multi-line text entry belong in typed rendering hints.
 
 The reusable `Field` definition does not carry template-local keying, cardinality, visibility, or label override. Those properties belong to `EmbeddedField`.
 

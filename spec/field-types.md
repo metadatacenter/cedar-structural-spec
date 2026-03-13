@@ -27,6 +27,12 @@ This specification refines several of these variants into more specific forms.
 - `SingleChoiceFieldType`
 - `MultipleChoiceFieldType`
 
+`TemporalFieldType` has three semantic forms:
+
+- `DateFieldType`
+- `TimeFieldType`
+- `DateTimeFieldType`
+
 `ContactFieldType` has two forms:
 
 - `EmailFieldType`
@@ -68,7 +74,9 @@ This specification defines the following rendering hint categories:
 - `SingleChoiceRenderingHint`
 - `MultipleChoiceRenderingHint`
 - `NumericRenderingHint`
-- `TemporalRenderingHint`
+- `DateRenderingHint`
+- `TimeRenderingHint`
+- `DateTimeRenderingHint`
 
 Rendering hints are scoped to compatible `FieldType` families.
 
@@ -80,7 +88,9 @@ The compatible pairings are:
 - `SingleChoiceRenderingHint` with `SingleChoiceFieldType`
 - `MultipleChoiceRenderingHint` with `MultipleChoiceFieldType`
 - `NumericRenderingHint` with `NumericFieldType`
-- `TemporalRenderingHint` with `TemporalFieldType`
+- `DateRenderingHint` with `DateFieldType`
+- `TimeRenderingHint` with `TimeFieldType`
+- `DateTimeRenderingHint` with `DateTimeFieldType`
 
 Rendering hints MUST be compatible with the associated `FieldType`. Invalid combinations, such as `RadioRenderingHint` on `MultipleChoiceFieldType`, MUST be rejected by conforming implementations.
 
@@ -103,7 +113,7 @@ Examples of incompatible combinations include:
 - `SingleChoiceFieldType` with `CheckboxRenderingHint`
 - `MultipleChoiceFieldType` with `RadioRenderingHint`
 - `NumericFieldType` with `CheckboxRenderingHint`
-- `TemporalFieldType` with `MultiLineTextRenderingHint`
+- `DateFieldType` with `MultiLineTextRenderingHint`
 
 ## Value Correspondence
 
@@ -113,7 +123,9 @@ The correspondence is:
 
 - `TextFieldType` to `TextValue`
 - `NumericFieldType` to `NumericValue`
-- `TemporalFieldType` to `TemporalValue`
+- `DateFieldType` to `DateValue`
+- `TimeFieldType` to `TimeValue`
+- `DateTimeFieldType` to `DateTimeValue`
 - `ControlledTermFieldType` to `ControlledTermValue`
 - `ChoiceFieldType` to `ChoiceValue`
 - `LinkFieldType` to `LinkValue`
@@ -136,7 +148,17 @@ These are part of the reusable text field definition rather than embedding-speci
 
 `NumericFieldType` is used for numeric values. It may specify a numeric datatype, unit association, and numeric precision.
 
-`TemporalFieldType` is used for date-like or time-like values. It may specify temporal datatype, temporal granularity, time format, and whether timezone capture is enabled.
+Temporal values are split into three semantic field types:
+
+- `DateFieldType`
+- `TimeFieldType`
+- `DateTimeFieldType`
+
+`DateFieldType` is used for date values. It may specify date granularity and a compatible `DateRenderingHint`.
+
+`TimeFieldType` is used for time values. It may specify time format, timezone capture, and a compatible `TimeRenderingHint`.
+
+`DateTimeFieldType` is used for date-time values. It may specify date-time granularity, time format, timezone capture, and a compatible `DateTimeRenderingHint`.
 
 `ControlledTermFieldType` is used for values drawn from a controlled terminology or ontology-backed source.
 

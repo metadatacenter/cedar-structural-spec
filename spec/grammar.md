@@ -251,13 +251,27 @@ NumericFieldType ::= numeric_field_type(
                        [NumericPrecision]
                      )
 
-TemporalFieldType ::= temporal_field_type(
-                        TemporalDatatype
-                        [TemporalRenderingHint]
-                        [TemporalGranularity]
-                        [TimeFormat]
-                        [TimezoneEnabled]
-                      )
+TemporalFieldType ::= DateFieldType
+                    | TimeFieldType
+                    | DateTimeFieldType
+
+DateFieldType ::= date_field_type(
+                   [DateRenderingHint]
+                   [DateGranularity]
+                 )
+
+TimeFieldType ::= time_field_type(
+                   [TimeRenderingHint]
+                   [TimeFormat]
+                   [TimezoneEnabled]
+                 )
+
+DateTimeFieldType ::= date_time_field_type(
+                       [DateTimeRenderingHint]
+                       [DateTimeGranularity]
+                       [TimeFormat]
+                       [TimezoneEnabled]
+                     )
 
 ControlledTermFieldType ::= controlled_term_field_type(
                               ControlledTermSource+
@@ -351,7 +365,9 @@ RenderingHint ::= TextRenderingHint
                 | SingleChoiceRenderingHint
                 | MultipleChoiceRenderingHint
                 | NumericRenderingHint
-                | TemporalRenderingHint
+                | DateRenderingHint
+                | TimeRenderingHint
+                | DateTimeRenderingHint
 
 TextRenderingHint ::= SingleLineTextRenderingHint
                     | MultiLineTextRenderingHint
@@ -361,6 +377,18 @@ SingleChoiceRenderingHint ::= RadioRenderingHint
 
 MultipleChoiceRenderingHint ::= CheckboxRenderingHint
                               | MultiSelectDropdownRenderingHint
+
+DateRenderingHint ::= date_rendering_hint(
+                       DateRenderingWidget
+                     )
+
+TimeRenderingHint ::= time_rendering_hint(
+                       TimeRenderingWidget
+                     )
+
+DateTimeRenderingHint ::= date_time_rendering_hint(
+                           DateTimeRenderingWidget
+                         )
 ```
 
 The `FieldType` grammar distinguishes semantic variation from presentation variation.
@@ -375,6 +403,8 @@ A `TextFieldType` MAY additionally define a default text value, minimum length, 
 
 Similarly, `ChoiceFieldType` distinguishes `SingleChoiceFieldType` from `MultipleChoiceFieldType` semantically, while the rendering hint determines whether the UI uses radio buttons, checkboxes, or dropdown presentation. Typed rendering hints make incompatible combinations structurally invalid.
 
+Temporal semantics are also split structurally: `DateFieldType`, `TimeFieldType`, and `DateTimeFieldType` are distinct semantic field types, and each carries only the rendering hints and temporal options that are meaningful for that temporal category.
+
 ## Field Type And Value Correspondence
 
 The `FieldType` of a `Field` determines the permitted `Value` forms in corresponding `FieldValue` constructs.
@@ -383,7 +413,9 @@ The correspondence is:
 
 - `TextFieldType` to `TextValue`
 - `NumericFieldType` to `NumericValue`
-- `TemporalFieldType` to `TemporalValue`
+- `DateFieldType` to `DateValue`
+- `TimeFieldType` to `TimeValue`
+- `DateTimeFieldType` to `DateTimeValue`
 - `ControlledTermFieldType` to `ControlledTermValue`
 - `ChoiceFieldType` to `ChoiceValue`
 - `LinkFieldType` to `LinkValue`
@@ -419,9 +451,23 @@ NumericLiteral ::= numeric_literal(
                      NumericDatatypeIri
                    )
 
-TemporalLiteral ::= temporal_literal(
+TemporalLiteral ::= DateLiteral
+                  | TimeLiteral
+                  | DateTimeLiteral
+
+DateLiteral ::= date_literal(
+                  LexicalForm
+                  DateDatatypeIri
+                )
+
+TimeLiteral ::= time_literal(
+                  LexicalForm
+                  TimeDatatypeIri
+                )
+
+DateTimeLiteral ::= date_time_literal(
                       LexicalForm
-                      TemporalDatatypeIri
+                      DateTimeDatatypeIri
                     )
 ```
 
@@ -435,11 +481,15 @@ A `LangStringLiteral` denotes an RDF literal whose lexical form is paired with a
 
 `NumericLiteral` is the class of literals permitted in `NumericValue`.
 
-`TemporalLiteral` is the class of literals permitted in `TemporalValue`.
+`DateLiteral`, `TimeLiteral`, and `DateTimeLiteral` are the literal classes permitted in `DateValue`, `TimeValue`, and `DateTimeValue`, respectively.
 
 `NumericLiteral` carries a numeric datatype IRI.
 
-`TemporalLiteral` carries a temporal datatype IRI.
+`DateLiteral` carries a date datatype IRI.
+
+`TimeLiteral` carries a time datatype IRI.
+
+`DateTimeLiteral` carries a date-time datatype IRI.
 
 The lexical form is a Unicode string and SHOULD be in Unicode Normalization Form C.
 
@@ -464,7 +514,9 @@ Two literals are term-equal if and only if their lexical forms and their datatyp
 
 Value ::= TextValue
         | NumericValue
-        | TemporalValue
+        | DateValue
+        | TimeValue
+        | DateTimeValue
         | ControlledTermValue
         | ChoiceValue
         | LinkValue
@@ -480,8 +532,16 @@ NumericValue ::= numeric_value(
                    NumericLiteral
                  )
 
-TemporalValue ::= temporal_value(
-                    TemporalLiteral
+DateValue ::= date_value(
+                DateLiteral
+              )
+
+TimeValue ::= time_value(
+                TimeLiteral
+              )
+
+DateTimeValue ::= date_time_value(
+                    DateTimeLiteral
                   )
 
 ControlledTermValue ::= controlled_term_value(
@@ -516,7 +576,7 @@ AttributeValue ::= attribute_value(
                   )
 ```
 
-The nonterminals `RichTextContent`, `ImageSource`, `YouTubeVideoSource`, `ChoiceOption`, `NumericDatatype`, `Unit`, `NumericPrecision`, `TemporalDatatype`, `TemporalGranularity`, `TimeFormat`, `TimezoneEnabled`, `TextConstraint`, `NumericConstraint`, `TemporalConstraint`, `ControlledTermConstraint`, `ChoiceConstraint`, `ExternalAuthorityConstraint`, `SingleLineTextRenderingHint`, `MultiLineTextRenderingHint`, `RadioRenderingHint`, `SingleSelectDropdownRenderingHint`, `CheckboxRenderingHint`, `MultiSelectDropdownRenderingHint`, `NumericRenderingHint`, `TemporalRenderingHint`, `LexicalForm`, `IRI`, `LanguageTag`, `DatatypeIRI`, `NumericDatatypeIri`, `TemporalDatatypeIri`, `TermIRI`, `Notation`, `PreferredLabel`, `Name`, `Description`, `Identifier`, `ISODateTimeStamp`, `Version`, `Status`, `ModelVersion`, `PreviousVersion`, `DerivedFrom`, `MinCardinality`, `MaxCardinality`, `MinLength`, `MaxLength`, `ValidationRegex`, `Label`, `AlternativeLabel`, `AnnotationName`, `AnnotationValue`, `AttributeName`, `Header`, `Footer`, `OntologyAcronym`, `OntologyName`, `OntologyIRI`, `RootTermIRI`, `RootTermLabel`, `MaxTraversalDepth`, `ValueSetIdentifier`, `ValueSetName`, `ValueSetIRI`, and `KeyIdentifier` are intentionally left abstract in this version.
+The nonterminals `RichTextContent`, `ImageSource`, `YouTubeVideoSource`, `ChoiceOption`, `NumericDatatype`, `Unit`, `NumericPrecision`, `TimeFormat`, `TimezoneEnabled`, `TextConstraint`, `NumericConstraint`, `TemporalConstraint`, `ControlledTermConstraint`, `ChoiceConstraint`, `ExternalAuthorityConstraint`, `SingleLineTextRenderingHint`, `MultiLineTextRenderingHint`, `RadioRenderingHint`, `SingleSelectDropdownRenderingHint`, `CheckboxRenderingHint`, `MultiSelectDropdownRenderingHint`, `NumericRenderingHint`, `DateRenderingWidget`, `TimeRenderingWidget`, `DateTimeRenderingWidget`, `LexicalForm`, `IRI`, `LanguageTag`, `DatatypeIRI`, `NumericDatatypeIri`, `DateDatatypeIri`, `TimeDatatypeIri`, `DateTimeDatatypeIri`, `TermIRI`, `Notation`, `PreferredLabel`, `Name`, `Description`, `Identifier`, `ISODateTimeStamp`, `Version`, `Status`, `ModelVersion`, `PreviousVersion`, `DerivedFrom`, `MinCardinality`, `MaxCardinality`, `MinLength`, `MaxLength`, `ValidationRegex`, `DateGranularity`, `DateTimeGranularity`, `Label`, `AlternativeLabel`, `AnnotationName`, `AnnotationValue`, `AttributeName`, `Header`, `Footer`, `OntologyAcronym`, `OntologyName`, `OntologyIRI`, `RootTermIRI`, `RootTermLabel`, `MaxTraversalDepth`, `ValueSetIdentifier`, `ValueSetName`, `ValueSetIRI`, and `KeyIdentifier` are intentionally left abstract in this version.
 
 ## Open Questions
 

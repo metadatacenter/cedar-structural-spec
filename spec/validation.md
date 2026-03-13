@@ -60,11 +60,23 @@ If a contained value is `NumericValue`, it MUST contain `NumericLiteral`.
 
 If a contained value is `NumericLiteral`, its datatype IRI is given by `NumericDatatypeIri`.
 
-If the referenced `Field` has `TemporalFieldType`, each contained value MUST be `TemporalValue`.
+If the referenced `Field` has `DateFieldType`, each contained value MUST be `DateValue`.
 
-If a contained value is `TemporalValue`, it MUST contain `TemporalLiteral`.
+If a contained value is `DateValue`, it MUST contain `DateLiteral`.
 
-If a contained value is `TemporalLiteral`, its datatype IRI is given by `TemporalDatatypeIri`.
+If a contained value is `DateLiteral`, its datatype IRI is given by `DateDatatypeIri`.
+
+If the referenced `Field` has `TimeFieldType`, each contained value MUST be `TimeValue`.
+
+If a contained value is `TimeValue`, it MUST contain `TimeLiteral`.
+
+If a contained value is `TimeLiteral`, its datatype IRI is given by `TimeDatatypeIri`.
+
+If the referenced `Field` has `DateTimeFieldType`, each contained value MUST be `DateTimeValue`.
+
+If a contained value is `DateTimeValue`, it MUST contain `DateTimeLiteral`.
+
+If a contained value is `DateTimeLiteral`, its datatype IRI is given by `DateTimeDatatypeIri`.
 
 If the referenced `Field` has `ControlledTermFieldType`, each contained value MUST be `ControlledTermValue`.
 
@@ -104,7 +116,11 @@ Any rendering hint used by the model MUST be compatible with the associated `Fie
 
 `NumericRenderingHint` MUST be used only with `NumericFieldType`.
 
-`TemporalRenderingHint` MUST be used only with `TemporalFieldType`.
+`DateRenderingHint` MUST be used only with `DateFieldType`.
+
+`TimeRenderingHint` MUST be used only with `TimeFieldType`.
+
+`DateTimeRenderingHint` MUST be used only with `DateTimeFieldType`.
 
 ### Controlled Term Value Structure
 
