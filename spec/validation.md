@@ -62,9 +62,23 @@ If a contained value is `NumericLiteral`, its datatype IRI is given by `NumericD
 
 If the referenced `Field` has `DateFieldType`, each contained value MUST be `DateValue`.
 
-If a contained value is `DateValue`, it MUST contain `DateLiteral`.
+If the referenced `Field` has `DateFieldType` with `YearValueType`, each contained value MUST be `YearValue`.
 
-If a contained value is `DateLiteral`, its datatype IRI is given by `DateDatatypeIri`.
+If a contained value is `YearValue`, it MUST contain `YearLiteral`.
+
+If a contained value is `YearLiteral`, its datatype IRI is given by `YearDatatypeIri`.
+
+If the referenced `Field` has `DateFieldType` with `YearMonthValueType`, each contained value MUST be `YearMonthValue`.
+
+If a contained value is `YearMonthValue`, it MUST contain `YearMonthLiteral`.
+
+If a contained value is `YearMonthLiteral`, its datatype IRI is given by `YearMonthDatatypeIri`.
+
+If the referenced `Field` has `DateFieldType` with `FullDateValueType`, each contained value MUST be `FullDateValue`.
+
+If a contained value is `FullDateValue`, it MUST contain `FullDateLiteral`.
+
+If a contained value is `FullDateLiteral`, its datatype IRI is given by `DateDatatypeIri`.
 
 If the referenced `Field` has `TimeFieldType`, each contained value MUST be `TimeValue`.
 

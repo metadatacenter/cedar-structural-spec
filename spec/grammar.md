@@ -244,41 +244,23 @@ FieldType ::= TextFieldType
             | AttributeValueFieldType
 
 TextFieldType ::= text_field_type(
-                    [TextRenderingHint]
                     [TextDefaultValue]
                     [MinLength]
                     [MaxLength]
                     [ValidationRegex]
+                    [TextRenderingHint]
                   )
 
 NumericFieldType ::= numeric_field_type(
                        NumericDatatype
-                       [NumericRenderingHint]
                        [Unit]
                        [NumericPrecision]
+                       [NumericRenderingHint]
                      )
 
 TemporalFieldType ::= DateFieldType
                     | TimeFieldType
                     | DateTimeFieldType
-
-DateFieldType ::= date_field_type(
-                   [DateRenderingHint]
-                   [DateGranularity]
-                 )
-
-TimeFieldType ::= time_field_type(
-                   [TimeRenderingHint]
-                   [TimeFormat]
-                   [TimezoneEnabled]
-                 )
-
-DateTimeFieldType ::= date_time_field_type(
-                       [DateTimeRenderingHint]
-                       [DateTimeGranularity]
-                       [TimeFormat]
-                       [TimezoneEnabled]
-                     )
 
 ControlledTermFieldType ::= controlled_term_field_type(
                               ControlledTermSource+
@@ -308,6 +290,76 @@ ExternalAuthorityFieldType ::= ORCIDFieldType
                              | NIHGrantIDFieldType
 
 AttributeValueFieldType ::= attribute_value_field_type()
+```
+
+## Temporal Fields
+
+`TemporalFieldType` denotes temporal-valued fields and is refined into strongly typed date, time, and date-time forms. This section groups the temporal field-type productions together with their compatible rendering hints, values, and literals.
+
+```bnf
+DateFieldType ::= date_field_type(
+                   DateValueType
+                   [DateRenderingHint]
+                 )
+
+DateValueType ::= YearValueType
+                | YearMonthValueType
+                | FullDateValueType
+
+YearValueType ::= year_value_type()
+
+YearMonthValueType ::= year_month_value_type()
+
+FullDateValueType ::= full_date_value_type()
+```
+
+```bnf
+TimeFieldType ::= time_field_type(
+                   [TimePrecision]
+                   [TimezoneEnabled]
+                   [TimeRenderingHint]
+                 )
+
+TimePrecision ::= HourMinutePrecision
+                | HourMinuteSecondPrecision
+                | HourMinuteSecondFractionPrecision
+
+HourMinutePrecision ::= hour_minute_precision()
+
+HourMinuteSecondPrecision ::= hour_minute_second_precision()
+
+HourMinuteSecondFractionPrecision ::= hour_minute_second_fraction_precision()
+```
+
+```bnf
+DateTimeFieldType ::= date_time_field_type(
+                       [DateTimeGranularity]
+                       [TimezoneEnabled]
+                       [DateTimeRenderingHint]
+                     )
+```
+
+```bnf
+DateRenderingHint ::= date_rendering_hint(
+                       DateRenderingWidget
+                     )
+
+TimeRenderingHint ::= time_rendering_hint(
+                       TimeRenderingWidget
+                       [TimeFormat]
+                     )
+
+DateTimeRenderingHint ::= date_time_rendering_hint(
+                           DateTimeRenderingWidget
+                           [TimeFormat]
+                         )
+
+TimeFormat ::= TwelveHourTimeFormat
+             | TwentyFourHourTimeFormat
+
+TwelveHourTimeFormat ::= twelve_hour_time_format()
+
+TwentyFourHourTimeFormat ::= twenty_four_hour_time_format()
 ```
 
 ## Controlled Term Sources
@@ -378,17 +430,6 @@ SingleChoiceRenderingHint ::= RadioRenderingHint
 MultipleChoiceRenderingHint ::= CheckboxRenderingHint
                               | MultiSelectDropdownRenderingHint
 
-DateRenderingHint ::= date_rendering_hint(
-                       DateRenderingWidget
-                     )
-
-TimeRenderingHint ::= time_rendering_hint(
-                       TimeRenderingWidget
-                     )
-
-DateTimeRenderingHint ::= date_time_rendering_hint(
-                           DateTimeRenderingWidget
-                         )
 ```
 
 The `FieldType` grammar distinguishes semantic variation from presentation variation.
@@ -455,10 +496,24 @@ TemporalLiteral ::= DateLiteral
                   | TimeLiteral
                   | DateTimeLiteral
 
-DateLiteral ::= date_literal(
+DateLiteral ::= YearLiteral
+               | YearMonthLiteral
+               | FullDateLiteral
+
+YearLiteral ::= year_literal(
                   LexicalForm
-                  DateDatatypeIri
+                  YearDatatypeIri
                 )
+
+YearMonthLiteral ::= year_month_literal(
+                       LexicalForm
+                       YearMonthDatatypeIri
+                     )
+
+FullDateLiteral ::= full_date_literal(
+                      LexicalForm
+                      DateDatatypeIri
+                    )
 
 TimeLiteral ::= time_literal(
                   LexicalForm
@@ -483,9 +538,15 @@ A `LangStringLiteral` denotes an RDF literal whose lexical form is paired with a
 
 `DateLiteral`, `TimeLiteral`, and `DateTimeLiteral` are the literal classes permitted in `DateValue`, `TimeValue`, and `DateTimeValue`, respectively.
 
+Within `DateLiteral`, `YearLiteral`, `YearMonthLiteral`, and `FullDateLiteral` distinguish year-only, year-month, and full-date values.
+
 `NumericLiteral` carries a numeric datatype IRI.
 
-`DateLiteral` carries a date datatype IRI.
+`YearLiteral` carries a year datatype IRI.
+
+`YearMonthLiteral` carries a year-month datatype IRI.
+
+`FullDateLiteral` carries a full-date datatype IRI.
 
 `TimeLiteral` carries a time datatype IRI.
 
@@ -532,9 +593,21 @@ NumericValue ::= numeric_value(
                    NumericLiteral
                  )
 
-DateValue ::= date_value(
-                DateLiteral
+DateValue ::= YearValue
+            | YearMonthValue
+            | FullDateValue
+
+YearValue ::= year_value(
+                YearLiteral
               )
+
+YearMonthValue ::= year_month_value(
+                     YearMonthLiteral
+                   )
+
+FullDateValue ::= full_date_value(
+                    FullDateLiteral
+                  )
 
 TimeValue ::= time_value(
                 TimeLiteral
@@ -576,7 +649,7 @@ AttributeValue ::= attribute_value(
                   )
 ```
 
-The nonterminals `RichTextContent`, `ImageSource`, `YouTubeVideoSource`, `ChoiceOption`, `NumericDatatype`, `Unit`, `NumericPrecision`, `TimeFormat`, `TimezoneEnabled`, `SingleLineTextRenderingHint`, `MultiLineTextRenderingHint`, `RadioRenderingHint`, `SingleSelectDropdownRenderingHint`, `CheckboxRenderingHint`, `MultiSelectDropdownRenderingHint`, `NumericRenderingHint`, `DateRenderingWidget`, `TimeRenderingWidget`, `DateTimeRenderingWidget`, `LexicalForm`, `IRI`, `LanguageTag`, `DatatypeIRI`, `NumericDatatypeIri`, `DateDatatypeIri`, `TimeDatatypeIri`, `DateTimeDatatypeIri`, `TermIRI`, `Notation`, `PreferredLabel`, `Name`, `Description`, `Identifier`, `ISODateTimeStamp`, `Version`, `Status`, `ModelVersion`, `PreviousVersion`, `DerivedFrom`, `MinCardinality`, `MaxCardinality`, `MinLength`, `MaxLength`, `ValidationRegex`, `DateGranularity`, `DateTimeGranularity`, `Label`, `AlternativeLabel`, `AnnotationName`, `AnnotationValue`, `AttributeName`, `Header`, `Footer`, `OntologyAcronym`, `OntologyName`, `OntologyIRI`, `RootTermIRI`, `RootTermLabel`, `MaxTraversalDepth`, `ValueSetIdentifier`, `ValueSetName`, `ValueSetIRI`, and `KeyIdentifier` are intentionally left abstract in this version.
+The nonterminals `RichTextContent`, `ImageSource`, `YouTubeVideoSource`, `ChoiceOption`, `NumericDatatype`, `Unit`, `NumericPrecision`, `TimezoneEnabled`, `SingleLineTextRenderingHint`, `MultiLineTextRenderingHint`, `RadioRenderingHint`, `SingleSelectDropdownRenderingHint`, `CheckboxRenderingHint`, `MultiSelectDropdownRenderingHint`, `NumericRenderingHint`, `DateRenderingWidget`, `TimeRenderingWidget`, `DateTimeRenderingWidget`, `LexicalForm`, `IRI`, `LanguageTag`, `DatatypeIRI`, `NumericDatatypeIri`, `YearDatatypeIri`, `YearMonthDatatypeIri`, `DateDatatypeIri`, `TimeDatatypeIri`, `DateTimeDatatypeIri`, `TermIRI`, `Notation`, `PreferredLabel`, `Name`, `Description`, `Identifier`, `ISODateTimeStamp`, `Version`, `Status`, `ModelVersion`, `PreviousVersion`, `DerivedFrom`, `MinCardinality`, `MaxCardinality`, `MinLength`, `MaxLength`, `ValidationRegex`, `DateTimeGranularity`, `TimePrecision`, `HourMinutePrecision`, `HourMinuteSecondPrecision`, `HourMinuteSecondFractionPrecision`, `Label`, `AlternativeLabel`, `AnnotationName`, `AnnotationValue`, `AttributeName`, `Header`, `Footer`, `OntologyAcronym`, `OntologyName`, `OntologyIRI`, `RootTermIRI`, `RootTermLabel`, `MaxTraversalDepth`, `ValueSetIdentifier`, `ValueSetName`, `ValueSetIRI`, and `KeyIdentifier` are intentionally left abstract in this version.
 
 ## Open Questions
 
