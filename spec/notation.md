@@ -20,6 +20,21 @@ Whitespace separates symbols within a production.
 
 Parentheses group the components of an abstract construct.
 
+Production names use `UpperCamelCase`.
+
+Abstract constructor forms use `lower_snake_case`.
+
+For example, in the production
+
+```bnf
+Template ::= template(
+               SchemaArtifactMetadata
+               EmbeddedArtifact*
+             )
+```
+
+`Template` is the production being defined, while `template(...)` denotes the abstract constructor form of that construct.
+
 ## Conformance Language
 
 The words MUST, MUST NOT, SHOULD, and MAY are used to express normative requirements when appropriate.

@@ -14,7 +14,7 @@ Artifact ::= SchemaArtifact
 SchemaArtifact ::= Template
                  | Field
 
-Template ::= Template(
+Template ::= template(
                SchemaArtifactMetadata
                [Header]
                [Footer]
@@ -25,7 +25,7 @@ EmbeddedArtifact ::= EmbeddedField
                    | EmbeddedTemplate
                    | EmbeddedPresentationComponent
 
-EmbeddedField ::= EmbeddedField(
+EmbeddedField ::= embedded_field(
                     EmbeddedArtifactContext
                     EmbeddedArtifactKey
                     FieldReference
@@ -36,7 +36,7 @@ EmbeddedField ::= EmbeddedField(
                     [LabelOverride]
                   )
 
-EmbeddedTemplate ::= EmbeddedTemplate(
+EmbeddedTemplate ::= embedded_template(
                        EmbeddedArtifactContext
                        EmbeddedArtifactKey
                        TemplateReference
@@ -46,7 +46,7 @@ EmbeddedTemplate ::= EmbeddedTemplate(
                        [LabelOverride]
                      )
 
-EmbeddedPresentationComponent ::= EmbeddedPresentationComponent(
+EmbeddedPresentationComponent ::= embedded_presentation_component(
                                     EmbeddedArtifactContext
                                     EmbeddedArtifactKey
                                     PresentationComponentReference
@@ -54,7 +54,7 @@ EmbeddedPresentationComponent ::= EmbeddedPresentationComponent(
                                     [LabelOverride]
                                   )
 
-Field ::= Field(
+Field ::= field(
             SchemaArtifactMetadata
             FieldType
             FieldIntrinsicConstraint*
@@ -66,30 +66,30 @@ PresentationComponent ::= RichTextComponent
                         | SectionBreakComponent
                         | PageBreakComponent
 
-RichTextComponent ::= RichTextComponent(
+RichTextComponent ::= rich_text_component(
                         ArtifactMetadata
                         RichTextContent
                       )
 
-ImageComponent ::= ImageComponent(
+ImageComponent ::= image_component(
                      ArtifactMetadata
                      ImageSource
                    )
 
-YouTubeVideoComponent ::= YouTubeVideoComponent(
+YouTubeVideoComponent ::= you_tube_video_component(
                             ArtifactMetadata
                             YouTubeVideoSource
                           )
 
-SectionBreakComponent ::= SectionBreakComponent(
+SectionBreakComponent ::= section_break_component(
                             ArtifactMetadata
                           )
 
-PageBreakComponent ::= PageBreakComponent(
+PageBreakComponent ::= page_break_component(
                          ArtifactMetadata
                        )
 
-TemplateInstance ::= TemplateInstance(
+TemplateInstance ::= template_instance(
                        ArtifactMetadata
                        TemplateReference
                        InstanceValue*
@@ -98,12 +98,12 @@ TemplateInstance ::= TemplateInstance(
 InstanceValue ::= FieldValue
                 | NestedTemplateInstance
 
-FieldValue ::= FieldValue(
+FieldValue ::= field_value(
                  EmbeddedArtifactKey
                  Value*
                )
 
-NestedTemplateInstance ::= NestedTemplateInstance(
+NestedTemplateInstance ::= nested_template_instance(
                              EmbeddedArtifactKey
                              InstanceValue*
                            )
@@ -120,24 +120,24 @@ ArtifactMetadata ::= DescriptiveMetadata
                      TemporalProvenance
                      Annotation*
 
-DescriptiveMetadata ::= DescriptiveMetadata(
+DescriptiveMetadata ::= descriptive_metadata(
                           Name
                           [Description]
                           [Identifier]
                         )
 
-SystemIdentifier ::= SystemIdentifier(
+SystemIdentifier ::= system_identifier(
                        IRI
                      )
 
-TemporalProvenance ::= TemporalProvenance(
+TemporalProvenance ::= temporal_provenance(
                          CreatedOn
                          CreatedBy
                          ModifiedOn
                          ModifiedBy
                        )
 
-SchemaVersioning ::= SchemaVersioning(
+SchemaVersioning ::= schema_versioning(
                        Version
                        Status
                        ModelVersion
@@ -145,7 +145,7 @@ SchemaVersioning ::= SchemaVersioning(
                        [DerivedFrom]
                      )
 
-Annotation ::= Annotation(
+Annotation ::= annotation(
                  AnnotationName
                  AnnotationValue
                )
@@ -154,7 +154,7 @@ Annotation ::= Annotation(
 ## Supporting Nonterminals
 
 ```bnf
-EmbeddedArtifactContext ::= EmbeddedArtifactContext(
+EmbeddedArtifactContext ::= embedded_artifact_context(
                               [Order]
                             )
 
@@ -162,7 +162,7 @@ ValueRequirement ::= Required
                    | Recommended
                    | Optional
 
-Cardinality ::= Cardinality(
+Cardinality ::= cardinality(
                   MinCardinality
                   [MaxCardinality]
                 )
@@ -170,11 +170,11 @@ Cardinality ::= Cardinality(
 Visibility ::= Visible
              | Hidden
 
-DefaultValue ::= DefaultValue(
+DefaultValue ::= default_value(
                    Value*
                  )
 
-LabelOverride ::= LabelOverride(
+LabelOverride ::= label_override(
                     Label
                     AlternativeLabel*
                   )
@@ -194,18 +194,18 @@ FieldType ::= TextFieldType
             | ExternalAuthorityFieldType
             | AttributeValueFieldType
 
-TextFieldType ::= TextFieldType(
+TextFieldType ::= text_field_type(
                     [TextRenderingHint]
                   )
 
-NumericFieldType ::= NumericFieldType(
+NumericFieldType ::= numeric_field_type(
                        NumericDatatype
                        [NumericRenderingHint]
                        [Unit]
                        [NumericPrecision]
                      )
 
-TemporalFieldType ::= TemporalFieldType(
+TemporalFieldType ::= temporal_field_type(
                         TemporalDatatype
                         [TemporalRenderingHint]
                         [TemporalGranularity]
@@ -213,7 +213,7 @@ TemporalFieldType ::= TemporalFieldType(
                         [TimezoneEnabled]
                       )
 
-ControlledTermFieldType ::= ControlledTermFieldType(
+ControlledTermFieldType ::= controlled_term_field_type(
                               ControlledTermSource+
                             )
 
@@ -225,12 +225,12 @@ ControlledTermSource ::= OntologySource
 ChoiceFieldType ::= SingleChoiceFieldType
                   | MultipleChoiceFieldType
 
-SingleChoiceFieldType ::= SingleChoiceFieldType(
+SingleChoiceFieldType ::= single_choice_field_type(
                             ChoiceOption+
                             [SingleChoiceRenderingHint]
                           )
 
-MultipleChoiceFieldType ::= MultipleChoiceFieldType(
+MultipleChoiceFieldType ::= multiple_choice_field_type(
                               ChoiceOption+
                               [MultipleChoiceRenderingHint]
                             )
@@ -245,7 +245,7 @@ ExternalAuthorityFieldType ::= ORCIDFieldType
                              | RRIDFieldType
                              | NIHGrantIDFieldType
 
-AttributeValueFieldType ::= AttributeValueFieldType()
+AttributeValueFieldType ::= attribute_value_field_type()
 
 FieldIntrinsicConstraint ::= TextConstraint
                            | NumericConstraint
@@ -298,50 +298,50 @@ Value ::= TextValue
         | ExternalAuthorityValue
         | AttributeValue
 
-TextValue ::= TextValue(
+TextValue ::= text_value(
                 Literal
                 [LanguageTag]
               )
 
-NumericValue ::= NumericValue(
+NumericValue ::= numeric_value(
                    Literal
                    [DatatypeIRI]
                  )
 
-TemporalValue ::= TemporalValue(
+TemporalValue ::= temporal_value(
                     Literal
                     [DatatypeIRI]
                   )
 
-ControlledTermValue ::= ControlledTermValue(
+ControlledTermValue ::= controlled_term_value(
                           TermIRI
                           Label
                           [Notation]
                           [PreferredLabel]
                         )
 
-ChoiceValue ::= ChoiceValue(
+ChoiceValue ::= choice_value(
                   Literal
                 )
 
-LinkValue ::= LinkValue(
+LinkValue ::= link_value(
                 IRI
               )
 
-ContactValue ::= ContactValue(
+ContactValue ::= contact_value(
                    Literal
                  )
 
-ExternalAuthorityValue ::= ExternalAuthorityValue(
+ExternalAuthorityValue ::= external_authority_value(
                              Literal
                            )
 
-AttributeValue ::= AttributeValue(
+AttributeValue ::= attribute_value(
                     AttributeName
                     Value
                   )
 
-Literal ::= Literal(
+Literal ::= literal(
               LexicalForm
             )
 ```
