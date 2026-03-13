@@ -10,6 +10,8 @@ Validation in the CEDAR Template Model consists of structural conformance to the
 
 Within a `Template`, each `EmbeddedArtifact` MUST have a unique `EmbeddedArtifactKey`.
 
+Each `EmbeddedArtifactKey` MUST be an ASCII identifier without whitespace.
+
 ### Embedding References
 
 Each `EmbeddedField` MUST reference a `Field`.

@@ -26,7 +26,6 @@ EmbeddedArtifact ::= EmbeddedField
                    | EmbeddedPresentationComponent
 
 EmbeddedField ::= embedded_field(
-                    EmbeddedArtifactContext
                     EmbeddedArtifactKey
                     FieldReference
                     [ValueRequirement]
@@ -37,7 +36,6 @@ EmbeddedField ::= embedded_field(
                   )
 
 EmbeddedTemplate ::= embedded_template(
-                       EmbeddedArtifactContext
                        EmbeddedArtifactKey
                        TemplateReference
                        [ValueRequirement]
@@ -47,7 +45,6 @@ EmbeddedTemplate ::= embedded_template(
                      )
 
 EmbeddedPresentationComponent ::= embedded_presentation_component(
-                                    EmbeddedArtifactContext
                                     EmbeddedArtifactKey
                                     PresentationComponentReference
                                     [Visibility]
@@ -116,7 +113,7 @@ SchemaArtifactMetadata ::= ArtifactMetadata
                            SchemaVersioning
 
 ArtifactMetadata ::= DescriptiveMetadata
-                     SystemIdentifier
+                     ArtifactId
                      TemporalProvenance
                      Annotation*
 
@@ -126,9 +123,21 @@ DescriptiveMetadata ::= descriptive_metadata(
                           [Identifier]
                         )
 
-SystemIdentifier ::= system_identifier(
-                       IRI
-                     )
+ArtifactId ::= artifact_id(
+                 IRI
+               )
+
+FieldId ::= field_id(
+              IRI
+            )
+
+TemplateId ::= template_id(
+                 IRI
+               )
+
+PresentationComponentId ::= presentation_component_id(
+                              IRI
+                            )
 
 TemporalProvenance ::= temporal_provenance(
                          CreatedOn
@@ -136,6 +145,14 @@ TemporalProvenance ::= temporal_provenance(
                          ModifiedOn
                          ModifiedBy
                        )
+
+CreatedOn ::= ISODateTimeStamp
+
+CreatedBy ::= IRI
+
+ModifiedOn ::= ISODateTimeStamp
+
+ModifiedBy ::= IRI
 
 SchemaVersioning ::= schema_versioning(
                        Version
@@ -151,12 +168,33 @@ Annotation ::= annotation(
                )
 ```
 
+`CreatedOn` and `ModifiedOn` MUST be ISO 8601 date-time timestamps.
+
+`CreatedBy` and `ModifiedBy` denote IRIs identifying the responsible agents.
+
+## Embedded Artifact Keys
+
+An `EmbeddedArtifactKey` is the local identifier of an `EmbeddedArtifact` within a `Template`.
+
+```bnf
+EmbeddedArtifactKey ::= embedded_artifact_key(
+                          KeyIdentifier
+                        )
+```
+
+`EmbeddedArtifactKey` MUST be an ASCII identifier without whitespace.
+
+`EmbeddedArtifactKey` values are local to a `Template` and MUST be unique within that `Template`.
+
 ## Supporting Nonterminals
 
 ```bnf
-EmbeddedArtifactContext ::= embedded_artifact_context(
-                              [Order]
-                            )
+
+FieldReference ::= FieldId
+
+TemplateReference ::= TemplateId
+
+PresentationComponentReference ::= PresentationComponentId
 
 ValueRequirement ::= Required
                    | Recommended
@@ -391,8 +429,9 @@ Literal ::= literal(
 
 `Literal` denotes an abstract lexical value. It carries lexical content only. Datatype interpretation and language tagging are supplied by the enclosing value construct when applicable.
 
-The nonterminals `FieldReference`, `TemplateReference`, `PresentationComponentReference`, `RichTextContent`, `ImageSource`, `YouTubeVideoSource`, `ChoiceOption`, `NumericDatatype`, `Unit`, `NumericPrecision`, `TemporalDatatype`, `TemporalGranularity`, `TimeFormat`, `TimezoneEnabled`, `TextConstraint`, `NumericConstraint`, `TemporalConstraint`, `ControlledTermConstraint`, `ChoiceConstraint`, `ExternalAuthorityConstraint`, `SingleLineTextRenderingHint`, `MultiLineTextRenderingHint`, `RadioRenderingHint`, `SingleSelectDropdownRenderingHint`, `CheckboxRenderingHint`, `MultiSelectDropdownRenderingHint`, `NumericRenderingHint`, `TemporalRenderingHint`, `LexicalForm`, `IRI`, `LanguageTag`, `DatatypeIRI`, `TermIRI`, `Notation`, `PreferredLabel`, `Name`, `Description`, `Identifier`, `CreatedOn`, `CreatedBy`, `ModifiedOn`, `ModifiedBy`, `Version`, `Status`, `ModelVersion`, `PreviousVersion`, `DerivedFrom`, `Order`, `MinCardinality`, `MaxCardinality`, `Label`, `AlternativeLabel`, `AnnotationName`, `AnnotationValue`, `AttributeName`, `Header`, `Footer`, `OntologyAcronym`, `OntologyName`, `OntologyIRI`, `RootTermIRI`, `RootTermLabel`, `MaxTraversalDepth`, `ValueSetIdentifier`, `ValueSetName`, and `ValueSetIRI` are intentionally left abstract in this version.
+The nonterminals `RichTextContent`, `ImageSource`, `YouTubeVideoSource`, `ChoiceOption`, `NumericDatatype`, `Unit`, `NumericPrecision`, `TemporalDatatype`, `TemporalGranularity`, `TimeFormat`, `TimezoneEnabled`, `TextConstraint`, `NumericConstraint`, `TemporalConstraint`, `ControlledTermConstraint`, `ChoiceConstraint`, `ExternalAuthorityConstraint`, `SingleLineTextRenderingHint`, `MultiLineTextRenderingHint`, `RadioRenderingHint`, `SingleSelectDropdownRenderingHint`, `CheckboxRenderingHint`, `MultiSelectDropdownRenderingHint`, `NumericRenderingHint`, `TemporalRenderingHint`, `LexicalForm`, `IRI`, `LanguageTag`, `DatatypeIRI`, `TermIRI`, `Notation`, `PreferredLabel`, `Name`, `Description`, `Identifier`, `ISODateTimeStamp`, `Version`, `Status`, `ModelVersion`, `PreviousVersion`, `DerivedFrom`, `MinCardinality`, `MaxCardinality`, `Label`, `AlternativeLabel`, `AnnotationName`, `AnnotationValue`, `AttributeName`, `Header`, `Footer`, `OntologyAcronym`, `OntologyName`, `OntologyIRI`, `RootTermIRI`, `RootTermLabel`, `MaxTraversalDepth`, `ValueSetIdentifier`, `ValueSetName`, `ValueSetIRI`, and `KeyIdentifier` are intentionally left abstract in this version.
 
 ## Open Questions
 
 - Should `LinkValue`, `ContactValue`, and `ExternalAuthorityValue` remain separate abstract value categories, or should they be normalized into a common literal-with-datatype form?
+- Should embedded artifacts always refer to reusable artifacts by explicit reference construct, or does the CEDAR model require some embeddings to support inline artifact definition?

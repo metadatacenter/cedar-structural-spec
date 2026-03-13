@@ -10,7 +10,7 @@ The CEDAR Template Model is organized around reusable artifacts, embedding const
 
 An `Artifact` is a top-level construct in the CEDAR Template Model.
 
-Each `Artifact` carries common artifact metadata including descriptive metadata, a system identifier, temporal provenance, and zero or more annotations.
+Each `Artifact` carries common artifact metadata including descriptive metadata, an artifact identifier, temporal provenance, and zero or more annotations.
 
 Descriptive metadata includes:
 
@@ -18,7 +18,7 @@ Descriptive metadata includes:
 - `Description`
 - `Identifier`
 
-The system identifier is a repository-assigned IRI that permanently identifies the artifact.
+The artifact identifier is a repository-assigned IRI that permanently identifies the artifact.
 
 Temporal provenance includes:
 
@@ -27,6 +27,10 @@ Temporal provenance includes:
 - `ModifiedOn`
 - `ModifiedBy`
 
+`CreatedOn` and `ModifiedOn` MUST be ISO 8601 date-time timestamps.
+
+`CreatedBy` and `ModifiedBy` MUST identify agents by IRI.
+
 Annotations are attribute-value pairs whose values may be literals or IRIs.
 
 ## SchemaArtifact
@@ -34,6 +38,8 @@ Annotations are attribute-value pairs whose values may be literals or IRIs.
 A `SchemaArtifact` is an `Artifact` that defines reusable schema structure.
 
 `Template` and `Field` are `SchemaArtifact` constructs.
+
+Each reusable artifact MAY be referenced by a typed identifier such as `FieldId`, `TemplateId`, or `PresentationComponentId`, depending on the referenced artifact kind.
 
 A `SchemaArtifact` additionally carries versioning metadata:
 
@@ -75,7 +81,9 @@ A `PresentationComponent` is an `Artifact` that contributes presentation or inst
 
 An `EmbeddedArtifact` contextualizes an artifact within a specific `Template`.
 
-An `EmbeddedArtifact` carries embedding-specific properties such as `EmbeddedArtifactKey`, order, local cardinality, visibility, default value, label override, and value requirement.
+An `EmbeddedArtifact` carries embedding-specific properties such as `EmbeddedArtifactKey`, local cardinality, visibility, default value, label override, and value requirement.
+
+The order of embedded artifacts in a `Template` is determined by the sequence in which the `EmbeddedArtifact` constructs occur within that `Template`.
 
 ## EmbeddedField
 
@@ -101,7 +109,11 @@ An `EmbeddedArtifactKey` is the local identifier for an `EmbeddedArtifact` withi
 
 `EmbeddedArtifactKey` values MUST be unique within a `Template`.
 
+`EmbeddedArtifactKey` MUST be an ASCII identifier without whitespace.
+
 `EmbeddedArtifactKey` is the mechanism that connects template structure and instance structure.
+
+`EmbeddedArtifactKey` is distinct from artifact identifiers such as `FieldId` and `TemplateId`. It identifies the embedding site within a template rather than the reusable artifact being referenced.
 
 ## TemplateInstance
 
