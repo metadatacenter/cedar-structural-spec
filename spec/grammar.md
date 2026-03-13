@@ -6,6 +6,8 @@ The grammar is abstract. It does not define any concrete serialization.
 
 ## Kernel Grammar
 
+The kernel grammar defines the primary abstract categories of the model and the core schema-level structure that connects them. It introduces reusable schema artifacts, templates, and the embedding constructs through which templates assemble fields, nested templates, and presentation components. Subsequent sections refine the metadata, field-type families, instance structures, and supporting constructs referenced here.
+
 ```bnf
 Artifact ::= SchemaArtifact
            | PresentationComponent
