@@ -57,6 +57,31 @@ Field ::= field(
             FieldIntrinsicConstraint*
           )
 
+TemplateInstance ::= template_instance(
+                       ArtifactMetadata
+                       TemplateReference
+                       InstanceValue*
+                     )
+
+InstanceValue ::= FieldValue
+                | NestedTemplateInstance
+
+FieldValue ::= field_value(
+                 EmbeddedArtifactKey
+                 Value*
+               )
+
+NestedTemplateInstance ::= nested_template_instance(
+                             EmbeddedArtifactKey
+                             InstanceValue*
+                           )
+```
+
+## Presentation Components
+
+`PresentationComponent` denotes reusable non-data-bearing content that contributes presentation or instructional structure within a `Template`. Presentation components appear in templates only through `EmbeddedPresentationComponent` and do not contribute `InstanceValue` constructs.
+
+```bnf
 PresentationComponent ::= RichTextComponent
                         | ImageComponent
                         | YouTubeVideoComponent
@@ -85,25 +110,6 @@ SectionBreakComponent ::= section_break_component(
 PageBreakComponent ::= page_break_component(
                          ArtifactMetadata
                        )
-
-TemplateInstance ::= template_instance(
-                       ArtifactMetadata
-                       TemplateReference
-                       InstanceValue*
-                     )
-
-InstanceValue ::= FieldValue
-                | NestedTemplateInstance
-
-FieldValue ::= field_value(
-                 EmbeddedArtifactKey
-                 Value*
-               )
-
-NestedTemplateInstance ::= nested_template_instance(
-                             EmbeddedArtifactKey
-                             InstanceValue*
-                           )
 ```
 
 ## Artifact Metadata
