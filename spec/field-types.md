@@ -120,13 +120,18 @@ Controlled term sources may be defined as:
 - explicitly enumerated classes
 - curated value sets
 
-`OntologySource` permits selection from one or more identified ontologies.
+`OntologySource` permits selection from one identified ontology.
 
-Each ontology descriptor records:
+Each ontology reference records:
+
+- ontology IRI
+
+The ontology IRI is the required identifier.
+
+An optional `OntologyDisplayHint` may additionally record:
 
 - ontology acronym
 - ontology name
-- ontology IRI
 
 `BranchSource` restricts selection to descendants of a specified root term within an identified ontology. It may additionally define maximum traversal depth.
 

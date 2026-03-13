@@ -259,17 +259,23 @@ ControlledTermSource ::= OntologySource
                        | ValueSetSource
 
 OntologySource ::= ontology_source(
-                     OntologyDescriptor+
+                     OntologyReference
                    )
 
-OntologyDescriptor ::= ontology_descriptor(
-                         OntologyAcronym
-                         OntologyName
-                         OntologyIRI
-                       )
+OntologyReference ::= ontology_reference(
+                        OntologyIRI
+                        [OntologyDisplayHint]
+                      )
+
+OntologyDisplayHint ::= ontology_display_hint(
+                          OntologyAcronym
+                        | OntologyName
+                        | OntologyAcronym
+                          OntologyName
+                        )
 
 BranchSource ::= branch_source(
-                   OntologyDescriptor
+                   OntologyReference
                    RootTermIRI
                    RootTermLabel
                    [MaxTraversalDepth]
@@ -282,7 +288,7 @@ ClassSource ::= class_source(
 ControlledTermClass ::= controlled_term_class(
                           TermIRI
                           Label
-                          OntologyDescriptor
+                          OntologyReference
                         )
 
 ValueSetSource ::= value_set_source(
@@ -385,7 +391,7 @@ Literal ::= literal(
 
 `Literal` denotes an abstract lexical value. It carries lexical content only. Datatype interpretation and language tagging are supplied by the enclosing value construct when applicable.
 
-The nonterminals `FieldReference`, `TemplateReference`, `PresentationComponentReference`, `RichTextContent`, `ImageSource`, `YouTubeVideoSource`, `ChoiceOption`, `NumericDatatype`, `Unit`, `NumericPrecision`, `TemporalDatatype`, `TemporalGranularity`, `TimeFormat`, `TimezoneEnabled`, `TextConstraint`, `NumericConstraint`, `TemporalConstraint`, `ControlledTermConstraint`, `ChoiceConstraint`, `ExternalAuthorityConstraint`, `SingleLineTextRenderingHint`, `MultiLineTextRenderingHint`, `RadioRenderingHint`, `SingleSelectDropdownRenderingHint`, `CheckboxRenderingHint`, `MultiSelectDropdownRenderingHint`, `NumericRenderingHint`, `TemporalRenderingHint`, `LexicalForm`, `IRI`, `LanguageTag`, `DatatypeIRI`, `TermIRI`, `Notation`, `PreferredLabel`, `Name`, `Description`, `Identifier`, `CreatedOn`, `CreatedBy`, `ModifiedOn`, `ModifiedBy`, `Version`, `Status`, `ModelVersion`, `PreviousVersion`, `DerivedFrom`, `Order`, `MinCardinality`, `MaxCardinality`, `Label`, `AlternativeLabel`, `AnnotationName`, `AnnotationValue`, `AttributeName`, `Header`, `Footer`, `OntologyAcronym`, `OntologyName`, `OntologyIRI`, `RootTermIRI`, `RootTermLabel`, `MaxTraversalDepth`, `ValueSetIdentifier`, and `ValueSetName` are intentionally left abstract in this version.
+The nonterminals `FieldReference`, `TemplateReference`, `PresentationComponentReference`, `RichTextContent`, `ImageSource`, `YouTubeVideoSource`, `ChoiceOption`, `NumericDatatype`, `Unit`, `NumericPrecision`, `TemporalDatatype`, `TemporalGranularity`, `TimeFormat`, `TimezoneEnabled`, `TextConstraint`, `NumericConstraint`, `TemporalConstraint`, `ControlledTermConstraint`, `ChoiceConstraint`, `ExternalAuthorityConstraint`, `SingleLineTextRenderingHint`, `MultiLineTextRenderingHint`, `RadioRenderingHint`, `SingleSelectDropdownRenderingHint`, `CheckboxRenderingHint`, `MultiSelectDropdownRenderingHint`, `NumericRenderingHint`, `TemporalRenderingHint`, `LexicalForm`, `IRI`, `LanguageTag`, `DatatypeIRI`, `TermIRI`, `Notation`, `PreferredLabel`, `Name`, `Description`, `Identifier`, `CreatedOn`, `CreatedBy`, `ModifiedOn`, `ModifiedBy`, `Version`, `Status`, `ModelVersion`, `PreviousVersion`, `DerivedFrom`, `Order`, `MinCardinality`, `MaxCardinality`, `Label`, `AlternativeLabel`, `AnnotationName`, `AnnotationValue`, `AttributeName`, `Header`, `Footer`, `OntologyAcronym`, `OntologyName`, `OntologyIRI`, `RootTermIRI`, `RootTermLabel`, `MaxTraversalDepth`, `ValueSetIdentifier`, `ValueSetName`, and `ValueSetIRI` are intentionally left abstract in this version.
 
 ## Open Questions
 
