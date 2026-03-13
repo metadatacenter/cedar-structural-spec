@@ -46,5 +46,4 @@ This specification does not define:
 ## Open Questions
 
 - Should instance structures eventually allow path-based keys in addition to `EmbeddedArtifactKey`?
-- Should rendering hints be defined on `Field`, on embedding constructs, or on both with clear precedence?
 - Should option sets for some `FieldType` variants become reusable artifacts?

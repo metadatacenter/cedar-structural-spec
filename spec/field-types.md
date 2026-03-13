@@ -22,17 +22,10 @@ This specification defines the following `FieldType` variants:
 
 This specification refines several of these variants into more specific forms.
 
-`TextFieldType` has two forms:
+`ChoiceFieldType` has two semantic forms:
 
-- `SingleLineTextFieldType`
-- `MultiLineTextFieldType`
-
-`ChoiceFieldType` has four forms:
-
-- `RadioChoiceFieldType`
-- `CheckboxChoiceFieldType`
-- `SingleSelectChoiceFieldType`
-- `MultiSelectChoiceFieldType`
+- `SingleChoiceFieldType`
+- `MultipleChoiceFieldType`
 
 `ContactFieldType` has two forms:
 
@@ -67,11 +60,52 @@ Examples of intrinsic constraints include:
 
 Rendering hints influence presentation behavior but do not change the semantic meaning of a `FieldType`.
 
-Rendering hints MUST be compatible with the associated `FieldType`. Invalid combinations, such as a choice-oriented hint applied to `TextFieldType`, MUST be rejected by conforming implementations.
+This specification defines the following rendering hint categories:
+
+- `TextRenderingHint`
+- `SingleChoiceRenderingHint`
+- `MultipleChoiceRenderingHint`
+- `NumericRenderingHint`
+- `TemporalRenderingHint`
+
+Rendering hints are scoped to compatible `FieldType` families.
+
+For strong typing, rendering hints are attached to the compatible concrete `FieldType` forms rather than to `Field` directly.
+
+The compatible pairings are:
+
+- `TextRenderingHint` with `TextFieldType`
+- `SingleChoiceRenderingHint` with `SingleChoiceFieldType`
+- `MultipleChoiceRenderingHint` with `MultipleChoiceFieldType`
+- `NumericRenderingHint` with `NumericFieldType`
+- `TemporalRenderingHint` with `TemporalFieldType`
+
+Rendering hints MUST be compatible with the associated `FieldType`. Invalid combinations, such as `RadioRenderingHint` on `MultipleChoiceFieldType`, MUST be rejected by conforming implementations.
+
+Rendering hints describe UI behavior only. They do not alter value semantics, intrinsic constraints, or instance interpretation.
+
+Rendering hints are therefore represented within the relevant concrete `FieldType` definitions.
+
+Examples of compatible combinations include:
+
+- `TextFieldType` with `SingleLineTextRenderingHint`
+- `TextFieldType` with `MultiLineTextRenderingHint`
+- `SingleChoiceFieldType` with `RadioRenderingHint`
+- `SingleChoiceFieldType` with `SingleSelectDropdownRenderingHint`
+- `MultipleChoiceFieldType` with `CheckboxRenderingHint`
+- `MultipleChoiceFieldType` with `MultiSelectDropdownRenderingHint`
+
+Examples of incompatible combinations include:
+
+- `TextFieldType` with `RadioRenderingHint`
+- `SingleChoiceFieldType` with `CheckboxRenderingHint`
+- `MultipleChoiceFieldType` with `RadioRenderingHint`
+- `NumericFieldType` with `CheckboxRenderingHint`
+- `TemporalFieldType` with `MultiLineTextRenderingHint`
 
 ## Variant Notes
 
-`TextFieldType` is used for textual values. `SingleLineTextFieldType` is intended for short text, while `MultiLineTextFieldType` is intended for longer textual content.
+`TextFieldType` is used for textual values. Single-line and multi-line presentation are expressed through `TextRenderingHint` rather than separate semantic field types.
 
 `NumericFieldType` is used for numeric values. It may specify a numeric datatype, unit association, and numeric precision.
 
@@ -86,7 +120,13 @@ Controlled term sources may be defined as:
 - explicitly enumerated classes
 - curated value sets
 
-`ChoiceFieldType` is used for values chosen from an explicit set of options. The specific choice form determines whether selection is single or multiple and how the choice set is presented.
+`ChoiceFieldType` is used for values chosen from an explicit set of options.
+
+`SingleChoiceFieldType` is used when exactly one option may be selected in a given value occurrence.
+
+`MultipleChoiceFieldType` is used when multiple options may be selected in a given value occurrence.
+
+Choice presentation is expressed through typed rendering hints rather than by multiplying semantic field types for radio, checkbox, and dropdown variants.
 
 `LinkFieldType` is used for link-like values.
 
@@ -110,4 +150,3 @@ The following properties are not intrinsic parts of a reusable `Field` and there
 ## Open Questions
 
 - Should reusable option sets for `ChoiceFieldType` be represented as first-class artifacts?
-- Should the specification define a normative taxonomy of rendering hints in this document or defer that to a later extension?

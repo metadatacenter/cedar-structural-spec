@@ -46,6 +46,16 @@ If an `EmbeddedTemplate` has multiplicity greater than one, the number of corres
 
 Any rendering hint used by the model MUST be compatible with the associated `FieldType`.
 
+`TextRenderingHint` MUST be used only with `TextFieldType`.
+
+`SingleChoiceRenderingHint` MUST be used only with `SingleChoiceFieldType`.
+
+`MultipleChoiceRenderingHint` MUST be used only with `MultipleChoiceFieldType`.
+
+`NumericRenderingHint` MUST be used only with `NumericFieldType`.
+
+`TemporalRenderingHint` MUST be used only with `TemporalFieldType`.
+
 ### Controlled Term Value Structure
 
 If a value conforms to `ControlledTermFieldType`, the value MUST include a term identifier and SHOULD include a human-readable label.

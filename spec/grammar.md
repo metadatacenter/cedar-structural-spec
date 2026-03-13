@@ -194,17 +194,20 @@ FieldType ::= TextFieldType
             | ExternalAuthorityFieldType
             | AttributeValueFieldType
 
-TextFieldType ::= SingleLineTextFieldType
-                | MultiLineTextFieldType
+TextFieldType ::= TextFieldType(
+                    [TextRenderingHint]
+                  )
 
 NumericFieldType ::= NumericFieldType(
                        NumericDatatype
+                       [NumericRenderingHint]
                        [Unit]
                        [NumericPrecision]
                      )
 
 TemporalFieldType ::= TemporalFieldType(
                         TemporalDatatype
+                        [TemporalRenderingHint]
                         [TemporalGranularity]
                         [TimeFormat]
                         [TimezoneEnabled]
@@ -219,10 +222,18 @@ ControlledTermSource ::= OntologySource
                        | ClassSource
                        | ValueSetSource
 
-ChoiceFieldType ::= RadioChoiceFieldType
-                  | CheckboxChoiceFieldType
-                  | SingleSelectChoiceFieldType
-                  | MultiSelectChoiceFieldType
+ChoiceFieldType ::= SingleChoiceFieldType
+                  | MultipleChoiceFieldType
+
+SingleChoiceFieldType ::= SingleChoiceFieldType(
+                            ChoiceOption+
+                            [SingleChoiceRenderingHint]
+                          )
+
+MultipleChoiceFieldType ::= MultipleChoiceFieldType(
+                              ChoiceOption+
+                              [MultipleChoiceRenderingHint]
+                            )
 
 ContactFieldType ::= EmailFieldType
                    | PhoneNumberFieldType
@@ -243,6 +254,35 @@ FieldIntrinsicConstraint ::= TextConstraint
                            | ChoiceConstraint
                            | ExternalAuthorityConstraint
 ```
+
+## Rendering Hints
+
+```bnf
+RenderingHint ::= TextRenderingHint
+                | SingleChoiceRenderingHint
+                | MultipleChoiceRenderingHint
+                | NumericRenderingHint
+                | TemporalRenderingHint
+
+TextRenderingHint ::= SingleLineTextRenderingHint
+                    | MultiLineTextRenderingHint
+
+SingleChoiceRenderingHint ::= RadioRenderingHint
+                            | SingleSelectDropdownRenderingHint
+
+MultipleChoiceRenderingHint ::= CheckboxRenderingHint
+                              | MultiSelectDropdownRenderingHint
+```
+
+The `FieldType` grammar distinguishes semantic variation from presentation variation.
+
+Semantic distinctions MUST remain in `FieldType` when they affect the meaning, cardinality, or value structure of the field.
+
+Presentation distinctions SHOULD be represented by typed rendering hints when they affect only UI behavior.
+
+Accordingly, `TextFieldType` is a single semantic field type whose single-line and multi-line display forms are represented by `TextRenderingHint`.
+
+Similarly, `ChoiceFieldType` distinguishes `SingleChoiceFieldType` from `MultipleChoiceFieldType` semantically, while the rendering hint determines whether the UI uses radio buttons, checkboxes, or dropdown presentation. Typed rendering hints make incompatible combinations structurally invalid.
 
 ## Supporting Nonterminals
 
@@ -308,9 +348,8 @@ Literal ::= Literal(
 
 `Literal` denotes an abstract lexical value. It carries lexical content only. Datatype interpretation and language tagging are supplied by the enclosing value construct when applicable.
 
-The nonterminals `FieldReference`, `TemplateReference`, `PresentationComponentReference`, `RichTextContent`, `ImageSource`, `YouTubeVideoSource`, `OntologySource`, `BranchSource`, `ClassSource`, `ValueSetSource`, `NumericDatatype`, `Unit`, `NumericPrecision`, `TemporalDatatype`, `TemporalGranularity`, `TimeFormat`, `TimezoneEnabled`, `TextConstraint`, `NumericConstraint`, `TemporalConstraint`, `ControlledTermConstraint`, `ChoiceConstraint`, `ExternalAuthorityConstraint`, `LexicalForm`, `IRI`, `LanguageTag`, `DatatypeIRI`, `TermIRI`, `Notation`, `PreferredLabel`, `Name`, `Description`, `Identifier`, `CreatedOn`, `CreatedBy`, `ModifiedOn`, `ModifiedBy`, `Version`, `Status`, `ModelVersion`, `PreviousVersion`, `DerivedFrom`, `Order`, `MinCardinality`, `MaxCardinality`, `Label`, `AlternativeLabel`, `AnnotationName`, `AnnotationValue`, `AttributeName`, `Header`, and `Footer` are intentionally left abstract in this version.
+The nonterminals `FieldReference`, `TemplateReference`, `PresentationComponentReference`, `RichTextContent`, `ImageSource`, `YouTubeVideoSource`, `OntologySource`, `BranchSource`, `ClassSource`, `ValueSetSource`, `ChoiceOption`, `NumericDatatype`, `Unit`, `NumericPrecision`, `TemporalDatatype`, `TemporalGranularity`, `TimeFormat`, `TimezoneEnabled`, `TextConstraint`, `NumericConstraint`, `TemporalConstraint`, `ControlledTermConstraint`, `ChoiceConstraint`, `ExternalAuthorityConstraint`, `SingleLineTextRenderingHint`, `MultiLineTextRenderingHint`, `RadioRenderingHint`, `SingleSelectDropdownRenderingHint`, `CheckboxRenderingHint`, `MultiSelectDropdownRenderingHint`, `NumericRenderingHint`, `TemporalRenderingHint`, `LexicalForm`, `IRI`, `LanguageTag`, `DatatypeIRI`, `TermIRI`, `Notation`, `PreferredLabel`, `Name`, `Description`, `Identifier`, `CreatedOn`, `CreatedBy`, `ModifiedOn`, `ModifiedBy`, `Version`, `Status`, `ModelVersion`, `PreviousVersion`, `DerivedFrom`, `Order`, `MinCardinality`, `MaxCardinality`, `Label`, `AlternativeLabel`, `AnnotationName`, `AnnotationValue`, `AttributeName`, `Header`, and `Footer` are intentionally left abstract in this version.
 
 ## Open Questions
 
 - Should `LinkValue`, `ContactValue`, and `ExternalAuthorityValue` remain separate abstract value categories, or should they be normalized into a common literal-with-datatype form?
-- Should embedding-specific presentation hints appear in embedded artifact properties, in `FieldType`, or in a separate nonterminal?
