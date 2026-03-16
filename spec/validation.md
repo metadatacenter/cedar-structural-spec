@@ -8,7 +8,7 @@ Validation in the CEDAR Template Model consists of structural conformance to the
 
 ### EmbeddedArtifactKey Uniqueness
 
-Within a `Template`, each `EmbeddedArtifact` MUST have a unique `EmbeddedArtifactKey`.
+Within a single `Template`, each `EmbeddedArtifact` MUST have a unique `EmbeddedArtifactKey`. The uniqueness constraint is local to that template level and does not extend across nested template boundaries. Accordingly, an embedded template MAY contain `EmbeddedArtifactKey` values that are identical to keys used in its containing template, because each template defines its own local key space.
 
 Each `EmbeddedArtifactKey` MUST be an ASCII identifier without whitespace.
 
