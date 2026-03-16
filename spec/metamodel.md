@@ -2,6 +2,8 @@
 
 ## Overview
 
+This section defines the conceptual arrangement of the CEDAR Template Model. Its goal is to state that conceptual information in a strongly typed and unambiguous manner by making the principal categories of constructs in the model and the relationships among them explicit. It does not prescribe any concrete serialization. A serialization MUST preserve and faithfully encode the conceptual information defined by this metamodel, but it MAY do so using whatever concrete representational structures are appropriate for that serialization format.
+
 The CEDAR Template Model is organized around reusable artifacts, embedding constructs, and instances that conform to templates.
 
 `Artifact` is the broadest category in the model. `SchemaArtifact`, `PresentationComponent`, and `TemplateInstance` are the principal subclasses used by this specification.
@@ -69,7 +71,7 @@ Where supported by a concrete `FieldType`, a compatible `RenderingHint` is defin
 
 `RenderingHint` influences presentation behavior only and MUST be compatible with the associated concrete `FieldType`.
 
-Semantic distinctions such as single-choice versus multiple-choice, date versus time versus date-time, permitted time precision, and permitted date-time precision belong in `FieldType`. Purely presentational distinctions such as single-line versus multi-line text entry, date component ordering, and 12-hour versus 24-hour time display belong in typed rendering hints.
+**Semantic Structure Versus Presentation.** This specification draws a strict distinction between semantic structure and presentation. Semantic distinctions MUST be modeled in `FieldType`. This includes distinctions such as single-choice versus multiple-choice, date versus time versus date-time, permitted time precision, and permitted date-time precision. Purely presentational distinctions MUST NOT be modeled as separate field types. Instead, distinctions such as single-line versus multi-line text entry, date component ordering, and 12-hour versus 24-hour time display MUST be modeled only through compatible typed rendering hints.
 
 The reusable `Field` definition does not carry template-local keying, cardinality, visibility, or label override. Those properties belong to `EmbeddedField`.
 
@@ -77,7 +79,7 @@ The reusable `Field` definition does not carry template-local keying, cardinalit
 
 ## PresentationComponent
 
-A `PresentationComponent` is an `Artifact` that contributes presentation or instructional structure.
+A `PresentationComponent` is an `Artifact` that contributes presentation or instructional structure. Examples include reusable rich text instructions, images, YouTube videos, section breaks, and page breaks that guide or organize a rendered template without introducing data-bearing content.
 
 `PresentationComponent` does not define a data-bearing value and does not contribute an `InstanceValue`.
 
@@ -147,5 +149,4 @@ A `NestedTemplateInstance` associates an `EmbeddedArtifactKey` with a nested col
 
 ## Open Questions
 
-- Should `PresentationComponent` remain a direct subclass of `Artifact`, or should a later revision introduce a more explicit hierarchy for reusable non-schema artifacts?
-- Which embedding-specific properties are mandatory for all `EmbeddedArtifact` constructs in the normative kernel?
+- Should `PresentationComponent` remain a direct subclass of `Artifact`, or should a later revision introduce a more explicit hierarchy for reusable non-schema artifacts? For example, a later revision could introduce an intermediate superclass for reusable non-schema artifacts and place `PresentationComponent` under that superclass rather than directly under `Artifact`. This would make the distinction between reusable schema artifacts such as `Template` and `Field` and reusable non-schema artifacts such as rich text, images, videos, section breaks, and page breaks more explicit.
