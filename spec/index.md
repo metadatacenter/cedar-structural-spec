@@ -29,8 +29,7 @@ This specification does not define:
 
 - [notation.md](/Users/matthewhorridge/IdeaProjects/cedar-structural-spec/spec/notation.md) defines the notation conventions used throughout the specification.
 - [metamodel.md](/Users/matthewhorridge/IdeaProjects/cedar-structural-spec/spec/metamodel.md) defines the core artifacts and their relationships.
-- [grammar.md](/Users/matthewhorridge/IdeaProjects/cedar-structural-spec/spec/grammar.md) gives the abstract BNF-style grammar.
-- [field-types.md](/Users/matthewhorridge/IdeaProjects/cedar-structural-spec/spec/field-types.md) defines `FieldType` and related constraints.
+- [grammar.md](/Users/matthewhorridge/IdeaProjects/cedar-structural-spec/spec/grammar.md) gives the abstract BNF-style grammar, including the `FieldType` system and related constraints.
 - [presentation.md](/Users/matthewhorridge/IdeaProjects/cedar-structural-spec/spec/presentation.md) defines `PresentationComponent`.
 - [instances.md](/Users/matthewhorridge/IdeaProjects/cedar-structural-spec/spec/instances.md) defines `TemplateInstance` and `InstanceValue`.
 - [validation.md](/Users/matthewhorridge/IdeaProjects/cedar-structural-spec/spec/validation.md) defines well-formedness and validation rules.
