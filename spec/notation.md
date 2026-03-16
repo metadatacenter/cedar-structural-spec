@@ -1,39 +1,8 @@
 # Notation
 
-This specification uses an abstract BNF-style notation to describe structure.
+This specification uses the terminology and naming conventions that are shared across the rest of the specification.
 
-The grammar defines abstract structure only. It does not define a concrete syntax such as JSON or YAML.
-
-## Production Notation
-
-The following notation is used:
-
-```bnf
-::=   defined as
-|     alternative production
-X*    zero or more occurrences of X
-X+    one or more occurrences of X
-[X]   optional occurrence of X
-```
-
-Whitespace separates symbols within a production.
-
-Parentheses group the components of an abstract construct.
-
-Production names use `UpperCamelCase`.
-
-Abstract constructor forms use `lower_snake_case`.
-
-For example, in the production
-
-```bnf
-Template ::= template(
-               SchemaArtifactMetadata
-               EmbeddedArtifact*
-             )
-```
-
-`Template` is the production being defined, while `template(...)` denotes the abstract constructor form of that construct.
+The production notation for the abstract grammar is defined in `spec/grammar.md`.
 
 ## Conformance Language
 

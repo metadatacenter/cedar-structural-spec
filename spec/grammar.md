@@ -4,6 +4,35 @@ This section defines the abstract structure of the CEDAR Template Model using a 
 
 The grammar is abstract. It does not define any concrete serialization.
 
+The following notation is used throughout this grammar:
+
+```bnf
+::=   defined as
+|     alternative production
+X*    zero or more occurrences of X
+X+    one or more occurrences of X
+[X]   optional occurrence of X
+```
+
+Whitespace separates symbols within a production.
+
+Parentheses group the components of an abstract construct.
+
+Production names use `UpperCamelCase`.
+
+Abstract constructor forms use `lower_snake_case`.
+
+For example, in the production
+
+```bnf
+Template ::= template(
+               SchemaArtifactMetadata
+               EmbeddedArtifact*
+             )
+```
+
+`Template` is the production being defined, while `template(...)` denotes the abstract constructor form of that construct.
+
 ## Kernel Grammar
 
 The kernel grammar defines the primary abstract categories of the model and the core schema-level structure that connects them. It introduces reusable schema artifacts, templates, and the embedding constructs through which templates assemble fields, nested templates, and presentation components. Subsequent sections refine the metadata, field-type families, instance structures, and supporting constructs referenced here.
