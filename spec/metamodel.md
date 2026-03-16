@@ -12,7 +12,7 @@ The CEDAR Template Model is organized around reusable artifacts, embedding const
 
 An `Artifact` is a top-level construct in the CEDAR Template Model.
 
-Each `Artifact` carries common artifact metadata including descriptive metadata, an artifact identifier, temporal provenance, and zero or more annotations.
+Each `Artifact` carries an artifact identifier together with common artifact metadata including descriptive metadata, temporal provenance, and zero or more annotations.
 
 Descriptive metadata includes:
 
@@ -20,7 +20,7 @@ Descriptive metadata includes:
 - `Description`
 - `Identifier`
 
-The artifact identifier is a repository-assigned IRI that permanently identifies the artifact.
+The artifact identifier is a repository-assigned IRI that permanently identifies the artifact. Artifact identity is conceptually distinct from artifact metadata.
 
 Temporal provenance includes:
 
@@ -53,7 +53,7 @@ A `SchemaArtifact` additionally carries versioning metadata:
 
 ## Template
 
-A `Template` is a `SchemaArtifact` that specifies an ordered arrangement of embedded artifacts.
+A `Template` is a `SchemaArtifact` identified by a `TemplateId` and specifies an ordered arrangement of embedded artifacts.
 
 A `Template` contains `EmbeddedArtifact` constructs rather than directly containing `Field`, `Template`, or `PresentationComponent`.
 
@@ -61,7 +61,7 @@ A `Template` MAY additionally define `Header` and `Footer` content for presentat
 
 ## Field
 
-A `Field` is a `SchemaArtifact` that specifies a kind of value that may appear in `TemplateInstance` constructs.
+A `Field` is a `SchemaArtifact` identified by a `FieldId` and specifies a kind of value that may appear in `TemplateInstance` constructs.
 
 A `Field` defines a `FieldType` together with any field-type-specific properties on the permitted values.
 
@@ -79,7 +79,7 @@ The reusable `Field` definition does not carry template-local keying, cardinalit
 
 ## PresentationComponent
 
-A `PresentationComponent` is an `Artifact` that contributes presentation or instructional structure. Examples include reusable rich text instructions, images, YouTube videos, section breaks, and page breaks that guide or organize a rendered template without introducing data-bearing content.
+A `PresentationComponent` is an `Artifact` identified by a `PresentationComponentId` that contributes presentation or instructional structure. Examples include reusable rich text instructions, images, YouTube videos, section breaks, and page breaks that guide or organize a rendered template without introducing data-bearing content.
 
 `PresentationComponent` does not define a data-bearing value and does not contribute an `InstanceValue`.
 
@@ -123,7 +123,7 @@ An `EmbeddedArtifactKey` is the local identifier for an `EmbeddedArtifact` withi
 
 ## TemplateInstance
 
-A `TemplateInstance` is an `Artifact` that conforms to a `Template`.
+A `TemplateInstance` is an `Artifact` identified by a `TemplateInstanceId` that conforms to a `Template`.
 
 A `TemplateInstance` contains `InstanceValue` constructs corresponding to the embedded data-bearing artifacts of that `Template`.
 

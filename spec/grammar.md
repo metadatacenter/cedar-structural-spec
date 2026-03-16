@@ -33,6 +33,7 @@ For example, in the production
 
 ```bnf
 Template ::= template(
+               TemplateId
                SchemaArtifactMetadata
                EmbeddedArtifact*
              )
@@ -53,11 +54,13 @@ SchemaArtifact ::= Field
                  | Template
 
 Field ::= field(
+            FieldId
             SchemaArtifactMetadata
             FieldType
           )
 
 Template ::= template(
+               TemplateId
                SchemaArtifactMetadata
                [Header]
                [Footer]
@@ -97,13 +100,9 @@ EmbeddedPresentationComponent ::= embedded_presentation_component(
 
 ## Artifact Identity
 
-Artifact identity defines the typed identifiers by which reusable artifacts and artifact references are denoted in the model. These identity constructs are distinct from descriptive metadata, provenance, versioning, and annotations.
+Artifact identity defines the typed identifiers by which artifacts and artifact references are denoted in the model. These identity constructs are distinct from descriptive metadata, provenance, versioning, and annotations.
 
 ```bnf
-ArtifactId ::= artifact_id(
-                 IRI
-               )
-
 FieldId ::= field_id(
               IRI
             )
@@ -115,18 +114,21 @@ TemplateId ::= template_id(
 PresentationComponentId ::= presentation_component_id(
                               IRI
                             )
+
+TemplateInstanceId ::= template_instance_id(
+                        IRI
+                      )
 ```
 
 ## Artifact Metadata
 
-Artifact metadata defines descriptive information, provenance, versioning, and annotations. `ArtifactMetadata` provides the common metadata carried by all artifacts, while `SchemaArtifactMetadata` extends that common structure with schema-versioning information used by reusable schema artifacts.
+Artifact metadata defines descriptive information, provenance, versioning, and annotations. `ArtifactMetadata` provides the common metadata carried by all artifacts other than identity, while `SchemaArtifactMetadata` extends that common structure with schema-versioning information used by reusable schema artifacts.
 
 ```bnf
 SchemaArtifactMetadata ::= ArtifactMetadata
                            SchemaVersioning
 
 ArtifactMetadata ::= DescriptiveMetadata
-                     ArtifactId
                      TemporalProvenance
                      Annotation*
 
@@ -594,6 +596,7 @@ Two literals are term-equal if and only if their lexical forms and their datatyp
 
 ```bnf
 TemplateInstance ::= template_instance(
+                       TemplateInstanceId
                        ArtifactMetadata
                        TemplateReference
                        InstanceValue*
@@ -625,25 +628,30 @@ PresentationComponent ::= RichTextComponent
                         | PageBreakComponent
 
 RichTextComponent ::= rich_text_component(
+                        PresentationComponentId
                         ArtifactMetadata
                         RichTextContent
                       )
 
 ImageComponent ::= image_component(
+                     PresentationComponentId
                      ArtifactMetadata
                      ImageSource
                    )
 
 YouTubeVideoComponent ::= you_tube_video_component(
+                            PresentationComponentId
                             ArtifactMetadata
                             YouTubeVideoSource
                           )
 
 SectionBreakComponent ::= section_break_component(
+                            PresentationComponentId
                             ArtifactMetadata
                           )
 
 PageBreakComponent ::= page_break_component(
+                         PresentationComponentId
                          ArtifactMetadata
                        )
 ```
