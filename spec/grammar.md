@@ -728,7 +728,155 @@ AttributeValue ::= attribute_value(
                   )
 ```
 
-The nonterminals `RichTextContent`, `ImageSource`, `YouTubeVideoSource`, `ChoiceOption`, `NumericDatatype`, `Unit`, `NumericPrecision`, `TimezoneEnabled`, `SingleLineTextRenderingHint`, `MultiLineTextRenderingHint`, `RadioRenderingHint`, `SingleSelectDropdownRenderingHint`, `CheckboxRenderingHint`, `MultiSelectDropdownRenderingHint`, `NumericRenderingHint`, `DateRenderingWidget`, `TimeRenderingWidget`, `DateTimeRenderingWidget`, `LexicalForm`, `IRI`, `LanguageTag`, `DatatypeIRI`, `NumericDatatypeIri`, `YearDatatypeIri`, `YearMonthDatatypeIri`, `DateDatatypeIri`, `TimeDatatypeIri`, `DateTimeDatatypeIri`, `TermIRI`, `Notation`, `PreferredLabel`, `Name`, `Description`, `Identifier`, `ISODateTimeStamp`, `Version`, `Status`, `ModelVersion`, `PreviousVersion`, `DerivedFrom`, `MinCardinality`, `MaxCardinality`, `MinLength`, `MaxLength`, `ValidationRegex`, `TimePrecision`, `HourMinutePrecision`, `HourMinuteSecondPrecision`, `HourMinuteSecondFractionPrecision`, `DateTimeValueType`, `DateHourMinuteValueType`, `DateHourMinuteSecondValueType`, `DateHourMinuteSecondFractionValueType`, `DateFormat`, `DateComponentOrder`, `DayMonthYearOrder`, `MonthDayYearOrder`, `YearMonthDayOrder`, `Label`, `AlternativeLabel`, `AnnotationName`, `AnnotationValue`, `AttributeName`, `Header`, `Footer`, `OntologyAcronym`, `OntologyName`, `OntologyIRI`, `RootTermIRI`, `RootTermLabel`, `MaxTraversalDepth`, `ValueSetIdentifier`, `ValueSetName`, `ValueSetIRI`, and `KeyIdentifier` are intentionally left abstract in this version.
+## Scalar And Datatype Leaves
+
+```bnf
+IRI ::= iri(
+          IRIString
+        )
+
+DatatypeIRI ::= datatype_iri(
+                IRI
+              )
+
+LanguageTag ::= language_tag(
+                  BCP47Tag
+                )
+
+LexicalForm ::= lexical_form(
+                  UnicodeString
+                )
+
+ISODateTimeStamp ::= iso_date_time_stamp(
+                       ISO8601DateTimeLexicalForm
+                     )
+
+KeyIdentifier ::= key_identifier(
+                    ASCIIIdentifier
+                  )
+```
+
+`IRI` denotes an Internationalized Resource Identifier.
+
+`DatatypeIRI` denotes an `IRI` that identifies an RDF datatype.
+
+`LanguageTag` denotes a well-formed BCP 47 language tag.
+
+`LexicalForm` denotes a Unicode string and SHOULD be in Unicode Normalization Form C.
+
+`ISODateTimeStamp` denotes an ISO 8601 date-time lexical form.
+
+`KeyIdentifier` denotes an ASCII identifier without whitespace.
+
+```bnf
+NumericDatatype ::= numeric_datatype(
+                      NumericDatatypeIri
+                    )
+
+NumericDatatypeIri ::= XsdIntegerDatatypeIri
+                     | XsdDecimalDatatypeIri
+                     | XsdFloatDatatypeIri
+                     | XsdDoubleDatatypeIri
+                     | XsdLongDatatypeIri
+                     | XsdIntDatatypeIri
+                     | XsdShortDatatypeIri
+                     | XsdByteDatatypeIri
+                     | XsdNonNegativeIntegerDatatypeIri
+                     | XsdPositiveIntegerDatatypeIri
+                     | XsdNonPositiveIntegerDatatypeIri
+                     | XsdNegativeIntegerDatatypeIri
+                     | XsdUnsignedLongDatatypeIri
+                     | XsdUnsignedIntDatatypeIri
+                     | XsdUnsignedShortDatatypeIri
+                     | XsdUnsignedByteDatatypeIri
+
+XsdIntegerDatatypeIri ::= xsd_integer_datatype_iri()
+
+XsdDecimalDatatypeIri ::= xsd_decimal_datatype_iri()
+
+XsdFloatDatatypeIri ::= xsd_float_datatype_iri()
+
+XsdDoubleDatatypeIri ::= xsd_double_datatype_iri()
+
+XsdLongDatatypeIri ::= xsd_long_datatype_iri()
+
+XsdIntDatatypeIri ::= xsd_int_datatype_iri()
+
+XsdShortDatatypeIri ::= xsd_short_datatype_iri()
+
+XsdByteDatatypeIri ::= xsd_byte_datatype_iri()
+
+XsdNonNegativeIntegerDatatypeIri ::= xsd_non_negative_integer_datatype_iri()
+
+XsdPositiveIntegerDatatypeIri ::= xsd_positive_integer_datatype_iri()
+
+XsdNonPositiveIntegerDatatypeIri ::= xsd_non_positive_integer_datatype_iri()
+
+XsdNegativeIntegerDatatypeIri ::= xsd_negative_integer_datatype_iri()
+
+XsdUnsignedLongDatatypeIri ::= xsd_unsigned_long_datatype_iri()
+
+XsdUnsignedIntDatatypeIri ::= xsd_unsigned_int_datatype_iri()
+
+XsdUnsignedShortDatatypeIri ::= xsd_unsigned_short_datatype_iri()
+
+XsdUnsignedByteDatatypeIri ::= xsd_unsigned_byte_datatype_iri()
+```
+
+`NumericDatatypeIri` denotes one of the supported XML Schema numeric datatype IRIs.
+
+The numeric datatype constructors denote the following XML Schema datatype IRIs:
+
+- `XsdIntegerDatatypeIri`: `http://www.w3.org/2001/XMLSchema#integer`
+- `XsdDecimalDatatypeIri`: `http://www.w3.org/2001/XMLSchema#decimal`
+- `XsdFloatDatatypeIri`: `http://www.w3.org/2001/XMLSchema#float`
+- `XsdDoubleDatatypeIri`: `http://www.w3.org/2001/XMLSchema#double`
+- `XsdLongDatatypeIri`: `http://www.w3.org/2001/XMLSchema#long`
+- `XsdIntDatatypeIri`: `http://www.w3.org/2001/XMLSchema#int`
+- `XsdShortDatatypeIri`: `http://www.w3.org/2001/XMLSchema#short`
+- `XsdByteDatatypeIri`: `http://www.w3.org/2001/XMLSchema#byte`
+- `XsdNonNegativeIntegerDatatypeIri`: `http://www.w3.org/2001/XMLSchema#nonNegativeInteger`
+- `XsdPositiveIntegerDatatypeIri`: `http://www.w3.org/2001/XMLSchema#positiveInteger`
+- `XsdNonPositiveIntegerDatatypeIri`: `http://www.w3.org/2001/XMLSchema#nonPositiveInteger`
+- `XsdNegativeIntegerDatatypeIri`: `http://www.w3.org/2001/XMLSchema#negativeInteger`
+- `XsdUnsignedLongDatatypeIri`: `http://www.w3.org/2001/XMLSchema#unsignedLong`
+- `XsdUnsignedIntDatatypeIri`: `http://www.w3.org/2001/XMLSchema#unsignedInt`
+- `XsdUnsignedShortDatatypeIri`: `http://www.w3.org/2001/XMLSchema#unsignedShort`
+- `XsdUnsignedByteDatatypeIri`: `http://www.w3.org/2001/XMLSchema#unsignedByte`
+
+```bnf
+YearDatatypeIri ::= XsdGYearDatatypeIri
+
+XsdGYearDatatypeIri ::= xsd_g_year_datatype_iri()
+
+YearMonthDatatypeIri ::= XsdGYearMonthDatatypeIri
+
+XsdGYearMonthDatatypeIri ::= xsd_g_year_month_datatype_iri()
+
+DateDatatypeIri ::= XsdDateDatatypeIri
+
+XsdDateDatatypeIri ::= xsd_date_datatype_iri()
+
+TimeDatatypeIri ::= XsdTimeDatatypeIri
+
+XsdTimeDatatypeIri ::= xsd_time_datatype_iri()
+
+DateTimeDatatypeIri ::= XsdDateTimeDatatypeIri
+
+XsdDateTimeDatatypeIri ::= xsd_date_time_datatype_iri()
+```
+
+`YearDatatypeIri`, `YearMonthDatatypeIri`, `DateDatatypeIri`, `TimeDatatypeIri`, and `DateTimeDatatypeIri` denote the XML Schema datatype IRIs used by the corresponding temporal literal categories.
+
+The temporal datatype constructors denote the following XML Schema datatype IRIs:
+
+- `XsdGYearDatatypeIri`: `http://www.w3.org/2001/XMLSchema#gYear`
+- `XsdGYearMonthDatatypeIri`: `http://www.w3.org/2001/XMLSchema#gYearMonth`
+- `XsdDateDatatypeIri`: `http://www.w3.org/2001/XMLSchema#date`
+- `XsdTimeDatatypeIri`: `http://www.w3.org/2001/XMLSchema#time`
+- `XsdDateTimeDatatypeIri`: `http://www.w3.org/2001/XMLSchema#dateTime`
+
+The nonterminals `RichTextContent`, `ImageSource`, `YouTubeVideoSource`, `ChoiceOption`, `Unit`, `NumericPrecision`, `TimezoneEnabled`, `SingleLineTextRenderingHint`, `MultiLineTextRenderingHint`, `RadioRenderingHint`, `SingleSelectDropdownRenderingHint`, `CheckboxRenderingHint`, `MultiSelectDropdownRenderingHint`, `NumericRenderingHint`, `DateRenderingWidget`, `TimeRenderingWidget`, `DateTimeRenderingWidget`, `TermIRI`, `Notation`, `PreferredLabel`, `Name`, `Description`, `Identifier`, `Version`, `Status`, `ModelVersion`, `PreviousVersion`, `DerivedFrom`, `MinCardinality`, `MaxCardinality`, `MinLength`, `MaxLength`, `ValidationRegex`, `TimePrecision`, `HourMinutePrecision`, `HourMinuteSecondPrecision`, `HourMinuteSecondFractionPrecision`, `DateTimeValueType`, `DateHourMinuteValueType`, `DateHourMinuteSecondValueType`, `DateHourMinuteSecondFractionValueType`, `DateFormat`, `DateComponentOrder`, `DayMonthYearOrder`, `MonthDayYearOrder`, `YearMonthDayOrder`, `Label`, `AlternativeLabel`, `AnnotationName`, `AnnotationValue`, `AttributeName`, `Header`, `Footer`, `OntologyAcronym`, `OntologyName`, `OntologyIRI`, `RootTermIRI`, `RootTermLabel`, `MaxTraversalDepth`, `ValueSetIdentifier`, `ValueSetName`, `ValueSetIRI`, `IRIString`, `BCP47Tag`, `UnicodeString`, `ISO8601DateTimeLexicalForm`, and `ASCIIIdentifier` are intentionally left abstract in this version.
 
 ## Open Questions
 
