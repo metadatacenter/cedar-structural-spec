@@ -42,6 +42,3 @@ The grammar distinguishes `DatatypeIriLiteral` and `LangStringLiteral` explicitl
 
 The normative structure and semantics of literals are defined in the `Literals` section of [grammar.md](/Users/matthewhorridge/IdeaProjects/cedar-structural-spec/spec/grammar.md).
 
-## Open Questions
-
-- Should the specification later introduce a distinct notation for semantic constraints that are not structural productions?
