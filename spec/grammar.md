@@ -104,19 +104,19 @@ Artifact identity defines the typed identifiers by which artifacts and artifact 
 
 ```bnf
 FieldId ::= field_id(
-              IRI
+              Iri
             )
 
 TemplateId ::= template_id(
-                 IRI
+                 Iri
                )
 
 PresentationComponentId ::= presentation_component_id(
-                              IRI
+                              Iri
                             )
 
 TemplateInstanceId ::= template_instance_id(
-                        IRI
+                        Iri
                       )
 ```
 
@@ -153,13 +153,13 @@ TemporalProvenance ::= temporal_provenance(
                          ModifiedBy
                        )
 
-CreatedOn ::= ISODateTimeStamp
+CreatedOn ::= IsoDateTimeStamp
 
-CreatedBy ::= IRI
+CreatedBy ::= Iri
 
-ModifiedOn ::= ISODateTimeStamp
+ModifiedOn ::= IsoDateTimeStamp
 
-ModifiedBy ::= IRI
+ModifiedBy ::= Iri
 ```
 
 `CreatedOn` and `ModifiedOn` MUST be ISO 8601 date-time timestamps.
@@ -294,12 +294,12 @@ MultipleChoiceFieldType ::= multiple_choice_field_type(
 ContactFieldType ::= EmailFieldType
                    | PhoneNumberFieldType
 
-ExternalAuthorityFieldType ::= ORCIDFieldType
-                             | RORFieldType
-                             | DOIFieldType
-                             | PubMedIDFieldType
-                             | RRIDFieldType
-                             | NIHGrantIDFieldType
+ExternalAuthorityFieldType ::= OrcidFieldType
+                             | RorFieldType
+                             | DoiFieldType
+                             | PubMedIdFieldType
+                             | RridFieldType
+                             | NihGrantIdFieldType
 
 AttributeValueFieldType ::= attribute_value_field_type()
 ```
@@ -412,7 +412,7 @@ OntologySource ::= ontology_source(
                    )
 
 OntologyReference ::= ontology_reference(
-                        OntologyIRI
+                        OntologyIri
                         [OntologyDisplayHint]
                       )
 
@@ -425,7 +425,7 @@ OntologyDisplayHint ::= ontology_display_hint(
 
 BranchSource ::= branch_source(
                    OntologyReference
-                   RootTermIRI
+                   RootTermIri
                    RootTermLabel
                    [MaxTraversalDepth]
                  )
@@ -435,7 +435,7 @@ ClassSource ::= class_source(
                 )
 
 ControlledTermClass ::= controlled_term_class(
-                          TermIRI
+                          TermIri
                           Label
                           OntologyReference
                         )
@@ -443,7 +443,7 @@ ControlledTermClass ::= controlled_term_class(
 ValueSetSource ::= value_set_source(
                      ValueSetIdentifier
                      [ValueSetName]
-                     [ValueSetIRI]
+                     [ValueSetIri]
                    )
 ```
 
@@ -509,7 +509,7 @@ Literal ::= DatatypeIriLiteral
 
 DatatypeIriLiteral ::= datatype_iri_literal(
                          LexicalForm
-                         DatatypeIRI
+                         DatatypeIri
                        )
 
 LangStringLiteral ::= lang_string_literal(
@@ -639,7 +639,7 @@ NestedTemplateInstance ::= nested_template_instance(
 ```bnf
 PresentationComponent ::= RichTextComponent
                         | ImageComponent
-                        | YouTubeVideoComponent
+                        | YoutubeVideoComponent
                         | SectionBreakComponent
                         | PageBreakComponent
 
@@ -655,10 +655,10 @@ ImageComponent ::= image_component(
                      ImageSource
                    )
 
-YouTubeVideoComponent ::= you_tube_video_component(
+YoutubeVideoComponent ::= you_tube_video_component(
                             PresentationComponentId
                             ArtifactMetadata
-                            YouTubeVideoSource
+                            YoutubeVideoSource
                           )
 
 SectionBreakComponent ::= section_break_component(
@@ -721,7 +721,7 @@ DateTimeValue ::= date_time_value(
                   )
 
 ControlledTermValue ::= controlled_term_value(
-                          TermIRI
+                          TermIri
                           Label
                           [Notation]
                           [PreferredLabel]
@@ -735,7 +735,7 @@ ChoiceSelection ::= Literal
                   | ControlledTermValue
 
 LinkValue ::= link_value(
-                IRI
+                Iri
               )
 
 ContactValue ::= contact_value(
@@ -755,40 +755,40 @@ AttributeValue ::= attribute_value(
 ## Scalar And Datatype Leaves
 
 ```bnf
-IRI ::= iri(
-          IRIString
+Iri ::= iri(
+          IriString
         )
 
-DatatypeIRI ::= datatype_iri(
-                IRI
+DatatypeIri ::= datatype_iri(
+                Iri
               )
 
 LanguageTag ::= language_tag(
-                  BCP47Tag
+                  Bcp47Tag
                 )
 
 LexicalForm ::= lexical_form(
                   UnicodeString
                 )
 
-ISODateTimeStamp ::= iso_date_time_stamp(
-                       ISO8601DateTimeLexicalForm
+IsoDateTimeStamp ::= iso_date_time_stamp(
+                       Iso8601DateTimeLexicalForm
                      )
 
 KeyIdentifier ::= key_identifier(
-                    ASCIIIdentifier
+                    AsciiIdentifier
                   )
 ```
 
-`IRI` denotes an Internationalized Resource Identifier.
+`Iri` denotes an Internationalized Resource Identifier.
 
-`DatatypeIRI` denotes an `IRI` that identifies an RDF datatype.
+`DatatypeIri` denotes an `Iri` that identifies an RDF datatype.
 
 `LanguageTag` denotes a well-formed BCP 47 language tag.
 
 `LexicalForm` denotes a Unicode string and SHOULD be in Unicode Normalization Form C.
 
-`ISODateTimeStamp` denotes an ISO 8601 date-time lexical form.
+`IsoDateTimeStamp` denotes an ISO 8601 date-time lexical form.
 
 `KeyIdentifier` denotes an ASCII identifier without whitespace.
 
@@ -900,7 +900,7 @@ The temporal datatype constructors denote the following XML Schema datatype IRIs
 - `XsdTimeDatatypeIri`: `http://www.w3.org/2001/XMLSchema#time`
 - `XsdDateTimeDatatypeIri`: `http://www.w3.org/2001/XMLSchema#dateTime`
 
-The nonterminals `RichTextContent`, `ImageSource`, `YouTubeVideoSource`, `ChoiceOption`, `Unit`, `NumericPrecision`, `TimezoneEnabled`, `SingleLineTextRenderingHint`, `MultiLineTextRenderingHint`, `RadioRenderingHint`, `SingleSelectDropdownRenderingHint`, `CheckboxRenderingHint`, `MultiSelectDropdownRenderingHint`, `NumericRenderingHint`, `DateRenderingWidget`, `TimeRenderingWidget`, `DateTimeRenderingWidget`, `TermIRI`, `Notation`, `PreferredLabel`, `Name`, `Description`, `Identifier`, `Version`, `Status`, `ModelVersion`, `PreviousVersion`, `DerivedFrom`, `MinCardinality`, `MaxCardinality`, `MinLength`, `MaxLength`, `ValidationRegex`, `TimePrecision`, `HourMinutePrecision`, `HourMinuteSecondPrecision`, `HourMinuteSecondFractionPrecision`, `DateTimeValueType`, `DateHourMinuteValueType`, `DateHourMinuteSecondValueType`, `DateHourMinuteSecondFractionValueType`, `DateFormat`, `DateComponentOrder`, `DayMonthYearOrder`, `MonthDayYearOrder`, `YearMonthDayOrder`, `Label`, `AlternativeLabel`, `AnnotationName`, `AnnotationValue`, `AttributeName`, `Header`, `Footer`, `OntologyAcronym`, `OntologyName`, `OntologyIRI`, `RootTermIRI`, `RootTermLabel`, `MaxTraversalDepth`, `ValueSetIdentifier`, `ValueSetName`, `ValueSetIRI`, `IRIString`, `BCP47Tag`, `UnicodeString`, `ISO8601DateTimeLexicalForm`, and `ASCIIIdentifier` are intentionally left abstract in this version.
+The nonterminals `RichTextContent`, `ImageSource`, `YoutubeVideoSource`, `ChoiceOption`, `Unit`, `NumericPrecision`, `TimezoneEnabled`, `SingleLineTextRenderingHint`, `MultiLineTextRenderingHint`, `RadioRenderingHint`, `SingleSelectDropdownRenderingHint`, `CheckboxRenderingHint`, `MultiSelectDropdownRenderingHint`, `NumericRenderingHint`, `DateRenderingWidget`, `TimeRenderingWidget`, `DateTimeRenderingWidget`, `TermIri`, `Notation`, `PreferredLabel`, `Name`, `Description`, `Identifier`, `Version`, `Status`, `ModelVersion`, `PreviousVersion`, `DerivedFrom`, `MinCardinality`, `MaxCardinality`, `MinLength`, `MaxLength`, `ValidationRegex`, `TimePrecision`, `HourMinutePrecision`, `HourMinuteSecondPrecision`, `HourMinuteSecondFractionPrecision`, `DateTimeValueType`, `DateHourMinuteValueType`, `DateHourMinuteSecondValueType`, `DateHourMinuteSecondFractionValueType`, `DateFormat`, `DateComponentOrder`, `DayMonthYearOrder`, `MonthDayYearOrder`, `YearMonthDayOrder`, `Label`, `AlternativeLabel`, `AnnotationName`, `AnnotationValue`, `AttributeName`, `Header`, `Footer`, `OntologyAcronym`, `OntologyName`, `OntologyIri`, `RootTermIri`, `RootTermLabel`, `MaxTraversalDepth`, `ValueSetIdentifier`, `ValueSetName`, `ValueSetIri`, `IriString`, `Bcp47Tag`, `UnicodeString`, `Iso8601DateTimeLexicalForm`, and `AsciiIdentifier` are intentionally left abstract in this version.
 
 ## Open Questions
 

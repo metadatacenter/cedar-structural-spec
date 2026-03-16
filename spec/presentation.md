@@ -12,7 +12,7 @@ This specification defines the following `PresentationComponent` variants:
 
 - `RichTextComponent`
 - `ImageComponent`
-- `YouTubeVideoComponent`
+- `YoutubeVideoComponent`
 - `SectionBreakComponent`
 - `PageBreakComponent`
 
@@ -28,7 +28,7 @@ An `EmbeddedPresentationComponent` carries embedding-specific properties such as
 
 `ImageComponent` carries an image source.
 
-`YouTubeVideoComponent` carries a YouTube video source.
+`YoutubeVideoComponent` carries a YouTube video source.
 
 `SectionBreakComponent` contributes sectional separation within a rendered template.
 

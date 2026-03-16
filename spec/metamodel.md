@@ -20,7 +20,7 @@ Descriptive metadata includes:
 - `Description`
 - `Identifier`
 
-The artifact identifier is a repository-assigned IRI that permanently identifies the artifact. Artifact identity is conceptually distinct from artifact metadata.
+The artifact identifier is a repository-assigned Iri that permanently identifies the artifact. Artifact identity is conceptually distinct from artifact metadata.
 
 Temporal provenance includes:
 
@@ -31,7 +31,7 @@ Temporal provenance includes:
 
 `CreatedOn` and `ModifiedOn` MUST be ISO 8601 date-time timestamps.
 
-`CreatedBy` and `ModifiedBy` MUST identify agents by IRI.
+`CreatedBy` and `ModifiedBy` MUST identify agents by Iri.
 
 Annotations are attribute-value pairs whose values may be literals or IRIs.
 
