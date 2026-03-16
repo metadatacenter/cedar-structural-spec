@@ -38,91 +38,78 @@ Each `NestedTemplateInstance` in a `TemplateInstance` MUST reference the `Embedd
 
 Values in a `FieldValue` MUST satisfy the `FieldType` and any field-type-specific properties of the referenced `Field`.
 
-If the referenced `Field` has `TextFieldType`, each contained value MUST be `TextValue`.
+The contained values MUST follow the `FieldType`-to-`Value` correspondence defined in `spec/grammar.md`. In particular:
 
-If a contained value is `TextValue`, it MUST contain `TextLiteral`.
+- `TextFieldType` values MUST be `TextValue`
+- `NumericFieldType` values MUST be `NumericValue`
+- `DateFieldType` values MUST be `DateValue`
+- `TimeFieldType` values MUST be `TimeValue`
+- `DateTimeFieldType` values MUST be `DateTimeValue`
+- `ControlledTermFieldType` values MUST be `ControlledTermValue`
+- `ChoiceFieldType` values MUST be `ChoiceValue`
+- `LinkFieldType` values MUST be `LinkValue`
+- `ContactFieldType` values MUST be `ContactValue`
+- `ExternalAuthorityFieldType` values MUST be `ExternalAuthorityValue`
+- `AttributeValueFieldType` values MUST be `AttributeValue`
 
-If a `TextFieldType` defines `TextDefaultValue`, that default value MUST be a `TextValue`.
+Additional well-formedness conditions apply as follows.
 
-If a `TextFieldType` defines both `MinLength` and `MaxLength`, the minimum length MUST NOT exceed the maximum length.
+For text values:
 
-If a `TextFieldType` defines `MinLength`, each contained `TextLiteral` lexical form MUST have length greater than or equal to that minimum length.
+- `TextValue` MUST contain `TextLiteral`
+- `TextDefaultValue`, if present, MUST be a `TextValue`
+- if both `MinLength` and `MaxLength` are present, `MinLength` MUST NOT exceed `MaxLength`
+- if `MinLength` is present, each `TextLiteral` lexical form MUST have length greater than or equal to that minimum
+- if `MaxLength` is present, each `TextLiteral` lexical form MUST have length less than or equal to that maximum
+- if `ValidationRegex` is present, each `TextLiteral` lexical form MUST match that regular expression
+- `TextDefaultValue`, if present, MUST satisfy any defined `MinLength`, `MaxLength`, and `ValidationRegex`
 
-If a `TextFieldType` defines `MaxLength`, each contained `TextLiteral` lexical form MUST have length less than or equal to that maximum length.
+For numeric values:
 
-If a `TextFieldType` defines `ValidationRegex`, each contained `TextLiteral` lexical form MUST match that regular expression.
+- `NumericValue` MUST contain `NumericLiteral`
+- `NumericLiteral` uses `NumericDatatypeIri`
 
-If a `TextFieldType` defines `TextDefaultValue`, that default value MUST satisfy any defined `MinLength`, `MaxLength`, and `ValidationRegex`.
+For date values:
 
-If the referenced `Field` has `NumericFieldType`, each contained value MUST be `NumericValue`.
+- `DateFieldType` with `YearValueType` MUST use `YearValue`, which MUST contain `YearLiteral`
+- `YearLiteral` uses `YearDatatypeIri`
+- `DateFieldType` with `YearMonthValueType` MUST use `YearMonthValue`, which MUST contain `YearMonthLiteral`
+- `YearMonthLiteral` uses `YearMonthDatatypeIri`
+- `DateFieldType` with `FullDateValueType` MUST use `FullDateValue`, which MUST contain `FullDateLiteral`
+- `FullDateLiteral` uses `DateDatatypeIri`
 
-If a contained value is `NumericValue`, it MUST contain `NumericLiteral`.
+For time values:
 
-If a contained value is `NumericLiteral`, its datatype IRI is given by `NumericDatatypeIri`.
+- `TimeValue` MUST contain `TimeLiteral`
+- `TimeLiteral` uses `TimeDatatypeIri`
+- `TimeFieldType` values MUST conform to any stated `TimePrecision`
 
-If the referenced `Field` has `DateFieldType`, each contained value MUST be `DateValue`.
+For date-time values:
 
-If the referenced `Field` has `DateFieldType` with `YearValueType`, each contained value MUST be `YearValue`.
+- `DateTimeValue` MUST contain `DateTimeLiteral`
+- `DateTimeLiteral` uses `DateTimeDatatypeIri`
+- `DateTimeFieldType` values MUST conform to the stated `DateTimeValueType`
 
-If a contained value is `YearValue`, it MUST contain `YearLiteral`.
+For choice values:
 
-If a contained value is `YearLiteral`, its datatype IRI is given by `YearDatatypeIri`.
+- `ChoiceValue` MUST contain `ChoiceSelection`
+- `ChoiceSelection` MUST be either a `Literal` or a `ControlledTermValue`
 
-If the referenced `Field` has `DateFieldType` with `YearMonthValueType`, each contained value MUST be `YearMonthValue`.
+For controlled-term values:
 
-If a contained value is `YearMonthValue`, it MUST contain `YearMonthLiteral`.
+- `ControlledTermValue` MUST include a term identifier and SHOULD include a human-readable label
 
-If a contained value is `YearMonthLiteral`, its datatype IRI is given by `YearMonthDatatypeIri`.
+For literals generally:
 
-If the referenced `Field` has `DateFieldType` with `FullDateValueType`, each contained value MUST be `FullDateValue`.
+- `DatatypeIriLiteral` lexical forms SHOULD be in Unicode Normalization Form C
+- `LangStringLiteral` lexical forms SHOULD be in Unicode Normalization Form C
+- `LangStringLiteral` language tags MUST be non-empty and well-formed according to BCP 47
 
-If a contained value is `FullDateValue`, it MUST contain `FullDateLiteral`.
+For multiplicity:
 
-If a contained value is `FullDateLiteral`, its datatype IRI is given by `DateDatatypeIri`.
-
-If the referenced `Field` has `TimeFieldType`, each contained value MUST be `TimeValue`.
-
-If a contained value is `TimeValue`, it MUST contain `TimeLiteral`.
-
-If a contained value is `TimeLiteral`, its datatype IRI is given by `TimeDatatypeIri`.
-
-If the referenced `Field` has `DateTimeFieldType`, each contained value MUST be `DateTimeValue`.
-
-If the referenced `Field` has `DateTimeFieldType` with `DateHourMinuteValueType`, each contained value MUST conform to the date-time precision required by that value type.
-
-If the referenced `Field` has `DateTimeFieldType` with `DateHourMinuteSecondValueType`, each contained value MUST conform to the date-time precision required by that value type.
-
-If the referenced `Field` has `DateTimeFieldType` with `DateHourMinuteSecondFractionValueType`, each contained value MUST conform to the date-time precision required by that value type.
-
-If a contained value is `DateTimeValue`, it MUST contain `DateTimeLiteral`.
-
-If a contained value is `DateTimeLiteral`, its datatype IRI is given by `DateTimeDatatypeIri`.
-
-If the referenced `Field` has `ControlledTermFieldType`, each contained value MUST be `ControlledTermValue`.
-
-If the referenced `Field` has `ChoiceFieldType`, each contained value MUST be `ChoiceValue`.
-
-If a contained `ChoiceValue` is present, its `ChoiceSelection` MUST be either a `Literal` or a `ControlledTermValue`.
-
-If the referenced `Field` has `LinkFieldType`, each contained value MUST be `LinkValue`.
-
-If the referenced `Field` has `ContactFieldType`, each contained value MUST be `ContactValue`.
-
-If the referenced `Field` has `ExternalAuthorityFieldType`, each contained value MUST be `ExternalAuthorityValue`.
-
-If the referenced `Field` has `AttributeValueFieldType`, each contained value MUST be `AttributeValue`.
-
-If a contained value includes `DatatypeIriLiteral`, the lexical form SHOULD be in Unicode Normalization Form C.
-
-If a contained value includes `LangStringLiteral`, the lexical form SHOULD be in Unicode Normalization Form C.
-
-If a contained value includes `LangStringLiteral`, its language tag MUST be non-empty and well-formed according to BCP 47.
-
-If an `EmbeddedField` is single-valued, its corresponding `FieldValue` MUST NOT contain more than one value.
-
-If an `EmbeddedField` is multi-valued, the number of values in its `FieldValue` MUST satisfy the embedding cardinality constraints.
-
-If an `EmbeddedTemplate` has multiplicity greater than one, the number of corresponding `NestedTemplateInstance` constructs MUST satisfy the embedding cardinality constraints.
+- if an `EmbeddedField` is single-valued, its corresponding `FieldValue` MUST NOT contain more than one value
+- if an `EmbeddedField` is multi-valued, the number of values in its `FieldValue` MUST satisfy the embedding cardinality constraints
+- if an `EmbeddedTemplate` has multiplicity greater than one, the number of corresponding `NestedTemplateInstance` constructs MUST satisfy the embedding cardinality constraints
 
 ### Rendering Hint Compatibility
 
