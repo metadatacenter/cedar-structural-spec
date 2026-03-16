@@ -122,7 +122,7 @@ TemplateInstanceId ::= template_instance_id(
 
 ## Artifact Metadata
 
-Artifact metadata defines descriptive information, provenance, versioning, and annotations. `ArtifactMetadata` provides the common metadata carried by all artifacts other than identity, while `SchemaArtifactMetadata` extends that common structure with schema-versioning information used by reusable schema artifacts.
+Artifact metadata defines descriptive information, provenance, versioning, and annotations. `ArtifactMetadata` provides the common metadata carried by all artifacts other than identity. `SchemaArtifactMetadata` extends that common structure with schema-versioning information used by reusable schema artifacts.
 
 ```bnf
 SchemaArtifactMetadata ::= ArtifactMetadata
@@ -131,32 +131,27 @@ SchemaArtifactMetadata ::= ArtifactMetadata
 ArtifactMetadata ::= DescriptiveMetadata
                      TemporalProvenance
                      Annotation*
+```
 
+`DescriptiveMetadata` identifies the human-oriented descriptive properties of an artifact. These properties support naming, explanatory text, and external or local identifiers used for cataloging.
+
+```bnf
 DescriptiveMetadata ::= descriptive_metadata(
                           Name
                           [Description]
                           [Identifier]
                         )
+```
 
+`TemporalProvenance` identifies when an artifact was created and modified, and which agents were responsible for those actions.
+
+```bnf
 TemporalProvenance ::= temporal_provenance(
                          CreatedOn
                          CreatedBy
                          ModifiedOn
                          ModifiedBy
                        )
-
-SchemaVersioning ::= schema_versioning(
-                       Version
-                       Status
-                       ModelVersion
-                       [PreviousVersion]
-                       [DerivedFrom]
-                     )
-
-Annotation ::= annotation(
-                 AnnotationName
-                 AnnotationValue
-               )
 
 CreatedOn ::= ISODateTimeStamp
 
@@ -170,6 +165,27 @@ ModifiedBy ::= IRI
 `CreatedOn` and `ModifiedOn` MUST be ISO 8601 date-time timestamps.
 
 `CreatedBy` and `ModifiedBy` denote IRIs identifying the responsible agents.
+
+`SchemaVersioning` identifies version-related metadata specific to reusable schema artifacts. It captures artifact version, publication status, the version of the schema model used, and optional derivation links to earlier or source artifacts.
+
+```bnf
+SchemaVersioning ::= schema_versioning(
+                       Version
+                       Status
+                       ModelVersion
+                       [PreviousVersion]
+                       [DerivedFrom]
+                     )
+```
+
+`Annotation` provides an extensible metadata mechanism for additional named metadata values that are not captured by the core descriptive, provenance, or versioning structures.
+
+```bnf
+Annotation ::= annotation(
+                 AnnotationName
+                 AnnotationValue
+               )
+```
 
 ## Embedded Artifact Keys
 
