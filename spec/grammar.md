@@ -59,7 +59,31 @@ EmbeddedPresentationComponent ::= embedded_presentation_component(
                                   )
 ```
 
+## Artifact Identity
+
+Artifact identity defines the typed identifiers by which reusable artifacts and artifact references are denoted in the model. These identity constructs are distinct from descriptive metadata, provenance, versioning, and annotations.
+
+```bnf
+ArtifactId ::= artifact_id(
+                 IRI
+               )
+
+FieldId ::= field_id(
+              IRI
+            )
+
+TemplateId ::= template_id(
+                 IRI
+               )
+
+PresentationComponentId ::= presentation_component_id(
+                              IRI
+                            )
+```
+
 ## Artifact Metadata
+
+Artifact metadata defines descriptive information, provenance, versioning, and annotations. `ArtifactMetadata` provides the common metadata carried by all artifacts, while `SchemaArtifactMetadata` extends that common structure with schema-versioning information used by reusable schema artifacts.
 
 ```bnf
 SchemaArtifactMetadata ::= ArtifactMetadata
@@ -76,36 +100,12 @@ DescriptiveMetadata ::= descriptive_metadata(
                           [Identifier]
                         )
 
-ArtifactId ::= artifact_id(
-                 IRI
-               )
-
-FieldId ::= field_id(
-              IRI
-            )
-
-TemplateId ::= template_id(
-                 IRI
-               )
-
-PresentationComponentId ::= presentation_component_id(
-                              IRI
-                            )
-
 TemporalProvenance ::= temporal_provenance(
                          CreatedOn
                          CreatedBy
                          ModifiedOn
                          ModifiedBy
                        )
-
-CreatedOn ::= ISODateTimeStamp
-
-CreatedBy ::= IRI
-
-ModifiedOn ::= ISODateTimeStamp
-
-ModifiedBy ::= IRI
 
 SchemaVersioning ::= schema_versioning(
                        Version
@@ -119,6 +119,14 @@ Annotation ::= annotation(
                  AnnotationName
                  AnnotationValue
                )
+
+CreatedOn ::= ISODateTimeStamp
+
+CreatedBy ::= IRI
+
+ModifiedOn ::= ISODateTimeStamp
+
+ModifiedBy ::= IRI
 ```
 
 `CreatedOn` and `ModifiedOn` MUST be ISO 8601 date-time timestamps.
@@ -139,7 +147,9 @@ EmbeddedArtifactKey ::= embedded_artifact_key(
 
 `EmbeddedArtifactKey` values are local to a `Template` and MUST be unique within that `Template`.
 
-## Embedding Properties
+## Embedded Artifact Properties
+
+Embedded artifact properties define the contextual information carried by an `EmbeddedArtifact` within a `Template`. These properties govern how a referenced reusable artifact is used in that template context, including reference, requirement, cardinality, visibility, defaults, and label override, and they are distinct from the intrinsic properties of the referenced reusable artifact itself.
 
 ```bnf
 
