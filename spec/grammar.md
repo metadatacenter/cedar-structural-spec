@@ -2,7 +2,14 @@
 
 This section defines the abstract structure of the CEDAR Template Model using a BNF-style grammar.
 
-The grammar is abstract. It does not define any concrete serialization.
+The grammar defines the abstract syntactic structure of the model. It specifies the kinds of constructs that exist and how they are composed, but it does not define a concrete textual or data serialization such as JSON, YAML, RDF, or a functional-style syntax.
+
+Accordingly, a production in this grammar describes abstract structure rather than a directly parseable text form. In particular, a production such as `Template ::= template( ... )` does not mean:
+
+- the literal token `template` must appear in a file
+- parentheses must appear in a file
+- whitespace must be used in a particular way in a file
+- the production is itself a concrete serialization format
 
 The following notation is used throughout this grammar:
 
@@ -18,9 +25,9 @@ Whitespace separates symbols within a production.
 
 Parentheses group the components of an abstract construct.
 
-Production names use `UpperCamelCase`.
+Production names use `UpperCamelCase`. A production name denotes the abstract category being defined, such as `Template`, `Field`, or `DateFieldType`.
 
-Abstract constructor forms use `lower_snake_case`.
+Abstract constructor forms use `lower_snake_case`. In this document, a constructor form is the schematic form used to show how an abstract construct is composed, such as `template(...)`, `field(...)`, or `date_field_type(...)`. The difference between `UpperCamelCase` production names and `lower_snake_case` constructor forms is purely a visual distinction used to make it clear when the grammar is naming a category and when it is showing the abstract form of a construct belonging to that category.
 
 For example, in the production
 
@@ -31,7 +38,7 @@ Template ::= template(
              )
 ```
 
-`Template` is the production being defined, while `template(...)` denotes the abstract constructor form of that construct.
+`Template` is the production being defined, while `template(...)` denotes the abstract constructor form of that construct; in other words, it shows the components of a `Template` and how they are composed.
 
 ## Kernel Grammar
 
