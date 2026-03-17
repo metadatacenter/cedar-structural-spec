@@ -74,6 +74,18 @@ classDiagram
   class Field {
     <<abstract>>
   }
+  class TemporalField {
+    <<abstract>>
+  }
+  class ChoiceField {
+    <<abstract>>
+  }
+  class ContactField {
+    <<abstract>>
+  }
+  class ExternalAuthorityField {
+    <<abstract>>
+  }
 
   class TextField
   class NumericField
@@ -115,22 +127,30 @@ classDiagram
 
   Field <|-- TextField
   Field <|-- NumericField
-  Field <|-- DateField
-  Field <|-- TimeField
-  Field <|-- DateTimeField
+  Field <|-- TemporalField
   Field <|-- ControlledTermField
-  Field <|-- SingleChoiceField
-  Field <|-- MultipleChoiceField
+  Field <|-- ChoiceField
   Field <|-- LinkField
-  Field <|-- EmailField
-  Field <|-- PhoneNumberField
-  Field <|-- OrcidField
-  Field <|-- RorField
-  Field <|-- DoiField
-  Field <|-- PubMedIdField
-  Field <|-- RridField
-  Field <|-- NihGrantIdField
+  Field <|-- ContactField
+  Field <|-- ExternalAuthorityField
   Field <|-- AttributeValueField
+
+  TemporalField <|-- DateField
+  TemporalField <|-- TimeField
+  TemporalField <|-- DateTimeField
+
+  ChoiceField <|-- SingleChoiceField
+  ChoiceField <|-- MultipleChoiceField
+
+  ContactField <|-- EmailField
+  ContactField <|-- PhoneNumberField
+
+  ExternalAuthorityField <|-- OrcidField
+  ExternalAuthorityField <|-- RorField
+  ExternalAuthorityField <|-- DoiField
+  ExternalAuthorityField <|-- PubMedIdField
+  ExternalAuthorityField <|-- RridField
+  ExternalAuthorityField <|-- NihGrantIdField
 
   TextField --> TextFieldType : carries
   NumericField --> NumericFieldType : carries

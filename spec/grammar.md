@@ -55,22 +55,30 @@ SchemaArtifact ::= Field
 
 Field ::= TextField
         | NumericField
-        | DateField
-        | TimeField
-        | DateTimeField
+        | TemporalField
         | ControlledTermField
-        | SingleChoiceField
-        | MultipleChoiceField
+        | ChoiceField
         | LinkField
-        | EmailField
-        | PhoneNumberField
-        | OrcidField
-        | RorField
-        | DoiField
-        | PubMedIdField
-        | RridField
-        | NihGrantIdField
+        | ContactField
+        | ExternalAuthorityField
         | AttributeValueField
+
+TemporalField ::= DateField
+                | TimeField
+                | DateTimeField
+
+ChoiceField ::= SingleChoiceField
+              | MultipleChoiceField
+
+ContactField ::= EmailField
+               | PhoneNumberField
+
+ExternalAuthorityField ::= OrcidField
+                         | RorField
+                         | DoiField
+                         | PubMedIdField
+                         | RridField
+                         | NihGrantIdField
 
 TextField ::= text_field(
                TextFieldId
