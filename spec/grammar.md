@@ -436,1196 +436,9 @@ EmbeddedPresentationComponent ::= embedded_presentation_component(
                                   )
 ```
 
-## Artifact Identity
+## Scalar and Datatype Leaves
 
-Artifact identity defines the typed identifiers by which artifacts and artifact references are denoted in the model. These identity constructs are distinct from descriptive metadata, provenance, versioning, and annotations.
-
-```ebnf
-FieldId ::= TextFieldId
-          | NumericFieldId
-          | DateFieldId
-          | TimeFieldId
-          | DateTimeFieldId
-          | ControlledTermFieldId
-          | SingleChoiceFieldId
-          | MultipleChoiceFieldId
-          | LinkFieldId
-          | EmailFieldId
-          | PhoneNumberFieldId
-          | OrcidFieldId
-          | RorFieldId
-          | DoiFieldId
-          | PubMedIdFieldId
-          | RridFieldId
-          | NihGrantIdFieldId
-          | AttributeValueFieldId
-
-TextFieldId ::= text_field_id( Iri )
-
-NumericFieldId ::= numeric_field_id( Iri )
-
-DateFieldId ::= date_field_id( Iri )
-
-TimeFieldId ::= time_field_id( Iri )
-
-DateTimeFieldId ::= date_time_field_id( Iri )
-
-ControlledTermFieldId ::= controlled_term_field_id( Iri )
-
-SingleChoiceFieldId ::= single_choice_field_id( Iri )
-
-MultipleChoiceFieldId ::= multiple_choice_field_id( Iri )
-
-LinkFieldId ::= link_field_id( Iri )
-
-EmailFieldId ::= email_field_id( Iri )
-
-PhoneNumberFieldId ::= phone_number_field_id( Iri )
-
-OrcidFieldId ::= orcid_field_id( Iri )
-
-RorFieldId ::= ror_field_id( Iri )
-
-DoiFieldId ::= doi_field_id( Iri )
-
-PubMedIdFieldId ::= pub_med_id_field_id( Iri )
-
-RridFieldId ::= rrid_field_id( Iri )
-
-NihGrantIdFieldId ::= nih_grant_id_field_id( Iri )
-
-AttributeValueFieldId ::= attribute_value_field_id( Iri )
-
-TemplateId ::= template_id( Iri )
-
-PresentationComponentId ::= presentation_component_id( Iri )
-
-TemplateInstanceId ::= template_instance_id( Iri )
-```
-
-## Embedded Artifact Keys
-
-An `EmbeddedArtifactKey` is the local identifier of an `EmbeddedArtifact` within a `Template`. It is the key by which an embedded field, embedded template, or embedded presentation component is distinguished from other embedded artifacts in the same template. This key is also the mechanism that connects template structure to instance structure: `FieldValue` and `NestedTemplateInstance` use `EmbeddedArtifactKey` to identify which embedded artifact in the template they correspond to.
-
-```ebnf
-EmbeddedArtifactKey ::= embedded_artifact_key(
-                          KeyIdentifier
-                        )
-
-KeyIdentifier ::= key_identifier(
-                    AsciiIdentifier
-                  )
-```
-
-`EmbeddedArtifactKey` MUST match the pattern `[A-Za-z][A-Za-z0-9_-]*`: it MUST begin with an ASCII letter followed by zero or more ASCII letters, digits, underscores, or hyphens.
-
-`EmbeddedArtifactKey` values are local to a `Template` and MUST be unique within that `Template`.
-
-## Embedded Artifact Properties
-
-Embedded artifact properties define the contextual information carried by an `EmbeddedArtifact` within a `Template`. These properties govern how a referenced reusable artifact is used in that template context, including reference, requirement, cardinality, visibility, defaults, and label override, and they are distinct from the intrinsic properties of the referenced reusable artifact itself.
-
-### References
-
-These productions identify the reusable artifact that is being included in the template.
-
-```ebnf
-FieldReference ::= TextFieldReference
-                 | NumericFieldReference
-                 | DateFieldReference
-                 | TimeFieldReference
-                 | DateTimeFieldReference
-                 | ControlledTermFieldReference
-                 | SingleChoiceFieldReference
-                 | MultipleChoiceFieldReference
-                 | LinkFieldReference
-                 | EmailFieldReference
-                 | PhoneNumberFieldReference
-                 | OrcidFieldReference
-                 | RorFieldReference
-                 | DoiFieldReference
-                 | PubMedIdFieldReference
-                 | RridFieldReference
-                 | NihGrantIdFieldReference
-                 | AttributeValueFieldReference
-
-TextFieldReference ::= TextFieldId
-
-NumericFieldReference ::= NumericFieldId
-
-DateFieldReference ::= DateFieldId
-
-TimeFieldReference ::= TimeFieldId
-
-DateTimeFieldReference ::= DateTimeFieldId
-
-ControlledTermFieldReference ::= ControlledTermFieldId
-
-SingleChoiceFieldReference ::= SingleChoiceFieldId
-
-MultipleChoiceFieldReference ::= MultipleChoiceFieldId
-
-LinkFieldReference ::= LinkFieldId
-
-EmailFieldReference ::= EmailFieldId
-
-PhoneNumberFieldReference ::= PhoneNumberFieldId
-
-OrcidFieldReference ::= OrcidFieldId
-
-RorFieldReference ::= RorFieldId
-
-DoiFieldReference ::= DoiFieldId
-
-PubMedIdFieldReference ::= PubMedIdFieldId
-
-RridFieldReference ::= RridFieldId
-
-NihGrantIdFieldReference ::= NihGrantIdFieldId
-
-AttributeValueFieldReference ::= AttributeValueFieldId
-
-TemplateReference ::= TemplateId
-
-PresentationComponentReference ::= PresentationComponentId
-```
-
-### Requirements
-
-`ValueRequirement` identifies whether a value is required, recommended, or optional in the embedding context. `Required` means that a value must be supplied for conformance. `Recommended` means that a value is not required for conformance, but implementations SHOULD encourage entry and MAY warn when it is absent. `Optional` means that a value may be omitted without conformance failure.
-
-**TODO:** Confirm with the CEDAR team whether `Recommended` is intended to have normative meaning beyond authoring guidance and warnings.
-
-```ebnf
-ValueRequirement ::= Required
-                   | Recommended
-                   | Optional
-```
-
-When `ValueRequirement` is absent from an `EmbeddedArtifact`, the default is `Optional`.
-
-### Cardinality
-
-`Cardinality` identifies the permitted number of occurrences for the embedded artifact in the embedding context.
-
-```ebnf
-Cardinality ::= cardinality(
-                  MinCardinality
-                  [MaxCardinality]
-                )
-
-MinCardinality ::= min_cardinality(
-                     NonNegativeInteger
-                   )
-
-MaxCardinality ::= max_cardinality(
-                     CardinalityUpperBound
-                   )
-
-CardinalityUpperBound ::= NonNegativeInteger
-                        | UnboundedCardinality
-
-UnboundedCardinality ::= unbounded_cardinality()
-```
-
-When `Cardinality` is absent from an `EmbeddedArtifact`, the implied default is `min_cardinality(1)` with `max_cardinality(1)`: the embedded artifact MUST appear exactly once.
-
-### Visibility
-
-`Visibility` determines whether the embedded artifact is shown in rendered interfaces. It is modeled as an embedding property rather than as a rendering hint because it applies to any kind of embedded artifact, not only to fields.
-
-```ebnf
-Visibility ::= Visible
-             | Hidden
-```
-
-When `Visibility` is absent from an `EmbeddedArtifact`, the default is `Visible`.
-
-### Defaults
-
-`DefaultValue` provides an embedding-specific default value where one is defined. The form of the default is determined by the value family of the embedded field. `TextDefaultValue` is also used by `TextFieldType` as the reusable text-specific default carried by that field type.
-
-```ebnf
-DefaultValue ::= TextDefaultValue
-               | NumericDefaultValue
-               | DateDefaultValue
-               | TimeDefaultValue
-               | DateTimeDefaultValue
-               | ControlledTermDefaultValue
-               | ChoiceDefaultValue
-               | LinkDefaultValue
-               | EmailDefaultValue
-               | PhoneNumberDefaultValue
-               | OrcidDefaultValue
-               | RorDefaultValue
-               | DoiDefaultValue
-               | PubMedIdDefaultValue
-               | RridDefaultValue
-               | NihGrantIdDefaultValue
-
-TextDefaultValue ::= text_default_value(
-                      TextValue
-                    )
-
-NumericDefaultValue ::= numeric_default_value(
-                         NumericValue
-                       )
-
-DateDefaultValue ::= date_default_value(
-                      DateValue
-                    )
-
-TimeDefaultValue ::= time_default_value(
-                      TimeValue
-                    )
-
-DateTimeDefaultValue ::= date_time_default_value(
-                          DateTimeValue
-                        )
-
-ControlledTermDefaultValue ::= controlled_term_default_value(
-                               ControlledTermValue
-                             )
-
-ChoiceDefaultValue ::= choice_default_value(
-                        ChoiceValue+
-                      )
-
-LinkDefaultValue ::= link_default_value(
-                      LinkValue
-                    )
-
-EmailDefaultValue ::= email_default_value(
-                       EmailValue
-                     )
-
-PhoneNumberDefaultValue ::= phone_number_default_value(
-                             PhoneNumberValue
-                           )
-
-OrcidDefaultValue ::= orcid_default_value(
-                      OrcidValue
-                    )
-
-RorDefaultValue ::= ror_default_value(
-                    RorValue
-                  )
-
-DoiDefaultValue ::= doi_default_value(
-                    DoiValue
-                  )
-
-PubMedIdDefaultValue ::= pub_med_id_default_value(
-                          PubMedIdValue
-                        )
-
-RridDefaultValue ::= rrid_default_value(
-                     RridValue
-                   )
-
-NihGrantIdDefaultValue ::= nih_grant_id_default_value(
-                           NihGrantIdValue
-                         )
-```
-
-`DefaultValue` provides an embedding-specific default value applied in the context of the containing `Template`. `TextDefaultValue` may appear both on `TextFieldType` (as a reusable field-level default) and on `EmbeddedTextField` (as an embedding-specific override). When both are present, the `TextDefaultValue` on `EmbeddedTextField` MUST take precedence.
-
-### Label Override
-
-`LabelOverride` provides template-specific labeling for an embedded artifact. This allows a template to override the default label of the referenced reusable artifact in that embedding context.
-
-```ebnf
-LabelOverride ::= label_override(
-                    Label
-                    AlternativeLabel*
-                  )
-```
-
-## Field Types
-
-`FieldType` denotes the semantic category of values that a `Field` may carry. The `FieldType` productions define the value structure associated with a field and, where appropriate, the typed rendering hints and field-type-specific properties that are valid for that semantic category.
-
-```ebnf
-
-FieldType ::= TextFieldType
-            | NumericFieldType
-            | TemporalFieldType
-            | ControlledTermFieldType
-            | ChoiceFieldType
-            | LinkFieldType
-            | ContactFieldType
-            | ExternalAuthorityFieldType
-            | AttributeValueFieldType
-
-TextFieldType ::= text_field_type(
-                    [TextDefaultValue]
-                    [MinLength]
-                    [MaxLength]
-                    [ValidationRegex]
-                    [TextRenderingHint]
-                  )
-
-NumericFieldType ::= numeric_field_type(
-                       NumericDatatype
-                       [Unit]
-                       [NumericPrecision]
-                       [NumericRenderingHint]
-                     )
-
-Unit ::= unit(
-           Iri
-           [Label]
-         )
-
-MinLength ::= min_length(
-                NonNegativeInteger
-              )
-
-MaxLength ::= max_length(
-                NonNegativeInteger
-              )
-
-ValidationRegex ::= validation_regex(
-                      RegexPattern
-                    )
-
-NumericPrecision ::= numeric_precision(
-                       NonNegativeInteger
-                     )
-
-TemporalFieldType ::= DateFieldType
-                    | TimeFieldType
-                    | DateTimeFieldType
-
-ControlledTermFieldType ::= controlled_term_field_type(
-                              ControlledTermSource+
-                            )
-
-ChoiceFieldType ::= SingleChoiceFieldType
-                  | MultipleChoiceFieldType
-
-SingleChoiceFieldType ::= single_choice_field_type(
-                            ChoiceOption+
-                            [SingleChoiceRenderingHint]
-                          )
-
-MultipleChoiceFieldType ::= multiple_choice_field_type(
-                              ChoiceOption+
-                              [MultipleChoiceRenderingHint]
-                            )
-
-ChoiceOption ::= choice_option(
-                   ChoiceOptionValue
-                 )
-
-ChoiceOptionValue ::= Literal
-                    | ControlledTermValue
-                    | Iri
-
-LinkFieldType ::= link_field_type()
-
-ContactFieldType ::= EmailFieldType
-                   | PhoneNumberFieldType
-
-EmailFieldType ::= email_field_type()
-
-PhoneNumberFieldType ::= phone_number_field_type()
-
-ExternalAuthorityFieldType ::= OrcidFieldType
-                             | RorFieldType
-                             | DoiFieldType
-                             | PubMedIdFieldType
-                             | RridFieldType
-                             | NihGrantIdFieldType
-
-OrcidFieldType ::= orcid_field_type()
-
-RorFieldType ::= ror_field_type()
-
-DoiFieldType ::= doi_field_type()
-
-PubMedIdFieldType ::= pub_med_id_field_type()
-
-RridFieldType ::= rrid_field_type()
-
-NihGrantIdFieldType ::= nih_grant_id_field_type()
-
-AttributeValueFieldType ::= attribute_value_field_type()
-```
-
-`Unit` denotes an identified measurement or quantity unit optionally paired with a human-readable label.
-
-The current placement of `Unit` on `NumericFieldType` is a pragmatic compromise. A later revision may introduce a distinct `QuantityFieldType` to model numeric values with fixed units more explicitly.
-
-`ChoiceOption` denotes one permissible option in a choice field.
-
-`ChoiceOptionValue` allows a choice option to be specified by a literal, an ontology-backed controlled term, or an IRI.
-
-### Temporal Field Types
-
-`TemporalFieldType` denotes temporal-valued fields and is refined into strongly typed date, time, and date-time forms. This section groups the temporal field-type productions together with their compatible rendering hints, values, and literals.
-
-```ebnf
-DateFieldType ::= date_field_type(
-                   DateValueType
-                   [DateRenderingHint]
-                 )
-
-DateValueType ::= YearValueType
-                | YearMonthValueType
-                | FullDateValueType
-
-YearValueType ::= year_value_type()
-
-YearMonthValueType ::= year_month_value_type()
-
-FullDateValueType ::= full_date_value_type()
-```
-
-```ebnf
-TimeFieldType ::= time_field_type(
-                   [TimePrecision]
-                   [TimezoneRequirement]
-                   [TimeRenderingHint]
-                 )
-
-TimePrecision ::= HourMinutePrecision
-                | HourMinuteSecondPrecision
-                | HourMinuteSecondFractionPrecision
-
-HourMinutePrecision ::= hour_minute_precision()
-
-HourMinuteSecondPrecision ::= hour_minute_second_precision()
-
-HourMinuteSecondFractionPrecision ::= hour_minute_second_fraction_precision()
-
-TimezoneRequirement ::= TimezoneRequired
-                      | TimezoneNotRequired
-
-TimezoneRequired ::= timezone_required()
-
-TimezoneNotRequired ::= timezone_not_required()
-```
-
-`TimePrecision` identifies the finest time precision permitted by a `TimeFieldType`.
-
-`HourMinutePrecision`, `HourMinuteSecondPrecision`, and `HourMinuteSecondFractionPrecision` identify time values constrained respectively to hour-and-minute precision, second precision, and fractional-second precision.
-
-`TimezoneRequirement` identifies whether timezone information is required by the field type.
-
-> **TODO:** The lexical conformance semantics of `TimePrecision` and `DateTimeValueType` — specifically, whether a value at a coarser precision must omit finer components entirely or may zero them — are unresolved pending clarification from the CEDAR team. No normative lexical constraint is defined here until that is resolved.
-
-```ebnf
-DateTimeFieldType ::= date_time_field_type(
-                       DateTimeValueType
-                       [TimezoneRequirement]
-                       [DateTimeRenderingHint]
-                     )
-
-DateTimeValueType ::= DateHourMinuteValueType
-                    | DateHourMinuteSecondValueType
-                    | DateHourMinuteSecondFractionValueType
-
-DateHourMinuteValueType ::= date_hour_minute_value_type()
-
-DateHourMinuteSecondValueType ::= date_hour_minute_second_value_type()
-
-DateHourMinuteSecondFractionValueType ::= date_hour_minute_second_fraction_value_type()
-```
-
-`DateTimeValueType` identifies the finest permitted date-time precision.
-
-`DateHourMinuteValueType`, `DateHourMinuteSecondValueType`, and `DateHourMinuteSecondFractionValueType` identify date-time values constrained respectively to minute precision, second precision, and fractional-second precision.
-
-```ebnf
-DateRenderingHint ::= date_rendering_hint(
-                       DateRenderingWidget
-                       [DateFormat]
-                     )
-
-DateRenderingWidget ::= DatePickerRenderingWidget
-
-DatePickerRenderingWidget ::= date_picker_rendering_widget()
-
-DateFormat ::= date_format(
-                DateComponentOrder
-              )
-
-DateComponentOrder ::= DayMonthYearOrder
-                     | MonthDayYearOrder
-                     | YearMonthDayOrder
-
-DayMonthYearOrder ::= day_month_year_order()
-
-MonthDayYearOrder ::= month_day_year_order()
-
-YearMonthDayOrder ::= year_month_day_order()
-
-TimeRenderingHint ::= time_rendering_hint(
-                       TimeRenderingWidget
-                       [TimeFormat]
-                     )
-
-TimeRenderingWidget ::= TimePickerRenderingWidget
-
-TimePickerRenderingWidget ::= time_picker_rendering_widget()
-
-DateTimeRenderingHint ::= date_time_rendering_hint(
-                           DateTimeRenderingWidget
-                           [TimeFormat]
-                         )
-
-DateTimeRenderingWidget ::= DateTimePickerRenderingWidget
-
-DateTimePickerRenderingWidget ::= date_time_picker_rendering_widget()
-
-TimeFormat ::= TwelveHourTimeFormat
-             | TwentyFourHourTimeFormat
-
-TwelveHourTimeFormat ::= twelve_hour_time_format()
-
-TwentyFourHourTimeFormat ::= twenty_four_hour_time_format()
-```
-
-`DateFormat` identifies the ordering used to display or acquire date components.
-
-`DateComponentOrder` identifies whether a date is rendered or acquired in day-month-year, month-day-year, or year-month-day order.
-
-## Presentation Components
-
-`PresentationComponent` denotes reusable non-data-bearing content that contributes presentation or instructional structure within a `Template`. Presentation components appear in templates only through `EmbeddedPresentationComponent` and do not contribute `InstanceValue` constructs.
-
-```ebnf
-PresentationComponent ::= RichTextComponent
-                        | ImageComponent
-                        | YoutubeVideoComponent
-                        | SectionBreakComponent
-                        | PageBreakComponent
-
-RichTextComponent ::= rich_text_component(
-                        PresentationComponentId
-                        ArtifactMetadata
-                        HtmlContent
-                      )
-
-ImageComponent ::= image_component(
-                     PresentationComponentId
-                     ArtifactMetadata
-                     ImageSource
-                   )
-
-YoutubeVideoComponent ::= you_tube_video_component(
-                            PresentationComponentId
-                            ArtifactMetadata
-                            YoutubeVideoSource
-                          )
-
-SectionBreakComponent ::= section_break_component(
-                            PresentationComponentId
-                            ArtifactMetadata
-                          )
-
-PageBreakComponent ::= page_break_component(
-                         PresentationComponentId
-                         ArtifactMetadata
-                       )
-```
-
-```ebnf
-HtmlContent ::= html_content(
-                  UnicodeString
-                )
-```
-
-`HtmlContent` denotes an HTML fragment represented as a Unicode string and used by a `RichTextComponent`.
-
-This specification does not define a required HTML feature set.
-
-Implementations MAY restrict or sanitize HTML content for security, portability, or rendering reasons.
-
-```ebnf
-ImageSource ::= image_source(
-                  Iri
-                )
-
-YoutubeVideoSource ::= you_tube_video_source(
-                         Iri
-                       )
-```
-
-`ImageSource` and `YoutubeVideoSource` denote IRIs identifying the image or video resource used by the corresponding presentation component.
-
-## Controlled Term Sources
-
-```ebnf
-ControlledTermSource ::= OntologySource
-                       | BranchSource
-                       | ClassSource
-                       | ValueSetSource
-
-OntologySource ::= ontology_source(
-                     OntologyReference
-                   )
-
-OntologyReference ::= ontology_reference(
-                        OntologyIri
-                        [OntologyDisplayHint]
-                      )
-
-OntologyDisplayHint ::= ontology_display_hint(
-                          OntologyDisplayHintContent
-                        )
-
-OntologyDisplayHintContent ::= OntologyAcronym
-                             | OntologyName
-                             | OntologyAcronym OntologyName
-
-BranchSource ::= branch_source(
-                   OntologyReference
-                   RootTermIri
-                   RootTermLabel
-                   [MaxTraversalDepth]
-                 )
-
-ClassSource ::= class_source(
-                  ControlledTermClass+
-                )
-
-ControlledTermClass ::= controlled_term_class(
-                          TermIri
-                          Label
-                          OntologyReference
-                        )
-
-ValueSetSource ::= value_set_source(
-                     ValueSetIdentifier
-                     [ValueSetName]
-                     [ValueSetIri]
-                   )
-```
-
-```ebnf
-TermIri ::= term_iri(
-              Iri
-            )
-
-OntologyAcronym ::= ontology_acronym(
-                      UnicodeString
-                    )
-
-OntologyName ::= ontology_name(
-                  UnicodeString
-                )
-
-OntologyIri ::= ontology_iri(
-                 Iri
-               )
-
-RootTermIri ::= root_term_iri(
-                  Iri
-                )
-
-RootTermLabel ::= root_term_label(
-                    UnicodeString
-                  )
-
-MaxTraversalDepth ::= max_traversal_depth(
-                        NonNegativeInteger
-                      )
-
-ValueSetIdentifier ::= value_set_identifier(
-                         UnicodeString
-                       )
-
-ValueSetName ::= value_set_name(
-                   UnicodeString
-                 )
-
-ValueSetIri ::= value_set_iri(
-                  Iri
-                )
-```
-
-`TermIri`, `OntologyIri`, `RootTermIri`, and `ValueSetIri` denote IRIs used in controlled-term source specifications.
-
-`OntologyAcronym`, `OntologyName`, `RootTermLabel`, `ValueSetIdentifier`, and `ValueSetName` denote textual controlled-term source metadata.
-
-`MaxTraversalDepth` denotes a non-negative traversal-depth limit for branch-based controlled-term sources.
-
-## Rendering Hints
-
-```ebnf
-RenderingHint ::= TextRenderingHint
-                | SingleChoiceRenderingHint
-                | MultipleChoiceRenderingHint
-                | NumericRenderingHint
-                | DateRenderingHint
-                | TimeRenderingHint
-                | DateTimeRenderingHint
-
-TextRenderingHint ::= SingleLineTextRenderingHint
-                    | MultiLineTextRenderingHint
-
-SingleLineTextRenderingHint ::= single_line_text_rendering_hint()
-
-MultiLineTextRenderingHint ::= multi_line_text_rendering_hint()
-
-SingleChoiceRenderingHint ::= RadioRenderingHint
-                            | SingleSelectDropdownRenderingHint
-
-RadioRenderingHint ::= radio_rendering_hint()
-
-SingleSelectDropdownRenderingHint ::= single_select_dropdown_rendering_hint()
-
-MultipleChoiceRenderingHint ::= CheckboxRenderingHint
-                              | MultiSelectDropdownRenderingHint
-
-CheckboxRenderingHint ::= checkbox_rendering_hint()
-
-MultiSelectDropdownRenderingHint ::= multi_select_dropdown_rendering_hint()
-
-NumericRenderingHint ::= NumericInputRenderingHint
-
-NumericInputRenderingHint ::= numeric_input_rendering_hint()
-
-```
-
-The `FieldType` grammar distinguishes semantic variation from presentation variation.
-
-Semantic distinctions MUST remain in `FieldType` when they affect the meaning, cardinality, or value structure of the field.
-
-Presentation distinctions SHOULD be represented by typed rendering hints when they affect only UI behavior.
-
-Accordingly, `TextFieldType` is a single semantic field type whose single-line and multi-line display forms are represented by `TextRenderingHint`.
-
-A `TextFieldType` MAY additionally define a default text value, minimum length, maximum length, and validating regular expression.
-
-Similarly, `ChoiceFieldType` distinguishes `SingleChoiceFieldType` from `MultipleChoiceFieldType` semantically, while the rendering hint determines whether the UI uses radio buttons, checkboxes, or dropdown presentation. Typed rendering hints make incompatible combinations structurally invalid.
-
-Temporal semantics are also split structurally: `DateFieldType`, `TimeFieldType`, and `DateTimeFieldType` are distinct semantic field types, and each carries only the rendering hints and temporal options that are meaningful for that temporal category.
-
-The current rendering vocabulary is explicit but deliberately small: numeric fields use `NumericInputRenderingHint`, date fields use `DatePickerRenderingWidget`, time fields use `TimePickerRenderingWidget`, and date-time fields use `DateTimePickerRenderingWidget`.
-
-## Literals
-
-```ebnf
-Literal ::= DatatypeIriLiteral
-          | LangStringLiteral
-
-DatatypeIriLiteral ::= datatype_iri_literal(
-                         LexicalForm
-                         DatatypeIri
-                       )
-
-LangStringLiteral ::= lang_string_literal(
-                        LexicalForm
-                        LanguageTag
-                      )
-
-TextLiteral ::= StringLiteral
-              | LangStringLiteral
-
-StringLiteral ::= string_literal(
-                    LexicalForm
-                  )
-
-NumericLiteral ::= numeric_literal(
-                     LexicalForm
-                     NumericDatatypeIri
-                   )
-
-TemporalLiteral ::= DateLiteral
-                  | TimeLiteral
-                  | DateTimeLiteral
-
-DateLiteral ::= YearLiteral
-               | YearMonthLiteral
-               | FullDateLiteral
-
-YearLiteral ::= year_literal(
-                  LexicalForm
-                  YearDatatypeIri
-                )
-
-YearMonthLiteral ::= year_month_literal(
-                       LexicalForm
-                       YearMonthDatatypeIri
-                     )
-
-FullDateLiteral ::= full_date_literal(
-                      LexicalForm
-                      DateDatatypeIri
-                    )
-
-TimeLiteral ::= time_literal(
-                  LexicalForm
-                  TimeDatatypeIri
-                )
-
-DateTimeLiteral ::= date_time_literal(
-                      LexicalForm
-                      DateTimeDatatypeIri
-                    )
-```
-
-A `Literal` in this specification is an RDF literal.
-
-A `DatatypeIriLiteral` denotes an RDF literal consisting of a lexical form and a datatype IRI.
-
-A `LangStringLiteral` denotes an RDF literal whose lexical form is paired with a non-empty language tag. `LangStringLiteral` corresponds to an RDF literal with datatype IRI `http://www.w3.org/1999/02/22-rdf-syntax-ns#langString`.
-
-A `StringLiteral` denotes an RDF literal whose datatype IRI is `http://www.w3.org/2001/XMLSchema#string`.
-
-`TextLiteral` is the class of literals permitted in `TextValue`.
-
-`NumericLiteral` is the class of literals permitted in `NumericValue`.
-
-`DateLiteral`, `TimeLiteral`, and `DateTimeLiteral` are the literal classes permitted in `DateValue`, `TimeValue`, and `DateTimeValue`, respectively.
-
-Within `DateLiteral`, `YearLiteral`, `YearMonthLiteral`, and `FullDateLiteral` distinguish year-only, year-month, and full-date values.
-
-`NumericLiteral` carries a numeric datatype IRI.
-
-`YearLiteral` carries a year datatype IRI.
-
-`YearMonthLiteral` carries a year-month datatype IRI.
-
-`FullDateLiteral` carries a full-date datatype IRI.
-
-`TimeLiteral` carries a time datatype IRI.
-
-`DateTimeLiteral` carries a date-time datatype IRI.
-
-The lexical form is a Unicode string and SHOULD be in Unicode Normalization Form C.
-
-The language tag of a `LangStringLiteral` MUST be non-empty and well-formed according to BCP 47.
-
-Concrete syntaxes MAY use simpler surface forms that omit an explicit datatype IRI for string literals or language-tagged strings. Such forms are syntactic sugar and do not change the abstract structure defined by this specification.
-
-The literal value associated with a `Literal` is determined as follows:
-
-- If the `Literal` is a `LangStringLiteral`, the literal value is the pair consisting of lexical form and language tag, in that order.
-- If the `Literal` is a `DatatypeIriLiteral`, the datatype IRI is recognized, and the lexical form is in the lexical space of that datatype, the literal value is obtained by applying the lexical-to-value mapping of that datatype to the lexical form.
-- If the `Literal` is a `DatatypeIriLiteral`, the datatype IRI is recognized, but the lexical form is outside the lexical space of that datatype, the literal is ill-typed.
-- If the `Literal` is a `DatatypeIriLiteral` and the datatype IRI is not recognized, the literal value is not defined by this specification.
-
-An ill-typed literal is not syntactically ill-formed, but it does not determine a valid literal value and produces a semantic inconsistency. Implementations MUST accept ill-typed literals and MAY produce warnings when encountering them.
-
-Two literals are term-equal if and only if their lexical forms and their datatype IRIs or language tags compare equal character by character.
-
-## Supporting Nonterminals
-
-```ebnf
-
-Value ::= TextValue
-        | NumericValue
-        | DateValue
-        | TimeValue
-        | DateTimeValue
-        | ControlledTermValue
-        | ChoiceValue
-        | LinkValue
-        | EmailValue
-        | PhoneNumberValue
-        | ExternalAuthorityValue
-        | AttributeValue
-
-TextValue ::= text_value(
-                TextLiteral
-              )
-
-NumericValue ::= numeric_value(
-                   NumericLiteral
-                 )
-
-DateValue ::= YearValue
-            | YearMonthValue
-            | FullDateValue
-
-YearValue ::= year_value(
-                YearLiteral
-              )
-
-YearMonthValue ::= year_month_value(
-                     YearMonthLiteral
-                   )
-
-FullDateValue ::= full_date_value(
-                    FullDateLiteral
-                  )
-
-TimeValue ::= time_value(
-                TimeLiteral
-              )
-
-DateTimeValue ::= date_time_value(
-                    DateTimeLiteral
-                  )
-
-ControlledTermValue ::= controlled_term_value(
-                          TermIri
-                          Label
-                          [Notation]
-                          [PreferredLabel]
-                        )
-
-ChoiceValue ::= choice_value(
-                  ChoiceSelection
-                )
-
-ChoiceSelection ::= Literal
-                  | ControlledTermValue
-                  | Iri
-
-LinkValue ::= link_value(
-                Iri
-              )
-
-EmailValue ::= email_value(
-                 StringLiteral
-               )
-
-PhoneNumberValue ::= phone_number_value(
-                       StringLiteral
-                     )
-
-ExternalAuthorityValue ::= OrcidValue
-                         | RorValue
-                         | DoiValue
-                         | PubMedIdValue
-                         | RridValue
-                         | NihGrantIdValue
-
-OrcidValue ::= orcid_value(
-                Iri
-                [Label]
-              )
-
-RorValue ::= ror_value(
-              Iri
-              [Label]
-            )
-
-DoiValue ::= doi_value(
-              Iri
-              [Label]
-            )
-
-PubMedIdValue ::= pub_med_id_value(
-                    Iri
-                    [Label]
-                  )
-
-RridValue ::= rrid_value(
-               Iri
-               [Label]
-             )
-
-NihGrantIdValue ::= nih_grant_id_value(
-                     Iri
-                     [Label]
-                   )
-
-AttributeValue ::= attribute_value(
-                    AttributeName
-                    Value
-                  )
-```
-
-`ChoiceSelection` and `ChoiceOptionValue` are structurally identical: both permit a `Literal`, a `ControlledTermValue`, or an `Iri`. The two production names are kept distinct to make their roles explicit. `ChoiceOptionValue` identifies a permissible option as declared in a `ChoiceFieldType`. `ChoiceSelection` identifies the value chosen in an instance context. The correspondence between them is governed by the match semantics defined in the validation rules.
-
-## Field Type And Value Correspondence
-
-The `FieldType` of a `Field` determines the permitted `Value` forms in corresponding `FieldValue` constructs.
-
-The correspondence is:
-
-- `TextFieldType` to `TextValue`
-- `NumericFieldType` to `NumericValue`
-- `DateFieldType` to `DateValue`
-- `TimeFieldType` to `TimeValue`
-- `DateTimeFieldType` to `DateTimeValue`
-- `ControlledTermFieldType` to `ControlledTermValue`
-- `ChoiceFieldType` to `ChoiceValue`
-- `LinkFieldType` to `LinkValue`
-- `EmailFieldType` to `EmailValue`
-- `PhoneNumberFieldType` to `PhoneNumberValue`
-- `OrcidFieldType` to `OrcidValue`
-- `RorFieldType` to `RorValue`
-- `DoiFieldType` to `DoiValue`
-- `PubMedIdFieldType` to `PubMedIdValue`
-- `RridFieldType` to `RridValue`
-- `NihGrantIdFieldType` to `NihGrantIdValue`
-- `AttributeValueFieldType` to `AttributeValue`
-
-## Instances
-
-`TemplateInstance` denotes instance data that conforms to a `Template`. Instance productions are separated here from schema and presentation productions so that the schema model and instance model can be read independently.
-
-```ebnf
-TemplateInstance ::= template_instance(
-                       TemplateInstanceId
-                       ArtifactMetadata
-                       TemplateReference
-                       InstanceValue*
-                     )
-
-InstanceValue ::= FieldValue
-                | NestedTemplateInstance
-
-FieldValue ::= field_value(
-                 EmbeddedArtifactKey
-                 Value*
-               )
-
-NestedTemplateInstance ::= nested_template_instance(
-                             EmbeddedArtifactKey
-                             InstanceValue*
-                           )
-```
-
-For multi-valued `EmbeddedField`, all values for a single field occurrence are collected within a single `FieldValue` using `Value*`. For multi-valued `EmbeddedTemplate`, multiplicity is represented by multiple `NestedTemplateInstance` constructs sharing the same `EmbeddedArtifactKey` within the containing `TemplateInstance`. This asymmetry reflects the structural difference between scalar repetition (multiple values for one field) and structural repetition (multiple complete nested instances for one embedded template).
-
-> **TODO:** `FieldValue` uses `Value*`, which permits a `FieldValue` with zero values. Whether an empty `FieldValue` is a valid representation of absence for an optional field, or whether absence must be represented by omitting the `FieldValue` entirely (which would make `Value+` correct), is unresolved pending clarification from the CEDAR team.
-
-## Artifact Metadata
-
-Artifact metadata defines descriptive information, provenance, versioning, and annotations. `ArtifactMetadata` provides the common metadata carried by all artifacts other than identity. `SchemaArtifactMetadata` extends that common structure with schema-versioning information used by reusable schema artifacts.
-
-### Aggregate Structure
-
-This subsection identifies how the metadata categories are grouped at the artifact level. `ArtifactMetadata` carries the metadata common to all artifacts other than identity, while `SchemaArtifactMetadata` adds versioning information for reusable schema artifacts.
-
-```ebnf
-SchemaArtifactMetadata ::= schema_artifact_metadata(
-                           ArtifactMetadata
-                           SchemaVersioning
-                         )
-
-ArtifactMetadata ::= artifact_metadata(
-                     DescriptiveMetadata
-                     TemporalProvenance
-                     Annotation*
-                   )
-```
-
-### Descriptive Metadata
-
-`DescriptiveMetadata` identifies the human-oriented descriptive properties of an artifact. These properties support naming, explanatory text, and external or local identifiers used for cataloging. `Name` is the required user-supplied name of the artifact. `Description`, when present, is extended textual description explaining the artifact's purpose and content. `Identifier`, when present, is a user-specified external identifier intended for integration with institutional or external systems.
-
-```ebnf
-DescriptiveMetadata ::= descriptive_metadata(
-                          Name
-                          [Description]
-                          [Identifier]
-                        )
-```
-
-### Temporal Provenance
-
-`TemporalProvenance` identifies when an artifact was created and modified, and which agents were responsible for those actions.
-
-```ebnf
-TemporalProvenance ::= temporal_provenance(
-                         CreatedOn
-                         CreatedBy
-                         ModifiedOn
-                         ModifiedBy
-                       )
-
-CreatedOn ::= IsoDateTimeStamp
-
-CreatedBy ::= Iri
-
-ModifiedOn ::= IsoDateTimeStamp
-
-ModifiedBy ::= Iri
-```
-
-`CreatedOn` and `ModifiedOn` MUST be ISO 8601 date-time timestamps.
-
-`CreatedBy` and `ModifiedBy` denote IRIs identifying the responsible agents.
-
-### Schema Versioning
-
-`SchemaVersioning` identifies version-related metadata specific to reusable schema artifacts. It captures artifact version, publication status, the version of the schema model used, and optional derivation links to earlier or source artifacts.
-
-```ebnf
-SchemaVersioning ::= schema_versioning(
-                       Version
-                       Status
-                       ModelVersion
-                       [PreviousVersion]
-                       [DerivedFrom]
-                     )
-```
-
-```ebnf
-Version ::= version(
-              SemanticVersion
-            )
-
-Status ::= DraftStatus
-         | PublishedStatus
-
-DraftStatus ::= draft_status()
-
-PublishedStatus ::= published_status()
-
-ModelVersion ::= model_version(
-                   SemanticVersion
-                 )
-
-PreviousVersion ::= previous_version(
-                      Iri
-                    )
-
-DerivedFrom ::= derived_from(
-                  Iri
-                )
-```
-
-```ebnf
-SemanticVersion ::= semantic_version(
-                      UnicodeString
-                    )
-```
-
-`Version` and `ModelVersion` denote Semantic Versioning 2.0.0 version identifiers.
-
-`SemanticVersion` MUST conform to Semantic Versioning 2.0.0 as defined at [semver.org](https://semver.org/).
-
-`Status` denotes the publication status of a reusable schema artifact and is restricted to `draft` or `published`.
-
-`PreviousVersion` and `DerivedFrom` denote IRIs identifying related source or predecessor artifacts.
-
-### Annotations
-
-`Annotation` provides an extensible metadata mechanism for additional named metadata values that are not captured by the core descriptive, provenance, or versioning structures. `AnnotationName` identifies the annotated metadata property. `AnnotationValue` provides the associated metadata value. Annotation values may be either literals or IRIs. This supports linking to external resources such as DOIs and grant identifiers, as well as storing institutional metadata.
-
-```ebnf
-Annotation ::= annotation(
-                 AnnotationName
-                 AnnotationValue
-               )
-
-AnnotationName ::= annotation_name(
-                    Iri
-                  )
-
-AnnotationValue ::= LiteralAnnotationValue
-                  | IriAnnotationValue
-
-LiteralAnnotationValue ::= literal_annotation_value(
-                           Literal
-                         )
-
-IriAnnotationValue ::= iri_annotation_value(
-                         Iri
-                       )
-```
-
-## Scalar And Datatype Leaves
+The following productions define the primitive leaf types used throughout this grammar. They are placed here so that subsequent sections can reference them without forward reference. They represent the atomic constructs from which all other productions are built: IRIs, typed string domains, lexical forms, numeric and temporal datatype IRIs, and textual metadata values.
 
 ```ebnf
 Iri ::= iri(
@@ -1633,8 +446,12 @@ Iri ::= iri(
         )
 
 DatatypeIri ::= datatype_iri(
-                Iri
-              )
+                  Iri
+                )
+
+TermIri ::= term_iri(
+              Iri
+            )
 
 LanguageTag ::= language_tag(
                   Bcp47Tag
@@ -1653,13 +470,15 @@ IsoDateTimeStamp ::= iso_date_time_stamp(
 
 `DatatypeIri` denotes an `Iri` that identifies an RDF datatype.
 
+`TermIri` denotes an `Iri` that identifies a term in a controlled vocabulary or ontology. It is used in `ControlledTermValue` and `ControlledTermClass`.
+
 `LanguageTag` denotes a well-formed BCP 47 language tag.
 
 `LexicalForm` denotes a Unicode string and SHOULD be in Unicode Normalization Form C.
 
 `IsoDateTimeStamp` denotes an ISO 8601 date-time lexical form.
 
-`KeyIdentifier` denotes an ASCII identifier without whitespace.
+`KeyIdentifier` wraps an `AsciiIdentifier` and carries the same character-set constraint: it MUST match the pattern `[A-Za-z][A-Za-z0-9_-]*`.
 
 ```ebnf
 NonNegativeInteger ::= non_negative_integer(
@@ -1848,6 +667,1192 @@ The following nonterminals are intentionally left abstract as underlying string 
 - `IntegerLexicalForm` denotes a base-10 integer lexical form.
 
 The nonterminals `SemanticVersion`, `IriString`, `Bcp47Tag`, `UnicodeString`, `Iso8601DateTimeLexicalForm`, `AsciiIdentifier`, and `IntegerLexicalForm` are intentionally left abstract in this version.
+
+## Literals
+
+```ebnf
+Literal ::= DatatypeIriLiteral
+          | LangStringLiteral
+
+DatatypeIriLiteral ::= datatype_iri_literal(
+                         LexicalForm
+                         DatatypeIri
+                       )
+
+LangStringLiteral ::= lang_string_literal(
+                        LexicalForm
+                        LanguageTag
+                      )
+
+TextLiteral ::= StringLiteral
+              | LangStringLiteral
+
+StringLiteral ::= string_literal(
+                    LexicalForm
+                  )
+
+NumericLiteral ::= numeric_literal(
+                     LexicalForm
+                     NumericDatatypeIri
+                   )
+
+TemporalLiteral ::= DateLiteral
+                  | TimeLiteral
+                  | DateTimeLiteral
+
+DateLiteral ::= YearLiteral
+              | YearMonthLiteral
+              | FullDateLiteral
+
+YearLiteral ::= year_literal(
+                  LexicalForm
+                  YearDatatypeIri
+                )
+
+YearMonthLiteral ::= year_month_literal(
+                       LexicalForm
+                       YearMonthDatatypeIri
+                     )
+
+FullDateLiteral ::= full_date_literal(
+                      LexicalForm
+                      DateDatatypeIri
+                    )
+
+TimeLiteral ::= time_literal(
+                  LexicalForm
+                  TimeDatatypeIri
+                )
+
+DateTimeLiteral ::= date_time_literal(
+                      LexicalForm
+                      DateTimeDatatypeIri
+                    )
+```
+
+A `Literal` in this specification is an RDF literal.
+
+A `DatatypeIriLiteral` denotes an RDF literal consisting of a lexical form and a datatype IRI.
+
+A `LangStringLiteral` denotes an RDF literal whose lexical form is paired with a non-empty language tag. `LangStringLiteral` corresponds to an RDF literal with datatype IRI `http://www.w3.org/1999/02/22-rdf-syntax-ns#langString`.
+
+A `StringLiteral` denotes an RDF literal whose datatype IRI is `http://www.w3.org/2001/XMLSchema#string`.
+
+`TextLiteral` is the class of literals permitted in `TextValue`.
+
+`NumericLiteral` is the class of literals permitted in `NumericValue`.
+
+`DateLiteral`, `TimeLiteral`, and `DateTimeLiteral` are the literal classes permitted in `DateValue`, `TimeValue`, and `DateTimeValue`, respectively.
+
+Within `DateLiteral`, `YearLiteral`, `YearMonthLiteral`, and `FullDateLiteral` distinguish year-only, year-month, and full-date values.
+
+`NumericLiteral` carries a numeric datatype IRI.
+
+`YearLiteral` carries a year datatype IRI.
+
+`YearMonthLiteral` carries a year-month datatype IRI.
+
+`FullDateLiteral` carries a full-date datatype IRI.
+
+`TimeLiteral` carries a time datatype IRI.
+
+`DateTimeLiteral` carries a date-time datatype IRI.
+
+The lexical form is a Unicode string and SHOULD be in Unicode Normalization Form C.
+
+The language tag of a `LangStringLiteral` MUST be non-empty and well-formed according to BCP 47.
+
+Concrete syntaxes MAY use simpler surface forms that omit an explicit datatype IRI for string literals or language-tagged strings. Such forms are syntactic sugar and do not change the abstract structure defined by this specification.
+
+The literal value associated with a `Literal` is determined as follows:
+
+- If the `Literal` is a `LangStringLiteral`, the literal value is the pair consisting of lexical form and language tag, in that order.
+- If the `Literal` is a `DatatypeIriLiteral`, the datatype IRI is recognized, and the lexical form is in the lexical space of that datatype, the literal value is obtained by applying the lexical-to-value mapping of that datatype to the lexical form.
+- If the `Literal` is a `DatatypeIriLiteral`, the datatype IRI is recognized, but the lexical form is outside the lexical space of that datatype, the literal is ill-typed.
+- If the `Literal` is a `DatatypeIriLiteral` and the datatype IRI is not recognized, the literal value is not defined by this specification.
+
+An ill-typed literal is not syntactically ill-formed, but it does not determine a valid literal value and produces a semantic inconsistency. Implementations MUST accept ill-typed literals and MAY produce warnings when encountering them.
+
+Two literals are term-equal if and only if their lexical forms and their datatype IRIs or language tags compare equal character by character.
+
+## Artifact Identity
+
+Artifact identity defines the typed identifiers by which artifacts and artifact references are denoted in the model. These identity constructs are distinct from descriptive metadata, provenance, versioning, and annotations.
+
+```ebnf
+FieldId ::= TextFieldId
+          | NumericFieldId
+          | DateFieldId
+          | TimeFieldId
+          | DateTimeFieldId
+          | ControlledTermFieldId
+          | SingleChoiceFieldId
+          | MultipleChoiceFieldId
+          | LinkFieldId
+          | EmailFieldId
+          | PhoneNumberFieldId
+          | OrcidFieldId
+          | RorFieldId
+          | DoiFieldId
+          | PubMedIdFieldId
+          | RridFieldId
+          | NihGrantIdFieldId
+          | AttributeValueFieldId
+
+TextFieldId ::= text_field_id( Iri )
+
+NumericFieldId ::= numeric_field_id( Iri )
+
+DateFieldId ::= date_field_id( Iri )
+
+TimeFieldId ::= time_field_id( Iri )
+
+DateTimeFieldId ::= date_time_field_id( Iri )
+
+ControlledTermFieldId ::= controlled_term_field_id( Iri )
+
+SingleChoiceFieldId ::= single_choice_field_id( Iri )
+
+MultipleChoiceFieldId ::= multiple_choice_field_id( Iri )
+
+LinkFieldId ::= link_field_id( Iri )
+
+EmailFieldId ::= email_field_id( Iri )
+
+PhoneNumberFieldId ::= phone_number_field_id( Iri )
+
+OrcidFieldId ::= orcid_field_id( Iri )
+
+RorFieldId ::= ror_field_id( Iri )
+
+DoiFieldId ::= doi_field_id( Iri )
+
+PubMedIdFieldId ::= pub_med_id_field_id( Iri )
+
+RridFieldId ::= rrid_field_id( Iri )
+
+NihGrantIdFieldId ::= nih_grant_id_field_id( Iri )
+
+AttributeValueFieldId ::= attribute_value_field_id( Iri )
+
+TemplateId ::= template_id( Iri )
+
+PresentationComponentId ::= presentation_component_id( Iri )
+
+TemplateInstanceId ::= template_instance_id( Iri )
+```
+
+## Artifact Metadata
+
+Artifact metadata defines descriptive information, provenance, versioning, and annotations. `ArtifactMetadata` provides the common metadata carried by all artifacts other than identity. `SchemaArtifactMetadata` extends that common structure with schema-versioning information used by reusable schema artifacts.
+
+### Aggregate Structure
+
+This subsection identifies how the metadata categories are grouped at the artifact level. `ArtifactMetadata` carries the metadata common to all artifacts other than identity, while `SchemaArtifactMetadata` adds versioning information for reusable schema artifacts.
+
+```ebnf
+SchemaArtifactMetadata ::= schema_artifact_metadata(
+                             ArtifactMetadata
+                             SchemaVersioning
+                           )
+
+ArtifactMetadata ::= artifact_metadata(
+                       DescriptiveMetadata
+                       TemporalProvenance
+                       Annotation*
+                     )
+```
+
+### Descriptive Metadata
+
+`DescriptiveMetadata` identifies the human-oriented descriptive properties of an artifact. These properties support naming, explanatory text, and external or local identifiers used for cataloging. `Name` is the required user-supplied name of the artifact. `Description`, when present, is extended textual description explaining the artifact's purpose and content. `Identifier`, when present, is a user-specified external identifier intended for integration with institutional or external systems.
+
+```ebnf
+DescriptiveMetadata ::= descriptive_metadata(
+                          Name
+                          [Description]
+                          [Identifier]
+                        )
+```
+
+### Temporal Provenance
+
+`TemporalProvenance` identifies when an artifact was created and modified, and which agents were responsible for those actions.
+
+```ebnf
+TemporalProvenance ::= temporal_provenance(
+                         CreatedOn
+                         CreatedBy
+                         ModifiedOn
+                         ModifiedBy
+                       )
+
+CreatedOn ::= IsoDateTimeStamp
+
+CreatedBy ::= Iri
+
+ModifiedOn ::= IsoDateTimeStamp
+
+ModifiedBy ::= Iri
+```
+
+`CreatedOn` and `ModifiedOn` MUST be ISO 8601 date-time timestamps.
+
+`CreatedBy` and `ModifiedBy` denote IRIs identifying the responsible agents.
+
+### Schema Versioning
+
+`SchemaVersioning` identifies version-related metadata specific to reusable schema artifacts. It captures artifact version, publication status, the version of the schema model used, and optional derivation links to earlier or source artifacts.
+
+```ebnf
+SchemaVersioning ::= schema_versioning(
+                       Version
+                       Status
+                       ModelVersion
+                       [PreviousVersion]
+                       [DerivedFrom]
+                     )
+```
+
+```ebnf
+Version ::= version(
+              SemanticVersion
+            )
+
+Status ::= DraftStatus
+         | PublishedStatus
+
+DraftStatus ::= draft_status()
+
+PublishedStatus ::= published_status()
+
+ModelVersion ::= model_version(
+                   SemanticVersion
+                 )
+
+PreviousVersion ::= previous_version(
+                      Iri
+                    )
+
+DerivedFrom ::= derived_from(
+                  Iri
+                )
+```
+
+```ebnf
+SemanticVersion ::= semantic_version(
+                      UnicodeString
+                    )
+```
+
+`Version` and `ModelVersion` denote Semantic Versioning 2.0.0 version identifiers.
+
+`SemanticVersion` MUST conform to Semantic Versioning 2.0.0 as defined at [semver.org](https://semver.org/).
+
+`Status` denotes the publication status of a reusable schema artifact and is restricted to `draft` or `published`.
+
+`PreviousVersion` and `DerivedFrom` denote IRIs identifying related source or predecessor artifacts.
+
+### Annotations
+
+`Annotation` provides an extensible metadata mechanism for additional named metadata values that are not captured by the core descriptive, provenance, or versioning structures. `AnnotationName` identifies the annotated metadata property. `AnnotationValue` provides the associated metadata value. Annotation values may be either literals or IRIs. This supports linking to external resources such as DOIs and grant identifiers, as well as storing institutional metadata.
+
+```ebnf
+Annotation ::= annotation(
+                 AnnotationName
+                 AnnotationValue
+               )
+
+AnnotationName ::= annotation_name(
+                     Iri
+                   )
+
+AnnotationValue ::= LiteralAnnotationValue
+                  | IriAnnotationValue
+
+LiteralAnnotationValue ::= literal_annotation_value(
+                             Literal
+                           )
+
+IriAnnotationValue ::= iri_annotation_value(
+                         Iri
+                       )
+```
+
+## Embedded Artifact Keys
+
+An `EmbeddedArtifactKey` is the local identifier of an `EmbeddedArtifact` within a `Template`. It is the key by which an embedded field, embedded template, or embedded presentation component is distinguished from other embedded artifacts in the same template. This key is also the mechanism that connects template structure to instance structure: `FieldValue` and `NestedTemplateInstance` use `EmbeddedArtifactKey` to identify which embedded artifact in the template they correspond to.
+
+```ebnf
+EmbeddedArtifactKey ::= embedded_artifact_key(
+                          KeyIdentifier
+                        )
+
+KeyIdentifier ::= key_identifier(
+                    AsciiIdentifier
+                  )
+```
+
+`EmbeddedArtifactKey` MUST match the pattern `[A-Za-z][A-Za-z0-9_-]*`: it MUST begin with an ASCII letter followed by zero or more ASCII letters, digits, underscores, or hyphens.
+
+`EmbeddedArtifactKey` values are local to a `Template` and MUST be unique within that `Template`.
+
+## Values
+
+This section defines the `Value` types that represent instance-level data. `Value` constructs appear in `FieldValue` instances and as typed default values in `EmbeddedArtifact` properties. The permitted form of a value in a `FieldValue` is determined by the `FieldType` of the referenced `Field`, as specified in the Field Type And Value Correspondence section.
+
+```ebnf
+Value ::= TextValue
+        | NumericValue
+        | DateValue
+        | TimeValue
+        | DateTimeValue
+        | ControlledTermValue
+        | ChoiceValue
+        | LinkValue
+        | EmailValue
+        | PhoneNumberValue
+        | ExternalAuthorityValue
+        | AttributeValue
+
+TextValue ::= text_value(
+                TextLiteral
+              )
+
+NumericValue ::= numeric_value(
+                   NumericLiteral
+                 )
+
+DateValue ::= YearValue
+            | YearMonthValue
+            | FullDateValue
+
+YearValue ::= year_value(
+                YearLiteral
+              )
+
+YearMonthValue ::= year_month_value(
+                     YearMonthLiteral
+                   )
+
+FullDateValue ::= full_date_value(
+                    FullDateLiteral
+                  )
+
+TimeValue ::= time_value(
+                TimeLiteral
+              )
+
+DateTimeValue ::= date_time_value(
+                    DateTimeLiteral
+                  )
+
+ControlledTermValue ::= controlled_term_value(
+                          TermIri
+                          Label
+                          [Notation]
+                          [PreferredLabel]
+                        )
+
+ChoiceValue ::= choice_value(
+                  ChoiceSelection
+                )
+
+ChoiceSelection ::= Literal
+                  | ControlledTermValue
+                  | Iri
+
+LinkValue ::= link_value(
+                Iri
+              )
+
+EmailValue ::= email_value(
+                 StringLiteral
+               )
+
+PhoneNumberValue ::= phone_number_value(
+                       StringLiteral
+                     )
+
+ExternalAuthorityValue ::= OrcidValue
+                         | RorValue
+                         | DoiValue
+                         | PubMedIdValue
+                         | RridValue
+                         | NihGrantIdValue
+
+OrcidValue ::= orcid_value(
+                 Iri
+                 [Label]
+               )
+
+RorValue ::= ror_value(
+               Iri
+               [Label]
+             )
+
+DoiValue ::= doi_value(
+               Iri
+               [Label]
+             )
+
+PubMedIdValue ::= pub_med_id_value(
+                    Iri
+                    [Label]
+                  )
+
+RridValue ::= rrid_value(
+                Iri
+                [Label]
+              )
+
+NihGrantIdValue ::= nih_grant_id_value(
+                      Iri
+                      [Label]
+                    )
+
+AttributeValue ::= attribute_value(
+                     AttributeName
+                     Value
+                   )
+```
+
+`ChoiceSelection` and `ChoiceOptionValue` are structurally identical: both permit a `Literal`, a `ControlledTermValue`, or an `Iri`. The two production names are kept distinct to make their roles explicit. `ChoiceOptionValue` identifies a permissible option as declared in a `ChoiceFieldType`. `ChoiceSelection` identifies the value chosen in an instance context. The correspondence between them is governed by the match semantics defined in the validation rules.
+
+## Embedded Artifact Properties
+
+Embedded artifact properties define the contextual information carried by an `EmbeddedArtifact` within a `Template`. These properties govern how a referenced reusable artifact is used in that template context, including reference, requirement, cardinality, visibility, defaults, and label override, and they are distinct from the intrinsic properties of the referenced reusable artifact itself.
+
+### References
+
+These productions identify the reusable artifact that is being included in the template.
+
+```ebnf
+FieldReference ::= TextFieldReference
+                 | NumericFieldReference
+                 | DateFieldReference
+                 | TimeFieldReference
+                 | DateTimeFieldReference
+                 | ControlledTermFieldReference
+                 | SingleChoiceFieldReference
+                 | MultipleChoiceFieldReference
+                 | LinkFieldReference
+                 | EmailFieldReference
+                 | PhoneNumberFieldReference
+                 | OrcidFieldReference
+                 | RorFieldReference
+                 | DoiFieldReference
+                 | PubMedIdFieldReference
+                 | RridFieldReference
+                 | NihGrantIdFieldReference
+                 | AttributeValueFieldReference
+
+TextFieldReference ::= TextFieldId
+
+NumericFieldReference ::= NumericFieldId
+
+DateFieldReference ::= DateFieldId
+
+TimeFieldReference ::= TimeFieldId
+
+DateTimeFieldReference ::= DateTimeFieldId
+
+ControlledTermFieldReference ::= ControlledTermFieldId
+
+SingleChoiceFieldReference ::= SingleChoiceFieldId
+
+MultipleChoiceFieldReference ::= MultipleChoiceFieldId
+
+LinkFieldReference ::= LinkFieldId
+
+EmailFieldReference ::= EmailFieldId
+
+PhoneNumberFieldReference ::= PhoneNumberFieldId
+
+OrcidFieldReference ::= OrcidFieldId
+
+RorFieldReference ::= RorFieldId
+
+DoiFieldReference ::= DoiFieldId
+
+PubMedIdFieldReference ::= PubMedIdFieldId
+
+RridFieldReference ::= RridFieldId
+
+NihGrantIdFieldReference ::= NihGrantIdFieldId
+
+AttributeValueFieldReference ::= AttributeValueFieldId
+
+TemplateReference ::= TemplateId
+
+PresentationComponentReference ::= PresentationComponentId
+```
+
+### Requirements
+
+`ValueRequirement` identifies whether a value is required, recommended, or optional in the embedding context. `Required` means that a value must be supplied for conformance. `Recommended` means that a value is not required for conformance, but implementations SHOULD encourage entry and MAY warn when it is absent. `Optional` means that a value may be omitted without conformance failure.
+
+**TODO:** Confirm with the CEDAR team whether `Recommended` is intended to have normative meaning beyond authoring guidance and warnings.
+
+```ebnf
+ValueRequirement ::= Required
+                   | Recommended
+                   | Optional
+```
+
+When `ValueRequirement` is absent from an `EmbeddedArtifact`, the default is `Optional`.
+
+### Cardinality
+
+`Cardinality` identifies the permitted number of occurrences for the embedded artifact in the embedding context.
+
+```ebnf
+Cardinality ::= cardinality(
+                  MinCardinality
+                  [MaxCardinality]
+                )
+
+MinCardinality ::= min_cardinality(
+                     NonNegativeInteger
+                   )
+
+MaxCardinality ::= max_cardinality(
+                     CardinalityUpperBound
+                   )
+
+CardinalityUpperBound ::= NonNegativeInteger
+                        | UnboundedCardinality
+
+UnboundedCardinality ::= unbounded_cardinality()
+```
+
+When `Cardinality` is absent from an `EmbeddedArtifact`, the implied default is `min_cardinality(1)` with `max_cardinality(1)`: the embedded artifact MUST appear exactly once.
+
+### Visibility
+
+`Visibility` determines whether the embedded artifact is shown in rendered interfaces. It is modeled as an embedding property rather than as a rendering hint because it applies to any kind of embedded artifact, not only to fields.
+
+```ebnf
+Visibility ::= Visible
+             | Hidden
+```
+
+When `Visibility` is absent from an `EmbeddedArtifact`, the default is `Visible`.
+
+### Defaults
+
+`DefaultValue` provides an embedding-specific default value where one is defined. The form of the default is determined by the value family of the embedded field. `TextDefaultValue` is also used by `TextFieldType` as the reusable text-specific default carried by that field type.
+
+```ebnf
+DefaultValue ::= TextDefaultValue
+               | NumericDefaultValue
+               | DateDefaultValue
+               | TimeDefaultValue
+               | DateTimeDefaultValue
+               | ControlledTermDefaultValue
+               | ChoiceDefaultValue
+               | LinkDefaultValue
+               | EmailDefaultValue
+               | PhoneNumberDefaultValue
+               | OrcidDefaultValue
+               | RorDefaultValue
+               | DoiDefaultValue
+               | PubMedIdDefaultValue
+               | RridDefaultValue
+               | NihGrantIdDefaultValue
+
+TextDefaultValue ::= text_default_value(
+                       TextValue
+                     )
+
+NumericDefaultValue ::= numeric_default_value(
+                          NumericValue
+                        )
+
+DateDefaultValue ::= date_default_value(
+                       DateValue
+                     )
+
+TimeDefaultValue ::= time_default_value(
+                       TimeValue
+                     )
+
+DateTimeDefaultValue ::= date_time_default_value(
+                           DateTimeValue
+                         )
+
+ControlledTermDefaultValue ::= controlled_term_default_value(
+                                 ControlledTermValue
+                               )
+
+ChoiceDefaultValue ::= choice_default_value(
+                         ChoiceValue+
+                       )
+
+LinkDefaultValue ::= link_default_value(
+                       LinkValue
+                     )
+
+EmailDefaultValue ::= email_default_value(
+                        EmailValue
+                      )
+
+PhoneNumberDefaultValue ::= phone_number_default_value(
+                              PhoneNumberValue
+                            )
+
+OrcidDefaultValue ::= orcid_default_value(
+                        OrcidValue
+                      )
+
+RorDefaultValue ::= ror_default_value(
+                      RorValue
+                    )
+
+DoiDefaultValue ::= doi_default_value(
+                      DoiValue
+                    )
+
+PubMedIdDefaultValue ::= pub_med_id_default_value(
+                           PubMedIdValue
+                         )
+
+RridDefaultValue ::= rrid_default_value(
+                       RridValue
+                     )
+
+NihGrantIdDefaultValue ::= nih_grant_id_default_value(
+                             NihGrantIdValue
+                           )
+```
+
+`DefaultValue` provides an embedding-specific default value applied in the context of the containing `Template`. `TextDefaultValue` may appear both on `TextFieldType` (as a reusable field-level default) and on `EmbeddedTextField` (as an embedding-specific override). When both are present, the `TextDefaultValue` on `EmbeddedTextField` MUST take precedence.
+
+### Label Override
+
+`LabelOverride` provides template-specific labeling for an embedded artifact. This allows a template to override the default label of the referenced reusable artifact in that embedding context.
+
+```ebnf
+LabelOverride ::= label_override(
+                    Label
+                    AlternativeLabel*
+                  )
+```
+
+## Field Types
+
+`FieldType` denotes the semantic category of values that a `Field` may carry. The `FieldType` productions define the value structure associated with a field and, where appropriate, the typed rendering hints and field-type-specific properties that are valid for that semantic category.
+
+```ebnf
+FieldType ::= TextFieldType
+            | NumericFieldType
+            | TemporalFieldType
+            | ControlledTermFieldType
+            | ChoiceFieldType
+            | LinkFieldType
+            | ContactFieldType
+            | ExternalAuthorityFieldType
+            | AttributeValueFieldType
+
+TextFieldType ::= text_field_type(
+                    [TextDefaultValue]
+                    [MinLength]
+                    [MaxLength]
+                    [ValidationRegex]
+                    [TextRenderingHint]
+                  )
+
+NumericFieldType ::= numeric_field_type(
+                       NumericDatatype
+                       [Unit]
+                       [NumericPrecision]
+                       [NumericRenderingHint]
+                     )
+
+Unit ::= unit(
+           Iri
+           [Label]
+         )
+
+MinLength ::= min_length(
+                NonNegativeInteger
+              )
+
+MaxLength ::= max_length(
+                NonNegativeInteger
+              )
+
+ValidationRegex ::= validation_regex(
+                      RegexPattern
+                    )
+
+NumericPrecision ::= numeric_precision(
+                       NonNegativeInteger
+                     )
+
+TemporalFieldType ::= DateFieldType
+                    | TimeFieldType
+                    | DateTimeFieldType
+
+ControlledTermFieldType ::= controlled_term_field_type(
+                              ControlledTermSource+
+                            )
+
+ChoiceFieldType ::= SingleChoiceFieldType
+                  | MultipleChoiceFieldType
+
+SingleChoiceFieldType ::= single_choice_field_type(
+                            ChoiceOption+
+                            [SingleChoiceRenderingHint]
+                          )
+
+MultipleChoiceFieldType ::= multiple_choice_field_type(
+                              ChoiceOption+
+                              [MultipleChoiceRenderingHint]
+                            )
+
+ChoiceOption ::= choice_option(
+                   ChoiceOptionValue
+                 )
+
+ChoiceOptionValue ::= Literal
+                    | ControlledTermValue
+                    | Iri
+
+LinkFieldType ::= link_field_type()
+
+ContactFieldType ::= EmailFieldType
+                   | PhoneNumberFieldType
+
+EmailFieldType ::= email_field_type()
+
+PhoneNumberFieldType ::= phone_number_field_type()
+
+ExternalAuthorityFieldType ::= OrcidFieldType
+                             | RorFieldType
+                             | DoiFieldType
+                             | PubMedIdFieldType
+                             | RridFieldType
+                             | NihGrantIdFieldType
+
+OrcidFieldType ::= orcid_field_type()
+
+RorFieldType ::= ror_field_type()
+
+DoiFieldType ::= doi_field_type()
+
+PubMedIdFieldType ::= pub_med_id_field_type()
+
+RridFieldType ::= rrid_field_type()
+
+NihGrantIdFieldType ::= nih_grant_id_field_type()
+
+AttributeValueFieldType ::= attribute_value_field_type()
+```
+
+`Unit` denotes an identified measurement or quantity unit optionally paired with a human-readable label.
+
+The current placement of `Unit` on `NumericFieldType` is a pragmatic compromise. A later revision may introduce a distinct `QuantityFieldType` to model numeric values with fixed units more explicitly.
+
+`ChoiceOption` denotes one permissible option in a choice field.
+
+`ChoiceOptionValue` allows a choice option to be specified by a literal, an ontology-backed controlled term, or an IRI.
+
+### Temporal Field Types
+
+`TemporalFieldType` denotes temporal-valued fields and is refined into strongly typed date, time, and date-time forms. This section groups the temporal field-type productions together with their compatible rendering hints and value-type constraints.
+
+```ebnf
+DateFieldType ::= date_field_type(
+                    DateValueType
+                    [DateRenderingHint]
+                  )
+
+DateValueType ::= YearValueType
+                | YearMonthValueType
+                | FullDateValueType
+
+YearValueType ::= year_value_type()
+
+YearMonthValueType ::= year_month_value_type()
+
+FullDateValueType ::= full_date_value_type()
+```
+
+```ebnf
+TimeFieldType ::= time_field_type(
+                    [TimePrecision]
+                    [TimezoneRequirement]
+                    [TimeRenderingHint]
+                  )
+
+TimePrecision ::= HourMinutePrecision
+                | HourMinuteSecondPrecision
+                | HourMinuteSecondFractionPrecision
+
+HourMinutePrecision ::= hour_minute_precision()
+
+HourMinuteSecondPrecision ::= hour_minute_second_precision()
+
+HourMinuteSecondFractionPrecision ::= hour_minute_second_fraction_precision()
+
+TimezoneRequirement ::= TimezoneRequired
+                      | TimezoneNotRequired
+
+TimezoneRequired ::= timezone_required()
+
+TimezoneNotRequired ::= timezone_not_required()
+```
+
+`TimePrecision` identifies the finest time precision permitted by a `TimeFieldType`.
+
+`HourMinutePrecision`, `HourMinuteSecondPrecision`, and `HourMinuteSecondFractionPrecision` identify time values constrained respectively to hour-and-minute precision, second precision, and fractional-second precision.
+
+`TimezoneRequirement` identifies whether timezone information is required by the field type.
+
+> **TODO:** The lexical conformance semantics of `TimePrecision` and `DateTimeValueType` — specifically, whether a value at a coarser precision must omit finer components entirely or may zero them — are unresolved pending clarification from the CEDAR team. No normative lexical constraint is defined here until that is resolved.
+
+```ebnf
+DateTimeFieldType ::= date_time_field_type(
+                        DateTimeValueType
+                        [TimezoneRequirement]
+                        [DateTimeRenderingHint]
+                      )
+
+DateTimeValueType ::= DateHourMinuteValueType
+                    | DateHourMinuteSecondValueType
+                    | DateHourMinuteSecondFractionValueType
+
+DateHourMinuteValueType ::= date_hour_minute_value_type()
+
+DateHourMinuteSecondValueType ::= date_hour_minute_second_value_type()
+
+DateHourMinuteSecondFractionValueType ::= date_hour_minute_second_fraction_value_type()
+```
+
+`DateTimeValueType` identifies the finest permitted date-time precision.
+
+`DateHourMinuteValueType`, `DateHourMinuteSecondValueType`, and `DateHourMinuteSecondFractionValueType` identify date-time values constrained respectively to minute precision, second precision, and fractional-second precision.
+
+```ebnf
+DateRenderingHint ::= date_rendering_hint(
+                        DateRenderingWidget
+                        [DateFormat]
+                      )
+
+DateRenderingWidget ::= DatePickerRenderingWidget
+
+DatePickerRenderingWidget ::= date_picker_rendering_widget()
+
+DateFormat ::= date_format(
+                 DateComponentOrder
+               )
+
+DateComponentOrder ::= DayMonthYearOrder
+                     | MonthDayYearOrder
+                     | YearMonthDayOrder
+
+DayMonthYearOrder ::= day_month_year_order()
+
+MonthDayYearOrder ::= month_day_year_order()
+
+YearMonthDayOrder ::= year_month_day_order()
+
+TimeRenderingHint ::= time_rendering_hint(
+                        TimeRenderingWidget
+                        [TimeFormat]
+                      )
+
+TimeRenderingWidget ::= TimePickerRenderingWidget
+
+TimePickerRenderingWidget ::= time_picker_rendering_widget()
+
+DateTimeRenderingHint ::= date_time_rendering_hint(
+                            DateTimeRenderingWidget
+                            [TimeFormat]
+                          )
+
+DateTimeRenderingWidget ::= DateTimePickerRenderingWidget
+
+DateTimePickerRenderingWidget ::= date_time_picker_rendering_widget()
+
+TimeFormat ::= TwelveHourTimeFormat
+             | TwentyFourHourTimeFormat
+
+TwelveHourTimeFormat ::= twelve_hour_time_format()
+
+TwentyFourHourTimeFormat ::= twenty_four_hour_time_format()
+```
+
+`DateFormat` identifies the ordering used to display or acquire date components.
+
+`DateComponentOrder` identifies whether a date is rendered or acquired in day-month-year, month-day-year, or year-month-day order.
+
+### Controlled Term Sources
+
+Controlled term sources define the ontological authorities from which controlled-term values may be drawn. A `ControlledTermFieldType` requires one or more `ControlledTermSource` entries. Each source specifies either an entire ontology, a branch of an ontology rooted at a given term, a set of individual ontology classes, or an external value set. `TermIri` is defined in the Scalar and Datatype Leaves section.
+
+```ebnf
+ControlledTermSource ::= OntologySource
+                       | BranchSource
+                       | ClassSource
+                       | ValueSetSource
+
+OntologySource ::= ontology_source(
+                     OntologyReference
+                   )
+
+OntologyReference ::= ontology_reference(
+                        OntologyIri
+                        [OntologyDisplayHint]
+                      )
+
+OntologyDisplayHint ::= ontology_display_hint(
+                          OntologyDisplayHintContent
+                        )
+
+OntologyDisplayHintContent ::= OntologyAcronym
+                             | OntologyName
+                             | OntologyAcronym OntologyName
+
+BranchSource ::= branch_source(
+                   OntologyReference
+                   RootTermIri
+                   RootTermLabel
+                   [MaxTraversalDepth]
+                 )
+
+ClassSource ::= class_source(
+                  ControlledTermClass+
+                )
+
+ControlledTermClass ::= controlled_term_class(
+                          TermIri
+                          Label
+                          OntologyReference
+                        )
+
+ValueSetSource ::= value_set_source(
+                     ValueSetIdentifier
+                     [ValueSetName]
+                     [ValueSetIri]
+                   )
+```
+
+```ebnf
+OntologyAcronym ::= ontology_acronym(
+                      UnicodeString
+                    )
+
+OntologyName ::= ontology_name(
+                   UnicodeString
+                 )
+
+OntologyIri ::= ontology_iri(
+                  Iri
+                )
+
+RootTermIri ::= root_term_iri(
+                  Iri
+                )
+
+RootTermLabel ::= root_term_label(
+                    UnicodeString
+                  )
+
+MaxTraversalDepth ::= max_traversal_depth(
+                        NonNegativeInteger
+                      )
+
+ValueSetIdentifier ::= value_set_identifier(
+                         UnicodeString
+                       )
+
+ValueSetName ::= value_set_name(
+                   UnicodeString
+                 )
+
+ValueSetIri ::= value_set_iri(
+                  Iri
+                )
+```
+
+`OntologyIri`, `RootTermIri`, and `ValueSetIri` denote IRIs used in controlled-term source specifications.
+
+`OntologyAcronym`, `OntologyName`, `RootTermLabel`, `ValueSetIdentifier`, and `ValueSetName` denote textual controlled-term source metadata.
+
+`MaxTraversalDepth` denotes a non-negative traversal-depth limit for branch-based controlled-term sources.
+
+### Rendering Hints
+
+```ebnf
+RenderingHint ::= TextRenderingHint
+                | SingleChoiceRenderingHint
+                | MultipleChoiceRenderingHint
+                | NumericRenderingHint
+                | DateRenderingHint
+                | TimeRenderingHint
+                | DateTimeRenderingHint
+
+TextRenderingHint ::= SingleLineTextRenderingHint
+                    | MultiLineTextRenderingHint
+
+SingleLineTextRenderingHint ::= single_line_text_rendering_hint()
+
+MultiLineTextRenderingHint ::= multi_line_text_rendering_hint()
+
+SingleChoiceRenderingHint ::= RadioRenderingHint
+                            | SingleSelectDropdownRenderingHint
+
+RadioRenderingHint ::= radio_rendering_hint()
+
+SingleSelectDropdownRenderingHint ::= single_select_dropdown_rendering_hint()
+
+MultipleChoiceRenderingHint ::= CheckboxRenderingHint
+                              | MultiSelectDropdownRenderingHint
+
+CheckboxRenderingHint ::= checkbox_rendering_hint()
+
+MultiSelectDropdownRenderingHint ::= multi_select_dropdown_rendering_hint()
+
+NumericRenderingHint ::= NumericInputRenderingHint
+
+NumericInputRenderingHint ::= numeric_input_rendering_hint()
+```
+
+The `FieldType` grammar distinguishes semantic variation from presentation variation.
+
+Semantic distinctions MUST remain in `FieldType` when they affect the meaning, cardinality, or value structure of the field.
+
+Presentation distinctions SHOULD be represented by typed rendering hints when they affect only UI behavior.
+
+Accordingly, `TextFieldType` is a single semantic field type whose single-line and multi-line display forms are represented by `TextRenderingHint`.
+
+A `TextFieldType` MAY additionally define a default text value, minimum length, maximum length, and validating regular expression.
+
+Similarly, `ChoiceFieldType` distinguishes `SingleChoiceFieldType` from `MultipleChoiceFieldType` semantically, while the rendering hint determines whether the UI uses radio buttons, checkboxes, or dropdown presentation. Typed rendering hints make incompatible combinations structurally invalid.
+
+Temporal semantics are also split structurally: `DateFieldType`, `TimeFieldType`, and `DateTimeFieldType` are distinct semantic field types, and each carries only the rendering hints and temporal options that are meaningful for that temporal category.
+
+The current rendering vocabulary is explicit but deliberately small: numeric fields use `NumericInputRenderingHint`, date fields use `DatePickerRenderingWidget`, time fields use `TimePickerRenderingWidget`, and date-time fields use `DateTimePickerRenderingWidget`.
+
+## Presentation Components
+
+`PresentationComponent` denotes reusable non-data-bearing content that contributes presentation or instructional structure within a `Template`. Presentation components appear in templates only through `EmbeddedPresentationComponent` and do not contribute `InstanceValue` constructs.
+
+```ebnf
+PresentationComponent ::= RichTextComponent
+                        | ImageComponent
+                        | YoutubeVideoComponent
+                        | SectionBreakComponent
+                        | PageBreakComponent
+
+RichTextComponent ::= rich_text_component(
+                        PresentationComponentId
+                        ArtifactMetadata
+                        HtmlContent
+                      )
+
+ImageComponent ::= image_component(
+                     PresentationComponentId
+                     ArtifactMetadata
+                     ImageSource
+                   )
+
+YoutubeVideoComponent ::= you_tube_video_component(
+                            PresentationComponentId
+                            ArtifactMetadata
+                            YoutubeVideoSource
+                          )
+
+SectionBreakComponent ::= section_break_component(
+                            PresentationComponentId
+                            ArtifactMetadata
+                          )
+
+PageBreakComponent ::= page_break_component(
+                         PresentationComponentId
+                         ArtifactMetadata
+                       )
+```
+
+```ebnf
+HtmlContent ::= html_content(
+                  UnicodeString
+                )
+```
+
+`HtmlContent` denotes an HTML fragment represented as a Unicode string and used by a `RichTextComponent`.
+
+This specification does not define a required HTML feature set.
+
+Implementations MAY restrict or sanitize HTML content for security, portability, or rendering reasons.
+
+```ebnf
+ImageSource ::= image_source(
+                  Iri
+                )
+
+YoutubeVideoSource ::= you_tube_video_source(
+                         Iri
+                       )
+```
+
+`ImageSource` and `YoutubeVideoSource` denote IRIs identifying the image or video resource used by the corresponding presentation component.
+
+## Field Type And Value Correspondence
+
+The `FieldType` of a `Field` determines the permitted `Value` forms in corresponding `FieldValue` constructs.
+
+The correspondence is:
+
+- `TextFieldType` to `TextValue`
+- `NumericFieldType` to `NumericValue`
+- `DateFieldType` to `DateValue`
+- `TimeFieldType` to `TimeValue`
+- `DateTimeFieldType` to `DateTimeValue`
+- `ControlledTermFieldType` to `ControlledTermValue`
+- `ChoiceFieldType` to `ChoiceValue`
+- `LinkFieldType` to `LinkValue`
+- `EmailFieldType` to `EmailValue`
+- `PhoneNumberFieldType` to `PhoneNumberValue`
+- `OrcidFieldType` to `OrcidValue`
+- `RorFieldType` to `RorValue`
+- `DoiFieldType` to `DoiValue`
+- `PubMedIdFieldType` to `PubMedIdValue`
+- `RridFieldType` to `RridValue`
+- `NihGrantIdFieldType` to `NihGrantIdValue`
+- `AttributeValueFieldType` to `AttributeValue`
+
+## Instances
+
+`TemplateInstance` denotes instance data that conforms to a `Template`. Instance productions are separated here from schema and presentation productions so that the schema model and instance model can be read independently.
+
+```ebnf
+TemplateInstance ::= template_instance(
+                       TemplateInstanceId
+                       ArtifactMetadata
+                       TemplateReference
+                       InstanceValue*
+                     )
+
+InstanceValue ::= FieldValue
+                | NestedTemplateInstance
+
+FieldValue ::= field_value(
+                 EmbeddedArtifactKey
+                 Value*
+               )
+
+NestedTemplateInstance ::= nested_template_instance(
+                             EmbeddedArtifactKey
+                             InstanceValue*
+                           )
+```
+
+For multi-valued `EmbeddedField`, all values for a single field occurrence are collected within a single `FieldValue` using `Value*`. For multi-valued `EmbeddedTemplate`, multiplicity is represented by multiple `NestedTemplateInstance` constructs sharing the same `EmbeddedArtifactKey` within the containing `TemplateInstance`. This asymmetry reflects the structural difference between scalar repetition (multiple values for one field) and structural repetition (multiple complete nested instances for one embedded template).
+
+> **TODO:** `FieldValue` uses `Value*`, which permits a `FieldValue` with zero values. Whether an empty `FieldValue` is a valid representation of absence for an optional field, or whether absence must be represented by omitting the `FieldValue` entirely (which would make `Value+` correct), is unresolved pending clarification from the CEDAR team.
 
 ## Open Questions
 
