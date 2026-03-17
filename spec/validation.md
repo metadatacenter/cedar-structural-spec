@@ -26,6 +26,10 @@ If an embedding defines minimum and maximum cardinality, the minimum cardinality
 
 If an embedding is marked `Required`, its minimum cardinality MUST be at least one.
 
+If an embedding is marked `Recommended`, absence of a value MUST NOT by itself cause conformance failure, though implementations MAY issue warnings or other authoring guidance.
+
+If an embedding is marked `Optional`, absence of a value MUST NOT by itself cause conformance failure.
+
 ### Instance Alignment
 
 Each `FieldValue` in a `TemplateInstance` MUST reference the `EmbeddedArtifactKey` of an `EmbeddedField` in the referenced `Template`.
@@ -104,6 +108,18 @@ For literals generally:
 - `DatatypeIriLiteral` lexical forms SHOULD be in Unicode Normalization Form C
 - `LangStringLiteral` lexical forms SHOULD be in Unicode Normalization Form C
 - `LangStringLiteral` language tags MUST be non-empty and well-formed according to BCP 47
+
+For typed defaults:
+
+- `NumericDefaultValue`, if present, MUST contain `NumericValue`
+- `DateDefaultValue`, if present, MUST contain `DateValue`
+- `TimeDefaultValue`, if present, MUST contain `TimeValue`
+- `DateTimeDefaultValue`, if present, MUST contain `DateTimeValue`
+- `ControlledTermDefaultValue`, if present, MUST contain `ControlledTermValue`
+- `ChoiceDefaultValue`, if present, MUST contain one or more `ChoiceValue` constructs
+- `LinkDefaultValue`, if present, MUST contain `LinkValue`
+- `ContactDefaultValue`, if present, MUST contain `ContactValue`
+- `ExternalAuthorityDefaultValue`, if present, MUST contain `ExternalAuthorityValue`
 
 For multiplicity:
 

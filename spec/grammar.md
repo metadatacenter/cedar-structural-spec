@@ -244,34 +244,112 @@ KeyIdentifier ::= key_identifier(
 
 Embedded artifact properties define the contextual information carried by an `EmbeddedArtifact` within a `Template`. These properties govern how a referenced reusable artifact is used in that template context, including reference, requirement, cardinality, visibility, defaults, and label override, and they are distinct from the intrinsic properties of the referenced reusable artifact itself.
 
-```ebnf
+### References
 
+These productions identify the reusable artifact that is being included in the template.
+
+```ebnf
 FieldReference ::= FieldId
 
 TemplateReference ::= TemplateId
 
 PresentationComponentReference ::= PresentationComponentId
+```
 
+### Requirements
+
+`ValueRequirement` identifies whether a value is required, recommended, or optional in the embedding context. `Required` means that a value must be supplied for conformance. `Recommended` means that a value is not required for conformance, but implementations SHOULD encourage entry and MAY warn when it is absent. `Optional` means that a value may be omitted without conformance failure.
+
+**TODO:** Confirm with the CEDAR team whether `Recommended` is intended to have normative meaning beyond authoring guidance and warnings.
+
+```ebnf
 ValueRequirement ::= Required
                    | Recommended
                    | Optional
+```
 
+### Cardinality
+
+`Cardinality` identifies the permitted number of occurrences for the embedded artifact in the embedding context.
+
+```ebnf
 Cardinality ::= cardinality(
                   MinCardinality
                   [MaxCardinality]
                 )
+```
 
+### Visibility
+
+`Visibility` determines whether the embedded artifact is shown in rendered interfaces. It is modeled as an embedding property rather than as a rendering hint because it applies to any kind of embedded artifact, not only to fields.
+
+```ebnf
 Visibility ::= Visible
              | Hidden
+```
 
-DefaultValue ::= default_value(
-                   Value*
-                 )
+### Defaults
+
+`DefaultValue` provides an embedding-specific default value where one is defined. The form of the default is determined by the value family of the embedded field. `TextDefaultValue` is also used by `TextFieldType` as the reusable text-specific default carried by that field type.
+
+```ebnf
+DefaultValue ::= TextDefaultValue
+               | NumericDefaultValue
+               | DateDefaultValue
+               | TimeDefaultValue
+               | DateTimeDefaultValue
+               | ControlledTermDefaultValue
+               | ChoiceDefaultValue
+               | LinkDefaultValue
+               | ContactDefaultValue
+               | ExternalAuthorityDefaultValue
 
 TextDefaultValue ::= text_default_value(
                       TextValue
                     )
 
+NumericDefaultValue ::= numeric_default_value(
+                         NumericValue
+                       )
+
+DateDefaultValue ::= date_default_value(
+                      DateValue
+                    )
+
+TimeDefaultValue ::= time_default_value(
+                      TimeValue
+                    )
+
+DateTimeDefaultValue ::= date_time_default_value(
+                          DateTimeValue
+                        )
+
+ControlledTermDefaultValue ::= controlled_term_default_value(
+                               ControlledTermValue
+                             )
+
+ChoiceDefaultValue ::= choice_default_value(
+                        ChoiceValue+
+                      )
+
+LinkDefaultValue ::= link_default_value(
+                      LinkValue
+                    )
+
+ContactDefaultValue ::= contact_default_value(
+                         ContactValue
+                       )
+
+ExternalAuthorityDefaultValue ::= external_authority_default_value(
+                                   ExternalAuthorityValue
+                                 )
+```
+
+### Label Override
+
+`LabelOverride` provides template-specific labeling for an embedded artifact. This allows a template to override the default label of the referenced reusable artifact in that embedding context.
+
+```ebnf
 LabelOverride ::= label_override(
                     Label
                     AlternativeLabel*

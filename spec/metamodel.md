@@ -75,7 +75,7 @@ Where supported by a concrete `FieldType`, a compatible `RenderingHint` is defin
 
 The reusable `Field` definition does not carry template-local keying, cardinality, visibility, or label override. Those properties belong to `EmbeddedField`.
 
-`EmbeddedField` MAY still define an embedding-specific `DefaultValue`. Where both a reusable text default and an embedding-specific default are present, the embedding-specific default is more specific to the template context.
+`EmbeddedField` MAY still define an embedding-specific typed `DefaultValue`. The form of that default depends on the value family of the embedded field. Where both a reusable text default and an embedding-specific text default are present, the embedding-specific default is more specific to the template context.
 
 ## PresentationComponent
 
