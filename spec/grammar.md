@@ -52,7 +52,11 @@ Artifact ::= SchemaArtifact
 
 SchemaArtifact ::= Field
                  | Template
+```
 
+The following productions introduce the abstract field categories. `Field` remains an abstract category, while the intermediate categories group related concrete field artifacts for readability and shared semantics.
+
+```ebnf
 Field ::= TextField
         | NumericField
         | TemporalField
@@ -79,7 +83,9 @@ ExternalAuthorityField ::= OrcidField
                          | PubMedIdField
                          | RridField
                          | NihGrantIdField
+```
 
+```ebnf
 TextField ::= text_field(
                TextFieldId
                SchemaArtifactMetadata
@@ -133,7 +139,11 @@ LinkField ::= link_field(
                SchemaArtifactMetadata
                LinkFieldType
              )
+```
 
+The next block completes the concrete field artifact variants for contact, external-authority, and attribute-value fields.
+
+```ebnf
 EmailField ::= email_field(
                 EmailFieldId
                 SchemaArtifactMetadata
@@ -146,6 +156,16 @@ PhoneNumberField ::= phone_number_field(
                       PhoneNumberFieldType
                     )
 
+AttributeValueField ::= attribute_value_field(
+                          AttributeValueFieldId
+                          SchemaArtifactMetadata
+                          AttributeValueFieldType
+                        )
+```
+
+The following block isolates the external-authority field artifacts, which all share the common role of representing identifiers from external authority systems.
+
+```ebnf
 OrcidField ::= orcid_field(
                 OrcidFieldId
                 SchemaArtifactMetadata
@@ -181,13 +201,11 @@ NihGrantIdField ::= nih_grant_id_field(
                      SchemaArtifactMetadata
                      NihGrantIdFieldType
                    )
+```
 
-AttributeValueField ::= attribute_value_field(
-                          AttributeValueFieldId
-                          SchemaArtifactMetadata
-                          AttributeValueFieldType
-                        )
+`Template` is shown separately because it is the schema artifact that assembles embedded artifacts into a reusable template structure.
 
+```ebnf
 Template ::= template(
                TemplateId
                SchemaArtifactMetadata
