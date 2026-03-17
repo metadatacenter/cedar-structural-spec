@@ -10,22 +10,33 @@ The words MUST, MUST NOT, SHOULD, and MAY are used to express normative requirem
 
 ## Naming Conventions
 
-Defined terms use the terminology in this specification exactly. In particular, the following terms are normative and stable:
+Defined terms use the terminology in this specification exactly. In particular, the following terms are normative and stable.
+
+Schema and artifact terms:
 
 - `Artifact`
 - `SchemaArtifact`
 - `Template`
 - `Field`
 - `PresentationComponent`
+
+Embedding terms:
+
 - `EmbeddedArtifact`
 - `EmbeddedField`
 - `EmbeddedTemplate`
 - `EmbeddedPresentationComponent`
+- `EmbeddedArtifactKey`
+
+Instance terms:
+
 - `TemplateInstance`
 - `InstanceValue`
 - `FieldValue`
 - `NestedTemplateInstance`
-- `EmbeddedArtifactKey`
+
+Typing terms:
+
 - `FieldType`
 
 ## Literal Notation
