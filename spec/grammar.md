@@ -758,6 +758,11 @@ NumericFieldType ::= numeric_field_type(
                        [NumericRenderingHint]
                      )
 
+Unit ::= unit(
+           Iri
+           [Label]
+         )
+
 MinLength ::= min_length(
                 NonNegativeInteger
               )
@@ -795,6 +800,14 @@ MultipleChoiceFieldType ::= multiple_choice_field_type(
                               [MultipleChoiceRenderingHint]
                             )
 
+ChoiceOption ::= choice_option(
+                   ChoiceOptionValue
+                 )
+
+ChoiceOptionValue ::= Literal
+                    | ControlledTermValue
+                    | Iri
+
 LinkFieldType ::= link_field_type()
 
 ContactFieldType ::= EmailFieldType
@@ -825,6 +838,12 @@ NihGrantIdFieldType ::= nih_grant_id_field_type()
 
 AttributeValueFieldType ::= attribute_value_field_type()
 ```
+
+`Unit` denotes an identified measurement or quantity unit optionally paired with a human-readable label.
+
+`ChoiceOption` denotes one permissible option in a choice field.
+
+`ChoiceOptionValue` allows a choice option to be specified by a literal, an ontology-backed controlled term, or an IRI.
 
 ### Temporal Field Types
 
@@ -1302,6 +1321,7 @@ ChoiceValue ::= choice_value(
 
 ChoiceSelection ::= Literal
                   | ControlledTermValue
+                  | Iri
 
 LinkValue ::= link_value(
                 Iri
@@ -1732,7 +1752,7 @@ The temporal datatype constructors denote the following XML Schema datatype IRIs
 - `XsdTimeDatatypeIri`: `http://www.w3.org/2001/XMLSchema#time`
 - `XsdDateTimeDatatypeIri`: `http://www.w3.org/2001/XMLSchema#dateTime`
 
-The nonterminals `RichTextContent`, `ImageSource`, `YoutubeVideoSource`, `ChoiceOption`, `Unit`, `SemanticVersion`, `Header`, `Footer`, `IriString`, `Bcp47Tag`, `UnicodeString`, `Iso8601DateTimeLexicalForm`, `AsciiIdentifier`, and `IntegerLexicalForm` are intentionally left abstract in this version.
+The nonterminals `RichTextContent`, `ImageSource`, `YoutubeVideoSource`, `SemanticVersion`, `Header`, `Footer`, `IriString`, `Bcp47Tag`, `UnicodeString`, `Iso8601DateTimeLexicalForm`, `AsciiIdentifier`, and `IntegerLexicalForm` are intentionally left abstract in this version.
 
 ## Open Questions
 

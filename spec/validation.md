@@ -108,7 +108,9 @@ For date-time values:
 For choice values:
 
 - `ChoiceValue` MUST contain `ChoiceSelection`
-- `ChoiceSelection` MUST be either a `Literal` or a `ControlledTermValue`
+- `ChoiceSelection` MUST be either a `Literal`, a `ControlledTermValue`, or an `Iri`
+- each `ChoiceOption` in a `ChoiceFieldType` MUST contain `ChoiceOptionValue`
+- `ChoiceOptionValue` MUST be either a `Literal`, a `ControlledTermValue`, or an `Iri`
 
 For controlled-term values:
 

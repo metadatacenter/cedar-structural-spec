@@ -33,7 +33,7 @@ The key identifies the embedding site within the containing `Template`, which al
 
 The permitted form of each contained value is determined by the `FieldType` of the referenced `Field`.
 
-For `ChoiceFieldType`, a contained `ChoiceValue` may represent either a literal choice token or an ontology-backed choice term.
+For `ChoiceFieldType`, a contained `ChoiceValue` may represent a literal choice token, an ontology-backed choice term, or an IRI-valued choice option.
 
 ## NestedTemplateInstance
 
