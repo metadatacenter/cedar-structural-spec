@@ -112,6 +112,7 @@ For literals generally:
 
 - `DatatypeIriLiteral` lexical forms SHOULD be in Unicode Normalization Form C
 - `LangStringLiteral` lexical forms SHOULD be in Unicode Normalization Form C
+- `StringLiteral` MUST denote an RDF literal with datatype IRI `http://www.w3.org/2001/XMLSchema#string`
 - `LangStringLiteral` language tags MUST be non-empty and well-formed according to BCP 47
 
 For typed defaults:

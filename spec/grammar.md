@@ -1084,6 +1084,8 @@ A `DatatypeIriLiteral` denotes an RDF literal consisting of a lexical form and a
 
 A `LangStringLiteral` denotes an RDF literal whose lexical form is paired with a non-empty language tag. `LangStringLiteral` corresponds to an RDF literal with datatype IRI `http://www.w3.org/1999/02/22-rdf-syntax-ns#langString`.
 
+A `StringLiteral` denotes an RDF literal whose datatype IRI is `http://www.w3.org/2001/XMLSchema#string`.
+
 `TextLiteral` is the class of literals permitted in `TextValue`.
 
 `NumericLiteral` is the class of literals permitted in `NumericValue`.
