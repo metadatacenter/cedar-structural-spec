@@ -133,12 +133,16 @@ Artifact metadata defines descriptive information, provenance, versioning, and a
 This subsection identifies how the metadata categories are grouped at the artifact level. `ArtifactMetadata` carries the metadata common to all artifacts other than identity, while `SchemaArtifactMetadata` adds versioning information for reusable schema artifacts.
 
 ```ebnf
-SchemaArtifactMetadata ::= ArtifactMetadata
+SchemaArtifactMetadata ::= schema_artifact_metadata(
+                           ArtifactMetadata
                            SchemaVersioning
+                         )
 
-ArtifactMetadata ::= DescriptiveMetadata
+ArtifactMetadata ::= artifact_metadata(
+                     DescriptiveMetadata
                      TemporalProvenance
                      Annotation*
+                   )
 ```
 
 ### Descriptive Metadata
