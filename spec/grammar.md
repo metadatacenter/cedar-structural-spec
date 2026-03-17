@@ -66,7 +66,11 @@ Template ::= template(
                [Footer]
                EmbeddedArtifact*
              )
+```
 
+`EmbeddedArtifact` defines the forms used to include reusable artifacts in a `Template`. These productions identify the reusable artifact being included and the template-specific properties that control its use in that template.
+
+```bnf
 EmbeddedArtifact ::= EmbeddedField
                    | EmbeddedTemplate
                    | EmbeddedPresentationComponent
