@@ -14,16 +14,15 @@ Accordingly, a production in this grammar describes abstract structure rather th
 The following notation is used throughout this grammar:
 
 ```ebnf
-::=   defined as
-|     alternative production
-X*    zero or more occurrences of X
-X+    one or more occurrences of X
-[X]   optional occurrence of X
+::=    defined as
+|      alternative production
+X*     zero or more occurrences of X
+X+     one or more occurrences of X
+[X]    optional occurrence of X
+(...)  groups the named components of an abstract constructor form
 ```
 
 Whitespace separates symbols within a production.
-
-Parentheses group the components of an abstract construct.
 
 Production names use `UpperCamelCase`. A production name denotes the abstract category being defined, such as `Template`, `Field`, or `DateFieldType`.
 
@@ -214,6 +213,8 @@ Template ::= template(
 ```
 
 `EmbeddedArtifact` defines the forms used to include reusable artifacts in a `Template`. These productions identify the reusable artifact being included and the template-specific properties that control its use in that template.
+
+The sequence of `EmbeddedArtifact` constructs within a `Template` is significant. The order in which they appear determines the presentation order of embedded artifacts in a rendered template. Conforming implementations MUST preserve this order.
 
 ```ebnf
 EmbeddedArtifact ::= EmbeddedField
@@ -516,7 +517,7 @@ KeyIdentifier ::= key_identifier(
                   )
 ```
 
-`EmbeddedArtifactKey` MUST be an ASCII identifier without whitespace.
+`EmbeddedArtifactKey` MUST match the pattern `[A-Za-z][A-Za-z0-9_-]*`: it MUST begin with an ASCII letter followed by zero or more ASCII letters, digits, underscores, or hyphens.
 
 `EmbeddedArtifactKey` values are local to a `Template` and MUST be unique within that `Template`.
 
@@ -601,6 +602,8 @@ ValueRequirement ::= Required
                    | Optional
 ```
 
+When `ValueRequirement` is absent from an `EmbeddedArtifact`, the default is `Optional`.
+
 ### Cardinality
 
 `Cardinality` identifies the permitted number of occurrences for the embedded artifact in the embedding context.
@@ -625,6 +628,8 @@ CardinalityUpperBound ::= NonNegativeInteger
 UnboundedCardinality ::= unbounded_cardinality()
 ```
 
+When `Cardinality` is absent from an `EmbeddedArtifact`, the implied default is `min_cardinality(1)` with `max_cardinality(1)`: the embedded artifact MUST appear exactly once.
+
 ### Visibility
 
 `Visibility` determines whether the embedded artifact is shown in rendered interfaces. It is modeled as an embedding property rather than as a rendering hint because it applies to any kind of embedded artifact, not only to fields.
@@ -633,6 +638,8 @@ UnboundedCardinality ::= unbounded_cardinality()
 Visibility ::= Visible
              | Hidden
 ```
+
+When `Visibility` is absent from an `EmbeddedArtifact`, the default is `Visible`.
 
 ### Defaults
 
@@ -720,6 +727,8 @@ NihGrantIdDefaultValue ::= nih_grant_id_default_value(
                            NihGrantIdValue
                          )
 ```
+
+`DefaultValue` provides an embedding-specific default value applied in the context of the containing `Template`. `TextDefaultValue` may appear both on `TextFieldType` (as a reusable field-level default) and on `EmbeddedTextField` (as an embedding-specific override). When both are present, the `TextDefaultValue` on `EmbeddedTextField` MUST take precedence.
 
 ### Label Override
 
@@ -904,6 +913,8 @@ TimezoneNotRequired ::= timezone_not_required()
 
 `TimezoneRequirement` identifies whether timezone information is required by the field type.
 
+> **TODO:** The lexical conformance semantics of `TimePrecision` and `DateTimeValueType` — specifically, whether a value at a coarser precision must omit finer components entirely or may zero them — are unresolved pending clarification from the CEDAR team. No normative lexical constraint is defined here until that is resolved.
+
 ```ebnf
 DateTimeFieldType ::= date_time_field_type(
                        DateTimeValueType
@@ -1062,11 +1073,12 @@ OntologyReference ::= ontology_reference(
                       )
 
 OntologyDisplayHint ::= ontology_display_hint(
-                          OntologyAcronym
-                        | OntologyName
-                        | OntologyAcronym
-                          OntologyName
+                          OntologyDisplayHintContent
                         )
+
+OntologyDisplayHintContent ::= OntologyAcronym
+                             | OntologyName
+                             | OntologyAcronym OntologyName
 
 BranchSource ::= branch_source(
                    OntologyReference
@@ -1420,6 +1432,8 @@ AttributeValue ::= attribute_value(
                   )
 ```
 
+`ChoiceSelection` and `ChoiceOptionValue` are structurally identical: both permit a `Literal`, a `ControlledTermValue`, or an `Iri`. The two production names are kept distinct to make their roles explicit. `ChoiceOptionValue` identifies a permissible option as declared in a `ChoiceFieldType`. `ChoiceSelection` identifies the value chosen in an instance context. The correspondence between them is governed by the match semantics defined in the validation rules.
+
 ## Field Type And Value Correspondence
 
 The `FieldType` of a `Field` determines the permitted `Value` forms in corresponding `FieldValue` constructs.
@@ -1469,6 +1483,10 @@ NestedTemplateInstance ::= nested_template_instance(
                              InstanceValue*
                            )
 ```
+
+For multi-valued `EmbeddedField`, all values for a single field occurrence are collected within a single `FieldValue` using `Value*`. For multi-valued `EmbeddedTemplate`, multiplicity is represented by multiple `NestedTemplateInstance` constructs sharing the same `EmbeddedArtifactKey` within the containing `TemplateInstance`. This asymmetry reflects the structural difference between scalar repetition (multiple values for one field) and structural repetition (multiple complete nested instances for one embedded template).
+
+> **TODO:** `FieldValue` uses `Value*`, which permits a `FieldValue` with zero values. Whether an empty `FieldValue` is a valid representation of absence for an optional field, or whether absence must be represented by omitting the `FieldValue` entirely (which would make `Value+` correct), is unresolved pending clarification from the CEDAR team.
 
 ## Artifact Metadata
 
@@ -1826,7 +1844,7 @@ The following nonterminals are intentionally left abstract as underlying string 
 - `Bcp47Tag` denotes a well-formed BCP 47 language tag.
 - `UnicodeString` denotes an arbitrary Unicode string.
 - `Iso8601DateTimeLexicalForm` denotes an ISO 8601 date-time lexical form.
-- `AsciiIdentifier` denotes an ASCII identifier without whitespace.
+- `AsciiIdentifier` denotes an identifier matching the pattern `[A-Za-z][A-Za-z0-9_-]*`: it begins with an ASCII letter followed by zero or more ASCII letters, digits, underscores, or hyphens.
 - `IntegerLexicalForm` denotes a base-10 integer lexical form.
 
 The nonterminals `SemanticVersion`, `IriString`, `Bcp47Tag`, `UnicodeString`, `Iso8601DateTimeLexicalForm`, `AsciiIdentifier`, and `IntegerLexicalForm` are intentionally left abstract in this version.

@@ -30,6 +30,14 @@ If an embedding is marked `Recommended`, absence of a value MUST NOT by itself c
 
 If an embedding is marked `Optional`, absence of a value MUST NOT by itself cause conformance failure.
 
+### Cardinality Defaults and Multiplicity
+
+When `Cardinality` is absent from an `EmbeddedArtifact`, the implied default cardinality is `min_cardinality(1)` with `max_cardinality(1)`: the embedded artifact MUST appear exactly once.
+
+An `EmbeddedField` is **single-valued** if its effective maximum cardinality is `max_cardinality(1)`.
+
+An `EmbeddedField` is **multi-valued** if its effective maximum cardinality is greater than one or is `UnboundedCardinality`.
+
 ### Versioning
 
 `Version` and `ModelVersion` MUST conform to Semantic Versioning 2.0.0.
@@ -114,6 +122,14 @@ For choice values:
 - `ChoiceOptionValue` MUST be either a `Literal`, a `ControlledTermValue`, or an `Iri`
 - if a `FieldValue` conforms to `SingleChoiceFieldType` or `MultipleChoiceFieldType`, each contained `ChoiceValue` MUST match one of the declared `ChoiceOption` values of the referenced field
 
+A `ChoiceValue` matches a `ChoiceOption` if and only if:
+
+- when both carry a `Literal`, they are term-equal: their lexical forms and their datatype IRIs or language tags compare equal character by character
+- when both carry a `ControlledTermValue`, their `TermIri` values are equal
+- when both carry an `Iri`, their IRI values are equal
+
+A `ChoiceValue` MUST NOT be considered to match a `ChoiceOption` whose `ChoiceOptionValue` is of a different structural form.
+
 For controlled-term values:
 
 - `ControlledTermValue` MUST include a term identifier and SHOULD include a human-readable label
@@ -152,12 +168,15 @@ For typed defaults:
 - `PubMedIdDefaultValue`, if present, MUST contain `PubMedIdValue`
 - `RridDefaultValue`, if present, MUST contain `RridValue`
 - `NihGrantIdDefaultValue`, if present, MUST contain `NihGrantIdValue`
+- `ChoiceDefaultValue` for an `EmbeddedSingleChoiceField` MUST contain exactly one `ChoiceValue`
 
 For multiplicity:
 
 - if an `EmbeddedField` is single-valued, its corresponding `FieldValue` MUST NOT contain more than one value
 - if an `EmbeddedField` is multi-valued, the number of values in its `FieldValue` MUST satisfy the embedding cardinality constraints
 - if an `EmbeddedTemplate` has multiplicity greater than one, the number of corresponding `NestedTemplateInstance` constructs MUST satisfy the embedding cardinality constraints
+
+> **TODO:** `FieldValue` uses `Value*`, permitting zero values. Whether an empty `FieldValue` is a valid representation of absence for an optional field, or whether absence must be represented by omitting the `FieldValue` entirely, is unresolved pending clarification from the CEDAR team. Until resolved, implementations SHOULD treat an empty `FieldValue` and an absent `FieldValue` as equivalent for the purposes of conformance checking against `ValueRequirement`.
 
 ### Rendering Hint Compatibility
 
@@ -180,6 +199,8 @@ Any rendering hint used by the model MUST be compatible with the associated `Fie
 ### Controlled Term Value Structure
 
 If a value conforms to `ControlledTermFieldType`, the value MUST include a term identifier and SHOULD include a human-readable label.
+
+A `ControlledTermDefaultValue`, if present, MUST contain a `ControlledTermValue` whose `TermIri` identifies a term drawn from one of the declared `ControlledTermSource` entries of the referenced `ControlledTermFieldType`.
 
 ## Validation Scope
 
