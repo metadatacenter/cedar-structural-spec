@@ -1022,6 +1022,54 @@ ValueSetSource ::= value_set_source(
                    )
 ```
 
+```ebnf
+TermIri ::= term_iri(
+              Iri
+            )
+
+OntologyAcronym ::= ontology_acronym(
+                      UnicodeString
+                    )
+
+OntologyName ::= ontology_name(
+                  UnicodeString
+                )
+
+OntologyIri ::= ontology_iri(
+                 Iri
+               )
+
+RootTermIri ::= root_term_iri(
+                  Iri
+                )
+
+RootTermLabel ::= root_term_label(
+                    UnicodeString
+                  )
+
+MaxTraversalDepth ::= max_traversal_depth(
+                        NonNegativeInteger
+                      )
+
+ValueSetIdentifier ::= value_set_identifier(
+                         UnicodeString
+                       )
+
+ValueSetName ::= value_set_name(
+                   UnicodeString
+                 )
+
+ValueSetIri ::= value_set_iri(
+                  Iri
+                )
+```
+
+`TermIri`, `OntologyIri`, `RootTermIri`, and `ValueSetIri` denote IRIs used in controlled-term source specifications.
+
+`OntologyAcronym`, `OntologyName`, `RootTermLabel`, `ValueSetIdentifier`, and `ValueSetName` denote textual controlled-term source metadata.
+
+`MaxTraversalDepth` denotes a non-negative traversal-depth limit for branch-based controlled-term sources.
+
 ## Rendering Hints
 
 ```ebnf
@@ -1522,54 +1570,6 @@ AttributeName ::= attribute_name(
 `Label`, `AlternativeLabel`, `Notation`, and `PreferredLabel` denote textual labeling and notation values.
 
 `AttributeName` denotes the name associated with an `AttributeValue`.
-
-```ebnf
-TermIri ::= term_iri(
-              Iri
-            )
-
-OntologyAcronym ::= ontology_acronym(
-                      UnicodeString
-                    )
-
-OntologyName ::= ontology_name(
-                  UnicodeString
-                )
-
-OntologyIri ::= ontology_iri(
-                 Iri
-               )
-
-RootTermIri ::= root_term_iri(
-                  Iri
-                )
-
-RootTermLabel ::= root_term_label(
-                    UnicodeString
-                  )
-
-MaxTraversalDepth ::= max_traversal_depth(
-                        NonNegativeInteger
-                      )
-
-ValueSetIdentifier ::= value_set_identifier(
-                         UnicodeString
-                       )
-
-ValueSetName ::= value_set_name(
-                   UnicodeString
-                 )
-
-ValueSetIri ::= value_set_iri(
-                  Iri
-                )
-```
-
-`TermIri`, `OntologyIri`, `RootTermIri`, and `ValueSetIri` denote IRIs used in controlled-term source specifications.
-
-`OntologyAcronym`, `OntologyName`, `RootTermLabel`, `ValueSetIdentifier`, and `ValueSetName` denote textual controlled-term source metadata.
-
-`MaxTraversalDepth` denotes a non-negative traversal-depth limit for branch-based controlled-term sources.
 
 ```ebnf
 NumericDatatype ::= numeric_datatype(
