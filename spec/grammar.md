@@ -49,7 +49,6 @@ Template ::= template(
 - [Scalar and Datatype Leaves](#scalar-and-datatype-leaves)
   - [Primitive String Types](#primitive-string-types)
   - [Core IRI and String Types](#core-iri-and-string-types)
-  - [Textual Metadata Types](#textual-metadata-types)
   - [Numeric Datatype IRIs](#numeric-datatype-iris)
   - [Temporal Datatype IRIs](#temporal-datatype-iris)
 - [Literals](#literals)
@@ -105,7 +104,17 @@ Template ::= template(
                [Footer]
                EmbeddedArtifact*
              )
+
+Header ::= header(
+             UnicodeString
+           )
+
+Footer ::= footer(
+             UnicodeString
+           )
 ```
+
+`Header` and `Footer` denote optional Unicode textual content displayed at the top and bottom of a rendered template respectively.
 
 The following productions introduce the abstract field categories. `Field` remains an abstract category, while the intermediate categories group related concrete field artifacts for readability and shared semantics.
 
@@ -554,68 +563,6 @@ RegexPattern ::= regex_pattern(
 
 `RegexPattern` denotes a Unicode string interpreted as a regular-expression pattern.
 
-### Textual Metadata Types
-
-These productions define string-valued types used in artifact metadata, labelling, and presentation. The descriptive group covers human-oriented naming and identification of artifacts.
-
-```ebnf
-Name ::= name(
-           UnicodeString
-         )
-
-Description ::= description(
-                  UnicodeString
-                )
-
-Identifier ::= identifier(
-                 UnicodeString
-               )
-```
-
-`Name`, `Description`, and `Identifier` denote descriptive textual metadata values used in artifact metadata.
-
-The labelling and notation group covers term labels and notations used in controlled-vocabulary and embedding contexts.
-
-```ebnf
-Label ::= label(
-            UnicodeString
-          )
-
-AlternativeLabel ::= alternative_label(
-                       UnicodeString
-                     )
-
-Notation ::= notation(
-               UnicodeString
-             )
-
-PreferredLabel ::= preferred_label(
-                     UnicodeString
-                   )
-```
-
-`Label`, `AlternativeLabel`, `Notation`, and `PreferredLabel` denote textual labelling and notation values.
-
-`AttributeName` names the attribute in an `AttributeValue` pair. `Header` and `Footer` carry template-level presentation text.
-
-```ebnf
-AttributeName ::= attribute_name(
-                    UnicodeString
-                  )
-
-Header ::= header(
-             UnicodeString
-           )
-
-Footer ::= footer(
-             UnicodeString
-           )
-```
-
-`AttributeName` denotes the name associated with an `AttributeValue`.
-
-`Header` and `Footer` denote Unicode textual content used as template-level header and footer text.
-
 ### Numeric Datatype IRIs
 
 `NumericDatatype` carries the XSD datatype IRI that identifies the numeric type of a `NumericLiteral`. `NumericDatatypeIri` enumerates the supported XSD numeric datatype IRIs. Each alternative is a nullary constructor; the corresponding XSD datatype IRI for each is given in the table below.
@@ -884,6 +831,18 @@ ArtifactMetadata ::= artifact_metadata(
 `DescriptiveMetadata` identifies the human-oriented descriptive properties of an artifact. These properties support naming, explanatory text, and external or local identifiers used for cataloging. `Name` is the required user-supplied name of the artifact. `Description`, when present, is extended textual description explaining the artifact's purpose and content. `Identifier`, when present, is a user-specified external identifier intended for integration with institutional or external systems.
 
 ```ebnf
+Name ::= name(
+           UnicodeString
+         )
+
+Description ::= description(
+                  UnicodeString
+                )
+
+Identifier ::= identifier(
+                 UnicodeString
+               )
+
 DescriptiveMetadata ::= descriptive_metadata(
                           Name
                           [Description]
@@ -1063,6 +1022,22 @@ DateTimeValue ::= date_time_value(
                     DateTimeLiteral
                   )
 
+Label ::= label(
+            UnicodeString
+          )
+
+AlternativeLabel ::= alternative_label(
+                       UnicodeString
+                     )
+
+Notation ::= notation(
+               UnicodeString
+             )
+
+PreferredLabel ::= preferred_label(
+                     UnicodeString
+                   )
+
 ControlledTermValue ::= controlled_term_value(
                           TermIri
                           Label
@@ -1126,6 +1101,10 @@ NihGrantIdValue ::= nih_grant_id_value(
                       Iri
                       [Label]
                     )
+
+AttributeName ::= attribute_name(
+                    UnicodeString
+                  )
 
 AttributeValue ::= attribute_value(
                      AttributeName
