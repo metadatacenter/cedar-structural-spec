@@ -41,24 +41,6 @@ Template ::= template(
 
 `Template` is the production being defined, while `template(...)` denotes the abstract constructor form of that construct; in other words, it shows the components of a `Template` and how they are composed.
 
-## Section Index
-
-- [Kernel Grammar](#kernel-grammar)
-- [Artifact Identity](#artifact-identity)
-- [Artifact Metadata](#artifact-metadata)
-- [Embedded Artifact Keys](#embedded-artifact-keys)
-- [Embedded Artifact Properties](#embedded-artifact-properties)
-- [Field Types](#field-types)
-- [Presentation Components](#presentation-components)
-- [Controlled Term Sources](#controlled-term-sources)
-- [Rendering Hints](#rendering-hints)
-- [Literals](#literals)
-- [Supporting Nonterminals](#supporting-nonterminals)
-- [Field Type And Value Correspondence](#field-type-and-value-correspondence)
-- [Instances](#instances)
-- [Scalar And Datatype Leaves](#scalar-and-datatype-leaves)
-- [Open Questions](#open-questions)
-
 ## Kernel Grammar
 
 The kernel grammar defines the primary abstract categories of the model and the core schema-level structure that connects them. It introduces reusable schema artifacts, templates, and the embedding constructs through which templates assemble fields, nested templates, and presentation components. Subsequent sections refine the metadata, field-type families, instance structures, and supporting constructs referenced here.
@@ -518,104 +500,6 @@ TemplateId ::= template_id( Iri )
 PresentationComponentId ::= presentation_component_id( Iri )
 
 TemplateInstanceId ::= template_instance_id( Iri )
-```
-
-## Artifact Metadata
-
-Artifact metadata defines descriptive information, provenance, versioning, and annotations. `ArtifactMetadata` provides the common metadata carried by all artifacts other than identity. `SchemaArtifactMetadata` extends that common structure with schema-versioning information used by reusable schema artifacts.
-
-### Aggregate Structure
-
-This subsection identifies how the metadata categories are grouped at the artifact level. `ArtifactMetadata` carries the metadata common to all artifacts other than identity, while `SchemaArtifactMetadata` adds versioning information for reusable schema artifacts.
-
-```ebnf
-SchemaArtifactMetadata ::= schema_artifact_metadata(
-                           ArtifactMetadata
-                           SchemaVersioning
-                         )
-
-ArtifactMetadata ::= artifact_metadata(
-                     DescriptiveMetadata
-                     TemporalProvenance
-                     Annotation*
-                   )
-```
-
-### Descriptive Metadata
-
-`DescriptiveMetadata` identifies the human-oriented descriptive properties of an artifact. These properties support naming, explanatory text, and external or local identifiers used for cataloging. `Name` is the required user-supplied name of the artifact. `Description`, when present, is extended textual description explaining the artifact's purpose and content. `Identifier`, when present, is a user-specified external identifier intended for integration with institutional or external systems.
-
-```ebnf
-DescriptiveMetadata ::= descriptive_metadata(
-                          Name
-                          [Description]
-                          [Identifier]
-                        )
-```
-
-### Temporal Provenance
-
-`TemporalProvenance` identifies when an artifact was created and modified, and which agents were responsible for those actions.
-
-```ebnf
-TemporalProvenance ::= temporal_provenance(
-                         CreatedOn
-                         CreatedBy
-                         ModifiedOn
-                         ModifiedBy
-                       )
-
-CreatedOn ::= IsoDateTimeStamp
-
-CreatedBy ::= Iri
-
-ModifiedOn ::= IsoDateTimeStamp
-
-ModifiedBy ::= Iri
-```
-
-`CreatedOn` and `ModifiedOn` MUST be ISO 8601 date-time timestamps.
-
-`CreatedBy` and `ModifiedBy` denote IRIs identifying the responsible agents.
-
-### Schema Versioning
-
-`SchemaVersioning` identifies version-related metadata specific to reusable schema artifacts. It captures artifact version, publication status, the version of the schema model used, and optional derivation links to earlier or source artifacts.
-
-```ebnf
-SchemaVersioning ::= schema_versioning(
-                       Version
-                       Status
-                       ModelVersion
-                       [PreviousVersion]
-                       [DerivedFrom]
-                     )
-```
-
-### Annotations
-
-`Annotation` provides an extensible metadata mechanism for additional named metadata values that are not captured by the core descriptive, provenance, or versioning structures. `AnnotationName` identifies the annotated metadata property. `AnnotationValue` provides the associated metadata value. Annotation values may be either literals or IRIs. This supports linking to external resources such as DOIs and grant identifiers, as well as storing institutional metadata.
-
-```ebnf
-Annotation ::= annotation(
-                 AnnotationName
-                 AnnotationValue
-               )
-
-AnnotationName ::= annotation_name(
-                    Iri
-                  )
-
-AnnotationValue ::= LiteralAnnotationValue
-                  | IriAnnotationValue
-
-LiteralAnnotationValue ::= literal_annotation_value(
-                           Literal
-                         )
-
-IriAnnotationValue ::= iri_annotation_value(
-                         Iri
-                       )
 ```
 
 ## Embedded Artifact Keys
@@ -1391,6 +1275,104 @@ NestedTemplateInstance ::= nested_template_instance(
                              EmbeddedArtifactKey
                              InstanceValue*
                            )
+```
+
+## Artifact Metadata
+
+Artifact metadata defines descriptive information, provenance, versioning, and annotations. `ArtifactMetadata` provides the common metadata carried by all artifacts other than identity. `SchemaArtifactMetadata` extends that common structure with schema-versioning information used by reusable schema artifacts.
+
+### Aggregate Structure
+
+This subsection identifies how the metadata categories are grouped at the artifact level. `ArtifactMetadata` carries the metadata common to all artifacts other than identity, while `SchemaArtifactMetadata` adds versioning information for reusable schema artifacts.
+
+```ebnf
+SchemaArtifactMetadata ::= schema_artifact_metadata(
+                           ArtifactMetadata
+                           SchemaVersioning
+                         )
+
+ArtifactMetadata ::= artifact_metadata(
+                     DescriptiveMetadata
+                     TemporalProvenance
+                     Annotation*
+                   )
+```
+
+### Descriptive Metadata
+
+`DescriptiveMetadata` identifies the human-oriented descriptive properties of an artifact. These properties support naming, explanatory text, and external or local identifiers used for cataloging. `Name` is the required user-supplied name of the artifact. `Description`, when present, is extended textual description explaining the artifact's purpose and content. `Identifier`, when present, is a user-specified external identifier intended for integration with institutional or external systems.
+
+```ebnf
+DescriptiveMetadata ::= descriptive_metadata(
+                          Name
+                          [Description]
+                          [Identifier]
+                        )
+```
+
+### Temporal Provenance
+
+`TemporalProvenance` identifies when an artifact was created and modified, and which agents were responsible for those actions.
+
+```ebnf
+TemporalProvenance ::= temporal_provenance(
+                         CreatedOn
+                         CreatedBy
+                         ModifiedOn
+                         ModifiedBy
+                       )
+
+CreatedOn ::= IsoDateTimeStamp
+
+CreatedBy ::= Iri
+
+ModifiedOn ::= IsoDateTimeStamp
+
+ModifiedBy ::= Iri
+```
+
+`CreatedOn` and `ModifiedOn` MUST be ISO 8601 date-time timestamps.
+
+`CreatedBy` and `ModifiedBy` denote IRIs identifying the responsible agents.
+
+### Schema Versioning
+
+`SchemaVersioning` identifies version-related metadata specific to reusable schema artifacts. It captures artifact version, publication status, the version of the schema model used, and optional derivation links to earlier or source artifacts.
+
+```ebnf
+SchemaVersioning ::= schema_versioning(
+                       Version
+                       Status
+                       ModelVersion
+                       [PreviousVersion]
+                       [DerivedFrom]
+                     )
+```
+
+### Annotations
+
+`Annotation` provides an extensible metadata mechanism for additional named metadata values that are not captured by the core descriptive, provenance, or versioning structures. `AnnotationName` identifies the annotated metadata property. `AnnotationValue` provides the associated metadata value. Annotation values may be either literals or IRIs. This supports linking to external resources such as DOIs and grant identifiers, as well as storing institutional metadata.
+
+```ebnf
+Annotation ::= annotation(
+                 AnnotationName
+                 AnnotationValue
+               )
+
+AnnotationName ::= annotation_name(
+                    Iri
+                  )
+
+AnnotationValue ::= LiteralAnnotationValue
+                  | IriAnnotationValue
+
+LiteralAnnotationValue ::= literal_annotation_value(
+                           Literal
+                         )
+
+IriAnnotationValue ::= iri_annotation_value(
+                         Iri
+                       )
 ```
 
 ## Scalar And Datatype Leaves
