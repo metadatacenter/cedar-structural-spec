@@ -930,7 +930,9 @@ DateRenderingHint ::= date_rendering_hint(
                        [DateFormat]
                      )
 
-DateRenderingWidget ::= date_rendering_widget()
+DateRenderingWidget ::= DatePickerRenderingWidget
+
+DatePickerRenderingWidget ::= date_picker_rendering_widget()
 
 DateFormat ::= date_format(
                 DateComponentOrder
@@ -951,14 +953,18 @@ TimeRenderingHint ::= time_rendering_hint(
                        [TimeFormat]
                      )
 
-TimeRenderingWidget ::= time_rendering_widget()
+TimeRenderingWidget ::= TimePickerRenderingWidget
+
+TimePickerRenderingWidget ::= time_picker_rendering_widget()
 
 DateTimeRenderingHint ::= date_time_rendering_hint(
                            DateTimeRenderingWidget
                            [TimeFormat]
                          )
 
-DateTimeRenderingWidget ::= date_time_rendering_widget()
+DateTimeRenderingWidget ::= DateTimePickerRenderingWidget
+
+DateTimePickerRenderingWidget ::= date_time_picker_rendering_widget()
 
 TimeFormat ::= TwelveHourTimeFormat
              | TwentyFourHourTimeFormat
@@ -1164,7 +1170,9 @@ CheckboxRenderingHint ::= checkbox_rendering_hint()
 
 MultiSelectDropdownRenderingHint ::= multi_select_dropdown_rendering_hint()
 
-NumericRenderingHint ::= numeric_rendering_hint()
+NumericRenderingHint ::= NumericInputRenderingHint
+
+NumericInputRenderingHint ::= numeric_input_rendering_hint()
 
 ```
 
@@ -1181,6 +1189,8 @@ A `TextFieldType` MAY additionally define a default text value, minimum length, 
 Similarly, `ChoiceFieldType` distinguishes `SingleChoiceFieldType` from `MultipleChoiceFieldType` semantically, while the rendering hint determines whether the UI uses radio buttons, checkboxes, or dropdown presentation. Typed rendering hints make incompatible combinations structurally invalid.
 
 Temporal semantics are also split structurally: `DateFieldType`, `TimeFieldType`, and `DateTimeFieldType` are distinct semantic field types, and each carries only the rendering hints and temporal options that are meaningful for that temporal category.
+
+The current rendering vocabulary is explicit but deliberately small: numeric fields use `NumericInputRenderingHint`, date fields use `DatePickerRenderingWidget`, time fields use `TimePickerRenderingWidget`, and date-time fields use `DateTimePickerRenderingWidget`.
 
 ## Literals
 
