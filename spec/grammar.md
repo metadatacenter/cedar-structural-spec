@@ -896,6 +896,8 @@ DateRenderingHint ::= date_rendering_hint(
                        [DateFormat]
                      )
 
+DateRenderingWidget ::= date_rendering_widget()
+
 DateFormat ::= date_format(
                 DateComponentOrder
               )
@@ -915,10 +917,14 @@ TimeRenderingHint ::= time_rendering_hint(
                        [TimeFormat]
                      )
 
+TimeRenderingWidget ::= time_rendering_widget()
+
 DateTimeRenderingHint ::= date_time_rendering_hint(
                            DateTimeRenderingWidget
                            [TimeFormat]
                          )
+
+DateTimeRenderingWidget ::= date_time_rendering_widget()
 
 TimeFormat ::= TwelveHourTimeFormat
              | TwentyFourHourTimeFormat
@@ -1030,11 +1036,25 @@ RenderingHint ::= TextRenderingHint
 TextRenderingHint ::= SingleLineTextRenderingHint
                     | MultiLineTextRenderingHint
 
+SingleLineTextRenderingHint ::= single_line_text_rendering_hint()
+
+MultiLineTextRenderingHint ::= multi_line_text_rendering_hint()
+
 SingleChoiceRenderingHint ::= RadioRenderingHint
                             | SingleSelectDropdownRenderingHint
 
+RadioRenderingHint ::= radio_rendering_hint()
+
+SingleSelectDropdownRenderingHint ::= single_select_dropdown_rendering_hint()
+
 MultipleChoiceRenderingHint ::= CheckboxRenderingHint
                               | MultiSelectDropdownRenderingHint
+
+CheckboxRenderingHint ::= checkbox_rendering_hint()
+
+MultiSelectDropdownRenderingHint ::= multi_select_dropdown_rendering_hint()
+
+NumericRenderingHint ::= numeric_rendering_hint()
 
 ```
 
@@ -1571,7 +1591,7 @@ The temporal datatype constructors denote the following XML Schema datatype IRIs
 - `XsdTimeDatatypeIri`: `http://www.w3.org/2001/XMLSchema#time`
 - `XsdDateTimeDatatypeIri`: `http://www.w3.org/2001/XMLSchema#dateTime`
 
-The nonterminals `RichTextContent`, `ImageSource`, `YoutubeVideoSource`, `ChoiceOption`, `Unit`, `SingleLineTextRenderingHint`, `MultiLineTextRenderingHint`, `RadioRenderingHint`, `SingleSelectDropdownRenderingHint`, `CheckboxRenderingHint`, `MultiSelectDropdownRenderingHint`, `NumericRenderingHint`, `DateRenderingWidget`, `TimeRenderingWidget`, `DateTimeRenderingWidget`, `TermIri`, `Notation`, `PreferredLabel`, `Name`, `Description`, `Identifier`, `Version`, `Status`, `ModelVersion`, `PreviousVersion`, `DerivedFrom`, `TimePrecision`, `HourMinutePrecision`, `HourMinuteSecondPrecision`, `HourMinuteSecondFractionPrecision`, `DateTimeValueType`, `DateHourMinuteValueType`, `DateHourMinuteSecondValueType`, `DateHourMinuteSecondFractionValueType`, `DateFormat`, `DateComponentOrder`, `DayMonthYearOrder`, `MonthDayYearOrder`, `YearMonthDayOrder`, `Label`, `AlternativeLabel`, `AttributeName`, `Header`, `Footer`, `OntologyAcronym`, `OntologyName`, `OntologyIri`, `RootTermIri`, `RootTermLabel`, `MaxTraversalDepth`, `ValueSetIdentifier`, `ValueSetName`, `ValueSetIri`, `IriString`, `Bcp47Tag`, `UnicodeString`, `Iso8601DateTimeLexicalForm`, `AsciiIdentifier`, and `IntegerLexicalForm` are intentionally left abstract in this version.
+The nonterminals `RichTextContent`, `ImageSource`, `YoutubeVideoSource`, `ChoiceOption`, `Unit`, `TermIri`, `Notation`, `PreferredLabel`, `Name`, `Description`, `Identifier`, `Version`, `Status`, `ModelVersion`, `PreviousVersion`, `DerivedFrom`, `TimePrecision`, `HourMinutePrecision`, `HourMinuteSecondPrecision`, `HourMinuteSecondFractionPrecision`, `DateTimeValueType`, `DateHourMinuteValueType`, `DateHourMinuteSecondValueType`, `DateHourMinuteSecondFractionValueType`, `DateFormat`, `DateComponentOrder`, `DayMonthYearOrder`, `MonthDayYearOrder`, `YearMonthDayOrder`, `Label`, `AlternativeLabel`, `AttributeName`, `Header`, `Footer`, `OntologyAcronym`, `OntologyName`, `OntologyIri`, `RootTermIri`, `RootTermLabel`, `MaxTraversalDepth`, `ValueSetIdentifier`, `ValueSetName`, `ValueSetIri`, `IriString`, `Bcp47Tag`, `UnicodeString`, `Iso8601DateTimeLexicalForm`, `AsciiIdentifier`, and `IntegerLexicalForm` are intentionally left abstract in this version.
 
 ## Open Questions
 
