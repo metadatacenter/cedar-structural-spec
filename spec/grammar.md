@@ -872,6 +872,12 @@ TimezoneRequired ::= timezone_required()
 TimezoneNotRequired ::= timezone_not_required()
 ```
 
+`TimePrecision` identifies the finest time precision permitted by a `TimeFieldType`.
+
+`HourMinutePrecision`, `HourMinuteSecondPrecision`, and `HourMinuteSecondFractionPrecision` identify time values constrained respectively to hour-and-minute precision, second precision, and fractional-second precision.
+
+`TimezoneRequirement` identifies whether timezone information is required by the field type.
+
 ```ebnf
 DateTimeFieldType ::= date_time_field_type(
                        DateTimeValueType
@@ -889,6 +895,10 @@ DateHourMinuteSecondValueType ::= date_hour_minute_second_value_type()
 
 DateHourMinuteSecondFractionValueType ::= date_hour_minute_second_fraction_value_type()
 ```
+
+`DateTimeValueType` identifies the finest permitted date-time precision.
+
+`DateHourMinuteValueType`, `DateHourMinuteSecondValueType`, and `DateHourMinuteSecondFractionValueType` identify date-time values constrained respectively to minute precision, second precision, and fractional-second precision.
 
 ```ebnf
 DateRenderingHint ::= date_rendering_hint(
@@ -933,6 +943,10 @@ TwelveHourTimeFormat ::= twelve_hour_time_format()
 
 TwentyFourHourTimeFormat ::= twenty_four_hour_time_format()
 ```
+
+`DateFormat` identifies the ordering used to display or acquire date components.
+
+`DateComponentOrder` identifies whether a date is rendered or acquired in day-month-year, month-day-year, or year-month-day order.
 
 ## Presentation Components
 
@@ -1718,7 +1732,7 @@ The temporal datatype constructors denote the following XML Schema datatype IRIs
 - `XsdTimeDatatypeIri`: `http://www.w3.org/2001/XMLSchema#time`
 - `XsdDateTimeDatatypeIri`: `http://www.w3.org/2001/XMLSchema#dateTime`
 
-The nonterminals `RichTextContent`, `ImageSource`, `YoutubeVideoSource`, `ChoiceOption`, `Unit`, `TimePrecision`, `HourMinutePrecision`, `HourMinuteSecondPrecision`, `HourMinuteSecondFractionPrecision`, `DateTimeValueType`, `DateHourMinuteValueType`, `DateHourMinuteSecondValueType`, `DateHourMinuteSecondFractionValueType`, `DateFormat`, `DateComponentOrder`, `DayMonthYearOrder`, `MonthDayYearOrder`, `YearMonthDayOrder`, `Header`, `Footer`, `SemanticVersion`, `IriString`, `Bcp47Tag`, `UnicodeString`, `Iso8601DateTimeLexicalForm`, `AsciiIdentifier`, and `IntegerLexicalForm` are intentionally left abstract in this version.
+The nonterminals `RichTextContent`, `ImageSource`, `YoutubeVideoSource`, `ChoiceOption`, `Unit`, `SemanticVersion`, `Header`, `Footer`, `IriString`, `Bcp47Tag`, `UnicodeString`, `Iso8601DateTimeLexicalForm`, `AsciiIdentifier`, and `IntegerLexicalForm` are intentionally left abstract in this version.
 
 ## Open Questions
 
