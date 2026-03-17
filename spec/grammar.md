@@ -224,12 +224,16 @@ IriAnnotationValue ::= iri_annotation_value(
 
 ## Embedded Artifact Keys
 
-An `EmbeddedArtifactKey` is the local identifier of an `EmbeddedArtifact` within a `Template`.
+An `EmbeddedArtifactKey` is the local identifier of an `EmbeddedArtifact` within a `Template`. It is the key by which an embedded field, embedded template, or embedded presentation component is distinguished from other embedded artifacts in the same template. This key is also the mechanism that connects template structure to instance structure: `FieldValue` and `NestedTemplateInstance` use `EmbeddedArtifactKey` to identify which embedded artifact in the template they correspond to.
 
 ```ebnf
 EmbeddedArtifactKey ::= embedded_artifact_key(
                           KeyIdentifier
                         )
+
+KeyIdentifier ::= key_identifier(
+                    AsciiIdentifier
+                  )
 ```
 
 `EmbeddedArtifactKey` MUST be an ASCII identifier without whitespace.
@@ -809,10 +813,6 @@ LexicalForm ::= lexical_form(
 IsoDateTimeStamp ::= iso_date_time_stamp(
                        Iso8601DateTimeLexicalForm
                      )
-
-KeyIdentifier ::= key_identifier(
-                    AsciiIdentifier
-                  )
 ```
 
 `Iri` denotes an Internationalized Resource Identifier.
