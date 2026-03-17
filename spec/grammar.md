@@ -1788,6 +1788,18 @@ The temporal datatype constructors denote the following XML Schema datatype IRIs
 - `XsdTimeDatatypeIri`: `http://www.w3.org/2001/XMLSchema#time`
 - `XsdDateTimeDatatypeIri`: `http://www.w3.org/2001/XMLSchema#dateTime`
 
+### Lexical Domains
+
+The following nonterminals are intentionally left abstract as lexical domains rather than model-level constructs.
+
+- `SemanticVersion` denotes a Semantic Versioning 2.0.0 lexical form.
+- `IriString` denotes the lexical form of an IRI.
+- `Bcp47Tag` denotes a well-formed BCP 47 language tag.
+- `UnicodeString` denotes an arbitrary Unicode string.
+- `Iso8601DateTimeLexicalForm` denotes an ISO 8601 date-time lexical form.
+- `AsciiIdentifier` denotes an ASCII identifier without whitespace.
+- `IntegerLexicalForm` denotes a base-10 integer lexical form.
+
 The nonterminals `SemanticVersion`, `IriString`, `Bcp47Tag`, `UnicodeString`, `Iso8601DateTimeLexicalForm`, `AsciiIdentifier`, and `IntegerLexicalForm` are intentionally left abstract in this version.
 
 ## Open Questions
