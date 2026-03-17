@@ -112,6 +112,7 @@ For choice values:
 - `ChoiceSelection` MUST be either a `Literal`, a `ControlledTermValue`, or an `Iri`
 - each `ChoiceOption` in a `ChoiceFieldType` MUST contain `ChoiceOptionValue`
 - `ChoiceOptionValue` MUST be either a `Literal`, a `ControlledTermValue`, or an `Iri`
+- if a `FieldValue` conforms to `SingleChoiceFieldType` or `MultipleChoiceFieldType`, each contained `ChoiceValue` MUST match one of the declared `ChoiceOption` values of the referenced field
 
 For controlled-term values:
 
