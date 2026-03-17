@@ -1788,9 +1788,9 @@ The temporal datatype constructors denote the following XML Schema datatype IRIs
 - `XsdTimeDatatypeIri`: `http://www.w3.org/2001/XMLSchema#time`
 - `XsdDateTimeDatatypeIri`: `http://www.w3.org/2001/XMLSchema#dateTime`
 
-### Lexical Domains
+### Underlying String Domains
 
-The following nonterminals are intentionally left abstract as lexical domains rather than model-level constructs.
+The following nonterminals are intentionally left abstract as underlying string domains rather than model-level constructs.
 
 - `SemanticVersion` denotes a Semantic Versioning 2.0.0 lexical form.
 - `IriString` denotes the lexical form of an IRI.
