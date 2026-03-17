@@ -34,6 +34,8 @@ If an embedding is marked `Optional`, absence of a value MUST NOT by itself caus
 
 `Version` and `ModelVersion` MUST conform to Semantic Versioning 2.0.0.
 
+`Status` MUST be either `draft` or `published`.
+
 ### Instance Alignment
 
 Each `FieldValue` in a `TemplateInstance` MUST reference the `EmbeddedArtifactKey` of an `EmbeddedField` in the referenced `Template`.

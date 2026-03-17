@@ -1460,9 +1460,12 @@ Version ::= version(
               SemanticVersion
             )
 
-Status ::= status(
-             UnicodeString
-           )
+Status ::= DraftStatus
+         | PublishedStatus
+
+DraftStatus ::= draft_status()
+
+PublishedStatus ::= published_status()
 
 ModelVersion ::= model_version(
                    SemanticVersion
@@ -1487,7 +1490,7 @@ SemanticVersion ::= semantic_version(
 
 `SemanticVersion` MUST conform to Semantic Versioning 2.0.0 as defined at [semver.org](https://semver.org/).
 
-`Status` denotes a publication or lifecycle status value.
+`Status` denotes the publication status of a reusable schema artifact and is restricted to `draft` or `published`.
 
 `PreviousVersion` and `DerivedFrom` denote IRIs identifying related source or predecessor artifacts.
 
