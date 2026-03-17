@@ -357,7 +357,7 @@ EmbeddedOrcidField ::= embedded_orcid_field(
                          [ValueRequirement]
                          [Cardinality]
                          [Visibility]
-                         [ExternalAuthorityDefaultValue]
+                         [OrcidDefaultValue]
                          [LabelOverride]
                        )
 
@@ -367,7 +367,7 @@ EmbeddedRorField ::= embedded_ror_field(
                        [ValueRequirement]
                        [Cardinality]
                        [Visibility]
-                       [ExternalAuthorityDefaultValue]
+                       [RorDefaultValue]
                        [LabelOverride]
                      )
 
@@ -377,7 +377,7 @@ EmbeddedDoiField ::= embedded_doi_field(
                        [ValueRequirement]
                        [Cardinality]
                        [Visibility]
-                       [ExternalAuthorityDefaultValue]
+                       [DoiDefaultValue]
                        [LabelOverride]
                      )
 
@@ -387,7 +387,7 @@ EmbeddedPubMedIdField ::= embedded_pub_med_id_field(
                             [ValueRequirement]
                             [Cardinality]
                             [Visibility]
-                            [ExternalAuthorityDefaultValue]
+                            [PubMedIdDefaultValue]
                             [LabelOverride]
                           )
 
@@ -397,7 +397,7 @@ EmbeddedRridField ::= embedded_rrid_field(
                         [ValueRequirement]
                         [Cardinality]
                         [Visibility]
-                        [ExternalAuthorityDefaultValue]
+                        [RridDefaultValue]
                         [LabelOverride]
                       )
 
@@ -407,7 +407,7 @@ EmbeddedNihGrantIdField ::= embedded_nih_grant_id_field(
                                [ValueRequirement]
                                [Cardinality]
                                [Visibility]
-                               [ExternalAuthorityDefaultValue]
+                               [NihGrantIdDefaultValue]
                                [LabelOverride]
                              )
 
@@ -735,7 +735,12 @@ DefaultValue ::= TextDefaultValue
                | ChoiceDefaultValue
                | LinkDefaultValue
                | ContactDefaultValue
-               | ExternalAuthorityDefaultValue
+               | OrcidDefaultValue
+               | RorDefaultValue
+               | DoiDefaultValue
+               | PubMedIdDefaultValue
+               | RridDefaultValue
+               | NihGrantIdDefaultValue
 
 TextDefaultValue ::= text_default_value(
                       TextValue
@@ -773,9 +778,29 @@ ContactDefaultValue ::= contact_default_value(
                          ContactValue
                        )
 
-ExternalAuthorityDefaultValue ::= external_authority_default_value(
-                                   ExternalAuthorityValue
-                                 )
+OrcidDefaultValue ::= orcid_default_value(
+                      OrcidValue
+                    )
+
+RorDefaultValue ::= ror_default_value(
+                    RorValue
+                  )
+
+DoiDefaultValue ::= doi_default_value(
+                    DoiValue
+                  )
+
+PubMedIdDefaultValue ::= pub_med_id_default_value(
+                          PubMedIdValue
+                        )
+
+RridDefaultValue ::= rrid_default_value(
+                     RridValue
+                   )
+
+NihGrantIdDefaultValue ::= nih_grant_id_default_value(
+                           NihGrantIdValue
+                         )
 ```
 
 ### Label Override
@@ -1066,7 +1091,12 @@ The correspondence is:
 - `ChoiceFieldType` to `ChoiceValue`
 - `LinkFieldType` to `LinkValue`
 - `ContactFieldType` to `ContactValue`
-- `ExternalAuthorityFieldType` to `ExternalAuthorityValue`
+- `OrcidFieldType` to `OrcidValue`
+- `RorFieldType` to `RorValue`
+- `DoiFieldType` to `DoiValue`
+- `PubMedIdFieldType` to `PubMedIdValue`
+- `RridFieldType` to `RridValue`
+- `NihGrantIdFieldType` to `NihGrantIdValue`
 - `AttributeValueFieldType` to `AttributeValue`
 
 ## Literals
@@ -1310,9 +1340,36 @@ ContactValue ::= contact_value(
                    Literal
                  )
 
-ExternalAuthorityValue ::= external_authority_value(
-                             Literal
-                           )
+ExternalAuthorityValue ::= OrcidValue
+                         | RorValue
+                         | DoiValue
+                         | PubMedIdValue
+                         | RridValue
+                         | NihGrantIdValue
+
+OrcidValue ::= orcid_value(
+                Literal
+              )
+
+RorValue ::= ror_value(
+              Literal
+            )
+
+DoiValue ::= doi_value(
+              Literal
+            )
+
+PubMedIdValue ::= pub_med_id_value(
+                    Literal
+                  )
+
+RridValue ::= rrid_value(
+               Literal
+             )
+
+NihGrantIdValue ::= nih_grant_id_value(
+                     Literal
+                   )
 
 AttributeValue ::= attribute_value(
                     AttributeName

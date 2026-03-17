@@ -53,7 +53,12 @@ The contained values MUST follow the `FieldType`-to-`Value` correspondence defin
 - `ChoiceFieldType` values MUST be `ChoiceValue`
 - `LinkFieldType` values MUST be `LinkValue`
 - `ContactFieldType` values MUST be `ContactValue`
-- `ExternalAuthorityFieldType` values MUST be `ExternalAuthorityValue`
+- `OrcidFieldType` values MUST be `OrcidValue`
+- `RorFieldType` values MUST be `RorValue`
+- `DoiFieldType` values MUST be `DoiValue`
+- `PubMedIdFieldType` values MUST be `PubMedIdValue`
+- `RridFieldType` values MUST be `RridValue`
+- `NihGrantIdFieldType` values MUST be `NihGrantIdValue`
 - `AttributeValueFieldType` values MUST be `AttributeValue`
 
 Additional well-formedness conditions apply as follows.
@@ -119,7 +124,12 @@ For typed defaults:
 - `ChoiceDefaultValue`, if present, MUST contain one or more `ChoiceValue` constructs
 - `LinkDefaultValue`, if present, MUST contain `LinkValue`
 - `ContactDefaultValue`, if present, MUST contain `ContactValue`
-- `ExternalAuthorityDefaultValue`, if present, MUST contain `ExternalAuthorityValue`
+- `OrcidDefaultValue`, if present, MUST contain `OrcidValue`
+- `RorDefaultValue`, if present, MUST contain `RorValue`
+- `DoiDefaultValue`, if present, MUST contain `DoiValue`
+- `PubMedIdDefaultValue`, if present, MUST contain `PubMedIdValue`
+- `RridDefaultValue`, if present, MUST contain `RridValue`
+- `NihGrantIdDefaultValue`, if present, MUST contain `NihGrantIdValue`
 
 For multiplicity:
 
