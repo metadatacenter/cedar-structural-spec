@@ -203,8 +203,6 @@ NihGrantIdField ::= nih_grant_id_field(
                    )
 ```
 
-`Template` is shown separately because it is the schema artifact that assembles embedded artifacts into a reusable template structure.
-
 ```ebnf
 Template ::= template(
                TemplateId
@@ -897,7 +895,7 @@ NihGrantIdFieldType ::= nih_grant_id_field_type()
 AttributeValueFieldType ::= attribute_value_field_type()
 ```
 
-## Temporal Fields
+## Temporal Field Types
 
 `TemporalFieldType` denotes temporal-valued fields and is refined into strongly typed date, time, and date-time forms. This section groups the temporal field-type productions together with their compatible rendering hints, values, and literals.
 
