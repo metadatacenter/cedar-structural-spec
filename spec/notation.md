@@ -40,5 +40,5 @@ The grammar distinguishes `DatatypeIriLiteral` and `LangStringLiteral` explicitl
 
 `LangStringLiteral` consists of lexical content together with a language tag.
 
-The normative structure and semantics of literals are defined in the `Literals` section of [grammar.md](/Users/matthewhorridge/IdeaProjects/cedar-structural-spec/spec/grammar.md).
+The normative structure and semantics of literals are defined in the `Literals` section of [grammar.md](grammar.md).
 
