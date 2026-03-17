@@ -486,7 +486,7 @@ The following productions define the primitive leaf types used throughout this g
 
 ### Primitive String Types
 
-The following nonterminals are intentionally left abstract. They define the string-valued leaf domains referenced by the productions in this section and are not themselves model-level constructs.
+The following nonterminals are intentionally left abstract. They define the string-valued leaf types referenced by the productions in this section and are not themselves model-level constructs.
 
 - `SemanticVersion` denotes a Semantic Versioning 2.0.0 lexical form.
 - `IriString` denotes the lexical form of an IRI.
