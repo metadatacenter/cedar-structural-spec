@@ -80,6 +80,8 @@ The kernel grammar defines the primary abstract categories of the model and the 
 
 ### Core Structure
 
+This subsection establishes the top-level taxonomy of the model and introduces its two principal concrete schema artifacts. `Artifact` is the broadest category, encompassing reusable schema artifacts, presentation components, and template instances. `Template` is defined here as the central container that organises embedded artifacts into a structured form. `Field` is introduced as an abstract category whose concrete variants are defined in the following subsection.
+
 ```ebnf
 Artifact ::= SchemaArtifact
            | PresentationComponent
