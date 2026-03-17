@@ -981,7 +981,7 @@ PresentationComponent ::= RichTextComponent
 RichTextComponent ::= rich_text_component(
                         PresentationComponentId
                         ArtifactMetadata
-                        RichTextContent
+                        HtmlContent
                       )
 
 ImageComponent ::= image_component(
@@ -1008,9 +1008,9 @@ PageBreakComponent ::= page_break_component(
 ```
 
 ```ebnf
-RichTextContent ::= rich_text_content(
-                      UnicodeString
-                    )
+HtmlContent ::= html_content(
+                  UnicodeString
+                )
 
 ImageSource ::= image_source(
                   Iri
@@ -1021,7 +1021,11 @@ YoutubeVideoSource ::= you_tube_video_source(
                        )
 ```
 
-`RichTextContent` denotes Unicode textual content used by a `RichTextComponent`.
+`HtmlContent` denotes an HTML fragment represented as a Unicode string and used by a `RichTextComponent`.
+
+This specification does not define a required HTML feature set.
+
+Implementations MAY restrict or sanitize HTML content for security, portability, or rendering reasons.
 
 `ImageSource` and `YoutubeVideoSource` denote IRIs identifying the image or video resource used by the corresponding presentation component.
 

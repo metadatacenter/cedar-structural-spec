@@ -24,7 +24,7 @@ Presentation constructs appear in a `Template` only through `EmbeddedPresentatio
 
 An `EmbeddedPresentationComponent` carries embedding-specific properties such as `EmbeddedArtifactKey`, visibility, and label override where applicable.
 
-`RichTextComponent` carries reusable rich text content.
+`RichTextComponent` carries reusable HTML content.
 
 `ImageComponent` carries an image source.
 
