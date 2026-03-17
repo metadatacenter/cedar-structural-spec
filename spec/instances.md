@@ -57,6 +57,8 @@ Date, time, and date-time instance values are represented separately by `DateVal
 
 Controlled term instance values SHOULD preserve both a term Iri and a human-readable label. They MAY additionally preserve notation and preferred label information from the source terminology.
 
+External authority instance values SHOULD preserve both the identifying Iri and, where available, a human-readable label.
+
 ## Open Questions
 
 - Should `TemplateInstance` permit partial conformance during authoring workflows, or should the model define only fully conforming instances?

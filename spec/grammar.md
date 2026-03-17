@@ -1363,27 +1363,33 @@ ExternalAuthorityValue ::= OrcidValue
                          | NihGrantIdValue
 
 OrcidValue ::= orcid_value(
-                Literal
+                Iri
+                [Label]
               )
 
 RorValue ::= ror_value(
-              Literal
+              Iri
+              [Label]
             )
 
 DoiValue ::= doi_value(
-              Literal
+              Iri
+              [Label]
             )
 
 PubMedIdValue ::= pub_med_id_value(
-                    Literal
+                    Iri
+                    [Label]
                   )
 
 RridValue ::= rrid_value(
-               Literal
+               Iri
+               [Label]
              )
 
 NihGrantIdValue ::= nih_grant_id_value(
-                     Literal
+                     Iri
+                     [Label]
                    )
 
 AttributeValue ::= attribute_value(
@@ -1804,5 +1810,4 @@ The nonterminals `SemanticVersion`, `IriString`, `Bcp47Tag`, `UnicodeString`, `I
 
 ## Open Questions
 
-- Should `LinkValue`, `ContactValue`, and `ExternalAuthorityValue` remain separate abstract value categories, or should they be normalized into a common literal-with-datatype form?
 - Should embedded artifacts always refer to reusable artifacts by explicit reference construct, or does the CEDAR model require some embeddings to support inline artifact definition?

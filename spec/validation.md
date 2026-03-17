@@ -116,6 +116,11 @@ For controlled-term values:
 
 - `ControlledTermValue` MUST include a term identifier and SHOULD include a human-readable label
 
+For external authority values:
+
+- `OrcidValue`, `RorValue`, `DoiValue`, `PubMedIdValue`, `RridValue`, and `NihGrantIdValue` MUST include an identifying `Iri`
+- these values MAY additionally include a human-readable `Label`
+
 For literals generally:
 
 - `DatatypeIriLiteral` lexical forms SHOULD be in Unicode Normalization Form C
