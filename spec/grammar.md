@@ -47,7 +47,7 @@ Template ::= template(
   - [Concrete Field Artifacts](#concrete-field-artifacts)
   - [Embedded Artifacts](#embedded-artifacts)
 - [Scalar and Datatype Leaves](#scalar-and-datatype-leaves)
-  - [Underlying String Domains](#underlying-string-domains)
+  - [Primitive String Types](#primitive-string-types)
 - [Literals](#literals)
 - [Artifact Identity](#artifact-identity)
 - [Artifact Metadata](#artifact-metadata)
@@ -484,6 +484,18 @@ EmbeddedPresentationComponent ::= embedded_presentation_component(
 
 The following productions define the primitive leaf types used throughout this grammar. They are placed here so that subsequent sections can reference them without forward reference. They represent the atomic constructs from which all other productions are built: IRIs, typed string domains, lexical forms, numeric and temporal datatype IRIs, and textual metadata values.
 
+### Primitive String Types
+
+The following nonterminals are intentionally left abstract. They define the string-valued leaf domains referenced by the productions in this section and are not themselves model-level constructs.
+
+- `SemanticVersion` denotes a Semantic Versioning 2.0.0 lexical form.
+- `IriString` denotes the lexical form of an IRI.
+- `Bcp47Tag` denotes a well-formed BCP 47 language tag.
+- `UnicodeString` denotes an arbitrary Unicode string.
+- `Iso8601DateTimeLexicalForm` denotes an ISO 8601 date-time lexical form.
+- `AsciiIdentifier` denotes an identifier matching the pattern `[A-Za-z][A-Za-z0-9_-]*`: it begins with an ASCII letter followed by zero or more ASCII letters, digits, underscores, or hyphens.
+- `IntegerLexicalForm` denotes a base-10 integer lexical form.
+
 ```ebnf
 Iri ::= iri(
           IriString
@@ -697,20 +709,6 @@ The temporal datatype constructors denote the following XML Schema datatype IRIs
 - `XsdDateDatatypeIri`: `http://www.w3.org/2001/XMLSchema#date`
 - `XsdTimeDatatypeIri`: `http://www.w3.org/2001/XMLSchema#time`
 - `XsdDateTimeDatatypeIri`: `http://www.w3.org/2001/XMLSchema#dateTime`
-
-### Underlying String Domains
-
-The following nonterminals are intentionally left abstract as underlying string domains rather than model-level constructs.
-
-- `SemanticVersion` denotes a Semantic Versioning 2.0.0 lexical form.
-- `IriString` denotes the lexical form of an IRI.
-- `Bcp47Tag` denotes a well-formed BCP 47 language tag.
-- `UnicodeString` denotes an arbitrary Unicode string.
-- `Iso8601DateTimeLexicalForm` denotes an ISO 8601 date-time lexical form.
-- `AsciiIdentifier` denotes an identifier matching the pattern `[A-Za-z][A-Za-z0-9_-]*`: it begins with an ASCII letter followed by zero or more ASCII letters, digits, underscores, or hyphens.
-- `IntegerLexicalForm` denotes a base-10 integer lexical form.
-
-The nonterminals `SemanticVersion`, `IriString`, `Bcp47Tag`, `UnicodeString`, `Iso8601DateTimeLexicalForm`, `AsciiIdentifier`, and `IntegerLexicalForm` are intentionally left abstract in this version.
 
 ## Literals
 
