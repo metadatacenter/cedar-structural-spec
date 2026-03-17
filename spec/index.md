@@ -29,7 +29,7 @@ This specification does not define:
 
 - [notation.md](notation.md) defines the notation conventions used throughout the specification.
 - [metamodel.md](metamodel.md) defines the core artifacts and their relationships.
-- [grammar.md](grammar.md) gives the abstract BNF-style grammar, including the `FieldType` system and related constraints.
+- [grammar.md](grammar.md) gives the abstract EBNF-style grammar, including the `FieldType` system and related constraints.
 - [presentation.md](presentation.md) defines `PresentationComponent`.
 - [instances.md](instances.md) defines `TemplateInstance` and `InstanceValue`.
 - [validation.md](validation.md) defines well-formedness and validation rules.

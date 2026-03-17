@@ -61,9 +61,9 @@ A `Template` MAY additionally define `Header` and `Footer` content for presentat
 
 ## Field
 
-A `Field` is a `SchemaArtifact` identified by a `FieldId` and specifies a kind of value that may appear in `TemplateInstance` constructs.
+A `Field` is a `SchemaArtifact` identified by a `FieldId` and specifies a kind of value that may appear in `TemplateInstance` constructs. `Field` is an abstract category refined into typed field artifacts such as `TextField`, `NumericField`, `DateField`, `TimeField`, `DateTimeField`, `ControlledTermField`, `SingleChoiceField`, and other concrete field variants.
 
-A `Field` defines a `FieldType` together with any field-type-specific properties on the permitted values.
+Each concrete `Field` variant carries the compatible concrete `FieldType` together with any field-type-specific properties on the permitted values.
 
 `TextFieldType` MAY define a reusable default text value, minimum length, maximum length, and validating regular expression.
 
@@ -93,9 +93,9 @@ The order of embedded artifacts in a `Template` is determined by the sequence in
 
 ## EmbeddedField
 
-An `EmbeddedField` is an `EmbeddedArtifact` that references a `Field`.
+An `EmbeddedField` is an `EmbeddedArtifact` that references a `Field`. `EmbeddedField` is an abstract category refined into typed embedded-field variants such as `EmbeddedTextField`, `EmbeddedNumericField`, `EmbeddedDateField`, and other concrete embedding forms.
 
-It determines how that `Field` participates within the containing `Template`.
+Each concrete `EmbeddedField` variant determines how the correspondingly typed `Field` participates within the containing `Template`.
 
 ## EmbeddedTemplate
 

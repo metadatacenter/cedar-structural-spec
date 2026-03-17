@@ -53,11 +53,132 @@ Artifact ::= SchemaArtifact
 SchemaArtifact ::= Field
                  | Template
 
-Field ::= field(
-            FieldId
-            SchemaArtifactMetadata
-            FieldType
-          )
+Field ::= TextField
+        | NumericField
+        | DateField
+        | TimeField
+        | DateTimeField
+        | ControlledTermField
+        | SingleChoiceField
+        | MultipleChoiceField
+        | LinkField
+        | EmailField
+        | PhoneNumberField
+        | OrcidField
+        | RorField
+        | DoiField
+        | PubMedIdField
+        | RridField
+        | NihGrantIdField
+        | AttributeValueField
+
+TextField ::= text_field(
+               TextFieldId
+               SchemaArtifactMetadata
+               TextFieldType
+             )
+
+NumericField ::= numeric_field(
+                  NumericFieldId
+                  SchemaArtifactMetadata
+                  NumericFieldType
+                )
+
+DateField ::= date_field(
+               DateFieldId
+               SchemaArtifactMetadata
+               DateFieldType
+             )
+
+TimeField ::= time_field(
+               TimeFieldId
+               SchemaArtifactMetadata
+               TimeFieldType
+             )
+
+DateTimeField ::= date_time_field(
+                   DateTimeFieldId
+                   SchemaArtifactMetadata
+                   DateTimeFieldType
+                 )
+
+ControlledTermField ::= controlled_term_field(
+                          ControlledTermFieldId
+                          SchemaArtifactMetadata
+                          ControlledTermFieldType
+                        )
+
+SingleChoiceField ::= single_choice_field(
+                         SingleChoiceFieldId
+                         SchemaArtifactMetadata
+                         SingleChoiceFieldType
+                       )
+
+MultipleChoiceField ::= multiple_choice_field(
+                           MultipleChoiceFieldId
+                           SchemaArtifactMetadata
+                           MultipleChoiceFieldType
+                         )
+
+LinkField ::= link_field(
+               LinkFieldId
+               SchemaArtifactMetadata
+               LinkFieldType
+             )
+
+EmailField ::= email_field(
+                EmailFieldId
+                SchemaArtifactMetadata
+                EmailFieldType
+              )
+
+PhoneNumberField ::= phone_number_field(
+                      PhoneNumberFieldId
+                      SchemaArtifactMetadata
+                      PhoneNumberFieldType
+                    )
+
+OrcidField ::= orcid_field(
+                OrcidFieldId
+                SchemaArtifactMetadata
+                OrcidFieldType
+              )
+
+RorField ::= ror_field(
+              RorFieldId
+              SchemaArtifactMetadata
+              RorFieldType
+            )
+
+DoiField ::= doi_field(
+              DoiFieldId
+              SchemaArtifactMetadata
+              DoiFieldType
+            )
+
+PubMedIdField ::= pub_med_id_field(
+                    PubMedIdFieldId
+                    SchemaArtifactMetadata
+                    PubMedIdFieldType
+                  )
+
+RridField ::= rrid_field(
+               RridFieldId
+               SchemaArtifactMetadata
+               RridFieldType
+             )
+
+NihGrantIdField ::= nih_grant_id_field(
+                     NihGrantIdFieldId
+                     SchemaArtifactMetadata
+                     NihGrantIdFieldType
+                   )
+
+AttributeValueField ::= attribute_value_field(
+                          AttributeValueFieldId
+                          SchemaArtifactMetadata
+                          AttributeValueFieldType
+                        )
 
 Template ::= template(
                TemplateId
@@ -75,15 +196,203 @@ EmbeddedArtifact ::= EmbeddedField
                    | EmbeddedTemplate
                    | EmbeddedPresentationComponent
 
-EmbeddedField ::= embedded_field(
-                    EmbeddedArtifactKey
-                    FieldReference
-                    [ValueRequirement]
-                    [Cardinality]
-                    [Visibility]
-                    [DefaultValue]
-                    [LabelOverride]
-                  )
+EmbeddedField ::= EmbeddedTextField
+                | EmbeddedNumericField
+                | EmbeddedDateField
+                | EmbeddedTimeField
+                | EmbeddedDateTimeField
+                | EmbeddedControlledTermField
+                | EmbeddedSingleChoiceField
+                | EmbeddedMultipleChoiceField
+                | EmbeddedLinkField
+                | EmbeddedEmailField
+                | EmbeddedPhoneNumberField
+                | EmbeddedOrcidField
+                | EmbeddedRorField
+                | EmbeddedDoiField
+                | EmbeddedPubMedIdField
+                | EmbeddedRridField
+                | EmbeddedNihGrantIdField
+                | EmbeddedAttributeValueField
+
+EmbeddedTextField ::= embedded_text_field(
+                        EmbeddedArtifactKey
+                        TextFieldReference
+                        [ValueRequirement]
+                        [Cardinality]
+                        [Visibility]
+                        [TextDefaultValue]
+                        [LabelOverride]
+                      )
+
+EmbeddedNumericField ::= embedded_numeric_field(
+                           EmbeddedArtifactKey
+                           NumericFieldReference
+                           [ValueRequirement]
+                           [Cardinality]
+                           [Visibility]
+                           [NumericDefaultValue]
+                           [LabelOverride]
+                         )
+
+EmbeddedDateField ::= embedded_date_field(
+                        EmbeddedArtifactKey
+                        DateFieldReference
+                        [ValueRequirement]
+                        [Cardinality]
+                        [Visibility]
+                        [DateDefaultValue]
+                        [LabelOverride]
+                      )
+
+EmbeddedTimeField ::= embedded_time_field(
+                        EmbeddedArtifactKey
+                        TimeFieldReference
+                        [ValueRequirement]
+                        [Cardinality]
+                        [Visibility]
+                        [TimeDefaultValue]
+                        [LabelOverride]
+                      )
+
+EmbeddedDateTimeField ::= embedded_date_time_field(
+                            EmbeddedArtifactKey
+                            DateTimeFieldReference
+                            [ValueRequirement]
+                            [Cardinality]
+                            [Visibility]
+                            [DateTimeDefaultValue]
+                            [LabelOverride]
+                          )
+
+EmbeddedControlledTermField ::= embedded_controlled_term_field(
+                                  EmbeddedArtifactKey
+                                  ControlledTermFieldReference
+                                  [ValueRequirement]
+                                  [Cardinality]
+                                  [Visibility]
+                                  [ControlledTermDefaultValue]
+                                  [LabelOverride]
+                                )
+
+EmbeddedSingleChoiceField ::= embedded_single_choice_field(
+                                 EmbeddedArtifactKey
+                                 SingleChoiceFieldReference
+                                 [ValueRequirement]
+                                 [Cardinality]
+                                 [Visibility]
+                                 [ChoiceDefaultValue]
+                                 [LabelOverride]
+                               )
+
+EmbeddedMultipleChoiceField ::= embedded_multiple_choice_field(
+                                   EmbeddedArtifactKey
+                                   MultipleChoiceFieldReference
+                                   [ValueRequirement]
+                                   [Cardinality]
+                                   [Visibility]
+                                   [ChoiceDefaultValue]
+                                   [LabelOverride]
+                                 )
+
+EmbeddedLinkField ::= embedded_link_field(
+                        EmbeddedArtifactKey
+                        LinkFieldReference
+                        [ValueRequirement]
+                        [Cardinality]
+                        [Visibility]
+                        [LinkDefaultValue]
+                        [LabelOverride]
+                      )
+
+EmbeddedEmailField ::= embedded_email_field(
+                         EmbeddedArtifactKey
+                         EmailFieldReference
+                         [ValueRequirement]
+                         [Cardinality]
+                         [Visibility]
+                         [ContactDefaultValue]
+                         [LabelOverride]
+                       )
+
+EmbeddedPhoneNumberField ::= embedded_phone_number_field(
+                               EmbeddedArtifactKey
+                               PhoneNumberFieldReference
+                               [ValueRequirement]
+                               [Cardinality]
+                               [Visibility]
+                               [ContactDefaultValue]
+                               [LabelOverride]
+                             )
+
+EmbeddedOrcidField ::= embedded_orcid_field(
+                         EmbeddedArtifactKey
+                         OrcidFieldReference
+                         [ValueRequirement]
+                         [Cardinality]
+                         [Visibility]
+                         [ExternalAuthorityDefaultValue]
+                         [LabelOverride]
+                       )
+
+EmbeddedRorField ::= embedded_ror_field(
+                       EmbeddedArtifactKey
+                       RorFieldReference
+                       [ValueRequirement]
+                       [Cardinality]
+                       [Visibility]
+                       [ExternalAuthorityDefaultValue]
+                       [LabelOverride]
+                     )
+
+EmbeddedDoiField ::= embedded_doi_field(
+                       EmbeddedArtifactKey
+                       DoiFieldReference
+                       [ValueRequirement]
+                       [Cardinality]
+                       [Visibility]
+                       [ExternalAuthorityDefaultValue]
+                       [LabelOverride]
+                     )
+
+EmbeddedPubMedIdField ::= embedded_pub_med_id_field(
+                            EmbeddedArtifactKey
+                            PubMedIdFieldReference
+                            [ValueRequirement]
+                            [Cardinality]
+                            [Visibility]
+                            [ExternalAuthorityDefaultValue]
+                            [LabelOverride]
+                          )
+
+EmbeddedRridField ::= embedded_rrid_field(
+                        EmbeddedArtifactKey
+                        RridFieldReference
+                        [ValueRequirement]
+                        [Cardinality]
+                        [Visibility]
+                        [ExternalAuthorityDefaultValue]
+                        [LabelOverride]
+                      )
+
+EmbeddedNihGrantIdField ::= embedded_nih_grant_id_field(
+                               EmbeddedArtifactKey
+                               NihGrantIdFieldReference
+                               [ValueRequirement]
+                               [Cardinality]
+                               [Visibility]
+                               [ExternalAuthorityDefaultValue]
+                               [LabelOverride]
+                             )
+
+EmbeddedAttributeValueField ::= embedded_attribute_value_field(
+                                  EmbeddedArtifactKey
+                                  AttributeValueFieldReference
+                                  [ValueRequirement]
+                                  [Cardinality]
+                                  [Visibility]
+                                  [LabelOverride]
+                                )
 
 EmbeddedTemplate ::= embedded_template(
                        EmbeddedArtifactKey
@@ -107,21 +416,66 @@ EmbeddedPresentationComponent ::= embedded_presentation_component(
 Artifact identity defines the typed identifiers by which artifacts and artifact references are denoted in the model. These identity constructs are distinct from descriptive metadata, provenance, versioning, and annotations.
 
 ```ebnf
-FieldId ::= field_id(
-              Iri
-            )
+FieldId ::= TextFieldId
+          | NumericFieldId
+          | DateFieldId
+          | TimeFieldId
+          | DateTimeFieldId
+          | ControlledTermFieldId
+          | SingleChoiceFieldId
+          | MultipleChoiceFieldId
+          | LinkFieldId
+          | EmailFieldId
+          | PhoneNumberFieldId
+          | OrcidFieldId
+          | RorFieldId
+          | DoiFieldId
+          | PubMedIdFieldId
+          | RridFieldId
+          | NihGrantIdFieldId
+          | AttributeValueFieldId
 
-TemplateId ::= template_id(
-                 Iri
-               )
+TextFieldId ::= text_field_id( Iri )
 
-PresentationComponentId ::= presentation_component_id(
-                              Iri
-                            )
+NumericFieldId ::= numeric_field_id( Iri )
 
-TemplateInstanceId ::= template_instance_id(
-                        Iri
-                      )
+DateFieldId ::= date_field_id( Iri )
+
+TimeFieldId ::= time_field_id( Iri )
+
+DateTimeFieldId ::= date_time_field_id( Iri )
+
+ControlledTermFieldId ::= controlled_term_field_id( Iri )
+
+SingleChoiceFieldId ::= single_choice_field_id( Iri )
+
+MultipleChoiceFieldId ::= multiple_choice_field_id( Iri )
+
+LinkFieldId ::= link_field_id( Iri )
+
+EmailFieldId ::= email_field_id( Iri )
+
+PhoneNumberFieldId ::= phone_number_field_id( Iri )
+
+OrcidFieldId ::= orcid_field_id( Iri )
+
+RorFieldId ::= ror_field_id( Iri )
+
+DoiFieldId ::= doi_field_id( Iri )
+
+PubMedIdFieldId ::= pub_med_id_field_id( Iri )
+
+RridFieldId ::= rrid_field_id( Iri )
+
+NihGrantIdFieldId ::= nih_grant_id_field_id( Iri )
+
+AttributeValueFieldId ::= attribute_value_field_id( Iri )
+
+TemplateId ::= template_id( Iri )
+
+PresentationComponentId ::= presentation_component_id( Iri )
+
+TemplateInstanceId ::= template_instance_id( Iri )
 ```
 
 ## Artifact Metadata
@@ -249,7 +603,60 @@ Embedded artifact properties define the contextual information carried by an `Em
 These productions identify the reusable artifact that is being included in the template.
 
 ```ebnf
-FieldReference ::= FieldId
+FieldReference ::= TextFieldReference
+                 | NumericFieldReference
+                 | DateFieldReference
+                 | TimeFieldReference
+                 | DateTimeFieldReference
+                 | ControlledTermFieldReference
+                 | SingleChoiceFieldReference
+                 | MultipleChoiceFieldReference
+                 | LinkFieldReference
+                 | EmailFieldReference
+                 | PhoneNumberFieldReference
+                 | OrcidFieldReference
+                 | RorFieldReference
+                 | DoiFieldReference
+                 | PubMedIdFieldReference
+                 | RridFieldReference
+                 | NihGrantIdFieldReference
+                 | AttributeValueFieldReference
+
+TextFieldReference ::= TextFieldId
+
+NumericFieldReference ::= NumericFieldId
+
+DateFieldReference ::= DateFieldId
+
+TimeFieldReference ::= TimeFieldId
+
+DateTimeFieldReference ::= DateTimeFieldId
+
+ControlledTermFieldReference ::= ControlledTermFieldId
+
+SingleChoiceFieldReference ::= SingleChoiceFieldId
+
+MultipleChoiceFieldReference ::= MultipleChoiceFieldId
+
+LinkFieldReference ::= LinkFieldId
+
+EmailFieldReference ::= EmailFieldId
+
+PhoneNumberFieldReference ::= PhoneNumberFieldId
+
+OrcidFieldReference ::= OrcidFieldId
+
+RorFieldReference ::= RorFieldId
+
+DoiFieldReference ::= DoiFieldId
+
+PubMedIdFieldReference ::= PubMedIdFieldId
+
+RridFieldReference ::= RridFieldId
+
+NihGrantIdFieldReference ::= NihGrantIdFieldId
+
+AttributeValueFieldReference ::= AttributeValueFieldId
 
 TemplateReference ::= TemplateId
 
@@ -408,8 +815,14 @@ MultipleChoiceFieldType ::= multiple_choice_field_type(
                               [MultipleChoiceRenderingHint]
                             )
 
+LinkFieldType ::= link_field_type()
+
 ContactFieldType ::= EmailFieldType
                    | PhoneNumberFieldType
+
+EmailFieldType ::= email_field_type()
+
+PhoneNumberFieldType ::= phone_number_field_type()
 
 ExternalAuthorityFieldType ::= OrcidFieldType
                              | RorFieldType
@@ -417,6 +830,18 @@ ExternalAuthorityFieldType ::= OrcidFieldType
                              | PubMedIdFieldType
                              | RridFieldType
                              | NihGrantIdFieldType
+
+OrcidFieldType ::= orcid_field_type()
+
+RorFieldType ::= ror_field_type()
+
+DoiFieldType ::= doi_field_type()
+
+PubMedIdFieldType ::= pub_med_id_field_type()
+
+RridFieldType ::= rrid_field_type()
+
+NihGrantIdFieldType ::= nih_grant_id_field_type()
 
 AttributeValueFieldType ::= attribute_value_field_type()
 ```
