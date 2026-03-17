@@ -1,6 +1,6 @@
 # Abstract Grammar
 
-This section defines the abstract structure of the CEDAR Template Model using a BNF-style grammar.
+This section defines the abstract structure of the CEDAR Template Model using an EBNF-style grammar.
 
 The grammar defines the abstract syntactic structure of the model. It specifies the kinds of constructs that exist and how they are composed, but it does not define a concrete textual or data serialization such as JSON, YAML, RDF, or a functional-style syntax.
 
