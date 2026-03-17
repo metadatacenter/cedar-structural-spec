@@ -31,7 +31,7 @@ Abstract constructor forms use `lower_snake_case`. In this document, a construct
 
 For example, in the production
 
-```bnf
+```ebnf
 Template ::= template(
                TemplateId
                SchemaArtifactMetadata
