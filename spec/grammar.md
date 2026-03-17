@@ -43,6 +43,9 @@ Template ::= template(
 ## Contents
 
 - [Kernel Grammar](#kernel-grammar)
+  - [Abstract Categories](#abstract-categories)
+  - [Concrete Field Artifacts](#concrete-field-artifacts)
+  - [Embedded Artifacts](#embedded-artifacts)
 - [Scalar and Datatype Leaves](#scalar-and-datatype-leaves)
   - [Underlying String Domains](#underlying-string-domains)
 - [Literals](#literals)
@@ -74,6 +77,8 @@ Template ::= template(
 ## Kernel Grammar
 
 The kernel grammar defines the primary abstract categories of the model and the core schema-level structure that connects them. It introduces reusable schema artifacts, templates, and the embedding constructs through which templates assemble fields, nested templates, and presentation components. Subsequent sections refine the metadata, field-type families, instance structures, and supporting constructs referenced here.
+
+### Abstract Categories
 
 ```ebnf
 Artifact ::= SchemaArtifact
@@ -114,6 +119,20 @@ ExternalAuthorityField ::= OrcidField
                          | RridField
                          | NihGrantIdField
 ```
+
+`Template` is the central container artifact. It assembles `EmbeddedArtifact` constructs into a structured form and defines the schema that `TemplateInstance` constructs conform to.
+
+```ebnf
+Template ::= template(
+               TemplateId
+               SchemaArtifactMetadata
+               [Header]
+               [Footer]
+               EmbeddedArtifact*
+             )
+```
+
+### Concrete Field Artifacts
 
 ```ebnf
 TextField ::= text_field(
@@ -233,15 +252,7 @@ NihGrantIdField ::= nih_grant_id_field(
                    )
 ```
 
-```ebnf
-Template ::= template(
-               TemplateId
-               SchemaArtifactMetadata
-               [Header]
-               [Footer]
-               EmbeddedArtifact*
-             )
-```
+### Embedded Artifacts
 
 `EmbeddedArtifact` defines the forms used to include reusable artifacts in a `Template`. These productions identify the reusable artifact being included and the template-specific properties that control its use in that template.
 
