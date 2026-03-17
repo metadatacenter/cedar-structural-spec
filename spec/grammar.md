@@ -1455,6 +1455,42 @@ SchemaVersioning ::= schema_versioning(
                      )
 ```
 
+```ebnf
+Version ::= version(
+              SemanticVersion
+            )
+
+Status ::= status(
+             UnicodeString
+           )
+
+ModelVersion ::= model_version(
+                   SemanticVersion
+                 )
+
+PreviousVersion ::= previous_version(
+                      Iri
+                    )
+
+DerivedFrom ::= derived_from(
+                  Iri
+                )
+```
+
+```ebnf
+SemanticVersion ::= semantic_version(
+                      UnicodeString
+                    )
+```
+
+`Version` and `ModelVersion` denote Semantic Versioning 2.0.0 version identifiers.
+
+`SemanticVersion` MUST conform to Semantic Versioning 2.0.0 as defined at [semver.org](https://semver.org/).
+
+`Status` denotes a publication or lifecycle status value.
+
+`PreviousVersion` and `DerivedFrom` denote IRIs identifying related source or predecessor artifacts.
+
 ### Annotations
 
 `Annotation` provides an extensible metadata mechanism for additional named metadata values that are not captured by the core descriptive, provenance, or versioning structures. `AnnotationName` identifies the annotated metadata property. `AnnotationValue` provides the associated metadata value. Annotation values may be either literals or IRIs. This supports linking to external resources such as DOIs and grant identifiers, as well as storing institutional metadata.
@@ -1679,7 +1715,7 @@ The temporal datatype constructors denote the following XML Schema datatype IRIs
 - `XsdTimeDatatypeIri`: `http://www.w3.org/2001/XMLSchema#time`
 - `XsdDateTimeDatatypeIri`: `http://www.w3.org/2001/XMLSchema#dateTime`
 
-The nonterminals `RichTextContent`, `ImageSource`, `YoutubeVideoSource`, `ChoiceOption`, `Unit`, `Version`, `Status`, `ModelVersion`, `PreviousVersion`, `DerivedFrom`, `TimePrecision`, `HourMinutePrecision`, `HourMinuteSecondPrecision`, `HourMinuteSecondFractionPrecision`, `DateTimeValueType`, `DateHourMinuteValueType`, `DateHourMinuteSecondValueType`, `DateHourMinuteSecondFractionValueType`, `DateFormat`, `DateComponentOrder`, `DayMonthYearOrder`, `MonthDayYearOrder`, `YearMonthDayOrder`, `Header`, `Footer`, `IriString`, `Bcp47Tag`, `UnicodeString`, `Iso8601DateTimeLexicalForm`, `AsciiIdentifier`, and `IntegerLexicalForm` are intentionally left abstract in this version.
+The nonterminals `RichTextContent`, `ImageSource`, `YoutubeVideoSource`, `ChoiceOption`, `Unit`, `TimePrecision`, `HourMinutePrecision`, `HourMinuteSecondPrecision`, `HourMinuteSecondFractionPrecision`, `DateTimeValueType`, `DateHourMinuteValueType`, `DateHourMinuteSecondValueType`, `DateHourMinuteSecondFractionValueType`, `DateFormat`, `DateComponentOrder`, `DayMonthYearOrder`, `MonthDayYearOrder`, `YearMonthDayOrder`, `Header`, `Footer`, `SemanticVersion`, `IriString`, `Bcp47Tag`, `UnicodeString`, `Iso8601DateTimeLexicalForm`, `AsciiIdentifier`, and `IntegerLexicalForm` are intentionally left abstract in this version.
 
 ## Open Questions
 

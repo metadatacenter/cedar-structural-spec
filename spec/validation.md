@@ -30,6 +30,10 @@ If an embedding is marked `Recommended`, absence of a value MUST NOT by itself c
 
 If an embedding is marked `Optional`, absence of a value MUST NOT by itself cause conformance failure.
 
+### Versioning
+
+`Version` and `ModelVersion` MUST conform to Semantic Versioning 2.0.0.
+
 ### Instance Alignment
 
 Each `FieldValue` in a `TemplateInstance` MUST reference the `EmbeddedArtifactKey` of an `EmbeddedField` in the referenced `Template`.
