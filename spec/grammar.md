@@ -1011,7 +1011,15 @@ PageBreakComponent ::= page_break_component(
 HtmlContent ::= html_content(
                   UnicodeString
                 )
+```
 
+`HtmlContent` denotes an HTML fragment represented as a Unicode string and used by a `RichTextComponent`.
+
+This specification does not define a required HTML feature set.
+
+Implementations MAY restrict or sanitize HTML content for security, portability, or rendering reasons.
+
+```ebnf
 ImageSource ::= image_source(
                   Iri
                 )
@@ -1020,12 +1028,6 @@ YoutubeVideoSource ::= you_tube_video_source(
                          Iri
                        )
 ```
-
-`HtmlContent` denotes an HTML fragment represented as a Unicode string and used by a `RichTextComponent`.
-
-This specification does not define a required HTML feature set.
-
-Implementations MAY restrict or sanitize HTML content for security, portability, or rendering reasons.
 
 `ImageSource` and `YoutubeVideoSource` denote IRIs identifying the image or video resource used by the corresponding presentation component.
 
