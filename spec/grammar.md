@@ -40,6 +40,37 @@ Template ::= template(
 
 `Template` is the production being defined, while `template(...)` denotes the abstract constructor form of that construct; in other words, it shows the components of a `Template` and how they are composed.
 
+## Contents
+
+- [Kernel Grammar](#kernel-grammar)
+- [Scalar and Datatype Leaves](#scalar-and-datatype-leaves)
+  - [Underlying String Domains](#underlying-string-domains)
+- [Literals](#literals)
+- [Artifact Identity](#artifact-identity)
+- [Artifact Metadata](#artifact-metadata)
+  - [Aggregate Structure](#aggregate-structure)
+  - [Descriptive Metadata](#descriptive-metadata)
+  - [Temporal Provenance](#temporal-provenance)
+  - [Schema Versioning](#schema-versioning)
+  - [Annotations](#annotations)
+- [Embedded Artifact Keys](#embedded-artifact-keys)
+- [Values](#values)
+- [Embedded Artifact Properties](#embedded-artifact-properties)
+  - [References](#references)
+  - [Requirements](#requirements)
+  - [Cardinality](#cardinality)
+  - [Visibility](#visibility)
+  - [Defaults](#defaults)
+  - [Label Override](#label-override)
+- [Field Types](#field-types)
+  - [Temporal Field Types](#temporal-field-types)
+  - [Controlled Term Sources](#controlled-term-sources)
+  - [Rendering Hints](#rendering-hints)
+- [Presentation Components](#presentation-components)
+- [Field Type And Value Correspondence](#field-type-and-value-correspondence)
+- [Instances](#instances)
+- [Open Questions](#open-questions)
+
 ## Kernel Grammar
 
 The kernel grammar defines the primary abstract categories of the model and the core schema-level structure that connects them. It introduces reusable schema artifacts, templates, and the embedding constructs through which templates assemble fields, nested templates, and presentation components. Subsequent sections refine the metadata, field-type families, instance structures, and supporting constructs referenced here.
