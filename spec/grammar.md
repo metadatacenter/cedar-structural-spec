@@ -41,6 +41,24 @@ Template ::= template(
 
 `Template` is the production being defined, while `template(...)` denotes the abstract constructor form of that construct; in other words, it shows the components of a `Template` and how they are composed.
 
+## Section Index
+
+- [Kernel Grammar](#kernel-grammar)
+- [Artifact Identity](#artifact-identity)
+- [Artifact Metadata](#artifact-metadata)
+- [Embedded Artifact Keys](#embedded-artifact-keys)
+- [Embedded Artifact Properties](#embedded-artifact-properties)
+- [Field Types](#field-types)
+- [Presentation Components](#presentation-components)
+- [Controlled Term Sources](#controlled-term-sources)
+- [Rendering Hints](#rendering-hints)
+- [Literals](#literals)
+- [Supporting Nonterminals](#supporting-nonterminals)
+- [Field Type And Value Correspondence](#field-type-and-value-correspondence)
+- [Instances](#instances)
+- [Scalar And Datatype Leaves](#scalar-and-datatype-leaves)
+- [Open Questions](#open-questions)
+
 ## Kernel Grammar
 
 The kernel grammar defines the primary abstract categories of the model and the core schema-level structure that connects them. It introduces reusable schema artifacts, templates, and the embedding constructs through which templates assemble fields, nested templates, and presentation components. Subsequent sections refine the metadata, field-type families, instance structures, and supporting constructs referenced here.
@@ -895,7 +913,7 @@ NihGrantIdFieldType ::= nih_grant_id_field_type()
 AttributeValueFieldType ::= attribute_value_field_type()
 ```
 
-## Temporal Field Types
+### Temporal Field Types
 
 `TemporalFieldType` denotes temporal-valued fields and is refined into strongly typed date, time, and date-time forms. This section groups the temporal field-type productions together with their compatible rendering hints, values, and literals.
 
@@ -990,6 +1008,46 @@ TwelveHourTimeFormat ::= twelve_hour_time_format()
 TwentyFourHourTimeFormat ::= twenty_four_hour_time_format()
 ```
 
+## Presentation Components
+
+`PresentationComponent` denotes reusable non-data-bearing content that contributes presentation or instructional structure within a `Template`. Presentation components appear in templates only through `EmbeddedPresentationComponent` and do not contribute `InstanceValue` constructs.
+
+```ebnf
+PresentationComponent ::= RichTextComponent
+                        | ImageComponent
+                        | YoutubeVideoComponent
+                        | SectionBreakComponent
+                        | PageBreakComponent
+
+RichTextComponent ::= rich_text_component(
+                        PresentationComponentId
+                        ArtifactMetadata
+                        RichTextContent
+                      )
+
+ImageComponent ::= image_component(
+                     PresentationComponentId
+                     ArtifactMetadata
+                     ImageSource
+                   )
+
+YoutubeVideoComponent ::= you_tube_video_component(
+                            PresentationComponentId
+                            ArtifactMetadata
+                            YoutubeVideoSource
+                          )
+
+SectionBreakComponent ::= section_break_component(
+                            PresentationComponentId
+                            ArtifactMetadata
+                          )
+
+PageBreakComponent ::= page_break_component(
+                         PresentationComponentId
+                         ArtifactMetadata
+                       )
+```
+
 ## Controlled Term Sources
 
 ```ebnf
@@ -1073,29 +1131,6 @@ A `TextFieldType` MAY additionally define a default text value, minimum length, 
 Similarly, `ChoiceFieldType` distinguishes `SingleChoiceFieldType` from `MultipleChoiceFieldType` semantically, while the rendering hint determines whether the UI uses radio buttons, checkboxes, or dropdown presentation. Typed rendering hints make incompatible combinations structurally invalid.
 
 Temporal semantics are also split structurally: `DateFieldType`, `TimeFieldType`, and `DateTimeFieldType` are distinct semantic field types, and each carries only the rendering hints and temporal options that are meaningful for that temporal category.
-
-## Field Type And Value Correspondence
-
-The `FieldType` of a `Field` determines the permitted `Value` forms in corresponding `FieldValue` constructs.
-
-The correspondence is:
-
-- `TextFieldType` to `TextValue`
-- `NumericFieldType` to `NumericValue`
-- `DateFieldType` to `DateValue`
-- `TimeFieldType` to `TimeValue`
-- `DateTimeFieldType` to `DateTimeValue`
-- `ControlledTermFieldType` to `ControlledTermValue`
-- `ChoiceFieldType` to `ChoiceValue`
-- `LinkFieldType` to `LinkValue`
-- `ContactFieldType` to `ContactValue`
-- `OrcidFieldType` to `OrcidValue`
-- `RorFieldType` to `RorValue`
-- `DoiFieldType` to `DoiValue`
-- `PubMedIdFieldType` to `PubMedIdValue`
-- `RridFieldType` to `RridValue`
-- `NihGrantIdFieldType` to `NihGrantIdValue`
-- `AttributeValueFieldType` to `AttributeValue`
 
 ## Literals
 
@@ -1202,72 +1237,6 @@ An ill-typed literal is not syntactically ill-formed, but it does not determine 
 
 Two literals are term-equal if and only if their lexical forms and their datatype IRIs or language tags compare equal character by character.
 
-## Instances
-
-`TemplateInstance` denotes instance data that conforms to a `Template`. Instance productions are separated here from schema and presentation productions so that the schema model and instance model can be read independently.
-
-```ebnf
-TemplateInstance ::= template_instance(
-                       TemplateInstanceId
-                       ArtifactMetadata
-                       TemplateReference
-                       InstanceValue*
-                     )
-
-InstanceValue ::= FieldValue
-                | NestedTemplateInstance
-
-FieldValue ::= field_value(
-                 EmbeddedArtifactKey
-                 Value*
-               )
-
-NestedTemplateInstance ::= nested_template_instance(
-                             EmbeddedArtifactKey
-                             InstanceValue*
-                           )
-```
-
-## Presentation Components
-
-`PresentationComponent` denotes reusable non-data-bearing content that contributes presentation or instructional structure within a `Template`. Presentation components appear in templates only through `EmbeddedPresentationComponent` and do not contribute `InstanceValue` constructs.
-
-```ebnf
-PresentationComponent ::= RichTextComponent
-                        | ImageComponent
-                        | YoutubeVideoComponent
-                        | SectionBreakComponent
-                        | PageBreakComponent
-
-RichTextComponent ::= rich_text_component(
-                        PresentationComponentId
-                        ArtifactMetadata
-                        RichTextContent
-                      )
-
-ImageComponent ::= image_component(
-                     PresentationComponentId
-                     ArtifactMetadata
-                     ImageSource
-                   )
-
-YoutubeVideoComponent ::= you_tube_video_component(
-                            PresentationComponentId
-                            ArtifactMetadata
-                            YoutubeVideoSource
-                          )
-
-SectionBreakComponent ::= section_break_component(
-                            PresentationComponentId
-                            ArtifactMetadata
-                          )
-
-PageBreakComponent ::= page_break_component(
-                         PresentationComponentId
-                         ArtifactMetadata
-                       )
-```
-
 ## Supporting Nonterminals
 
 ```ebnf
@@ -1373,6 +1342,55 @@ AttributeValue ::= attribute_value(
                     AttributeName
                     Value
                   )
+```
+
+## Field Type And Value Correspondence
+
+The `FieldType` of a `Field` determines the permitted `Value` forms in corresponding `FieldValue` constructs.
+
+The correspondence is:
+
+- `TextFieldType` to `TextValue`
+- `NumericFieldType` to `NumericValue`
+- `DateFieldType` to `DateValue`
+- `TimeFieldType` to `TimeValue`
+- `DateTimeFieldType` to `DateTimeValue`
+- `ControlledTermFieldType` to `ControlledTermValue`
+- `ChoiceFieldType` to `ChoiceValue`
+- `LinkFieldType` to `LinkValue`
+- `ContactFieldType` to `ContactValue`
+- `OrcidFieldType` to `OrcidValue`
+- `RorFieldType` to `RorValue`
+- `DoiFieldType` to `DoiValue`
+- `PubMedIdFieldType` to `PubMedIdValue`
+- `RridFieldType` to `RridValue`
+- `NihGrantIdFieldType` to `NihGrantIdValue`
+- `AttributeValueFieldType` to `AttributeValue`
+
+## Instances
+
+`TemplateInstance` denotes instance data that conforms to a `Template`. Instance productions are separated here from schema and presentation productions so that the schema model and instance model can be read independently.
+
+```ebnf
+TemplateInstance ::= template_instance(
+                       TemplateInstanceId
+                       ArtifactMetadata
+                       TemplateReference
+                       InstanceValue*
+                     )
+
+InstanceValue ::= FieldValue
+                | NestedTemplateInstance
+
+FieldValue ::= field_value(
+                 EmbeddedArtifactKey
+                 Value*
+               )
+
+NestedTemplateInstance ::= nested_template_instance(
+                             EmbeddedArtifactKey
+                             InstanceValue*
+                           )
 ```
 
 ## Scalar And Datatype Leaves
