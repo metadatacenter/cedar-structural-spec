@@ -33,7 +33,7 @@ Temporal provenance includes:
 
 `CreatedBy` and `ModifiedBy` MUST identify agents by Iri.
 
-Annotations are attribute-value pairs whose values may be literals or IRIs.
+Annotations are property-value pairs. Each annotation has an `AnnotationName` identifying the annotated metadata property and an `AnnotationValue` that may be either a literal or an IRI. Annotations support linking to external resources such as DOIs and grant identifiers, and also support storing institutional metadata.
 
 ## SchemaArtifact
 
