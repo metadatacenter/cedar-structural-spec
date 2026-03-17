@@ -58,7 +58,8 @@ The contained values MUST follow the `FieldType`-to-`Value` correspondence defin
 - `ControlledTermFieldType` values MUST be `ControlledTermValue`
 - `ChoiceFieldType` values MUST be `ChoiceValue`
 - `LinkFieldType` values MUST be `LinkValue`
-- `ContactFieldType` values MUST be `ContactValue`
+- `EmailFieldType` values MUST be `EmailValue`
+- `PhoneNumberFieldType` values MUST be `PhoneNumberValue`
 - `OrcidFieldType` values MUST be `OrcidValue`
 - `RorFieldType` values MUST be `RorValue`
 - `DoiFieldType` values MUST be `DoiValue`
@@ -116,6 +117,11 @@ For controlled-term values:
 
 - `ControlledTermValue` MUST include a term identifier and SHOULD include a human-readable label
 
+For contact values:
+
+- `EmailValue` MUST contain a `StringLiteral`
+- `PhoneNumberValue` MUST contain a `StringLiteral`
+
 For external authority values:
 
 - `OrcidValue`, `RorValue`, `DoiValue`, `PubMedIdValue`, `RridValue`, and `NihGrantIdValue` MUST include an identifying `Iri`
@@ -137,7 +143,8 @@ For typed defaults:
 - `ControlledTermDefaultValue`, if present, MUST contain `ControlledTermValue`
 - `ChoiceDefaultValue`, if present, MUST contain one or more `ChoiceValue` constructs
 - `LinkDefaultValue`, if present, MUST contain `LinkValue`
-- `ContactDefaultValue`, if present, MUST contain `ContactValue`
+- `EmailDefaultValue`, if present, MUST contain `EmailValue`
+- `PhoneNumberDefaultValue`, if present, MUST contain `PhoneNumberValue`
 - `OrcidDefaultValue`, if present, MUST contain `OrcidValue`
 - `RorDefaultValue`, if present, MUST contain `RorValue`
 - `DoiDefaultValue`, if present, MUST contain `DoiValue`

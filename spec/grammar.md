@@ -335,7 +335,7 @@ EmbeddedEmailField ::= embedded_email_field(
                          [ValueRequirement]
                          [Cardinality]
                          [Visibility]
-                         [ContactDefaultValue]
+                         [EmailDefaultValue]
                          [LabelOverride]
                        )
 
@@ -345,7 +345,7 @@ EmbeddedPhoneNumberField ::= embedded_phone_number_field(
                                [ValueRequirement]
                                [Cardinality]
                                [Visibility]
-                               [ContactDefaultValue]
+                               [PhoneNumberDefaultValue]
                                [LabelOverride]
                              )
 
@@ -647,7 +647,8 @@ DefaultValue ::= TextDefaultValue
                | ControlledTermDefaultValue
                | ChoiceDefaultValue
                | LinkDefaultValue
-               | ContactDefaultValue
+               | EmailDefaultValue
+               | PhoneNumberDefaultValue
                | OrcidDefaultValue
                | RorDefaultValue
                | DoiDefaultValue
@@ -687,9 +688,13 @@ LinkDefaultValue ::= link_default_value(
                       LinkValue
                     )
 
-ContactDefaultValue ::= contact_default_value(
-                         ContactValue
-                       )
+EmailDefaultValue ::= email_default_value(
+                       EmailValue
+                     )
+
+PhoneNumberDefaultValue ::= phone_number_default_value(
+                             PhoneNumberValue
+                           )
 
 OrcidDefaultValue ::= orcid_default_value(
                       OrcidValue
@@ -1296,7 +1301,8 @@ Value ::= TextValue
         | ControlledTermValue
         | ChoiceValue
         | LinkValue
-        | ContactValue
+        | EmailValue
+        | PhoneNumberValue
         | ExternalAuthorityValue
         | AttributeValue
 
@@ -1351,9 +1357,13 @@ LinkValue ::= link_value(
                 Iri
               )
 
-ContactValue ::= contact_value(
-                   Literal
-                 )
+EmailValue ::= email_value(
+                 StringLiteral
+               )
+
+PhoneNumberValue ::= phone_number_value(
+                       StringLiteral
+                     )
 
 ExternalAuthorityValue ::= OrcidValue
                          | RorValue
@@ -1412,7 +1422,8 @@ The correspondence is:
 - `ControlledTermFieldType` to `ControlledTermValue`
 - `ChoiceFieldType` to `ChoiceValue`
 - `LinkFieldType` to `LinkValue`
-- `ContactFieldType` to `ContactValue`
+- `EmailFieldType` to `EmailValue`
+- `PhoneNumberFieldType` to `PhoneNumberValue`
 - `OrcidFieldType` to `OrcidValue`
 - `RorFieldType` to `RorValue`
 - `DoiFieldType` to `DoiValue`
