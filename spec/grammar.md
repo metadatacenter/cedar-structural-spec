@@ -43,7 +43,7 @@ Template ::= template(
 ## Contents
 
 - [Kernel Grammar](#kernel-grammar)
-  - [Abstract Categories](#abstract-categories)
+  - [Core Structure](#core-structure)
   - [Concrete Field Artifacts](#concrete-field-artifacts)
   - [Embedded Artifacts](#embedded-artifacts)
 - [Scalar and Datatype Leaves](#scalar-and-datatype-leaves)
@@ -78,7 +78,7 @@ Template ::= template(
 
 The kernel grammar defines the primary abstract categories of the model and the core schema-level structure that connects them. It introduces reusable schema artifacts, templates, and the embedding constructs through which templates assemble fields, nested templates, and presentation components. Subsequent sections refine the metadata, field-type families, instance structures, and supporting constructs referenced here.
 
-### Abstract Categories
+### Core Structure
 
 ```ebnf
 Artifact ::= SchemaArtifact
@@ -87,6 +87,18 @@ Artifact ::= SchemaArtifact
 
 SchemaArtifact ::= Field
                  | Template
+```
+
+`Template` is a concrete schema artifact and the central container of the model. It assembles `EmbeddedArtifact` constructs into a structured form and defines the schema that `TemplateInstance` constructs conform to.
+
+```ebnf
+Template ::= template(
+               TemplateId
+               SchemaArtifactMetadata
+               [Header]
+               [Footer]
+               EmbeddedArtifact*
+             )
 ```
 
 The following productions introduce the abstract field categories. `Field` remains an abstract category, while the intermediate categories group related concrete field artifacts for readability and shared semantics.
@@ -118,18 +130,6 @@ ExternalAuthorityField ::= OrcidField
                          | PubMedIdField
                          | RridField
                          | NihGrantIdField
-```
-
-`Template` is the central container artifact. It assembles `EmbeddedArtifact` constructs into a structured form and defines the schema that `TemplateInstance` constructs conform to.
-
-```ebnf
-Template ::= template(
-               TemplateId
-               SchemaArtifactMetadata
-               [Header]
-               [Footer]
-               EmbeddedArtifact*
-             )
 ```
 
 ### Concrete Field Artifacts
