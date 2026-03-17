@@ -65,7 +65,92 @@ A `Field` is a `SchemaArtifact` identified by a `FieldId` and specifies a kind o
 
 Each concrete `Field` variant carries the compatible concrete `FieldType` together with any field-type-specific properties on the permitted values.
 
+**Why `FieldType` Still Exists.** The concrete field artifact identifies what broad kind of field is being defined. For example, `TextField` identifies the artifact as a text field, and `DateField` identifies the artifact as a date field. `FieldType` is still retained because it provides the semantic configuration block for that concrete field artifact. In simple terms, the field artifact answers the question "what kind of reusable field is this?" while the compatible `FieldType` answers the question "what are the value rules and rendering-compatible properties for this kind of field?" This keeps artifact identity, provenance, and versioning separate from value semantics and field-specific configuration. It also preserves a uniform pattern across field kinds: each concrete field artifact has an identifier, metadata, and exactly one compatible `FieldType`.
+
 `TextFieldType` MAY define a reusable default text value, minimum length, maximum length, and validating regular expression.
+
+```mermaid
+classDiagram
+  class Field {
+    <<abstract>>
+  }
+
+  class TextField
+  class NumericField
+  class DateField
+  class TimeField
+  class DateTimeField
+  class ControlledTermField
+  class SingleChoiceField
+  class MultipleChoiceField
+  class LinkField
+  class EmailField
+  class PhoneNumberField
+  class OrcidField
+  class RorField
+  class DoiField
+  class PubMedIdField
+  class RridField
+  class NihGrantIdField
+  class AttributeValueField
+
+  class TextFieldType
+  class NumericFieldType
+  class DateFieldType
+  class TimeFieldType
+  class DateTimeFieldType
+  class ControlledTermFieldType
+  class SingleChoiceFieldType
+  class MultipleChoiceFieldType
+  class LinkFieldType
+  class EmailFieldType
+  class PhoneNumberFieldType
+  class OrcidFieldType
+  class RorFieldType
+  class DoiFieldType
+  class PubMedIdFieldType
+  class RridFieldType
+  class NihGrantIdFieldType
+  class AttributeValueFieldType
+
+  Field <|-- TextField
+  Field <|-- NumericField
+  Field <|-- DateField
+  Field <|-- TimeField
+  Field <|-- DateTimeField
+  Field <|-- ControlledTermField
+  Field <|-- SingleChoiceField
+  Field <|-- MultipleChoiceField
+  Field <|-- LinkField
+  Field <|-- EmailField
+  Field <|-- PhoneNumberField
+  Field <|-- OrcidField
+  Field <|-- RorField
+  Field <|-- DoiField
+  Field <|-- PubMedIdField
+  Field <|-- RridField
+  Field <|-- NihGrantIdField
+  Field <|-- AttributeValueField
+
+  TextField --> TextFieldType : carries
+  NumericField --> NumericFieldType : carries
+  DateField --> DateFieldType : carries
+  TimeField --> TimeFieldType : carries
+  DateTimeField --> DateTimeFieldType : carries
+  ControlledTermField --> ControlledTermFieldType : carries
+  SingleChoiceField --> SingleChoiceFieldType : carries
+  MultipleChoiceField --> MultipleChoiceFieldType : carries
+  LinkField --> LinkFieldType : carries
+  EmailField --> EmailFieldType : carries
+  PhoneNumberField --> PhoneNumberFieldType : carries
+  OrcidField --> OrcidFieldType : carries
+  RorField --> RorFieldType : carries
+  DoiField --> DoiFieldType : carries
+  PubMedIdField --> PubMedIdFieldType : carries
+  RridField --> RridFieldType : carries
+  NihGrantIdField --> NihGrantIdFieldType : carries
+  AttributeValueField --> AttributeValueFieldType : carries
+```
 
 Where supported by a concrete `FieldType`, a compatible `RenderingHint` is defined as part of that `FieldType`.
 
