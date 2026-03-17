@@ -1007,6 +1007,24 @@ PageBreakComponent ::= page_break_component(
                        )
 ```
 
+```ebnf
+RichTextContent ::= rich_text_content(
+                      UnicodeString
+                    )
+
+ImageSource ::= image_source(
+                  Iri
+                )
+
+YoutubeVideoSource ::= you_tube_video_source(
+                         Iri
+                       )
+```
+
+`RichTextContent` denotes Unicode textual content used by a `RichTextComponent`.
+
+`ImageSource` and `YoutubeVideoSource` denote IRIs identifying the image or video resource used by the corresponding presentation component.
+
 ## Controlled Term Sources
 
 ```ebnf
@@ -1645,6 +1663,18 @@ AttributeName ::= attribute_name(
 `AttributeName` denotes the name associated with an `AttributeValue`.
 
 ```ebnf
+Header ::= header(
+             UnicodeString
+           )
+
+Footer ::= footer(
+             UnicodeString
+           )
+```
+
+`Header` and `Footer` denote Unicode textual content used as template-level header and footer text.
+
+```ebnf
 NumericDatatype ::= numeric_datatype(
                       NumericDatatypeIri
                     )
@@ -1752,7 +1782,7 @@ The temporal datatype constructors denote the following XML Schema datatype IRIs
 - `XsdTimeDatatypeIri`: `http://www.w3.org/2001/XMLSchema#time`
 - `XsdDateTimeDatatypeIri`: `http://www.w3.org/2001/XMLSchema#dateTime`
 
-The nonterminals `RichTextContent`, `ImageSource`, `YoutubeVideoSource`, `SemanticVersion`, `Header`, `Footer`, `IriString`, `Bcp47Tag`, `UnicodeString`, `Iso8601DateTimeLexicalForm`, `AsciiIdentifier`, and `IntegerLexicalForm` are intentionally left abstract in this version.
+The nonterminals `SemanticVersion`, `IriString`, `Bcp47Tag`, `UnicodeString`, `Iso8601DateTimeLexicalForm`, `AsciiIdentifier`, and `IntegerLexicalForm` are intentionally left abstract in this version.
 
 ## Open Questions
 
