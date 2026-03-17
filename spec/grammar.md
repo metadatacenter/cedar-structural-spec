@@ -846,6 +846,8 @@ AttributeValueFieldType ::= attribute_value_field_type()
 
 `Unit` denotes an identified measurement or quantity unit optionally paired with a human-readable label.
 
+The current placement of `Unit` on `NumericFieldType` is a pragmatic compromise. A later revision may introduce a distinct `QuantityFieldType` to model numeric values with fixed units more explicitly.
+
 `ChoiceOption` denotes one permissible option in a choice field.
 
 `ChoiceOptionValue` allows a choice option to be specified by a literal, an ontology-backed controlled term, or an IRI.
