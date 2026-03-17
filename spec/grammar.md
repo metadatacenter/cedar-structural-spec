@@ -1484,6 +1484,94 @@ RegexPattern ::= regex_pattern(
 `RegexPattern` denotes a Unicode string interpreted as a regular-expression pattern.
 
 ```ebnf
+Name ::= name(
+           UnicodeString
+         )
+
+Description ::= description(
+                  UnicodeString
+                )
+
+Identifier ::= identifier(
+                 UnicodeString
+               )
+
+Label ::= label(
+            UnicodeString
+          )
+
+AlternativeLabel ::= alternative_label(
+                       UnicodeString
+                     )
+
+Notation ::= notation(
+               UnicodeString
+             )
+
+PreferredLabel ::= preferred_label(
+                     UnicodeString
+                   )
+
+AttributeName ::= attribute_name(
+                    UnicodeString
+                  )
+```
+
+`Name`, `Description`, and `Identifier` denote descriptive textual metadata values.
+
+`Label`, `AlternativeLabel`, `Notation`, and `PreferredLabel` denote textual labeling and notation values.
+
+`AttributeName` denotes the name associated with an `AttributeValue`.
+
+```ebnf
+TermIri ::= term_iri(
+              Iri
+            )
+
+OntologyAcronym ::= ontology_acronym(
+                      UnicodeString
+                    )
+
+OntologyName ::= ontology_name(
+                  UnicodeString
+                )
+
+OntologyIri ::= ontology_iri(
+                 Iri
+               )
+
+RootTermIri ::= root_term_iri(
+                  Iri
+                )
+
+RootTermLabel ::= root_term_label(
+                    UnicodeString
+                  )
+
+MaxTraversalDepth ::= max_traversal_depth(
+                        NonNegativeInteger
+                      )
+
+ValueSetIdentifier ::= value_set_identifier(
+                         UnicodeString
+                       )
+
+ValueSetName ::= value_set_name(
+                   UnicodeString
+                 )
+
+ValueSetIri ::= value_set_iri(
+                  Iri
+                )
+```
+
+`TermIri`, `OntologyIri`, `RootTermIri`, and `ValueSetIri` denote IRIs used in controlled-term source specifications.
+
+`OntologyAcronym`, `OntologyName`, `RootTermLabel`, `ValueSetIdentifier`, and `ValueSetName` denote textual controlled-term source metadata.
+
+`MaxTraversalDepth` denotes a non-negative traversal-depth limit for branch-based controlled-term sources.
+
+```ebnf
 NumericDatatype ::= numeric_datatype(
                       NumericDatatypeIri
                     )
@@ -1591,7 +1679,7 @@ The temporal datatype constructors denote the following XML Schema datatype IRIs
 - `XsdTimeDatatypeIri`: `http://www.w3.org/2001/XMLSchema#time`
 - `XsdDateTimeDatatypeIri`: `http://www.w3.org/2001/XMLSchema#dateTime`
 
-The nonterminals `RichTextContent`, `ImageSource`, `YoutubeVideoSource`, `ChoiceOption`, `Unit`, `TermIri`, `Notation`, `PreferredLabel`, `Name`, `Description`, `Identifier`, `Version`, `Status`, `ModelVersion`, `PreviousVersion`, `DerivedFrom`, `TimePrecision`, `HourMinutePrecision`, `HourMinuteSecondPrecision`, `HourMinuteSecondFractionPrecision`, `DateTimeValueType`, `DateHourMinuteValueType`, `DateHourMinuteSecondValueType`, `DateHourMinuteSecondFractionValueType`, `DateFormat`, `DateComponentOrder`, `DayMonthYearOrder`, `MonthDayYearOrder`, `YearMonthDayOrder`, `Label`, `AlternativeLabel`, `AttributeName`, `Header`, `Footer`, `OntologyAcronym`, `OntologyName`, `OntologyIri`, `RootTermIri`, `RootTermLabel`, `MaxTraversalDepth`, `ValueSetIdentifier`, `ValueSetName`, `ValueSetIri`, `IriString`, `Bcp47Tag`, `UnicodeString`, `Iso8601DateTimeLexicalForm`, `AsciiIdentifier`, and `IntegerLexicalForm` are intentionally left abstract in this version.
+The nonterminals `RichTextContent`, `ImageSource`, `YoutubeVideoSource`, `ChoiceOption`, `Unit`, `Version`, `Status`, `ModelVersion`, `PreviousVersion`, `DerivedFrom`, `TimePrecision`, `HourMinutePrecision`, `HourMinuteSecondPrecision`, `HourMinuteSecondFractionPrecision`, `DateTimeValueType`, `DateHourMinuteValueType`, `DateHourMinuteSecondValueType`, `DateHourMinuteSecondFractionValueType`, `DateFormat`, `DateComponentOrder`, `DayMonthYearOrder`, `MonthDayYearOrder`, `YearMonthDayOrder`, `Header`, `Footer`, `IriString`, `Bcp47Tag`, `UnicodeString`, `Iso8601DateTimeLexicalForm`, `AsciiIdentifier`, and `IntegerLexicalForm` are intentionally left abstract in this version.
 
 ## Open Questions
 
