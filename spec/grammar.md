@@ -610,6 +610,19 @@ Cardinality ::= cardinality(
                   MinCardinality
                   [MaxCardinality]
                 )
+
+MinCardinality ::= min_cardinality(
+                     NonNegativeInteger
+                   )
+
+MaxCardinality ::= max_cardinality(
+                     CardinalityUpperBound
+                   )
+
+CardinalityUpperBound ::= NonNegativeInteger
+                        | UnboundedCardinality
+
+UnboundedCardinality ::= unbounded_cardinality()
 ```
 
 ### Visibility
@@ -745,6 +758,22 @@ NumericFieldType ::= numeric_field_type(
                        [NumericRenderingHint]
                      )
 
+MinLength ::= min_length(
+                NonNegativeInteger
+              )
+
+MaxLength ::= max_length(
+                NonNegativeInteger
+              )
+
+ValidationRegex ::= validation_regex(
+                      RegexPattern
+                    )
+
+NumericPrecision ::= numeric_precision(
+                       NonNegativeInteger
+                     )
+
 TemporalFieldType ::= DateFieldType
                     | TimeFieldType
                     | DateTimeFieldType
@@ -821,7 +850,7 @@ FullDateValueType ::= full_date_value_type()
 ```ebnf
 TimeFieldType ::= time_field_type(
                    [TimePrecision]
-                   [TimezoneEnabled]
+                   [TimezoneRequirement]
                    [TimeRenderingHint]
                  )
 
@@ -834,12 +863,19 @@ HourMinutePrecision ::= hour_minute_precision()
 HourMinuteSecondPrecision ::= hour_minute_second_precision()
 
 HourMinuteSecondFractionPrecision ::= hour_minute_second_fraction_precision()
+
+TimezoneRequirement ::= TimezoneRequired
+                      | TimezoneNotRequired
+
+TimezoneRequired ::= timezone_required()
+
+TimezoneNotRequired ::= timezone_not_required()
 ```
 
 ```ebnf
 DateTimeFieldType ::= date_time_field_type(
                        DateTimeValueType
-                       [TimezoneEnabled]
+                       [TimezoneRequirement]
                        [DateTimeRenderingHint]
                      )
 
@@ -1414,6 +1450,20 @@ IsoDateTimeStamp ::= iso_date_time_stamp(
 `KeyIdentifier` denotes an ASCII identifier without whitespace.
 
 ```ebnf
+NonNegativeInteger ::= non_negative_integer(
+                         IntegerLexicalForm
+                       )
+
+RegexPattern ::= regex_pattern(
+                   UnicodeString
+                 )
+```
+
+`NonNegativeInteger` denotes an integer greater than or equal to zero.
+
+`RegexPattern` denotes a Unicode string interpreted as a regular-expression pattern.
+
+```ebnf
 NumericDatatype ::= numeric_datatype(
                       NumericDatatypeIri
                     )
@@ -1521,7 +1571,7 @@ The temporal datatype constructors denote the following XML Schema datatype IRIs
 - `XsdTimeDatatypeIri`: `http://www.w3.org/2001/XMLSchema#time`
 - `XsdDateTimeDatatypeIri`: `http://www.w3.org/2001/XMLSchema#dateTime`
 
-The nonterminals `RichTextContent`, `ImageSource`, `YoutubeVideoSource`, `ChoiceOption`, `Unit`, `NumericPrecision`, `TimezoneEnabled`, `SingleLineTextRenderingHint`, `MultiLineTextRenderingHint`, `RadioRenderingHint`, `SingleSelectDropdownRenderingHint`, `CheckboxRenderingHint`, `MultiSelectDropdownRenderingHint`, `NumericRenderingHint`, `DateRenderingWidget`, `TimeRenderingWidget`, `DateTimeRenderingWidget`, `TermIri`, `Notation`, `PreferredLabel`, `Name`, `Description`, `Identifier`, `Version`, `Status`, `ModelVersion`, `PreviousVersion`, `DerivedFrom`, `MinCardinality`, `MaxCardinality`, `MinLength`, `MaxLength`, `ValidationRegex`, `TimePrecision`, `HourMinutePrecision`, `HourMinuteSecondPrecision`, `HourMinuteSecondFractionPrecision`, `DateTimeValueType`, `DateHourMinuteValueType`, `DateHourMinuteSecondValueType`, `DateHourMinuteSecondFractionValueType`, `DateFormat`, `DateComponentOrder`, `DayMonthYearOrder`, `MonthDayYearOrder`, `YearMonthDayOrder`, `Label`, `AlternativeLabel`, `AttributeName`, `Header`, `Footer`, `OntologyAcronym`, `OntologyName`, `OntologyIri`, `RootTermIri`, `RootTermLabel`, `MaxTraversalDepth`, `ValueSetIdentifier`, `ValueSetName`, `ValueSetIri`, `IriString`, `Bcp47Tag`, `UnicodeString`, `Iso8601DateTimeLexicalForm`, and `AsciiIdentifier` are intentionally left abstract in this version.
+The nonterminals `RichTextContent`, `ImageSource`, `YoutubeVideoSource`, `ChoiceOption`, `Unit`, `SingleLineTextRenderingHint`, `MultiLineTextRenderingHint`, `RadioRenderingHint`, `SingleSelectDropdownRenderingHint`, `CheckboxRenderingHint`, `MultiSelectDropdownRenderingHint`, `NumericRenderingHint`, `DateRenderingWidget`, `TimeRenderingWidget`, `DateTimeRenderingWidget`, `TermIri`, `Notation`, `PreferredLabel`, `Name`, `Description`, `Identifier`, `Version`, `Status`, `ModelVersion`, `PreviousVersion`, `DerivedFrom`, `TimePrecision`, `HourMinutePrecision`, `HourMinuteSecondPrecision`, `HourMinuteSecondFractionPrecision`, `DateTimeValueType`, `DateHourMinuteValueType`, `DateHourMinuteSecondValueType`, `DateHourMinuteSecondFractionValueType`, `DateFormat`, `DateComponentOrder`, `DayMonthYearOrder`, `MonthDayYearOrder`, `YearMonthDayOrder`, `Label`, `AlternativeLabel`, `AttributeName`, `Header`, `Footer`, `OntologyAcronym`, `OntologyName`, `OntologyIri`, `RootTermIri`, `RootTermLabel`, `MaxTraversalDepth`, `ValueSetIdentifier`, `ValueSetName`, `ValueSetIri`, `IriString`, `Bcp47Tag`, `UnicodeString`, `Iso8601DateTimeLexicalForm`, `AsciiIdentifier`, and `IntegerLexicalForm` are intentionally left abstract in this version.
 
 ## Open Questions
 
