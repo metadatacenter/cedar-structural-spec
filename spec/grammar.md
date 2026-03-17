@@ -48,6 +48,10 @@ Template ::= template(
   - [Embedded Artifacts](#embedded-artifacts)
 - [Scalar and Datatype Leaves](#scalar-and-datatype-leaves)
   - [Primitive String Types](#primitive-string-types)
+  - [Core IRI and String Types](#core-iri-and-string-types)
+  - [Textual Metadata Types](#textual-metadata-types)
+  - [Numeric Datatype IRIs](#numeric-datatype-iris)
+  - [Temporal Datatype IRIs](#temporal-datatype-iris)
 - [Literals](#literals)
 - [Artifact Identity](#artifact-identity)
 - [Artifact Metadata](#artifact-metadata)
@@ -496,6 +500,10 @@ The following nonterminals are intentionally left abstract. They define the stri
 - `AsciiIdentifier` denotes an identifier matching the pattern `[A-Za-z][A-Za-z0-9_-]*`: it begins with an ASCII letter followed by zero or more ASCII letters, digits, underscores, or hyphens.
 - `IntegerLexicalForm` denotes a base-10 integer lexical form.
 
+### Core IRI and String Types
+
+This subsection defines the fundamental IRI, string, and numeric leaf types that appear throughout the grammar. `Iri` is the base construct for all IRI-valued positions. `DatatypeIri` and `TermIri` are specialised IRI forms used in literal typing and controlled-vocabulary references respectively. `LanguageTag` and `LexicalForm` support RDF literal construction. `IsoDateTimeStamp` carries ISO 8601 date-time values used in temporal provenance. `NonNegativeInteger` and `RegexPattern` support field-type constraints.
+
 ```ebnf
 Iri ::= iri(
           IriString
@@ -520,6 +528,14 @@ LexicalForm ::= lexical_form(
 IsoDateTimeStamp ::= iso_date_time_stamp(
                        Iso8601DateTimeLexicalForm
                      )
+
+NonNegativeInteger ::= non_negative_integer(
+                         IntegerLexicalForm
+                       )
+
+RegexPattern ::= regex_pattern(
+                   UnicodeString
+                 )
 ```
 
 `Iri` denotes an Internationalized Resource Identifier.
@@ -534,21 +550,13 @@ IsoDateTimeStamp ::= iso_date_time_stamp(
 
 `IsoDateTimeStamp` denotes an ISO 8601 date-time lexical form.
 
-`KeyIdentifier` wraps an `AsciiIdentifier` and carries the same character-set constraint: it MUST match the pattern `[A-Za-z][A-Za-z0-9_-]*`.
-
-```ebnf
-NonNegativeInteger ::= non_negative_integer(
-                         IntegerLexicalForm
-                       )
-
-RegexPattern ::= regex_pattern(
-                   UnicodeString
-                 )
-```
-
 `NonNegativeInteger` denotes an integer greater than or equal to zero.
 
 `RegexPattern` denotes a Unicode string interpreted as a regular-expression pattern.
+
+### Textual Metadata Types
+
+These productions define string-valued types used in artifact metadata, labelling, and presentation. The descriptive group covers human-oriented naming and identification of artifacts.
 
 ```ebnf
 Name ::= name(
@@ -562,7 +570,13 @@ Description ::= description(
 Identifier ::= identifier(
                  UnicodeString
                )
+```
 
+`Name`, `Description`, and `Identifier` denote descriptive textual metadata values used in artifact metadata.
+
+The labelling and notation group covers term labels and notations used in controlled-vocabulary and embedding contexts.
+
+```ebnf
 Label ::= label(
             UnicodeString
           )
@@ -578,19 +592,17 @@ Notation ::= notation(
 PreferredLabel ::= preferred_label(
                      UnicodeString
                    )
+```
 
+`Label`, `AlternativeLabel`, `Notation`, and `PreferredLabel` denote textual labelling and notation values.
+
+`AttributeName` names the attribute in an `AttributeValue` pair. `Header` and `Footer` carry template-level presentation text.
+
+```ebnf
 AttributeName ::= attribute_name(
                     UnicodeString
                   )
-```
 
-`Name`, `Description`, and `Identifier` denote descriptive textual metadata values.
-
-`Label`, `AlternativeLabel`, `Notation`, and `PreferredLabel` denote textual labeling and notation values.
-
-`AttributeName` denotes the name associated with an `AttributeValue`.
-
-```ebnf
 Header ::= header(
              UnicodeString
            )
@@ -600,7 +612,13 @@ Footer ::= footer(
            )
 ```
 
+`AttributeName` denotes the name associated with an `AttributeValue`.
+
 `Header` and `Footer` denote Unicode textual content used as template-level header and footer text.
+
+### Numeric Datatype IRIs
+
+`NumericDatatype` carries the XSD datatype IRI that identifies the numeric type of a `NumericLiteral`. `NumericDatatypeIri` enumerates the supported XSD numeric datatype IRIs. Each alternative is a nullary constructor; the corresponding XSD datatype IRI for each is given in the table below.
 
 ```ebnf
 NumericDatatype ::= numeric_datatype(
@@ -623,92 +641,48 @@ NumericDatatypeIri ::= XsdIntegerDatatypeIri
                      | XsdUnsignedIntDatatypeIri
                      | XsdUnsignedShortDatatypeIri
                      | XsdUnsignedByteDatatypeIri
-
-XsdIntegerDatatypeIri ::= xsd_integer_datatype_iri()
-
-XsdDecimalDatatypeIri ::= xsd_decimal_datatype_iri()
-
-XsdFloatDatatypeIri ::= xsd_float_datatype_iri()
-
-XsdDoubleDatatypeIri ::= xsd_double_datatype_iri()
-
-XsdLongDatatypeIri ::= xsd_long_datatype_iri()
-
-XsdIntDatatypeIri ::= xsd_int_datatype_iri()
-
-XsdShortDatatypeIri ::= xsd_short_datatype_iri()
-
-XsdByteDatatypeIri ::= xsd_byte_datatype_iri()
-
-XsdNonNegativeIntegerDatatypeIri ::= xsd_non_negative_integer_datatype_iri()
-
-XsdPositiveIntegerDatatypeIri ::= xsd_positive_integer_datatype_iri()
-
-XsdNonPositiveIntegerDatatypeIri ::= xsd_non_positive_integer_datatype_iri()
-
-XsdNegativeIntegerDatatypeIri ::= xsd_negative_integer_datatype_iri()
-
-XsdUnsignedLongDatatypeIri ::= xsd_unsigned_long_datatype_iri()
-
-XsdUnsignedIntDatatypeIri ::= xsd_unsigned_int_datatype_iri()
-
-XsdUnsignedShortDatatypeIri ::= xsd_unsigned_short_datatype_iri()
-
-XsdUnsignedByteDatatypeIri ::= xsd_unsigned_byte_datatype_iri()
 ```
 
-`NumericDatatypeIri` denotes one of the supported XML Schema numeric datatype IRIs.
+| Production | XSD Datatype IRI |
+|---|---|
+| `XsdIntegerDatatypeIri` | `http://www.w3.org/2001/XMLSchema#integer` |
+| `XsdDecimalDatatypeIri` | `http://www.w3.org/2001/XMLSchema#decimal` |
+| `XsdFloatDatatypeIri` | `http://www.w3.org/2001/XMLSchema#float` |
+| `XsdDoubleDatatypeIri` | `http://www.w3.org/2001/XMLSchema#double` |
+| `XsdLongDatatypeIri` | `http://www.w3.org/2001/XMLSchema#long` |
+| `XsdIntDatatypeIri` | `http://www.w3.org/2001/XMLSchema#int` |
+| `XsdShortDatatypeIri` | `http://www.w3.org/2001/XMLSchema#short` |
+| `XsdByteDatatypeIri` | `http://www.w3.org/2001/XMLSchema#byte` |
+| `XsdNonNegativeIntegerDatatypeIri` | `http://www.w3.org/2001/XMLSchema#nonNegativeInteger` |
+| `XsdPositiveIntegerDatatypeIri` | `http://www.w3.org/2001/XMLSchema#positiveInteger` |
+| `XsdNonPositiveIntegerDatatypeIri` | `http://www.w3.org/2001/XMLSchema#nonPositiveInteger` |
+| `XsdNegativeIntegerDatatypeIri` | `http://www.w3.org/2001/XMLSchema#negativeInteger` |
+| `XsdUnsignedLongDatatypeIri` | `http://www.w3.org/2001/XMLSchema#unsignedLong` |
+| `XsdUnsignedIntDatatypeIri` | `http://www.w3.org/2001/XMLSchema#unsignedInt` |
+| `XsdUnsignedShortDatatypeIri` | `http://www.w3.org/2001/XMLSchema#unsignedShort` |
+| `XsdUnsignedByteDatatypeIri` | `http://www.w3.org/2001/XMLSchema#unsignedByte` |
 
-The numeric datatype constructors denote the following XML Schema datatype IRIs:
+### Temporal Datatype IRIs
 
-- `XsdIntegerDatatypeIri`: `http://www.w3.org/2001/XMLSchema#integer`
-- `XsdDecimalDatatypeIri`: `http://www.w3.org/2001/XMLSchema#decimal`
-- `XsdFloatDatatypeIri`: `http://www.w3.org/2001/XMLSchema#float`
-- `XsdDoubleDatatypeIri`: `http://www.w3.org/2001/XMLSchema#double`
-- `XsdLongDatatypeIri`: `http://www.w3.org/2001/XMLSchema#long`
-- `XsdIntDatatypeIri`: `http://www.w3.org/2001/XMLSchema#int`
-- `XsdShortDatatypeIri`: `http://www.w3.org/2001/XMLSchema#short`
-- `XsdByteDatatypeIri`: `http://www.w3.org/2001/XMLSchema#byte`
-- `XsdNonNegativeIntegerDatatypeIri`: `http://www.w3.org/2001/XMLSchema#nonNegativeInteger`
-- `XsdPositiveIntegerDatatypeIri`: `http://www.w3.org/2001/XMLSchema#positiveInteger`
-- `XsdNonPositiveIntegerDatatypeIri`: `http://www.w3.org/2001/XMLSchema#nonPositiveInteger`
-- `XsdNegativeIntegerDatatypeIri`: `http://www.w3.org/2001/XMLSchema#negativeInteger`
-- `XsdUnsignedLongDatatypeIri`: `http://www.w3.org/2001/XMLSchema#unsignedLong`
-- `XsdUnsignedIntDatatypeIri`: `http://www.w3.org/2001/XMLSchema#unsignedInt`
-- `XsdUnsignedShortDatatypeIri`: `http://www.w3.org/2001/XMLSchema#unsignedShort`
-- `XsdUnsignedByteDatatypeIri`: `http://www.w3.org/2001/XMLSchema#unsignedByte`
+These productions define the XSD datatype IRIs used by temporal literal categories. Each temporal precision level has a dedicated abstract IRI type that resolves to a single XSD constructor. The corresponding XSD datatype IRI for each constructor is given in the table below.
 
 ```ebnf
-YearDatatypeIri ::= XsdGYearDatatypeIri
-
-XsdGYearDatatypeIri ::= xsd_g_year_datatype_iri()
-
+YearDatatypeIri      ::= XsdGYearDatatypeIri
 YearMonthDatatypeIri ::= XsdGYearMonthDatatypeIri
-
-XsdGYearMonthDatatypeIri ::= xsd_g_year_month_datatype_iri()
-
-DateDatatypeIri ::= XsdDateDatatypeIri
-
-XsdDateDatatypeIri ::= xsd_date_datatype_iri()
-
-TimeDatatypeIri ::= XsdTimeDatatypeIri
-
-XsdTimeDatatypeIri ::= xsd_time_datatype_iri()
-
-DateTimeDatatypeIri ::= XsdDateTimeDatatypeIri
-
-XsdDateTimeDatatypeIri ::= xsd_date_time_datatype_iri()
+DateDatatypeIri      ::= XsdDateDatatypeIri
+TimeDatatypeIri      ::= XsdTimeDatatypeIri
+DateTimeDatatypeIri  ::= XsdDateTimeDatatypeIri
 ```
 
+| Production | XSD Datatype IRI |
+|---|---|
+| `XsdGYearDatatypeIri` | `http://www.w3.org/2001/XMLSchema#gYear` |
+| `XsdGYearMonthDatatypeIri` | `http://www.w3.org/2001/XMLSchema#gYearMonth` |
+| `XsdDateDatatypeIri` | `http://www.w3.org/2001/XMLSchema#date` |
+| `XsdTimeDatatypeIri` | `http://www.w3.org/2001/XMLSchema#time` |
+| `XsdDateTimeDatatypeIri` | `http://www.w3.org/2001/XMLSchema#dateTime` |
+
 `YearDatatypeIri`, `YearMonthDatatypeIri`, `DateDatatypeIri`, `TimeDatatypeIri`, and `DateTimeDatatypeIri` denote the XML Schema datatype IRIs used by the corresponding temporal literal categories.
-
-The temporal datatype constructors denote the following XML Schema datatype IRIs:
-
-- `XsdGYearDatatypeIri`: `http://www.w3.org/2001/XMLSchema#gYear`
-- `XsdGYearMonthDatatypeIri`: `http://www.w3.org/2001/XMLSchema#gYearMonth`
-- `XsdDateDatatypeIri`: `http://www.w3.org/2001/XMLSchema#date`
-- `XsdTimeDatatypeIri`: `http://www.w3.org/2001/XMLSchema#time`
-- `XsdDateTimeDatatypeIri`: `http://www.w3.org/2001/XMLSchema#dateTime`
 
 ## Literals
 
