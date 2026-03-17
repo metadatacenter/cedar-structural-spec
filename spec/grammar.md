@@ -13,7 +13,7 @@ Accordingly, a production in this grammar describes abstract structure rather th
 
 The following notation is used throughout this grammar:
 
-```bnf
+```ebnf
 ::=   defined as
 |     alternative production
 X*    zero or more occurrences of X
@@ -45,7 +45,7 @@ Template ::= template(
 
 The kernel grammar defines the primary abstract categories of the model and the core schema-level structure that connects them. It introduces reusable schema artifacts, templates, and the embedding constructs through which templates assemble fields, nested templates, and presentation components. Subsequent sections refine the metadata, field-type families, instance structures, and supporting constructs referenced here.
 
-```bnf
+```ebnf
 Artifact ::= SchemaArtifact
            | PresentationComponent
            | TemplateInstance
@@ -70,7 +70,7 @@ Template ::= template(
 
 `EmbeddedArtifact` defines the forms used to include reusable artifacts in a `Template`. These productions identify the reusable artifact being included and the template-specific properties that control its use in that template.
 
-```bnf
+```ebnf
 EmbeddedArtifact ::= EmbeddedField
                    | EmbeddedTemplate
                    | EmbeddedPresentationComponent
@@ -106,7 +106,7 @@ EmbeddedPresentationComponent ::= embedded_presentation_component(
 
 Artifact identity defines the typed identifiers by which artifacts and artifact references are denoted in the model. These identity constructs are distinct from descriptive metadata, provenance, versioning, and annotations.
 
-```bnf
+```ebnf
 FieldId ::= field_id(
               Iri
             )
@@ -132,7 +132,7 @@ Artifact metadata defines descriptive information, provenance, versioning, and a
 
 This subsection identifies how the metadata categories are grouped at the artifact level. `ArtifactMetadata` carries the metadata common to all artifacts other than identity, while `SchemaArtifactMetadata` adds versioning information for reusable schema artifacts.
 
-```bnf
+```ebnf
 SchemaArtifactMetadata ::= ArtifactMetadata
                            SchemaVersioning
 
@@ -145,7 +145,7 @@ ArtifactMetadata ::= DescriptiveMetadata
 
 `DescriptiveMetadata` identifies the human-oriented descriptive properties of an artifact. These properties support naming, explanatory text, and external or local identifiers used for cataloging. `Name` is the required user-supplied name of the artifact. `Description`, when present, is extended textual description explaining the artifact's purpose and content. `Identifier`, when present, is a user-specified external identifier intended for integration with institutional or external systems.
 
-```bnf
+```ebnf
 DescriptiveMetadata ::= descriptive_metadata(
                           Name
                           [Description]
@@ -157,7 +157,7 @@ DescriptiveMetadata ::= descriptive_metadata(
 
 `TemporalProvenance` identifies when an artifact was created and modified, and which agents were responsible for those actions.
 
-```bnf
+```ebnf
 TemporalProvenance ::= temporal_provenance(
                          CreatedOn
                          CreatedBy
@@ -182,7 +182,7 @@ ModifiedBy ::= Iri
 
 `SchemaVersioning` identifies version-related metadata specific to reusable schema artifacts. It captures artifact version, publication status, the version of the schema model used, and optional derivation links to earlier or source artifacts.
 
-```bnf
+```ebnf
 SchemaVersioning ::= schema_versioning(
                        Version
                        Status
@@ -196,7 +196,7 @@ SchemaVersioning ::= schema_versioning(
 
 `Annotation`s provides an extensible metadata mechanism for additional named metadata values that are not captured by the core descriptive, provenance, or versioning structures.
 
-```bnf
+```ebnf
 Annotation ::= annotation(
                  AnnotationName
                  AnnotationValue
@@ -207,7 +207,7 @@ Annotation ::= annotation(
 
 An `EmbeddedArtifactKey` is the local identifier of an `EmbeddedArtifact` within a `Template`.
 
-```bnf
+```ebnf
 EmbeddedArtifactKey ::= embedded_artifact_key(
                           KeyIdentifier
                         )
@@ -221,7 +221,7 @@ EmbeddedArtifactKey ::= embedded_artifact_key(
 
 Embedded artifact properties define the contextual information carried by an `EmbeddedArtifact` within a `Template`. These properties govern how a referenced reusable artifact is used in that template context, including reference, requirement, cardinality, visibility, defaults, and label override, and they are distinct from the intrinsic properties of the referenced reusable artifact itself.
 
-```bnf
+```ebnf
 
 FieldReference ::= FieldId
 
@@ -259,7 +259,7 @@ LabelOverride ::= label_override(
 
 `FieldType` denotes the semantic category of values that a `Field` may carry. The `FieldType` productions define the value structure associated with a field and, where appropriate, the typed rendering hints and field-type-specific properties that are valid for that semantic category.
 
-```bnf
+```ebnf
 
 FieldType ::= TextFieldType
             | NumericFieldType
@@ -324,7 +324,7 @@ AttributeValueFieldType ::= attribute_value_field_type()
 
 `TemporalFieldType` denotes temporal-valued fields and is refined into strongly typed date, time, and date-time forms. This section groups the temporal field-type productions together with their compatible rendering hints, values, and literals.
 
-```bnf
+```ebnf
 DateFieldType ::= date_field_type(
                    DateValueType
                    [DateRenderingHint]
@@ -341,7 +341,7 @@ YearMonthValueType ::= year_month_value_type()
 FullDateValueType ::= full_date_value_type()
 ```
 
-```bnf
+```ebnf
 TimeFieldType ::= time_field_type(
                    [TimePrecision]
                    [TimezoneEnabled]
@@ -359,7 +359,7 @@ HourMinuteSecondPrecision ::= hour_minute_second_precision()
 HourMinuteSecondFractionPrecision ::= hour_minute_second_fraction_precision()
 ```
 
-```bnf
+```ebnf
 DateTimeFieldType ::= date_time_field_type(
                        DateTimeValueType
                        [TimezoneEnabled]
@@ -377,7 +377,7 @@ DateHourMinuteSecondValueType ::= date_hour_minute_second_value_type()
 DateHourMinuteSecondFractionValueType ::= date_hour_minute_second_fraction_value_type()
 ```
 
-```bnf
+```ebnf
 DateRenderingHint ::= date_rendering_hint(
                        DateRenderingWidget
                        [DateFormat]
@@ -417,7 +417,7 @@ TwentyFourHourTimeFormat ::= twenty_four_hour_time_format()
 
 ## Controlled Term Sources
 
-```bnf
+```ebnf
 ControlledTermSource ::= OntologySource
                        | BranchSource
                        | ClassSource
@@ -465,7 +465,7 @@ ValueSetSource ::= value_set_source(
 
 ## Rendering Hints
 
-```bnf
+```ebnf
 RenderingHint ::= TextRenderingHint
                 | SingleChoiceRenderingHint
                 | MultipleChoiceRenderingHint
@@ -519,7 +519,7 @@ The correspondence is:
 
 ## Literals
 
-```bnf
+```ebnf
 Literal ::= DatatypeIriLiteral
           | LangStringLiteral
 
@@ -626,7 +626,7 @@ Two literals are term-equal if and only if their lexical forms and their datatyp
 
 `TemplateInstance` denotes instance data that conforms to a `Template`. Instance productions are separated here from schema and presentation productions so that the schema model and instance model can be read independently.
 
-```bnf
+```ebnf
 TemplateInstance ::= template_instance(
                        TemplateInstanceId
                        ArtifactMetadata
@@ -652,7 +652,7 @@ NestedTemplateInstance ::= nested_template_instance(
 
 `PresentationComponent` denotes reusable non-data-bearing content that contributes presentation or instructional structure within a `Template`. Presentation components appear in templates only through `EmbeddedPresentationComponent` and do not contribute `InstanceValue` constructs.
 
-```bnf
+```ebnf
 PresentationComponent ::= RichTextComponent
                         | ImageComponent
                         | YoutubeVideoComponent
@@ -690,7 +690,7 @@ PageBreakComponent ::= page_break_component(
 
 ## Supporting Nonterminals
 
-```bnf
+```ebnf
 
 Value ::= TextValue
         | NumericValue
@@ -770,7 +770,7 @@ AttributeValue ::= attribute_value(
 
 ## Scalar And Datatype Leaves
 
-```bnf
+```ebnf
 Iri ::= iri(
           IriString
         )
@@ -808,7 +808,7 @@ KeyIdentifier ::= key_identifier(
 
 `KeyIdentifier` denotes an ASCII identifier without whitespace.
 
-```bnf
+```ebnf
 NumericDatatype ::= numeric_datatype(
                       NumericDatatypeIri
                     )
@@ -884,7 +884,7 @@ The numeric datatype constructors denote the following XML Schema datatype IRIs:
 - `XsdUnsignedShortDatatypeIri`: `http://www.w3.org/2001/XMLSchema#unsignedShort`
 - `XsdUnsignedByteDatatypeIri`: `http://www.w3.org/2001/XMLSchema#unsignedByte`
 
-```bnf
+```ebnf
 YearDatatypeIri ::= XsdGYearDatatypeIri
 
 XsdGYearDatatypeIri ::= xsd_g_year_datatype_iri()
