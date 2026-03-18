@@ -52,6 +52,10 @@ Template ::= template(
   - [Numeric Datatype IRIs](#numeric-datatype-iris)
   - [Temporal Datatype IRIs](#temporal-datatype-iris)
 - [Literals](#literals)
+  - [Base Literals](#base-literals)
+  - [Numeric Literals](#numeric-literals)
+  - [Temporal Literals](#temporal-literals)
+  - [Literal Value Semantics](#literal-value-semantics)
 - [Artifact Identity](#artifact-identity)
 - [Artifact Metadata](#artifact-metadata)
   - [Aggregate Structure](#aggregate-structure)
@@ -633,6 +637,12 @@ DateTimeDatatypeIri  ::= XsdDateTimeDatatypeIri
 
 ## Literals
 
+Literals are the atomic data values used throughout the instance model. This specification follows the RDF literal model: every literal consists of a lexical form paired with either a datatype IRI or a language tag. Typed subclasses narrow the permitted datatype IRI to support strongly typed numeric and temporal values. The lexical form of any literal SHOULD be in Unicode Normalization Form C.
+
+### Base Literals
+
+The base literal types define the two concrete RDF literal forms together with their string specialisations. These are used in text-valued, general-purpose, and controlled-term positions throughout the model.
+
 ```ebnf
 Literal ::= DatatypeIriLiteral
           | LangStringLiteral
@@ -647,18 +657,42 @@ LangStringLiteral ::= lang_string_literal(
                         LanguageTag
                       )
 
-TextLiteral ::= StringLiteral
-              | LangStringLiteral
-
 StringLiteral ::= string_literal(
                     LexicalForm
                   )
 
+TextLiteral ::= StringLiteral
+              | LangStringLiteral
+```
+
+`Literal` is the base category for all RDF literals in this specification.
+
+`DatatypeIriLiteral` consists of a lexical form and a datatype IRI.
+
+`LangStringLiteral` consists of a lexical form and a language tag. Its implicit datatype IRI is `http://www.w3.org/1999/02/22-rdf-syntax-ns#langString`. Its language tag MUST be non-empty and well-formed according to BCP 47.
+
+`StringLiteral` is a `DatatypeIriLiteral` whose datatype IRI is `http://www.w3.org/2001/XMLSchema#string`.
+
+`TextLiteral` is the union of `StringLiteral` and `LangStringLiteral`. It is the class of literals permitted in `TextValue`, admitting both plain strings and language-tagged strings.
+
+Concrete syntaxes MAY use simpler surface forms that omit an explicit datatype IRI for string literals or language-tagged strings. Such forms are syntactic sugar and do not change the abstract structure defined by this specification.
+
+### Numeric Literals
+
+`NumericLiteral` is the class of literals permitted in `NumericValue`. It pairs a lexical form with a numeric datatype IRI drawn from `NumericDatatypeIri` (see Numeric Datatype IRIs).
+
+```ebnf
 NumericLiteral ::= numeric_literal(
                      LexicalForm
                      NumericDatatypeIri
                    )
+```
 
+### Temporal Literals
+
+Temporal literals are strongly typed at each precision level. `TemporalLiteral` is the abstract supertype; `DateLiteral`, `TimeLiteral`, and `DateTimeLiteral` correspond to the three temporal field types. Within `DateLiteral`, the three alternatives preserve year-only, year-month, and full-date precision explicitly rather than collapsing them into a single form.
+
+```ebnf
 TemporalLiteral ::= DateLiteral
                   | TimeLiteral
                   | DateTimeLiteral
@@ -693,46 +727,27 @@ DateTimeLiteral ::= date_time_literal(
                     )
 ```
 
-A `Literal` in this specification is an RDF literal.
+Each temporal literal carries a datatype IRI from the corresponding temporal datatype IRI category, and is used in the corresponding `Value` type:
 
-A `DatatypeIriLiteral` denotes an RDF literal consisting of a lexical form and a datatype IRI.
+| Literal | Datatype IRI category | Used in |
+|---|---|---|
+| `YearLiteral` | `YearDatatypeIri` | `YearValue` |
+| `YearMonthLiteral` | `YearMonthDatatypeIri` | `YearMonthValue` |
+| `FullDateLiteral` | `DateDatatypeIri` | `FullDateValue` |
+| `TimeLiteral` | `TimeDatatypeIri` | `TimeValue` |
+| `DateTimeLiteral` | `DateTimeDatatypeIri` | `DateTimeValue` |
 
-A `LangStringLiteral` denotes an RDF literal whose lexical form is paired with a non-empty language tag. `LangStringLiteral` corresponds to an RDF literal with datatype IRI `http://www.w3.org/1999/02/22-rdf-syntax-ns#langString`.
+### Literal Value Semantics
 
-A `StringLiteral` denotes an RDF literal whose datatype IRI is `http://www.w3.org/2001/XMLSchema#string`.
+The value associated with a `DatatypeIriLiteral` depends on whether its datatype IRI is recognised and whether its lexical form is in the lexical space of that datatype:
 
-`TextLiteral` is the class of literals permitted in `TextValue`.
+| Condition | Result |
+|---|---|
+| Datatype IRI recognised; lexical form in lexical space | Literal value is obtained by applying the lexical-to-value mapping of the datatype to the lexical form |
+| Datatype IRI recognised; lexical form outside lexical space | Ill-typed literal: no valid literal value is determined |
+| Datatype IRI not recognised | Literal value is not defined by this specification |
 
-`NumericLiteral` is the class of literals permitted in `NumericValue`.
-
-`DateLiteral`, `TimeLiteral`, and `DateTimeLiteral` are the literal classes permitted in `DateValue`, `TimeValue`, and `DateTimeValue`, respectively.
-
-Within `DateLiteral`, `YearLiteral`, `YearMonthLiteral`, and `FullDateLiteral` distinguish year-only, year-month, and full-date values.
-
-`NumericLiteral` carries a numeric datatype IRI.
-
-`YearLiteral` carries a year datatype IRI.
-
-`YearMonthLiteral` carries a year-month datatype IRI.
-
-`FullDateLiteral` carries a full-date datatype IRI.
-
-`TimeLiteral` carries a time datatype IRI.
-
-`DateTimeLiteral` carries a date-time datatype IRI.
-
-The lexical form is a Unicode string and SHOULD be in Unicode Normalization Form C.
-
-The language tag of a `LangStringLiteral` MUST be non-empty and well-formed according to BCP 47.
-
-Concrete syntaxes MAY use simpler surface forms that omit an explicit datatype IRI for string literals or language-tagged strings. Such forms are syntactic sugar and do not change the abstract structure defined by this specification.
-
-The literal value associated with a `Literal` is determined as follows:
-
-- If the `Literal` is a `LangStringLiteral`, the literal value is the pair consisting of lexical form and language tag, in that order.
-- If the `Literal` is a `DatatypeIriLiteral`, the datatype IRI is recognized, and the lexical form is in the lexical space of that datatype, the literal value is obtained by applying the lexical-to-value mapping of that datatype to the lexical form.
-- If the `Literal` is a `DatatypeIriLiteral`, the datatype IRI is recognized, but the lexical form is outside the lexical space of that datatype, the literal is ill-typed.
-- If the `Literal` is a `DatatypeIriLiteral` and the datatype IRI is not recognized, the literal value is not defined by this specification.
+For a `LangStringLiteral`, the literal value is the pair consisting of lexical form and language tag, in that order.
 
 An ill-typed literal is not syntactically ill-formed, but it does not determine a valid literal value and produces a semantic inconsistency. Implementations MUST accept ill-typed literals and MAY produce warnings when encountering them.
 
