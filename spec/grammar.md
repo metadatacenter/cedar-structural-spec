@@ -1013,7 +1013,7 @@ Two literals are term-equal if and only if their lexical forms and their datatyp
 
 ## Values
 
-This section defines the `Value` types that represent instance-level data. `Value` constructs appear in `FieldValue` instances and as typed default values in `EmbeddedArtifact` properties. The permitted form of a value in a `FieldValue` is determined by the `FieldType` of the referenced `Field`, as specified in the Field Type And Value Correspondence section.
+This section defines the `Value` types that represent instance-level data. `Value` constructs appear in `FieldValue` instances and as typed default values in `EmbeddedArtifact` properties. The value types are defined here independently of the `FieldType` productions that constrain them; the normative mapping between each `FieldType` and its permitted `Value` form is given in the [Field Type And Value Correspondence](#field-type-and-value-correspondence) section.
 
 ```ebnf
 Value ::= TextValue
@@ -1239,7 +1239,7 @@ KeyIdentifier ::= key_identifier(
 
 ### References
 
-These productions identify the reusable artifact that is being included in the template.
+These productions identify the reusable artifact that is being included in the template. Each reference type is a typed alias for the corresponding artifact identifier — for example, `TextFieldReference` is structurally identical to `TextFieldId`. The typed reference forms exist for the same strong-typing reason as the typed identifiers: a `TextFieldReference` can only appear in an `EmbeddedTextField`, making it structurally impossible to embed a field of the wrong kind. The distinction between a reference and an identifier is one of role: an identifier permanently names a reusable artifact, while a reference expresses the intention to embed that artifact in a specific template context.
 
 ```ebnf
 FieldReference ::= TextFieldReference
@@ -1355,7 +1355,9 @@ When `Visibility` is absent from an `EmbeddedArtifact`, the default is `Visible`
 
 ### Defaults
 
-`DefaultValue` provides an embedding-specific default value where one is defined. The form of the default is determined by the value family of the embedded field. `TextDefaultValue` is also used by `TextFieldType` as the reusable text-specific default carried by that field type.
+A `DefaultValue` specifies the value to be pre-populated for an embedded artifact when no explicit value has been supplied by the user. Each concrete `DefaultValue` variant wraps the `Value` type of its corresponding field family, ensuring that a default is always structurally compatible with the values the field accepts. The concrete variants are grouped by field family, mirroring the groupings in the Values and Concrete Field Artifacts sections.
+
+`TextDefaultValue` occupies a special position: it may appear both on `TextFieldType` as a reusable field-level default, and on `EmbeddedTextField` as an embedding-specific override. All other default value types appear only at the embedding level. When both a field-level and an embedding-specific text default are present, the embedding-specific one takes precedence as it is more specific to the template context.
 
 ```ebnf
 DefaultValue ::= TextDefaultValue
@@ -1439,8 +1441,6 @@ NihGrantIdDefaultValue ::= nih_grant_id_default_value(
                              NihGrantIdValue
                            )
 ```
-
-`DefaultValue` provides an embedding-specific default value applied in the context of the containing `Template`. `TextDefaultValue` may appear both on `TextFieldType` (as a reusable field-level default) and on `EmbeddedTextField` (as an embedding-specific override). When both are present, the `TextDefaultValue` on `EmbeddedTextField` MUST take precedence.
 
 ### Label Override
 
@@ -1860,7 +1860,11 @@ The current rendering vocabulary is explicit but deliberately small: numeric fie
 
 ## Presentation Components
 
-`PresentationComponent` denotes reusable non-data-bearing content that contributes presentation or instructional structure within a `Template`. Presentation components appear in templates only through `EmbeddedPresentationComponent` and do not contribute `InstanceValue` constructs.
+A `PresentationComponent` is a reusable artifact that contributes presentation or instructional structure to a rendered template without introducing data-bearing content. It is distinct from `SchemaArtifact`: where `Template` and `Field` define the structure and semantics of instance data, `PresentationComponent` exists purely to guide, organise, or annotate the rendered form — for example by embedding rich text instructions, illustrative images, video content, or structural breaks between sections.
+
+`PresentationComponent` carries its own identity, metadata, and provenance as an `Artifact`, making it independently reusable across multiple templates. It appears within a template only through `EmbeddedPresentationComponent`, which contributes no `InstanceValue` and is therefore invisible to the instance model. A conforming `TemplateInstance` MUST NOT contain an `InstanceValue` for an `EmbeddedPresentationComponent`.
+
+The following concrete variants are defined:
 
 ```ebnf
 PresentationComponent ::= RichTextComponent
@@ -1955,7 +1959,9 @@ The table below gives the complete correspondence. The Field Family column ident
 
 ## Instances
 
-`TemplateInstance` denotes instance data that conforms to a `Template`. Instance productions are separated here from schema and presentation productions so that the schema model and instance model can be read independently.
+A `TemplateInstance` is an `Artifact` that records data conforming to a specific `Template`. Instance productions are defined here separately from schema and presentation productions so that the schema model and the instance model can be read independently.
+
+A `TemplateInstance` references the `Template` it conforms to and contains zero or more `InstanceValue` constructs. Each `InstanceValue` is keyed by an `EmbeddedArtifactKey` that identifies the corresponding embedded artifact in the referenced template. There are two forms: `FieldValue`, which carries one or more typed values for an `EmbeddedField`, and `NestedTemplateInstance`, which carries a nested collection of `InstanceValue` constructs for an `EmbeddedTemplate`. `EmbeddedPresentationComponent` constructs produce no `InstanceValue` and are absent from the instance model entirely.
 
 ```ebnf
 TemplateInstance ::= template_instance(
