@@ -249,7 +249,7 @@ PhoneNumberField ::= phone_number_field(
                     )
 ```
 
-The external authority field variants correspond to the `ExternalAuthorityField` abstract category. Each represents an identifier issued by a specific external authority system, as described in the External Authority Values section.
+The external authority field variants correspond to the `ExternalAuthorityField` abstract category. Each represents an identifier issued by a specific external authority system, as described in the [External Authority Values](#external-authority-values) section.
 
 ```ebnf
 OrcidField ::= orcid_field(
