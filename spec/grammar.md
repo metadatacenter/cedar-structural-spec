@@ -201,7 +201,7 @@ DateTimeField ::= date_time_field(
                  )
 ```
 
-`ControlledTermField` supports values drawn from declared ontology sources. `SingleChoiceField` and `MultipleChoiceField` correspond to the `ChoiceField` abstract category and differ in whether they permit one or multiple selections from a declared option set. `LinkField` carries a single IRI-valued hyperlink.
+`ControlledTermField` supports values drawn from declared ontology sources. `LinkField` carries a single IRI-valued hyperlink.
 
 ```ebnf
 ControlledTermField ::= controlled_term_field(
@@ -210,6 +210,16 @@ ControlledTermField ::= controlled_term_field(
                           ControlledTermFieldType
                         )
 
+LinkField ::= link_field(
+               LinkFieldId
+               SchemaArtifactMetadata
+               LinkFieldType
+             )
+```
+
+`SingleChoiceField` and `MultipleChoiceField` correspond to the `ChoiceField` abstract category and are the two concrete choice field variants. They differ in whether they permit exactly one or multiple simultaneous selections from a declared set of options. The permitted options are declared in the corresponding `ChoiceFieldType` and are validated against at the instance level.
+
+```ebnf
 SingleChoiceField ::= single_choice_field(
                          SingleChoiceFieldId
                          SchemaArtifactMetadata
@@ -221,12 +231,6 @@ MultipleChoiceField ::= multiple_choice_field(
                            SchemaArtifactMetadata
                            MultipleChoiceFieldType
                          )
-
-LinkField ::= link_field(
-               LinkFieldId
-               SchemaArtifactMetadata
-               LinkFieldType
-             )
 ```
 
 The contact field variants correspond to the `ContactField` abstract category and represent human contact identifiers.
