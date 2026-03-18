@@ -1807,6 +1807,8 @@ ValueSetIri ::= value_set_iri(
 
 ### Rendering Hints
 
+A `RenderingHint` is an optional presentational instruction carried by a `FieldType` that tells a rendering implementation how to display the field. Rendering hints are strictly presentational: they do not affect the meaning, structure, or validation of field values. Each rendering hint is typed to a specific `FieldType` family, so only compatible hint-and-field-type combinations are expressible. For example, a `TextRenderingHint` may only appear on a `TextFieldType`, and a `SingleChoiceRenderingHint` may only appear on a `SingleChoiceFieldType`. Note that temporal rendering hints (`DateRenderingHint`, `TimeRenderingHint`, and `DateTimeRenderingHint`) are defined alongside their respective field types in the [Temporal Field Types](#temporal-field-types) subsection.
+
 ```ebnf
 RenderingHint ::= TextRenderingHint
                 | SingleChoiceRenderingHint
