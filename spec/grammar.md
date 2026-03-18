@@ -251,7 +251,7 @@ PhoneNumberField ::= phone_number_field(
                     )
 ```
 
-The external authority field variants correspond to the `ExternalAuthorityField` abstract category. Each represents an identifier issued by a specific external authority system, as described in the [External Authority Values](#external-authority-values) section.
+The external authority field variants correspond to the `ExternalAuthorityField` abstract category. Each represents an identifier issued by a specific external authority system, as described in the [External Authority Values](#external-authority-values) section. Each external authority field is associated with format validation specific to its identifier scheme and supports integration with the corresponding resolution service for identifier lookup and verification.
 
 ```ebnf
 OrcidField ::= orcid_field(
@@ -654,6 +654,8 @@ DescriptiveMetadata ::= descriptive_metadata(
 ```
 
 `Name`, `Description`, and `Identifier` carry Unicode string values. See [`UnicodeString`](#primitive-string-types).
+
+> **TODO:** Clarify with the CEDAR team whether `Field` artifacts carry a preferred label (the question text shown to users) and alternative labels as distinct properties separate from `Name`. The v2.0.0 conceptual document (§4.1) describes "a preferred label (the actual question text) and alternative labels for display flexibility", which suggests these may be field-level descriptor properties rather than embedding-level overrides. If so, `DescriptiveMetadata` or a field-specific metadata structure would need to accommodate them.
 
 ### Temporal Provenance
 
@@ -1342,6 +1344,8 @@ UnboundedCardinality ::= unbounded_cardinality()
 
 When `Cardinality` is absent from an `EmbeddedArtifact`, the implied default is `min_cardinality(1)` with `max_cardinality(1)`: the embedded artifact MUST appear exactly once.
 
+> **TODO:** Clarify with the CEDAR team the intended relationship between `ValueRequirement` and `MinCardinality`. One possible interpretation is that `ValueRequirement` governs whether the user is obligated to supply the field at all, while `MinCardinality` governs how many values must be present *if* any are supplied — making the two orthogonal rather than overlapping. For example, a "parents" field might be `Optional` (the user is not required to fill it in) but carry `min_cardinality(2)` (if they do fill it in, they must specify at least two). In a biomedical context, a "PCR primer pair" field could similarly be `Optional` but require `min_cardinality(2)` because a primer pair is only meaningful when both the forward and reverse primers are specified together. Under this reading, `Optional` with `min_cardinality(2)` would be a valid and meaningful combination, and the current validation rule that `Required` implies `min_cardinality ≥ 1` would need to be re-examined to address the full range of combinations.
+
 ### Visibility
 
 `Visibility` determines whether the embedded artifact is shown in rendered interfaces. It is modeled as an embedding property rather than as a rendering hint because it applies to any kind of embedded artifact, not only to fields.
@@ -1488,6 +1492,8 @@ NumericFieldType ::= numeric_field_type(
                        NumericDatatype
                        [Unit]
                        [NumericPrecision]
+                       [NumericMinValue]
+                       [NumericMaxValue]
                        [NumericRenderingHint]
                      )
 
@@ -1512,6 +1518,14 @@ NumericPrecision ::= numeric_precision(
                        NonNegativeInteger
                      )
 
+NumericMinValue ::= numeric_min_value(
+                      NumericValue
+                    )
+
+NumericMaxValue ::= numeric_max_value(
+                      NumericValue
+                    )
+
 TemporalFieldType ::= DateFieldType
                     | TimeFieldType
                     | DateTimeFieldType
@@ -1535,7 +1549,10 @@ MultipleChoiceFieldType ::= multiple_choice_field_type(
 
 ChoiceOption ::= choice_option(
                    ChoiceOptionValue
+                   [DefaultOption]
                  )
+
+DefaultOption ::= default_option()
 
 ChoiceOptionValue ::= Literal
                     | ControlledTermValue
@@ -1576,7 +1593,9 @@ AttributeValueFieldType ::= attribute_value_field_type()
 
 The current placement of `Unit` on `NumericFieldType` is a pragmatic compromise. A later revision may introduce a distinct `QuantityFieldType` to model numeric values with fixed units more explicitly.
 
-`ChoiceOption` denotes one permissible option in a choice field.
+`NumericMinValue` and `NumericMaxValue` specify inclusive lower and upper bounds on the numeric values that a field accepts. Both are expressed as `NumericValue` constructs so that the datatype of the bound matches the datatype of the field values it constrains.
+
+`ChoiceOption` denotes one permissible option in a choice field. `DefaultOption`, when present, marks the option as pre-selected when a new instance is created. This is a field-level default baked into the option definition itself; an embedding-level `ChoiceDefaultValue` on the corresponding `EmbeddedField` takes precedence when both are present.
 
 `ChoiceOptionValue` allows a choice option to be specified by a literal, an ontology-backed controlled term, or an IRI.
 
@@ -1994,6 +2013,8 @@ Each `FieldValue`'s `EmbeddedArtifactKey` MUST identify an `EmbeddedField` in th
 To make the abstract structure concrete, consider a `Template` containing two `EmbeddedTextField` constructs keyed `title` and `description`, and one `EmbeddedTemplate` keyed `study_arm` with a maximum cardinality of three. A conforming `TemplateInstance` for that template would contain two `FieldValue` constructs — one keyed `title` carrying a `TextValue`, one keyed `description` carrying a `TextValue` — and between one and three `NestedTemplateInstance` constructs each keyed `study_arm`, where each `NestedTemplateInstance` contains its own `InstanceValue` constructs corresponding to the embedded artifacts of the nested template.
 
 For multi-valued `EmbeddedField`, all values for a single field occurrence are collected within a single `FieldValue` using `Value*`. For multi-valued `EmbeddedTemplate`, multiplicity is represented by multiple `NestedTemplateInstance` constructs sharing the same `EmbeddedArtifactKey` within the containing `TemplateInstance`. This asymmetry reflects the structural difference between scalar repetition (multiple values for one field) and structural repetition (multiple complete nested instances for one embedded template). In both cases the number of values or instances MUST satisfy the [Cardinality](#cardinality) constraints defined by the corresponding `EmbeddedField` or `EmbeddedTemplate`; see `spec/validation.md` for the normative multiplicity rules. `NestedTemplateInstance` is the recursive construct that supports arbitrarily deep nested template structure: because a `NestedTemplateInstance` itself contains `InstanceValue*`, and `InstanceValue` may contain further `NestedTemplateInstance` constructs, template nesting can be as deep as the schema requires.
+
+Instance conformance may be enforced at data-entry time, preventing submission of a non-conforming instance, or retrospectively, by validating existing instances against their referenced template. Both modes apply the same conformance rules; the distinction is an implementation concern rather than a model-level distinction.
 
 > **TODO:** `FieldValue` uses `Value*`, which permits a `FieldValue` with zero values. Whether an empty `FieldValue` is a valid representation of absence for an optional field, or whether absence must be represented by omitting the `FieldValue` entirely (which would make `Value+` correct), is unresolved pending clarification from the CEDAR team.
 

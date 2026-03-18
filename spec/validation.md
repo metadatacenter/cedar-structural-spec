@@ -30,6 +30,8 @@ If an embedding is marked `Recommended`, absence of a value MUST NOT by itself c
 
 If an embedding is marked `Optional`, absence of a value MUST NOT by itself cause conformance failure.
 
+> **TODO:** Clarify with the CEDAR team whether `ValueRequirement` and `MinCardinality` are intended to be orthogonal. The current rules treat `Required` as implying `min_cardinality ≥ 1`, but do not address `Optional` combined with `min_cardinality ≥ 2` — a combination that may be intentional and meaningful (e.g. a "PCR primer pair" field that is not obligatory but, if supplied, must include both the forward and reverse primer to be interpretable). If the two are orthogonal, the rules in this section need to be extended to cover all combinations.
+
 ### Cardinality Defaults and Multiplicity
 
 When `Cardinality` is absent from an `EmbeddedArtifact`, the implied default cardinality is `min_cardinality(1)` with `max_cardinality(1)`: the embedded artifact MUST appear exactly once.
