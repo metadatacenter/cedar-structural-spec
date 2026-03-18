@@ -281,7 +281,7 @@ NihGrantIdField ::= nih_grant_id_field(
 
 ### Embedded Artifacts
 
-`EmbeddedArtifact` defines the forms used to include reusable artifacts in a `Template`. These productions identify the reusable artifact being included and the template-specific properties that control its use in that template.
+An `EmbeddedArtifact` contextualises a reusable artifact within a specific `Template`, adding template-local properties that govern how the artifact participates in that context. There are three forms: `EmbeddedField`, which embeds a data-bearing field; `EmbeddedTemplate`, which nests a template within the containing template; and `EmbeddedPresentationComponent`, which contributes presentational structure without producing instance data.
 
 The sequence of `EmbeddedArtifact` constructs within a `Template` is significant. The order in which they appear determines the presentation order of embedded artifacts in a rendered template. Conforming implementations MUST preserve this order.
 
@@ -308,7 +308,11 @@ EmbeddedField ::= EmbeddedTextField
                 | EmbeddedRridField
                 | EmbeddedNihGrantIdField
                 | EmbeddedAttributeValueField
+```
 
+Every concrete `EmbeddedField` variant follows the same structural pattern. Each carries: an `EmbeddedArtifactKey` uniquely identifying the embedding site within the containing `Template`; a typed field reference identifying the reusable `Field` being embedded; an optional `ValueRequirement` specifying whether a value is required, recommended, or optional; an optional `Cardinality` bounding the permitted number of values; an optional `Visibility` controlling whether the field is shown in rendered interfaces; an optional typed `DefaultValue` providing an embedding-specific default; and an optional `LabelOverride` allowing the template to override the field's label in this context. The only variation across concrete `EmbeddedField` variants is the typed field reference and the typed default value, both of which match the value family of the referenced field.
+
+```ebnf
 EmbeddedTextField ::= embedded_text_field(
                         EmbeddedArtifactKey
                         TextFieldReference
@@ -487,7 +491,11 @@ EmbeddedAttributeValueField ::= embedded_attribute_value_field(
                                   [Visibility]
                                   [LabelOverride]
                                 )
+```
 
+`EmbeddedTemplate` and `EmbeddedPresentationComponent` follow a similar pattern to embedded fields but differ in what embedding properties they carry. `EmbeddedTemplate` supports cardinality to permit multiple nested instances of the referenced template but carries no typed default value. `EmbeddedPresentationComponent` carries neither a value requirement, cardinality, nor default value, as it contributes no instance data and exists purely to contribute presentational structure.
+
+```ebnf
 EmbeddedTemplate ::= embedded_template(
                        EmbeddedArtifactKey
                        TemplateReference
