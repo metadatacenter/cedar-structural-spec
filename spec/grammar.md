@@ -1171,16 +1171,16 @@ RridIri     ::= rrid_iri( Iri )
 NihGrantIri ::= nih_grant_iri( Iri )
 ```
 
-| Typed IRI | Authority |
-|---|---|
-| `OrcidIri` | ORCID — identifies a researcher by ORCID iD |
-| `RorIri` | Research Organization Registry — identifies a research organisation by ROR ID |
-| `DoiIri` | Digital Object Identifier — identifies a digital object by DOI |
-| `PubMedIri` | PubMed — identifies a PubMed article |
-| `RridIri` | Research Resource Identifier — identifies a research resource by RRID |
-| `NihGrantIri` | NIH — identifies an NIH-funded grant |
+| Typed IRI | Authority | IRI Pattern |
+|---|---|---|
+| `OrcidIri` | ORCID — identifies a researcher by ORCID iD | `https://orcid.org/\d{4}-\d{4}-\d{4}-\d{3}[\dX]` |
+| `RorIri` | Research Organization Registry — identifies a research organisation by ROR ID | `https://ror.org/0[a-z0-9]{8}` |
+| `DoiIri` | Digital Object Identifier — identifies a digital object by DOI | `https://doi.org/10\.\d{4,}/.+` |
+| `PubMedIri` | PubMed — identifies a PubMed article | `https://pubmed.ncbi.nlm.nih.gov/\d+` |
+| `RridIri` | Research Resource Identifier — identifies a research resource by RRID | `https://identifiers.org/RRID:[A-Z]+_\d+` |
+| `NihGrantIri` | NIH — identifies an NIH-funded grant | unspecified |
 
-An `OrcidIri` MUST use the canonical ORCID IRI form: the prefix `https://orcid.org/` followed by a 16-digit ORCID iD expressed as four hyphen-separated groups of four characters matching the pattern `\d{4}-\d{4}-\d{4}-\d{3}[\dX]`. The final character MAY be the digit `X`, which serves as an ISO 7064 Mod 11-2 check character. For example: `https://orcid.org/0000-0001-2345-6789`.
+The final character of an ORCID iD MAY be `X`, serving as an ISO 7064 Mod 11-2 check character.
 
 ### Attribute Value
 
