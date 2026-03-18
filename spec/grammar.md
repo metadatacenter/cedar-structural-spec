@@ -539,7 +539,7 @@ EmbeddedPresentationComponent ::= embedded_presentation_component(
 
 Artifact identity defines the typed identifiers by which artifacts and artifact references are denoted in the model. These identity constructs are distinct from descriptive metadata, provenance, versioning, and annotations.
 
-Each artifact kind has its own typed identifier rather than a single shared `FieldId` or generic artifact identifier. This typed identity serves several purposes. First, it allows a reference such as `TextFieldReference` or `DateFieldReference` to carry its field-family membership structurally, so that an embedding of a date field cannot accidentally reference a text field identifier. Second, it enables implementations to enforce field-type consistency at the point of reference rather than deferring it to a runtime validation step. Third, it keeps the identity of a reusable field artifact aligned with the `FieldType` it carries, making the relationship between artifact identity, value semantics, and embedding context explicit and statically checkable. `TemplateId`, `PresentationComponentId`, and `TemplateInstanceId` follow the same pattern, each identifying a distinct kind of artifact with no risk of confusion across categories.
+Each field kind has its own typed identifier rather than sharing a single generic `FieldId`. This provides strong typing: a `TextFieldReference` can only refer to a `TextFieldId`, a `DateFieldReference` can only refer to a `DateFieldId`, and so on, making it structurally impossible to embed a field of the wrong type. `TemplateId`, `PresentationComponentId`, and `TemplateInstanceId` follow the same pattern for the same reason.
 
 ```ebnf
 FieldId ::= TextFieldId
