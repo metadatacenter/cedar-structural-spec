@@ -1922,27 +1922,34 @@ YoutubeVideoSource ::= you_tube_video_source(
 
 ## Field Type And Value Correspondence
 
-The `FieldType` of a `Field` determines the permitted `Value` forms in corresponding `FieldValue` constructs.
+The `FieldType` carried by a `Field` determines the `Value` form that MUST appear in any `FieldValue` corresponding to an embedding of that field. This is a normative constraint: a `FieldValue` that carries a `Value` of the wrong form for the referenced field's `FieldType` is non-conforming.
 
-The correspondence is:
+The correspondence is applied through the `EmbeddedArtifactKey` chain. A `FieldValue` in a `TemplateInstance` carries an `EmbeddedArtifactKey` that identifies an `EmbeddedField` in the referenced `Template`. That `EmbeddedField` references a reusable `Field`, which carries a `FieldType`. It is that `FieldType` that determines the permitted `Value` form for the `FieldValue`. The correspondence therefore spans the full path from instance value through embedding context to reusable field definition.
 
-- `TextFieldType` to `TextValue`
-- `NumericFieldType` to `NumericValue`
-- `DateFieldType` to `DateValue`
-- `TimeFieldType` to `TimeValue`
-- `DateTimeFieldType` to `DateTimeValue`
-- `ControlledTermFieldType` to `ControlledTermValue`
-- `ChoiceFieldType` to `ChoiceValue`
-- `LinkFieldType` to `LinkValue`
-- `EmailFieldType` to `EmailValue`
-- `PhoneNumberFieldType` to `PhoneNumberValue`
-- `OrcidFieldType` to `OrcidValue`
-- `RorFieldType` to `RorValue`
-- `DoiFieldType` to `DoiValue`
-- `PubMedIdFieldType` to `PubMedIdValue`
-- `RridFieldType` to `RridValue`
-- `NihGrantIdFieldType` to `NihGrantIdValue`
-- `AttributeValueFieldType` to `AttributeValue`
+The table below gives the complete correspondence. The Field Family column identifies the abstract category in the `Field` hierarchy to which the concrete field belongs; families group field kinds that share related value semantics. Where a field is a direct subclass of `Field` with no intermediate abstract category, this column is left blank.
+
+| Field Family | `FieldType` | `Value` |
+|---|---|---|
+| | `TextFieldType` | `TextValue` |
+| | `NumericFieldType` | `NumericValue` |
+| `TemporalField` | `DateFieldType` | `DateValue` |
+| `TemporalField` | `TimeFieldType` | `TimeValue` |
+| `TemporalField` | `DateTimeFieldType` | `DateTimeValue` |
+| | `ControlledTermFieldType` | `ControlledTermValue` |
+| `ChoiceField` | `SingleChoiceFieldType` | `ChoiceValue` |
+| `ChoiceField` | `MultipleChoiceFieldType` | `ChoiceValue` |
+| | `LinkFieldType` | `LinkValue` |
+| `ContactField` | `EmailFieldType` | `EmailValue` |
+| `ContactField` | `PhoneNumberFieldType` | `PhoneNumberValue` |
+| `ExternalAuthorityField` | `OrcidFieldType` | `OrcidValue` |
+| `ExternalAuthorityField` | `RorFieldType` | `RorValue` |
+| `ExternalAuthorityField` | `DoiFieldType` | `DoiValue` |
+| `ExternalAuthorityField` | `PubMedIdFieldType` | `PubMedIdValue` |
+| `ExternalAuthorityField` | `RridFieldType` | `RridValue` |
+| `ExternalAuthorityField` | `NihGrantIdFieldType` | `NihGrantIdValue` |
+| | `AttributeValueFieldType` | `AttributeValue` |
+
+`SingleChoiceFieldType` and `MultipleChoiceFieldType` both map to `ChoiceValue`. The distinction between them is not visible in the value type itself but in the cardinality constraint: a `SingleChoiceFieldType` permits exactly one `ChoiceValue` per `FieldValue`, while a `MultipleChoiceFieldType` permits one or more. This constraint is enforced at validation rather than through distinct value types.
 
 ## Instances
 
