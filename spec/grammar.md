@@ -63,7 +63,6 @@ Template ::= template(
   - [Numeric Literals](#numeric-literals)
   - [Temporal Literals](#temporal-literals)
   - [Literal Value Semantics](#literal-value-semantics)
-- [Embedded Artifact Keys](#embedded-artifact-keys)
 - [Values](#values)
   - [Scalar Values](#scalar-values)
   - [Temporal Values](#temporal-values)
@@ -74,6 +73,7 @@ Template ::= template(
   - [External Authority Values](#external-authority-values)
   - [Attribute Value](#attribute-value)
 - [Embedded Artifact Properties](#embedded-artifact-properties)
+  - [Embedded Artifact Key](#embedded-artifact-key)
   - [References](#references)
   - [Requirements](#requirements)
   - [Cardinality](#cardinality)
@@ -719,15 +719,7 @@ DerivedFrom ::= derived_from(
                 )
 ```
 
-```ebnf
-SemanticVersion ::= semantic_version(
-                      UnicodeString
-                    )
-```
-
 `Version` and `ModelVersion` denote Semantic Versioning 2.0.0 version identifiers.
-
-`SemanticVersion` MUST conform to Semantic Versioning 2.0.0 as defined at [semver.org](https://semver.org/).
 
 `Status` denotes the publication status of a reusable schema artifact and is restricted to `draft` or `published`.
 
@@ -769,7 +761,7 @@ The following productions define the primitive leaf types used throughout this g
 
 The following nonterminals are intentionally left abstract. They define the string-valued leaf types referenced by the productions in this section and are not themselves model-level constructs.
 
-- `SemanticVersion` denotes a Semantic Versioning 2.0.0 lexical form.
+- `SemanticVersion` denotes a Semantic Versioning 2.0.0 lexical form and MUST conform to the Semantic Versioning 2.0.0 specification as defined at [semver.org](https://semver.org/).
 - `IriString` denotes the lexical form of an IRI.
 - `Bcp47Tag` denotes a well-formed BCP 47 language tag.
 - `UnicodeString` denotes an arbitrary Unicode string.
@@ -1017,24 +1009,6 @@ An ill-typed literal is not syntactically ill-formed, but it does not determine 
 
 Two literals are term-equal if and only if their lexical forms and their datatype IRIs or language tags compare equal character by character.
 
-## Embedded Artifact Keys
-
-An `EmbeddedArtifactKey` is the local identifier of an `EmbeddedArtifact` within a `Template`. It is the key by which an embedded field, embedded template, or embedded presentation component is distinguished from other embedded artifacts in the same template. This key is also the mechanism that connects template structure to instance structure: `FieldValue` and `NestedTemplateInstance` use `EmbeddedArtifactKey` to identify which embedded artifact in the template they correspond to.
-
-```ebnf
-EmbeddedArtifactKey ::= embedded_artifact_key(
-                          KeyIdentifier
-                        )
-
-KeyIdentifier ::= key_identifier(
-                    AsciiIdentifier
-                  )
-```
-
-`EmbeddedArtifactKey` MUST match the pattern `[A-Za-z][A-Za-z0-9_-]*`: it MUST begin with an ASCII letter followed by zero or more ASCII letters, digits, underscores, or hyphens.
-
-`EmbeddedArtifactKey` values are local to a `Template` and MUST be unique within that `Template`.
-
 ## Values
 
 This section defines the `Value` types that represent instance-level data. `Value` constructs appear in `FieldValue` instances and as typed default values in `EmbeddedArtifact` properties. The permitted form of a value in a `FieldValue` is determined by the `FieldType` of the referenced `Field`, as specified in the Field Type And Value Correspondence section.
@@ -1239,7 +1213,25 @@ AttributeValue ::= attribute_value(
 
 ## Embedded Artifact Properties
 
-Embedded artifact properties define the contextual information carried by an `EmbeddedArtifact` within a `Template`. These properties govern how a referenced reusable artifact is used in that template context, including reference, requirement, cardinality, visibility, defaults, and label override, and they are distinct from the intrinsic properties of the referenced reusable artifact itself.
+Embedded artifact properties define the contextual information carried by an `EmbeddedArtifact` within a `Template`. These properties govern how a referenced reusable artifact is used in that template context, including key, reference, requirement, cardinality, visibility, defaults, and label override, and they are distinct from the intrinsic properties of the referenced reusable artifact itself.
+
+### Embedded Artifact Key
+
+An `EmbeddedArtifactKey` is the local identifier of an `EmbeddedArtifact` within a `Template`. It is the key by which an embedded field, embedded template, or embedded presentation component is distinguished from other embedded artifacts in the same template. This key is also the mechanism that connects template structure to instance structure: `FieldValue` and `NestedTemplateInstance` use `EmbeddedArtifactKey` to identify which embedded artifact in the template they correspond to.
+
+```ebnf
+EmbeddedArtifactKey ::= embedded_artifact_key(
+                          KeyIdentifier
+                        )
+
+KeyIdentifier ::= key_identifier(
+                    AsciiIdentifier
+                  )
+```
+
+`EmbeddedArtifactKey` MUST match the pattern `[A-Za-z][A-Za-z0-9_-]*`: it MUST begin with an ASCII letter followed by zero or more ASCII letters, digits, underscores, or hyphens.
+
+`EmbeddedArtifactKey` values are local to a `Template` and MUST be unique within that `Template`.
 
 ### References
 
@@ -1463,7 +1455,9 @@ LabelOverride ::= label_override(
 
 ## Field Types
 
-`FieldType` denotes the semantic category of values that a `Field` may carry. The `FieldType` productions define the value structure associated with a field and, where appropriate, the typed rendering hints and field-type-specific properties that are valid for that semantic category.
+A `FieldType` is the semantic configuration block carried by a concrete `Field` artifact. It specifies what kind of value the field accepts, any constraints on that value, and any compatible rendering hints for presentation. Each concrete `Field` variant carries exactly one `FieldType` that matches its kind: a `TextField` carries a `TextFieldType`, a `DateField` carries a `DateFieldType`, and so on. The correspondence between each `FieldType` and its permitted `Value` form is given in the [Field Type And Value Correspondence](#field-type-and-value-correspondence) section.
+
+`FieldType` productions are grouped here by field family, mirroring the abstract `Field` hierarchy in the Kernel Grammar. Temporal field types, which carry additional precision and rendering configuration, are detailed in the [Temporal Field Types](#temporal-field-types) subsection. Controlled term source declarations, which specify the ontological authorities from which controlled-term values may be drawn, are covered in the [Controlled Term Sources](#controlled-term-sources) subsection. Rendering hints for all field families are defined in the [Rendering Hints](#rendering-hints) subsection, with the exception of temporal rendering hints which are defined alongside their field types.
 
 ```ebnf
 FieldType ::= TextFieldType
@@ -1579,6 +1573,8 @@ The current placement of `Unit` on `NumericFieldType` is a pragmatic compromise.
 `ChoiceOption` denotes one permissible option in a choice field.
 
 `ChoiceOptionValue` allows a choice option to be specified by a literal, an ontology-backed controlled term, or an IRI.
+
+`ControlledTermSource` is defined in [Controlled Term Sources](#controlled-term-sources).
 
 ### Temporal Field Types
 
