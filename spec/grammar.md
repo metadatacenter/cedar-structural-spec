@@ -46,6 +46,13 @@ Template ::= template(
   - [Core Structure](#core-structure)
   - [Concrete Field Artifacts](#concrete-field-artifacts)
   - [Embedded Artifacts](#embedded-artifacts)
+- [Artifact Identity](#artifact-identity)
+- [Artifact Metadata](#artifact-metadata)
+  - [Aggregate Structure](#aggregate-structure)
+  - [Descriptive Metadata](#descriptive-metadata)
+  - [Temporal Provenance](#temporal-provenance)
+  - [Schema Versioning](#schema-versioning)
+  - [Annotations](#annotations)
 - [Scalar and Datatype Leaves](#scalar-and-datatype-leaves)
   - [Primitive String Types](#primitive-string-types)
   - [Core IRI and String Types](#core-iri-and-string-types)
@@ -56,13 +63,6 @@ Template ::= template(
   - [Numeric Literals](#numeric-literals)
   - [Temporal Literals](#temporal-literals)
   - [Literal Value Semantics](#literal-value-semantics)
-- [Artifact Identity](#artifact-identity)
-- [Artifact Metadata](#artifact-metadata)
-  - [Aggregate Structure](#aggregate-structure)
-  - [Descriptive Metadata](#descriptive-metadata)
-  - [Temporal Provenance](#temporal-provenance)
-  - [Schema Versioning](#schema-versioning)
-  - [Annotations](#annotations)
 - [Embedded Artifact Keys](#embedded-artifact-keys)
 - [Values](#values)
   - [Scalar Values](#scalar-values)
@@ -529,9 +529,233 @@ EmbeddedPresentationComponent ::= embedded_presentation_component(
                                   )
 ```
 
+## Artifact Identity
+
+Artifact identity defines the typed identifiers by which artifacts and artifact references are denoted in the model. These identity constructs are distinct from descriptive metadata, provenance, versioning, and annotations.
+
+```ebnf
+FieldId ::= TextFieldId
+          | NumericFieldId
+          | DateFieldId
+          | TimeFieldId
+          | DateTimeFieldId
+          | ControlledTermFieldId
+          | SingleChoiceFieldId
+          | MultipleChoiceFieldId
+          | LinkFieldId
+          | EmailFieldId
+          | PhoneNumberFieldId
+          | OrcidFieldId
+          | RorFieldId
+          | DoiFieldId
+          | PubMedIdFieldId
+          | RridFieldId
+          | NihGrantIdFieldId
+          | AttributeValueFieldId
+
+TextFieldId ::= text_field_id( Iri )
+
+NumericFieldId ::= numeric_field_id( Iri )
+
+DateFieldId ::= date_field_id( Iri )
+
+TimeFieldId ::= time_field_id( Iri )
+
+DateTimeFieldId ::= date_time_field_id( Iri )
+
+ControlledTermFieldId ::= controlled_term_field_id( Iri )
+
+SingleChoiceFieldId ::= single_choice_field_id( Iri )
+
+MultipleChoiceFieldId ::= multiple_choice_field_id( Iri )
+
+LinkFieldId ::= link_field_id( Iri )
+
+EmailFieldId ::= email_field_id( Iri )
+
+PhoneNumberFieldId ::= phone_number_field_id( Iri )
+
+OrcidFieldId ::= orcid_field_id( Iri )
+
+RorFieldId ::= ror_field_id( Iri )
+
+DoiFieldId ::= doi_field_id( Iri )
+
+PubMedIdFieldId ::= pub_med_id_field_id( Iri )
+
+RridFieldId ::= rrid_field_id( Iri )
+
+NihGrantIdFieldId ::= nih_grant_id_field_id( Iri )
+
+AttributeValueFieldId ::= attribute_value_field_id( Iri )
+
+TemplateId ::= template_id( Iri )
+
+PresentationComponentId ::= presentation_component_id( Iri )
+
+TemplateInstanceId ::= template_instance_id( Iri )
+```
+
+All artifact identifier productions are IRI-valued. See [`Iri`](#core-iri-and-string-types).
+
+## Artifact Metadata
+
+Artifact metadata defines descriptive information, provenance, versioning, and annotations. `ArtifactMetadata` provides the common metadata carried by all artifacts other than identity. `SchemaArtifactMetadata` extends that common structure with schema-versioning information used by reusable schema artifacts.
+
+### Aggregate Structure
+
+This subsection identifies how the metadata categories are grouped at the artifact level. `ArtifactMetadata` carries the metadata common to all artifacts other than identity, while `SchemaArtifactMetadata` adds versioning information for reusable schema artifacts.
+
+```ebnf
+SchemaArtifactMetadata ::= schema_artifact_metadata(
+                             ArtifactMetadata
+                             SchemaVersioning
+                           )
+
+ArtifactMetadata ::= artifact_metadata(
+                       DescriptiveMetadata
+                       TemporalProvenance
+                       Annotation*
+                     )
+```
+
+### Descriptive Metadata
+
+`DescriptiveMetadata` identifies the human-oriented descriptive properties of an artifact. These properties support naming, explanatory text, and external or local identifiers used for cataloging. `Name` is the required user-supplied name of the artifact. `Description`, when present, is extended textual description explaining the artifact's purpose and content. `Identifier`, when present, is a user-specified external identifier intended for integration with institutional or external systems.
+
+```ebnf
+Name ::= name(
+           UnicodeString
+         )
+
+Description ::= description(
+                  UnicodeString
+                )
+
+Identifier ::= identifier(
+                 UnicodeString
+               )
+
+DescriptiveMetadata ::= descriptive_metadata(
+                          Name
+                          [Description]
+                          [Identifier]
+                        )
+```
+
+`Name`, `Description`, and `Identifier` carry Unicode string values. See [`UnicodeString`](#primitive-string-types).
+
+### Temporal Provenance
+
+`TemporalProvenance` identifies when an artifact was created and modified, and which agents were responsible for those actions.
+
+```ebnf
+TemporalProvenance ::= temporal_provenance(
+                         CreatedOn
+                         CreatedBy
+                         ModifiedOn
+                         ModifiedBy
+                       )
+
+CreatedOn ::= IsoDateTimeStamp
+
+CreatedBy ::= Iri
+
+ModifiedOn ::= IsoDateTimeStamp
+
+ModifiedBy ::= Iri
+```
+
+`CreatedOn` and `ModifiedOn` MUST be ISO 8601 date-time timestamps.
+
+`CreatedBy` and `ModifiedBy` denote IRIs identifying the responsible agents.
+
+See [`IsoDateTimeStamp`](#core-iri-and-string-types) and [`Iri`](#core-iri-and-string-types).
+
+### Schema Versioning
+
+`SchemaVersioning` identifies version-related metadata specific to reusable schema artifacts. It captures artifact version, publication status, the version of the schema model used, and optional derivation links to earlier or source artifacts.
+
+```ebnf
+SchemaVersioning ::= schema_versioning(
+                       Version
+                       Status
+                       ModelVersion
+                       [PreviousVersion]
+                       [DerivedFrom]
+                     )
+```
+
+```ebnf
+Version ::= version(
+              SemanticVersion
+            )
+
+Status ::= DraftStatus
+         | PublishedStatus
+
+DraftStatus ::= draft_status()
+
+PublishedStatus ::= published_status()
+
+ModelVersion ::= model_version(
+                   SemanticVersion
+                 )
+
+PreviousVersion ::= previous_version(
+                      Iri
+                    )
+
+DerivedFrom ::= derived_from(
+                  Iri
+                )
+```
+
+```ebnf
+SemanticVersion ::= semantic_version(
+                      UnicodeString
+                    )
+```
+
+`Version` and `ModelVersion` denote Semantic Versioning 2.0.0 version identifiers.
+
+`SemanticVersion` MUST conform to Semantic Versioning 2.0.0 as defined at [semver.org](https://semver.org/).
+
+`Status` denotes the publication status of a reusable schema artifact and is restricted to `draft` or `published`.
+
+`PreviousVersion` and `DerivedFrom` denote IRIs identifying related source or predecessor artifacts.
+
+### Annotations
+
+`Annotation` provides an extensible metadata mechanism for additional named metadata values that are not captured by the core descriptive, provenance, or versioning structures. `AnnotationName` identifies the annotated metadata property. `AnnotationValue` provides the associated metadata value. Annotation values may be either literals or IRIs. This supports linking to external resources such as DOIs and grant identifiers, as well as storing institutional metadata.
+
+```ebnf
+Annotation ::= annotation(
+                 AnnotationName
+                 AnnotationValue
+               )
+
+AnnotationName ::= annotation_name(
+                     Iri
+                   )
+
+AnnotationValue ::= LiteralAnnotationValue
+                  | IriAnnotationValue
+
+LiteralAnnotationValue ::= literal_annotation_value(
+                             Literal
+                           )
+
+IriAnnotationValue ::= iri_annotation_value(
+                         Iri
+                       )
+```
+
+See [`Iri`](#core-iri-and-string-types) and [`Literal`](#base-literals).
+
 ## Scalar and Datatype Leaves
 
-The following productions define the primitive leaf types used throughout this grammar. They are placed here so that subsequent sections can reference them without forward reference. They represent the atomic constructs from which all other productions are built: IRIs, typed string domains, lexical forms, numeric and temporal datatype IRIs, and textual metadata values.
+The following productions define the primitive leaf types used throughout this grammar. They represent the atomic constructs from which all other productions are built: IRIs, typed string domains, lexical forms, numeric and temporal datatype IRIs, and textual metadata values.
 
 ### Primitive String Types
 
@@ -784,222 +1008,6 @@ For a `LangStringLiteral`, the literal value is the pair consisting of lexical f
 An ill-typed literal is not syntactically ill-formed, but it does not determine a valid literal value and produces a semantic inconsistency. Implementations MUST accept ill-typed literals and MAY produce warnings when encountering them.
 
 Two literals are term-equal if and only if their lexical forms and their datatype IRIs or language tags compare equal character by character.
-
-## Artifact Identity
-
-Artifact identity defines the typed identifiers by which artifacts and artifact references are denoted in the model. These identity constructs are distinct from descriptive metadata, provenance, versioning, and annotations.
-
-```ebnf
-FieldId ::= TextFieldId
-          | NumericFieldId
-          | DateFieldId
-          | TimeFieldId
-          | DateTimeFieldId
-          | ControlledTermFieldId
-          | SingleChoiceFieldId
-          | MultipleChoiceFieldId
-          | LinkFieldId
-          | EmailFieldId
-          | PhoneNumberFieldId
-          | OrcidFieldId
-          | RorFieldId
-          | DoiFieldId
-          | PubMedIdFieldId
-          | RridFieldId
-          | NihGrantIdFieldId
-          | AttributeValueFieldId
-
-TextFieldId ::= text_field_id( Iri )
-
-NumericFieldId ::= numeric_field_id( Iri )
-
-DateFieldId ::= date_field_id( Iri )
-
-TimeFieldId ::= time_field_id( Iri )
-
-DateTimeFieldId ::= date_time_field_id( Iri )
-
-ControlledTermFieldId ::= controlled_term_field_id( Iri )
-
-SingleChoiceFieldId ::= single_choice_field_id( Iri )
-
-MultipleChoiceFieldId ::= multiple_choice_field_id( Iri )
-
-LinkFieldId ::= link_field_id( Iri )
-
-EmailFieldId ::= email_field_id( Iri )
-
-PhoneNumberFieldId ::= phone_number_field_id( Iri )
-
-OrcidFieldId ::= orcid_field_id( Iri )
-
-RorFieldId ::= ror_field_id( Iri )
-
-DoiFieldId ::= doi_field_id( Iri )
-
-PubMedIdFieldId ::= pub_med_id_field_id( Iri )
-
-RridFieldId ::= rrid_field_id( Iri )
-
-NihGrantIdFieldId ::= nih_grant_id_field_id( Iri )
-
-AttributeValueFieldId ::= attribute_value_field_id( Iri )
-
-TemplateId ::= template_id( Iri )
-
-PresentationComponentId ::= presentation_component_id( Iri )
-
-TemplateInstanceId ::= template_instance_id( Iri )
-```
-
-## Artifact Metadata
-
-Artifact metadata defines descriptive information, provenance, versioning, and annotations. `ArtifactMetadata` provides the common metadata carried by all artifacts other than identity. `SchemaArtifactMetadata` extends that common structure with schema-versioning information used by reusable schema artifacts.
-
-### Aggregate Structure
-
-This subsection identifies how the metadata categories are grouped at the artifact level. `ArtifactMetadata` carries the metadata common to all artifacts other than identity, while `SchemaArtifactMetadata` adds versioning information for reusable schema artifacts.
-
-```ebnf
-SchemaArtifactMetadata ::= schema_artifact_metadata(
-                             ArtifactMetadata
-                             SchemaVersioning
-                           )
-
-ArtifactMetadata ::= artifact_metadata(
-                       DescriptiveMetadata
-                       TemporalProvenance
-                       Annotation*
-                     )
-```
-
-### Descriptive Metadata
-
-`DescriptiveMetadata` identifies the human-oriented descriptive properties of an artifact. These properties support naming, explanatory text, and external or local identifiers used for cataloging. `Name` is the required user-supplied name of the artifact. `Description`, when present, is extended textual description explaining the artifact's purpose and content. `Identifier`, when present, is a user-specified external identifier intended for integration with institutional or external systems.
-
-```ebnf
-Name ::= name(
-           UnicodeString
-         )
-
-Description ::= description(
-                  UnicodeString
-                )
-
-Identifier ::= identifier(
-                 UnicodeString
-               )
-
-DescriptiveMetadata ::= descriptive_metadata(
-                          Name
-                          [Description]
-                          [Identifier]
-                        )
-```
-
-### Temporal Provenance
-
-`TemporalProvenance` identifies when an artifact was created and modified, and which agents were responsible for those actions.
-
-```ebnf
-TemporalProvenance ::= temporal_provenance(
-                         CreatedOn
-                         CreatedBy
-                         ModifiedOn
-                         ModifiedBy
-                       )
-
-CreatedOn ::= IsoDateTimeStamp
-
-CreatedBy ::= Iri
-
-ModifiedOn ::= IsoDateTimeStamp
-
-ModifiedBy ::= Iri
-```
-
-`CreatedOn` and `ModifiedOn` MUST be ISO 8601 date-time timestamps.
-
-`CreatedBy` and `ModifiedBy` denote IRIs identifying the responsible agents.
-
-### Schema Versioning
-
-`SchemaVersioning` identifies version-related metadata specific to reusable schema artifacts. It captures artifact version, publication status, the version of the schema model used, and optional derivation links to earlier or source artifacts.
-
-```ebnf
-SchemaVersioning ::= schema_versioning(
-                       Version
-                       Status
-                       ModelVersion
-                       [PreviousVersion]
-                       [DerivedFrom]
-                     )
-```
-
-```ebnf
-Version ::= version(
-              SemanticVersion
-            )
-
-Status ::= DraftStatus
-         | PublishedStatus
-
-DraftStatus ::= draft_status()
-
-PublishedStatus ::= published_status()
-
-ModelVersion ::= model_version(
-                   SemanticVersion
-                 )
-
-PreviousVersion ::= previous_version(
-                      Iri
-                    )
-
-DerivedFrom ::= derived_from(
-                  Iri
-                )
-```
-
-```ebnf
-SemanticVersion ::= semantic_version(
-                      UnicodeString
-                    )
-```
-
-`Version` and `ModelVersion` denote Semantic Versioning 2.0.0 version identifiers.
-
-`SemanticVersion` MUST conform to Semantic Versioning 2.0.0 as defined at [semver.org](https://semver.org/).
-
-`Status` denotes the publication status of a reusable schema artifact and is restricted to `draft` or `published`.
-
-`PreviousVersion` and `DerivedFrom` denote IRIs identifying related source or predecessor artifacts.
-
-### Annotations
-
-`Annotation` provides an extensible metadata mechanism for additional named metadata values that are not captured by the core descriptive, provenance, or versioning structures. `AnnotationName` identifies the annotated metadata property. `AnnotationValue` provides the associated metadata value. Annotation values may be either literals or IRIs. This supports linking to external resources such as DOIs and grant identifiers, as well as storing institutional metadata.
-
-```ebnf
-Annotation ::= annotation(
-                 AnnotationName
-                 AnnotationValue
-               )
-
-AnnotationName ::= annotation_name(
-                     Iri
-                   )
-
-AnnotationValue ::= LiteralAnnotationValue
-                  | IriAnnotationValue
-
-LiteralAnnotationValue ::= literal_annotation_value(
-                             Literal
-                           )
-
-IriAnnotationValue ::= iri_annotation_value(
-                         Iri
-                       )
-```
 
 ## Embedded Artifact Keys
 
