@@ -57,7 +57,7 @@ Date, time, and date-time instance values are represented separately by `DateVal
 
 Controlled term instance values SHOULD preserve both a term Iri and a human-readable label. They MAY additionally preserve notation and preferred label information from the source terminology.
 
-External authority instance values SHOULD preserve both the identifying Iri and, where available, a human-readable label.
+External authority instance values SHOULD preserve both the typed authority IRI (`OrcidIri`, `RorIri`, `DoiIri`, `PubMedIri`, `RridIri`, or `NihGrantIri` as appropriate) and, where available, a human-readable label.
 
 ## Open Questions
 

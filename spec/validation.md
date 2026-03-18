@@ -141,7 +141,12 @@ For contact values:
 
 For external authority values:
 
-- `OrcidValue`, `RorValue`, `DoiValue`, `PubMedIdValue`, `RridValue`, and `NihGrantIdValue` MUST include an identifying `Iri`
+- `OrcidValue` MUST include an `OrcidIri`
+- `RorValue` MUST include a `RorIri`
+- `DoiValue` MUST include a `DoiIri`
+- `PubMedIdValue` MUST include a `PubMedIri`
+- `RridValue` MUST include an `RridIri`
+- `NihGrantIdValue` MUST include a `NihGrantIri`
 - these values MAY additionally include a human-readable `Label`
 
 For literals generally:
