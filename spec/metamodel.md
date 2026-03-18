@@ -2,72 +2,31 @@
 
 ## Overview
 
-This section defines the conceptual arrangement of the CEDAR Template Model. Its goal is to state that conceptual information in a strongly typed and unambiguous manner by making the principal categories of constructs in the model and the relationships among them explicit. It does not prescribe any concrete serialization. A serialization MUST preserve and faithfully encode the conceptual information defined by this metamodel, but it MAY do so using whatever concrete representational structures are appropriate for that serialization format.
+This section provides a conceptual overview of the CEDAR Template Model. Its purpose is to describe the principal categories of constructs, the relationships among them, and the design rationale behind key decisions. It is intended as a companion to the formal abstract grammar defined in [`spec/grammar.md`](grammar.md), which is the normative specification. Readers seeking precise structural definitions, production rules, or normative constraints should consult `grammar.md` directly.
 
-The CEDAR Template Model is organized around reusable artifacts, embedding constructs, and instances that conform to templates.
+The CEDAR Template Model is organised around three principal concerns: reusable schema artifacts that define structure, embedding constructs that contextualise those artifacts within a specific template, and template instances that record data conforming to a template.
 
-`Artifact` is the broadest category in the model. `SchemaArtifact`, `PresentationComponent`, and `TemplateInstance` are the principal subclasses used by this specification.
+## Principal Categories
 
-## Artifact
+`Artifact` is the broadest category in the model. Every artifact carries a repository-assigned identifier, descriptive metadata, temporal provenance, and zero or more annotations. `SchemaArtifact`, `PresentationComponent`, and `TemplateInstance` are the three principal subclasses.
 
-An `Artifact` is a top-level construct in the CEDAR Template Model.
+A `SchemaArtifact` is a reusable artifact that defines schema structure. `Template` and `Field` are the two concrete schema artifact kinds. Both carry versioning metadata in addition to the common artifact metadata.
 
-Each `Artifact` carries an artifact identifier together with common artifact metadata including descriptive metadata, temporal provenance, and zero or more annotations.
+A `Template` is the central container of the model. It specifies an ordered arrangement of `EmbeddedArtifact` constructs and defines the schema that `TemplateInstance` constructs must conform to.
 
-Descriptive metadata includes:
+A `Field` is an abstract category refined into typed concrete variants — `TextField`, `NumericField`, `DateField`, `TimeField`, `DateTimeField`, `ControlledTermField`, `SingleChoiceField`, `MultipleChoiceField`, `LinkField`, `EmailField`, `PhoneNumberField`, the external authority fields, and `AttributeValueField`. Each concrete field carries a matching `FieldType` that specifies its value semantics and configuration. The field artifact carries identity, metadata, and provenance; the `FieldType` carries value rules and rendering properties. See `grammar.md` for the rationale behind this separation.
 
-- `Name`
-- `Description`
-- `Identifier`
+A `PresentationComponent` is a reusable non-data-bearing artifact that contributes presentational or instructional structure within a template. Examples include rich text, images, YouTube videos, section breaks, and page breaks. Presentation components do not produce instance values.
 
-The artifact identifier is a repository-assigned Iri that permanently identifies the artifact. Artifact identity is conceptually distinct from artifact metadata.
+An `EmbeddedArtifact` contextualises a reusable artifact within a specific `Template`. It carries the template-local properties — key, cardinality, visibility, default value, label override, and value requirement — that govern how the referenced artifact participates in that template context. There are three forms: `EmbeddedField`, `EmbeddedTemplate`, and `EmbeddedPresentationComponent`.
 
-Temporal provenance includes:
+An `EmbeddedArtifactKey` is the local identifier of an `EmbeddedArtifact` within its containing `Template`. It is the mechanism that connects template structure to instance structure.
 
-- `CreatedOn`
-- `CreatedBy`
-- `ModifiedOn`
-- `ModifiedBy`
+A `TemplateInstance` is an artifact that records data conforming to a `Template`. It contains `FieldValue` and `NestedTemplateInstance` constructs keyed by `EmbeddedArtifactKey`, corresponding to the data-bearing embedded artifacts of the referenced template.
 
-`CreatedOn` and `ModifiedOn` MUST be ISO 8601 date-time timestamps.
+## Field Hierarchy
 
-`CreatedBy` and `ModifiedBy` MUST identify agents by Iri.
-
-Annotations are property-value pairs. Each annotation has an `AnnotationName` identifying the annotated metadata property and an `AnnotationValue` that may be either a literal or an IRI. Annotations support linking to external resources such as DOIs and grant identifiers, and also support storing institutional metadata.
-
-## SchemaArtifact
-
-A `SchemaArtifact` is an `Artifact` that defines reusable schema structure.
-
-`Template` and `Field` are `SchemaArtifact` constructs.
-
-Each reusable artifact MAY be referenced by a typed identifier such as `FieldId`, `TemplateId`, or `PresentationComponentId`, depending on the referenced artifact kind.
-
-A `SchemaArtifact` additionally carries versioning metadata:
-
-- `Version`
-- `Status`
-- `ModelVersion`
-- `PreviousVersion`
-- `DerivedFrom`
-
-## Template
-
-A `Template` is a `SchemaArtifact` identified by a `TemplateId` and specifies an ordered arrangement of embedded artifacts.
-
-A `Template` contains `EmbeddedArtifact` constructs rather than directly containing `Field`, `Template`, or `PresentationComponent`.
-
-A `Template` MAY additionally define `Header` and `Footer` content for presentation at the template level.
-
-## Field
-
-A `Field` is a `SchemaArtifact` identified by a `FieldId` and specifies a kind of value that may appear in `TemplateInstance` constructs. `Field` is an abstract category refined into typed field artifacts such as `TextField`, `NumericField`, `DateField`, `TimeField`, `DateTimeField`, `ControlledTermField`, `SingleChoiceField`, and other concrete field variants.
-
-Each concrete `Field` variant carries the compatible concrete `FieldType` together with any field-type-specific properties on the permitted values.
-
-**Why `FieldType` Still Exists.** The concrete field artifact identifies what broad kind of field is being defined. For example, `TextField` identifies the artifact as a text field, and `DateField` identifies the artifact as a date field. `FieldType` is still retained because it provides the semantic configuration block for that concrete field artifact. In simple terms, the field artifact answers the question "what kind of reusable field is this?" while the compatible `FieldType` answers the question "what are the value rules and rendering-compatible properties for this kind of field?" This keeps artifact identity, provenance, and versioning separate from value semantics and field-specific configuration. It also preserves a uniform pattern across field kinds: each concrete field artifact has an identifier, metadata, and exactly one compatible `FieldType`.
-
-`TextFieldType` MAY define a reusable default text value, minimum length, maximum length, and validating regular expression.
+The diagram below shows the complete `Field` hierarchy and the `FieldType` each concrete field variant carries.
 
 ```mermaid
 classDiagram
@@ -171,88 +130,3 @@ classDiagram
   NihGrantIdField --> NihGrantIdFieldType : carries
   AttributeValueField --> AttributeValueFieldType : carries
 ```
-
-Where supported by a concrete `FieldType`, a compatible `RenderingHint` is defined as part of that `FieldType`.
-
-`RenderingHint` influences presentation behavior only and MUST be compatible with the associated concrete `FieldType`.
-
-**Semantic Structure Versus Presentation.** This specification draws a strict distinction between semantic structure and presentation. Semantic distinctions MUST be modeled in `FieldType`. This includes distinctions such as single-choice versus multiple-choice, date versus time versus date-time, permitted time precision, and permitted date-time precision. Purely presentational distinctions MUST NOT be modeled as separate field types. Instead, distinctions such as single-line versus multi-line text entry, date component ordering, and 12-hour versus 24-hour time display MUST be modeled only through compatible typed rendering hints.
-
-The reusable `Field` definition does not carry template-local keying, cardinality, visibility, or label override. Those properties belong to `EmbeddedField`.
-
-`EmbeddedField` MAY still define an embedding-specific typed `DefaultValue`. The form of that default depends on the value family of the embedded field. Where both a reusable text default and an embedding-specific text default are present, the embedding-specific default is more specific to the template context.
-
-## PresentationComponent
-
-A `PresentationComponent` is an `Artifact` identified by a `PresentationComponentId` that contributes presentation or instructional structure. Examples include reusable rich text instructions, images, YouTube videos, section breaks, and page breaks that guide or organize a rendered template without introducing data-bearing content.
-
-`PresentationComponent` does not define a data-bearing value and does not contribute an `InstanceValue`.
-
-## EmbeddedArtifact
-
-An `EmbeddedArtifact` contextualizes an artifact within a specific `Template`.
-
-An `EmbeddedArtifact` carries embedding-specific properties such as `EmbeddedArtifactKey`, local cardinality, visibility, default value, label override, and value requirement.
-
-The order of embedded artifacts in a `Template` is determined by the sequence in which the `EmbeddedArtifact` constructs occur within that `Template`.
-
-## EmbeddedField
-
-An `EmbeddedField` is an `EmbeddedArtifact` that references a `Field`. `EmbeddedField` is an abstract category refined into typed embedded-field variants such as `EmbeddedTextField`, `EmbeddedNumericField`, `EmbeddedDateField`, and other concrete embedding forms.
-
-Each concrete `EmbeddedField` variant determines how the correspondingly typed `Field` participates within the containing `Template`.
-
-## EmbeddedTemplate
-
-An `EmbeddedTemplate` is an `EmbeddedArtifact` that references a `Template`.
-
-It determines how the referenced `Template` is nested within the containing `Template`.
-
-## EmbeddedPresentationComponent
-
-An `EmbeddedPresentationComponent` is an `EmbeddedArtifact` that references a `PresentationComponent`.
-
-It contributes presentation structure within a `Template` but does not produce `InstanceValue`.
-
-## EmbeddedArtifactKey
-
-An `EmbeddedArtifactKey` is the local identifier for an `EmbeddedArtifact` within a `Template`.
-
-`EmbeddedArtifactKey` values MUST be unique within a `Template`.
-
-`EmbeddedArtifactKey` MUST be an ASCII identifier without whitespace.
-
-`EmbeddedArtifactKey` is the mechanism that connects template structure and instance structure.
-
-`EmbeddedArtifactKey` is distinct from artifact identifiers such as `FieldId` and `TemplateId`. It identifies the embedding site within a template rather than the reusable artifact being referenced.
-
-## TemplateInstance
-
-A `TemplateInstance` is an `Artifact` identified by a `TemplateInstanceId` that conforms to a `Template`.
-
-A `TemplateInstance` contains `InstanceValue` constructs corresponding to the embedded data-bearing artifacts of that `Template`.
-
-## InstanceValue
-
-An `InstanceValue` is a value-bearing construct within a `TemplateInstance`.
-
-This specification defines two forms of `InstanceValue`: `FieldValue` and `NestedTemplateInstance`.
-
-## FieldValue
-
-A `FieldValue` associates an `EmbeddedArtifactKey` with one or more values corresponding to an `EmbeddedField`.
-
-The `EmbeddedArtifactKey` identifies the embedding context, not merely the referenced `Field`.
-
-The representation of the value depends on the referenced `FieldType`.
-
-## NestedTemplateInstance
-
-A `NestedTemplateInstance` associates an `EmbeddedArtifactKey` with a nested collection of `InstanceValue` constructs corresponding to an `EmbeddedTemplate`.
-
-`NestedTemplateInstance` is the recursive construct that supports nested template structure.
-
-## Open Questions
-
-- Should `PresentationComponent` remain a direct subclass of `Artifact`, or should a later revision introduce a more explicit hierarchy for reusable non-schema artifacts? For example, a later revision could introduce an intermediate superclass for reusable non-schema artifacts and place `PresentationComponent` under that superclass rather than directly under `Artifact`. This would make the distinction between reusable schema artifacts such as `Template` and `Field` and reusable non-schema artifacts such as rich text, images, videos, section breaks, and page breaks more explicit.
-- Should a later revision introduce a distinct `QuantityFieldType` rather than attaching optional `Unit` information directly to `NumericFieldType`? The current model permits fixed units on numeric fields as a pragmatic compromise, but a dedicated quantity field type may provide a cleaner semantic distinction for numeric values that are intrinsically unit-bearing.

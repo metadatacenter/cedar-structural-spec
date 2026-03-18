@@ -40,6 +40,8 @@ Template ::= template(
 
 `Template` is the production being defined, while `template(...)` denotes the abstract constructor form of that construct; in other words, it shows the components of a `Template` and how they are composed.
 
+A conceptual overview of the model — describing the principal categories, their relationships, and the design rationale behind key decisions — is provided in [`spec/metamodel.md`](metamodel.md). The present document is the normative formal specification.
+
 ## Contents
 
 - [Kernel Grammar](#kernel-grammar)
@@ -299,7 +301,7 @@ AttributeValueField ::= attribute_value_field(
                         )
 ```
 
-The concrete field artifacts defined above are reusable schema-level constructs. To appear within a `Template`, each must be included via an [Embedded Artifacts](#embedded-artifacts) construct, which adds the template-local context — key, cardinality, visibility, default value, and label override — that governs how the field participates in that specific template.
+The concrete field artifacts defined above are reusable schema-level constructs. A reusable `Field` deliberately does not carry template-local keying, cardinality, visibility, or label override — those properties belong to the embedding context, not to the reusable artifact. To appear within a `Template`, each field must be included via an [Embedded Artifacts](#embedded-artifacts) construct, which adds that template-local context and governs how the field participates in that specific template.
 
 ### Embedded Artifacts
 
@@ -1233,6 +1235,8 @@ KeyIdentifier ::= key_identifier(
 
 `EmbeddedArtifactKey` values are local to a `Template` and MUST be unique within that `Template`.
 
+`EmbeddedArtifactKey` is distinct from artifact identifiers such as `FieldId` and `TemplateId`. It identifies the embedding site within a template rather than the reusable artifact being referenced. The same reusable `Field` may be embedded more than once in a `Template` under different keys, and each key independently identifies that embedding site in both the template structure and any corresponding `TemplateInstance`.
+
 ### References
 
 These productions identify the reusable artifact that is being included in the template.
@@ -1456,6 +1460,8 @@ LabelOverride ::= label_override(
 ## Field Types
 
 A `FieldType` is the semantic configuration block carried by a concrete `Field` artifact. It specifies what kind of value the field accepts, any constraints on that value, and any compatible rendering hints for presentation. Each concrete `Field` variant carries exactly one `FieldType` that matches its kind: a `TextField` carries a `TextFieldType`, a `DateField` carries a `DateFieldType`, and so on. The correspondence between each `FieldType` and its permitted `Value` form is given in the [Field Type And Value Correspondence](#field-type-and-value-correspondence) section.
+
+One might ask why `FieldType` exists as a separate construct rather than folding its content directly into the concrete `Field` artifact. The answer is separation of concerns: the concrete field artifact — `TextField`, `DateField`, and so on — answers the question "what kind of reusable field is this?" and carries the artifact's identity, descriptive metadata, provenance, and versioning. The `FieldType` answers the separate question "what are the value rules and rendering-compatible properties for this kind of field?" Keeping these concerns distinct means that artifact identity and lifecycle metadata remain uniform across all field kinds, while value semantics and field-specific configuration vary per family through `FieldType`. It also preserves a clean, uniform pattern: every concrete field artifact carries exactly one identifier, one `SchemaArtifactMetadata`, and one `FieldType`.
 
 `FieldType` productions are grouped here by field family, mirroring the abstract `Field` hierarchy in the Kernel Grammar. Temporal field types, which carry additional precision and rendering configuration, are detailed in the [Temporal Field Types](#temporal-field-types) subsection. Controlled term source declarations, which specify the ontological authorities from which controlled-term values may be drawn, are covered in the [Controlled Term Sources](#controlled-term-sources) subsection. Rendering hints for all field families are defined in the [Rendering Hints](#rendering-hints) subsection, with the exception of temporal rendering hints which are defined alongside their field types.
 
@@ -1840,11 +1846,7 @@ NumericRenderingHint ::= NumericInputRenderingHint
 NumericInputRenderingHint ::= numeric_input_rendering_hint()
 ```
 
-The `FieldType` grammar distinguishes semantic variation from presentation variation.
-
-Semantic distinctions MUST remain in `FieldType` when they affect the meaning, cardinality, or value structure of the field.
-
-Presentation distinctions SHOULD be represented by typed rendering hints when they affect only UI behavior.
+This specification draws a strict distinction between semantic structure and presentation. Semantic distinctions MUST be modeled in `FieldType` when they affect the meaning, cardinality, or value structure of a field. This includes distinctions such as single-choice versus multiple-choice, date versus time versus date-time, and permitted temporal precision. Purely presentational distinctions MUST NOT be modeled as separate field types. Instead, distinctions such as single-line versus multi-line text entry, date component ordering, and 12-hour versus 24-hour time display MUST be expressed only through compatible typed rendering hints.
 
 Accordingly, `TextFieldType` is a single semantic field type whose single-line and multi-line display forms are represented by `TextRenderingHint`.
 
@@ -1977,10 +1979,12 @@ NestedTemplateInstance ::= nested_template_instance(
                            )
 ```
 
-For multi-valued `EmbeddedField`, all values for a single field occurrence are collected within a single `FieldValue` using `Value*`. For multi-valued `EmbeddedTemplate`, multiplicity is represented by multiple `NestedTemplateInstance` constructs sharing the same `EmbeddedArtifactKey` within the containing `TemplateInstance`. This asymmetry reflects the structural difference between scalar repetition (multiple values for one field) and structural repetition (multiple complete nested instances for one embedded template).
+For multi-valued `EmbeddedField`, all values for a single field occurrence are collected within a single `FieldValue` using `Value*`. For multi-valued `EmbeddedTemplate`, multiplicity is represented by multiple `NestedTemplateInstance` constructs sharing the same `EmbeddedArtifactKey` within the containing `TemplateInstance`. This asymmetry reflects the structural difference between scalar repetition (multiple values for one field) and structural repetition (multiple complete nested instances for one embedded template). `NestedTemplateInstance` is the recursive construct that supports arbitrarily deep nested template structure: because a `NestedTemplateInstance` itself contains `InstanceValue*`, and `InstanceValue` may contain further `NestedTemplateInstance` constructs, template nesting can be as deep as the schema requires.
 
 > **TODO:** `FieldValue` uses `Value*`, which permits a `FieldValue` with zero values. Whether an empty `FieldValue` is a valid representation of absence for an optional field, or whether absence must be represented by omitting the `FieldValue` entirely (which would make `Value+` correct), is unresolved pending clarification from the CEDAR team.
 
 ## Open Questions
 
 - Should embedded artifacts always refer to reusable artifacts by explicit reference construct, or does the CEDAR model require some embeddings to support inline artifact definition?
+- Should `PresentationComponent` remain a direct subclass of `Artifact`, or should a later revision introduce an intermediate superclass for reusable non-schema artifacts? This would make the distinction between reusable schema artifacts such as `Template` and `Field` and reusable non-schema artifacts such as rich text, images, videos, and section breaks more explicit in the hierarchy.
+- Should a later revision introduce a distinct `QuantityFieldType` rather than attaching optional `Unit` information directly to `NumericFieldType`? The current model permits fixed units on numeric fields as a pragmatic compromise, but a dedicated quantity field type may provide a cleaner semantic distinction for numeric values that are intrinsically unit-bearing.
