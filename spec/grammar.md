@@ -65,6 +65,14 @@ Template ::= template(
   - [Annotations](#annotations)
 - [Embedded Artifact Keys](#embedded-artifact-keys)
 - [Values](#values)
+  - [Scalar Values](#scalar-values)
+  - [Temporal Values](#temporal-values)
+  - [Controlled Term Value](#controlled-term-value)
+  - [Choice Value](#choice-value)
+  - [Link Value](#link-value)
+  - [Contact Values](#contact-values)
+  - [External Authority Values](#external-authority-values)
+  - [Attribute Value](#attribute-value)
 - [Embedded Artifact Properties](#embedded-artifact-properties)
   - [References](#references)
   - [Requirements](#requirements)
@@ -1004,7 +1012,13 @@ Value ::= TextValue
         | PhoneNumberValue
         | ExternalAuthorityValue
         | AttributeValue
+```
 
+### Scalar Values
+
+`TextValue` and `NumericValue` are the simplest value forms, each wrapping a single typed literal that corresponds directly to its field type. `TextValue` accepts either a plain string or a language-tagged string via `TextLiteral`. `NumericValue` carries a typed numeric literal with an XML Schema numeric datatype IRI.
+
+```ebnf
 TextValue ::= text_value(
                 TextLiteral
               )
@@ -1012,7 +1026,13 @@ TextValue ::= text_value(
 NumericValue ::= numeric_value(
                    NumericLiteral
                  )
+```
 
+### Temporal Values
+
+Temporal values represent date, time, and date-time data, corresponding directly to `DateFieldType`, `TimeFieldType`, and `DateTimeFieldType` respectively. `DateValue` is further refined into three precision variants — `YearValue`, `YearMonthValue`, and `FullDateValue` — to preserve the intended granularity explicitly rather than collapsing all date forms into a single type.
+
+```ebnf
 DateValue ::= YearValue
             | YearMonthValue
             | FullDateValue
@@ -1036,14 +1056,16 @@ TimeValue ::= time_value(
 DateTimeValue ::= date_time_value(
                     DateTimeLiteral
                   )
+```
 
+### Controlled Term Value
+
+A controlled term value identifies a term drawn from an ontology, branch, class set, or value set declared in the corresponding `ControlledTermFieldType`. It carries a `TermIri` identifying the term and a mandatory human-readable `Label`. `Notation` and `PreferredLabel` carry optional terminology metadata from the source ontology, such as a symbolic code or the ontology's own preferred label for the term.
+
+```ebnf
 Label ::= label(
             UnicodeString
           )
-
-AlternativeLabel ::= alternative_label(
-                       UnicodeString
-                     )
 
 Notation ::= notation(
                UnicodeString
@@ -1059,7 +1081,13 @@ ControlledTermValue ::= controlled_term_value(
                           [Notation]
                           [PreferredLabel]
                         )
+```
 
+### Choice Value
+
+A choice value carries a selection from the options declared by a `ChoiceFieldType`. The selection may take the form of a literal, a controlled term, or an IRI, matching one of the structural forms used to declare the corresponding `ChoiceOption`. `ChoiceSelection` and `ChoiceOptionValue` are structurally identical but kept distinct to make the role of each explicit: `ChoiceOptionValue` identifies a permissible option as declared in a `ChoiceFieldType`, while `ChoiceSelection` identifies the value chosen in an instance context. The correspondence between them is governed by the match semantics defined in the validation rules.
+
+```ebnf
 ChoiceValue ::= choice_value(
                   ChoiceSelection
                 )
@@ -1067,11 +1095,23 @@ ChoiceValue ::= choice_value(
 ChoiceSelection ::= Literal
                   | ControlledTermValue
                   | Iri
+```
 
+### Link Value
+
+A link value represents a hyperlink or URL-valued field. It carries a single `Iri` identifying the linked resource, with no additional metadata.
+
+```ebnf
 LinkValue ::= link_value(
                 Iri
               )
+```
 
+### Contact Values
+
+Contact values represent human contact identifiers. `EmailValue` carries an email address as a plain string literal and `PhoneNumberValue` carries a telephone number as a plain string literal. Both use `StringLiteral` rather than a more specialised literal form; format validation is left to implementations.
+
+```ebnf
 EmailValue ::= email_value(
                  StringLiteral
                )
@@ -1079,7 +1119,13 @@ EmailValue ::= email_value(
 PhoneNumberValue ::= phone_number_value(
                        StringLiteral
                      )
+```
 
+### External Authority Values
+
+External authority values represent identifiers issued by recognised external authority systems. Each concrete value type carries a typed IRI specialised for its authority together with an optional human-readable `Label`. The typed IRI signals the expected identifier scheme; format conformance for each authority may be enforced by profile-specific or implementation-specific validation rules.
+
+```ebnf
 ExternalAuthorityValue ::= OrcidValue
                          | RorValue
                          | DoiValue
@@ -1088,35 +1134,57 @@ ExternalAuthorityValue ::= OrcidValue
                          | NihGrantIdValue
 
 OrcidValue ::= orcid_value(
-                 Iri
+                 OrcidIri
                  [Label]
                )
 
 RorValue ::= ror_value(
-               Iri
+               RorIri
                [Label]
              )
 
 DoiValue ::= doi_value(
-               Iri
+               DoiIri
                [Label]
              )
 
 PubMedIdValue ::= pub_med_id_value(
-                    Iri
+                    PubMedIri
                     [Label]
                   )
 
 RridValue ::= rrid_value(
-                Iri
+                RridIri
                 [Label]
               )
 
 NihGrantIdValue ::= nih_grant_id_value(
-                      Iri
+                      NihGrantIri
                       [Label]
                     )
 
+OrcidIri    ::= orcid_iri( Iri )
+RorIri      ::= ror_iri( Iri )
+DoiIri      ::= doi_iri( Iri )
+PubMedIri   ::= pub_med_iri( Iri )
+RridIri     ::= rrid_iri( Iri )
+NihGrantIri ::= nih_grant_iri( Iri )
+```
+
+| Typed IRI | Authority |
+|---|---|
+| `OrcidIri` | ORCID — identifies a researcher by ORCID iD |
+| `RorIri` | Research Organization Registry — identifies a research organisation by ROR ID |
+| `DoiIri` | Digital Object Identifier — identifies a digital object by DOI |
+| `PubMedIri` | PubMed — identifies a PubMed article |
+| `RridIri` | Research Resource Identifier — identifies a research resource by RRID |
+| `NihGrantIri` | NIH — identifies an NIH-funded grant |
+
+### Attribute Value
+
+An attribute value is a name-value pair used to represent arbitrary named properties whose names are not known at schema definition time. `AttributeName` carries the name of the attribute as a Unicode string. The value component is itself a `Value`, permitting attribute values to carry any value type including nested attribute values.
+
+```ebnf
 AttributeName ::= attribute_name(
                     UnicodeString
                   )
@@ -1126,8 +1194,6 @@ AttributeValue ::= attribute_value(
                      Value
                    )
 ```
-
-`ChoiceSelection` and `ChoiceOptionValue` are structurally identical: both permit a `Literal`, a `ControlledTermValue`, or an `Iri`. The two production names are kept distinct to make their roles explicit. `ChoiceOptionValue` identifies a permissible option as declared in a `ChoiceFieldType`. `ChoiceSelection` identifies the value chosen in an instance context. The correspondence between them is governed by the match semantics defined in the validation rules.
 
 ## Embedded Artifact Properties
 
@@ -1343,6 +1409,10 @@ NihGrantIdDefaultValue ::= nih_grant_id_default_value(
 `LabelOverride` provides template-specific labeling for an embedded artifact. This allows a template to override the default label of the referenced reusable artifact in that embedding context.
 
 ```ebnf
+AlternativeLabel ::= alternative_label(
+                       UnicodeString
+                     )
+
 LabelOverride ::= label_override(
                     Label
                     AlternativeLabel*
