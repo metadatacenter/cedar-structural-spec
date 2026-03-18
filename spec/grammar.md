@@ -299,6 +299,8 @@ AttributeValueField ::= attribute_value_field(
                         )
 ```
 
+The concrete field artifacts defined above are reusable schema-level constructs. To appear within a `Template`, each must be included via an [Embedded Artifacts](#embedded-artifacts) construct, which adds the template-local context — key, cardinality, visibility, default value, and label override — that governs how the field participates in that specific template.
+
 ### Embedded Artifacts
 
 An `EmbeddedArtifact` contextualises a reusable artifact within a specific `Template`, adding template-local properties that govern how the artifact participates in that context. There are three forms: `EmbeddedField`, which embeds a data-bearing field; `EmbeddedTemplate`, which nests a template within the containing template; and `EmbeddedPresentationComponent`, which contributes presentational structure without producing instance data.
