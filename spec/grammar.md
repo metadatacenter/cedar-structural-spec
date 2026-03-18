@@ -1930,7 +1930,7 @@ The table below gives the complete correspondence. The Field Family column ident
 
 | Field Family | `FieldType` | `Value` |
 |---|---|---|
-| | `TextFieldType` | [`TextValue`](link-works) |
+| | `TextFieldType` | `TextValue` |
 | | `NumericFieldType` | `NumericValue` |
 | `TemporalField` | `DateFieldType` | `DateValue` |
 | `TemporalField` | `TimeFieldType` | `TimeValue` |
