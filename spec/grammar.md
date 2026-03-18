@@ -690,7 +690,7 @@ NumericLiteral ::= numeric_literal(
 
 ### Temporal Literals
 
-Temporal literals are strongly typed at each precision level. `TemporalLiteral` is the abstract supertype; `DateLiteral`, `TimeLiteral`, and `DateTimeLiteral` correspond to the three temporal field types. Within `DateLiteral`, the three alternatives preserve year-only, year-month, and full-date precision explicitly rather than collapsing them into a single form.
+A temporal literal is a typed literal that represents a date, a time of day, or a combined date-time value, carried as an RDF literal with an XML Schema temporal datatype IRI. Temporal literals are strongly typed at each precision level. `TemporalLiteral` is the abstract supertype; `DateLiteral`, `TimeLiteral`, and `DateTimeLiteral` correspond to the three temporal field types. Within `DateLiteral`, the three alternatives preserve year-only, year-month, and full-date precision explicitly rather than collapsing them into a single form.
 
 ```ebnf
 TemporalLiteral ::= DateLiteral
