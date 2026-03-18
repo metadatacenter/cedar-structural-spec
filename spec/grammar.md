@@ -161,6 +161,10 @@ ExternalAuthorityField ::= OrcidField
 
 ### Concrete Field Artifacts
 
+Each concrete `Field` variant carries exactly three components: a typed artifact identifier that permanently identifies the reusable field; `SchemaArtifactMetadata` providing the descriptive, provenance, versioning, and annotation metadata common to all schema artifacts; and a typed `FieldType` that specifies the value semantics and configuration for that field category. The identifier and `FieldType` are specific to each concrete variant; `SchemaArtifactMetadata` is uniform across all fields. The groupings below mirror the abstract `Field` hierarchy defined in Core Structure.
+
+`TextField` and `NumericField` are the two simple scalar field types. Each carries the most basic value semantics — free text and typed numeric values respectively.
+
 ```ebnf
 TextField ::= text_field(
                TextFieldId
@@ -173,7 +177,11 @@ NumericField ::= numeric_field(
                   SchemaArtifactMetadata
                   NumericFieldType
                 )
+```
 
+The temporal field variants correspond to the `TemporalField` abstract category. Each is typed to a distinct temporal semantic — date, time of day, or combined date-time — and carries its own `FieldType` with precision and rendering options appropriate to that category.
+
+```ebnf
 DateField ::= date_field(
                DateFieldId
                SchemaArtifactMetadata
@@ -191,7 +199,11 @@ DateTimeField ::= date_time_field(
                    SchemaArtifactMetadata
                    DateTimeFieldType
                  )
+```
 
+`ControlledTermField` supports values drawn from declared ontology sources. `SingleChoiceField` and `MultipleChoiceField` correspond to the `ChoiceField` abstract category and differ in whether they permit one or multiple selections from a declared option set. `LinkField` carries a single IRI-valued hyperlink.
+
+```ebnf
 ControlledTermField ::= controlled_term_field(
                           ControlledTermFieldId
                           SchemaArtifactMetadata
@@ -217,7 +229,7 @@ LinkField ::= link_field(
              )
 ```
 
-The next block completes the concrete field artifact variants for contact, external-authority, and attribute-value fields.
+The contact field variants correspond to the `ContactField` abstract category and represent human contact identifiers.
 
 ```ebnf
 EmailField ::= email_field(
@@ -231,15 +243,9 @@ PhoneNumberField ::= phone_number_field(
                       SchemaArtifactMetadata
                       PhoneNumberFieldType
                     )
-
-AttributeValueField ::= attribute_value_field(
-                          AttributeValueFieldId
-                          SchemaArtifactMetadata
-                          AttributeValueFieldType
-                        )
 ```
 
-The following block isolates the external-authority field artifacts, which all share the common role of representing identifiers from external authority systems.
+The external authority field variants correspond to the `ExternalAuthorityField` abstract category. Each represents an identifier issued by a specific external authority system, as described in the External Authority Values section.
 
 ```ebnf
 OrcidField ::= orcid_field(
@@ -277,6 +283,16 @@ NihGrantIdField ::= nih_grant_id_field(
                      SchemaArtifactMetadata
                      NihGrantIdFieldType
                    )
+```
+
+`AttributeValueField` supports open-ended name-value pair data whose attribute names are not fixed at schema definition time.
+
+```ebnf
+AttributeValueField ::= attribute_value_field(
+                          AttributeValueFieldId
+                          SchemaArtifactMetadata
+                          AttributeValueFieldType
+                        )
 ```
 
 ### Embedded Artifacts
