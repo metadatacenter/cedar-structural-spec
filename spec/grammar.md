@@ -1180,6 +1180,8 @@ NihGrantIri ::= nih_grant_iri( Iri )
 | `RridIri` | Research Resource Identifier — identifies a research resource by RRID |
 | `NihGrantIri` | NIH — identifies an NIH-funded grant |
 
+An `OrcidIri` MUST use the canonical ORCID IRI form: the prefix `https://orcid.org/` followed by a 16-digit ORCID iD expressed as four hyphen-separated groups of four characters matching the pattern `\d{4}-\d{4}-\d{4}-\d{3}[\dX]`. The final character MAY be the digit `X`, which serves as an ISO 7064 Mod 11-2 check character. For example: `https://orcid.org/0000-0001-2345-6789`.
+
 ### Attribute Value
 
 An attribute value is a name-value pair used to represent arbitrary named properties whose names are not known at schema definition time. `AttributeName` carries the name of the attribute as a Unicode string. The value component is itself a `Value`, permitting attribute values to carry any value type including nested attribute values.
