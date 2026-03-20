@@ -97,14 +97,14 @@ merge(
 
 #### `encode_descriptive_metadata(D: DescriptiveMetadata) → Object`
 
-```
-{
-  "schema:name":        D.name.unicode_string,
-  "schema:description": D.description.unicode_string   if D.description is present, else null,
-  "schema:identifier":  D.identifier.unicode_string    if D.identifier is present, else omit,
-  "rdfs:label":         D.preferred_label.unicode_string  if D.preferred_label is present, else omit
-}
-```
+Returns a JSON object with the following keys:
+
+| Key | Value | Condition |
+|-----------------|---|---|
+| `"schema:name"` | `D.name.unicode_string` | Always present |
+| `"schema:description"` | `D.description.unicode_string` | `null` if `D.description` absent |
+| `"schema:identifier"` | `D.identifier.unicode_string` | Omit if `D.identifier` absent |
+| `"rdfs:label"`  | `D.preferred_label.unicode_string` | Omit if `D.preferred_label` absent |
 
 `AlternativeLabel` values on `DescriptiveMetadata` have no direct CTM 1.6.0 equivalent and are omitted.
 
@@ -112,37 +112,39 @@ merge(
 
 #### `encode_temporal_provenance(P: TemporalProvenance) → Object`
 
-```
-{
-  "pav:createdOn":      P.created_on.iso_8601_date_time_lexical_form,
-  "pav:createdBy":      iri(P.created_by),
-  "pav:lastUpdatedOn":  P.modified_on.iso_8601_date_time_lexical_form,
-  "oslc:modifiedBy":    iri(P.modified_by)
-}
-```
+Returns a JSON object with the following keys:
+
+| Key | Value |
+|---|---|
+| `"pav:createdOn"` | `P.created_on.iso_8601_date_time_lexical_form` |
+| `"pav:createdBy"` | `iri(P.created_by)` |
+| `"pav:lastUpdatedOn"` | `P.modified_on.iso_8601_date_time_lexical_form` |
+| `"oslc:modifiedBy"` | `iri(P.modified_by)` |
 
 ---
 
 #### `encode_schema_versioning(V: SchemaVersioning) → Object`
 
-```
-{
-  "pav:version":          V.version.semantic_version,
-  "bibo:status":          encode_status(V.status),
-  "schema:schemaVersion": V.model_version.semantic_version,
-  "pav:previousVersion":  iri(V.previous_version.iri)  if V.previous_version is present, else omit,
-  "pav:derivedFrom":      iri(V.derived_from.iri)      if V.derived_from is present, else omit
-}
-```
+Returns a JSON object with the following keys:
+
+| Key | Value | Condition |
+|---|---|---|
+| `"pav:version"` | `V.version.semantic_version` | Always present |
+| `"bibo:status"` | `encode_status(V.status)` | Always present |
+| `"schema:schemaVersion"` | `V.model_version.semantic_version` | Always present |
+| `"pav:previousVersion"` | `iri(V.previous_version.iri)` | Omit if `V.previous_version` absent |
+| `"pav:derivedFrom"` | `iri(V.derived_from.iri)` | Omit if `V.derived_from` absent |
 
 ---
 
 #### `encode_status(S: Status) → String`
 
-```
-if S is DraftStatus:     "bibo:draft"
-if S is PublishedStatus: "bibo:published"
-```
+Returns the string corresponding to the `Status` kind:
+
+| `Status` kind | Returns |
+|---|---|
+| `DraftStatus` | `"bibo:draft"` |
+| `PublishedStatus` | `"bibo:published"` |
 
 ---
 
@@ -421,10 +423,12 @@ If `E.visibility` is not `Hidden`, the `"hidden"` key is omitted.
 
 #### `encode_text_rendering_hint(hint: TextRenderingHint or absent) → String`
 
-```
-if hint is SingleLineTextRenderingHint or absent: "textfield"
-if hint is MultiLineTextRenderingHint:            "textarea"
-```
+Returns the string corresponding to the hint kind:
+
+| `TextRenderingHint` kind | Returns |
+|---|---|
+| `SingleLineTextRenderingHint` or absent | `"textfield"` |
+| `MultiLineTextRenderingHint` | `"textarea"` |
 
 ---
 
@@ -463,26 +467,26 @@ if hint is MultiLineTextRenderingHint:            "textarea"
 
 #### `encode_numeric_datatype(D: NumericDatatype) → String`
 
-Maps `NumericDatatypeIri` to its XSD IRI string:
+Returns the string corresponding to the `NumericDatatypeIri` kind:
 
-```
-XsdIntegerDatatypeIri                → "xsd:integer"
-XsdDecimalDatatypeIri                → "xsd:decimal"
-XsdFloatDatatypeIri                  → "xsd:float"
-XsdDoubleDatatypeIri                 → "xsd:double"
-XsdLongDatatypeIri                   → "xsd:long"
-XsdIntDatatypeIri                    → "xsd:int"
-XsdShortDatatypeIri                  → "xsd:short"
-XsdByteDatatypeIri                   → "xsd:byte"
-XsdNonNegativeIntegerDatatypeIri     → "xsd:nonNegativeInteger"
-XsdPositiveIntegerDatatypeIri        → "xsd:positiveInteger"
-XsdNonPositiveIntegerDatatypeIri     → "xsd:nonPositiveInteger"
-XsdNegativeIntegerDatatypeIri        → "xsd:negativeInteger"
-XsdUnsignedLongDatatypeIri           → "xsd:unsignedLong"
-XsdUnsignedIntDatatypeIri            → "xsd:unsignedInt"
-XsdUnsignedShortDatatypeIri          → "xsd:unsignedShort"
-XsdUnsignedByteDatatypeIri           → "xsd:unsignedByte"
-```
+| `NumericDatatypeIri` kind | Returns |
+|---|---|
+| `XsdIntegerDatatypeIri` | `"xsd:integer"` |
+| `XsdDecimalDatatypeIri` | `"xsd:decimal"` |
+| `XsdFloatDatatypeIri` | `"xsd:float"` |
+| `XsdDoubleDatatypeIri` | `"xsd:double"` |
+| `XsdLongDatatypeIri` | `"xsd:long"` |
+| `XsdIntDatatypeIri` | `"xsd:int"` |
+| `XsdShortDatatypeIri` | `"xsd:short"` |
+| `XsdByteDatatypeIri` | `"xsd:byte"` |
+| `XsdNonNegativeIntegerDatatypeIri` | `"xsd:nonNegativeInteger"` |
+| `XsdPositiveIntegerDatatypeIri` | `"xsd:positiveInteger"` |
+| `XsdNonPositiveIntegerDatatypeIri` | `"xsd:nonPositiveInteger"` |
+| `XsdNegativeIntegerDatatypeIri` | `"xsd:negativeInteger"` |
+| `XsdUnsignedLongDatatypeIri` | `"xsd:unsignedLong"` |
+| `XsdUnsignedIntDatatypeIri` | `"xsd:unsignedInt"` |
+| `XsdUnsignedShortDatatypeIri` | `"xsd:unsignedShort"` |
+| `XsdUnsignedByteDatatypeIri` | `"xsd:unsignedByte"` |
 
 ---
 
@@ -516,27 +520,33 @@ XsdUnsignedByteDatatypeIri           → "xsd:unsignedByte"
 
 #### `encode_date_value_type(DVT: DateValueType) → String`
 
-```
-YearValueType      → "xsd:gYear"
-YearMonthValueType → "xsd:gYearMonth"
-FullDateValueType  → "xsd:date"
-```
+Returns the XSD datatype string for the `DateValueType` kind:
+
+| `DateValueType` kind | Returns |
+|---|---|
+| `YearValueType` | `"xsd:gYear"` |
+| `YearMonthValueType` | `"xsd:gYearMonth"` |
+| `FullDateValueType` | `"xsd:date"` |
 
 #### `encode_date_granularity(DVT: DateValueType) → String`
 
-```
-YearValueType      → "year"
-YearMonthValueType → "month"
-FullDateValueType  → "day"
-```
+Returns the `temporalGranularity` string for the `DateValueType` kind:
 
-#### `encode_date_format(DF: DateFormat) → String`
+| `DateValueType` kind | Returns |
+|---|---|
+| `YearValueType` | `"year"` |
+| `YearMonthValueType` | `"month"` |
+| `FullDateValueType` | `"day"` |
 
-```
-DayMonthYearOrder  → "D/M/YYYY"
-MonthDayYearOrder  → "M/D/YYYY"
-YearMonthDayOrder  → "YYYY/M/D"
-```
+#### `encode_date_format(DF: DateComponentOrder) → String`
+
+Returns the `dateFormat` string for the `DateComponentOrder` kind:
+
+| `DateComponentOrder` kind | Returns |
+|---|---|
+| `DayMonthYearOrder` | `"D/M/YYYY"` |
+| `MonthDayYearOrder` | `"M/D/YYYY"` |
+| `YearMonthDayOrder` | `"YYYY/M/D"` |
 
 ---
 
@@ -572,12 +582,14 @@ YearMonthDayOrder  → "YYYY/M/D"
 
 #### `encode_time_precision(TP: TimePrecision or absent) → String`
 
-```
-HourMinutePrecision               → "minute"
-HourMinuteSecondPrecision         → "second"
-HourMinuteSecondFractionPrecision → "decimalSecond"
-absent                            → "decimalSecond"
-```
+Returns the `temporalGranularity` string for the `TimePrecision` kind:
+
+| `TimePrecision` kind | Returns |
+|---|---|
+| `HourMinutePrecision` | `"minute"` |
+| `HourMinuteSecondPrecision` | `"second"` |
+| `HourMinuteSecondFractionPrecision` | `"decimalSecond"` |
+| absent | `"decimalSecond"` |
 
 ---
 
@@ -613,11 +625,13 @@ absent                            → "decimalSecond"
 
 #### `encode_datetime_value_type(DVT: DateTimeValueType) → String`
 
-```
-DateHourMinuteValueType               → "minute"
-DateHourMinuteSecondValueType         → "second"
-DateHourMinuteSecondFractionValueType → "decimalSecond"
-```
+Returns the `temporalGranularity` string for the `DateTimeValueType` kind:
+
+| `DateTimeValueType` kind | Returns |
+|---|---|
+| `DateHourMinuteValueType` | `"minute"` |
+| `DateHourMinuteSecondValueType` | `"second"` |
+| `DateHourMinuteSecondFractionValueType` | `"decimalSecond"` |
 
 ---
 
@@ -651,51 +665,47 @@ DateHourMinuteSecondFractionValueType → "decimalSecond"
 
 #### `encode_ontology_source(S: OntologySource) → Object`
 
-```
-{
-  "uri":      iri(S.ontology_reference.ontology_iri.iri),
-  if S.ontology_reference.ontology_display_hint.ontology_acronym is present:
-    "acronym": S.ontology_reference.ontology_display_hint.ontology_acronym.unicode_string,
-  if S.ontology_reference.ontology_display_hint.ontology_name is present:
-    "name":    S.ontology_reference.ontology_display_hint.ontology_name.unicode_string
-}
-```
+Returns a JSON object with the following keys:
+
+| Key | Value | Condition |
+|---|---|---|
+| `"uri"` | `iri(S.ontology_reference.ontology_iri.iri)` | Always present |
+| `"acronym"` | `S.ontology_reference.ontology_display_hint.ontology_acronym.unicode_string` | Omit if absent |
+| `"name"` | `S.ontology_reference.ontology_display_hint.ontology_name.unicode_string` | Omit if absent |
 
 #### `encode_branch_source(S: BranchSource) → Object`
 
-```
-{
-  "uri":           iri(S.ontology_reference.ontology_iri.iri),
-  if S.ontology_reference.ontology_display_hint.ontology_acronym is present:
-    "acronym":     S.ontology_reference.ontology_display_hint.ontology_acronym.unicode_string,
-  "rootTermUri":   iri(S.root_term_iri.iri),
-  "rootTermLabel": S.root_term_label.unicode_string,
-  if S.max_traversal_depth is present:
-    "maxDepth":    S.max_traversal_depth.non_negative_integer (as integer)
-}
-```
+Returns a JSON object with the following keys:
+
+| Key | Value | Condition |
+|---|---|---|
+| `"uri"` | `iri(S.ontology_reference.ontology_iri.iri)` | Always present |
+| `"acronym"` | `S.ontology_reference.ontology_display_hint.ontology_acronym.unicode_string` | Omit if absent |
+| `"rootTermUri"` | `iri(S.root_term_iri.iri)` | Always present |
+| `"rootTermLabel"` | `S.root_term_label.unicode_string` | Always present |
+| `"maxDepth"` | `S.max_traversal_depth.non_negative_integer (as integer)` | Omit if absent |
 
 #### `encode_class_source_entry(C: ControlledTermClass) → Object`
 
-```
-{
-  "uri":       iri(C.term_iri.iri),
-  "label":     C.label.unicode_string,
-  "prefLabel": C.label.unicode_string,
-  "type":      "OntologyClass",
-  "source":    iri(C.ontology_reference.ontology_iri.iri)
-}
-```
+Returns a JSON object with the following keys:
+
+| Key | Value | Condition |
+|---|---|---|
+| `"uri"` | `iri(C.term_iri.iri)` | Always present |
+| `"label"` | `C.label.unicode_string` | Always present |
+| `"prefLabel"` | `C.label.unicode_string` | Always present |
+| `"type"` | `"OntologyClass"` | Always present |
+| `"source"` | `iri(C.ontology_reference.ontology_iri.iri)` | Always present |
 
 #### `encode_value_set_source(S: ValueSetSource) → Object`
 
-```
-{
-  "identifier": S.value_set_identifier.unicode_string,
-  if S.value_set_name is present: "name": S.value_set_name.unicode_string,
-  if S.value_set_iri is present:  "uri":  iri(S.value_set_iri.iri)
-}
-```
+Returns a JSON object with the following keys:
+
+| Key | Value | Condition |
+|---|---|---|
+| `"identifier"` | `S.value_set_identifier.unicode_string` | Always present |
+| `"name"` | `S.value_set_name.unicode_string` | Omit if absent |
+| `"uri"` | `iri(S.value_set_iri.iri)` | Omit if absent |
 
 ---
 
@@ -731,10 +741,12 @@ For **IRI-form** single choice: replace the `"@value"` property entry with `"@id
 
 #### `encode_single_choice_rendering_hint(hint: SingleChoiceRenderingHint or absent) → String`
 
-```
-RadioRenderingHint or absent         → "radio"
-SingleSelectDropdownRenderingHint    → "list"
-```
+Returns the `inputType` string for the hint kind:
+
+| `SingleChoiceRenderingHint` kind | Returns |
+|---|---|
+| `RadioRenderingHint` or absent | `"radio"` |
+| `SingleSelectDropdownRenderingHint` | `"list"` |
 
 ---
 
@@ -770,10 +782,12 @@ For literal-form multiple choice (IRI-form: replace `"@value"` with `"@id"` and 
 
 #### `encode_multiple_choice_rendering_hint(hint: MultipleChoiceRenderingHint or absent) → String`
 
-```
-CheckboxRenderingHint or absent    → "checkbox"
-MultiSelectDropdownRenderingHint   → "list"
-```
+Returns the `inputType` string for the hint kind:
+
+| `MultipleChoiceRenderingHint` kind | Returns |
+|---|---|
+| `CheckboxRenderingHint` or absent | `"checkbox"` |
+| `MultiSelectDropdownRenderingHint` | `"list"` |
 
 #### `encode_choice_option_literal(O: ChoiceOption) → Object`
 
@@ -884,14 +898,16 @@ All six external authority field types encode as IRI-valued fields with a type-s
 
 #### `encode_external_authority_input_type(FT: ExternalAuthorityFieldType) → String`
 
-```
-OrcidFieldType      → "orcid"
-RorFieldType        → "ror"
-DoiFieldType        → "doi"
-PubMedIdFieldType   → "pubmed"
-RridFieldType       → "rrid"
-NihGrantIdFieldType → "nih-grant"
-```
+Returns the `inputType` string for the field type kind:
+
+| `ExternalAuthorityFieldType` kind | Returns |
+|---|---|
+| `OrcidFieldType` | `"orcid"` |
+| `RorFieldType` | `"ror"` |
+| `DoiFieldType` | `"doi"` |
+| `PubMedIdFieldType` | `"pubmed"` |
+| `RridFieldType` | `"rrid"` |
+| `NihGrantIdFieldType` | `"nih-grant"` |
 
 The `inputType` string values for external authority fields are not standardised in the published CTM 1.6.0 specification. The values above reflect common practice and SHOULD be confirmed against the deployed CTM 1.6.0 implementation.
 
@@ -956,20 +972,22 @@ These functions encode `Value` constructs as they appear within a `TemplateInsta
 
 #### `encode_value(V: Value) → Object`
 
-Dispatch on the kind of `V`:
+Dispatches to the encoding function for the `Value` kind:
 
-- `TextValue`              → `encode_text_value(V)`
-- `NumericValue`           → `encode_numeric_value(V)`
-- `DateValue`              → `encode_date_value(V)`
-- `TimeValue`              → `encode_time_value(V)`
-- `DateTimeValue`          → `encode_datetime_value(V)`
-- `ControlledTermValue`    → `encode_controlled_term_value(V)`
-- `ChoiceValue`            → `encode_choice_value(V)`
-- `LinkValue`              → `encode_link_value(V)`
-- `EmailValue`             → `encode_email_value(V)`
-- `PhoneNumberValue`       → `encode_phone_number_value(V)`
-- `ExternalAuthorityValue` → `encode_external_authority_value(V)`
-- `AttributeValue`         → `encode_attribute_value(V)`
+| `Value` kind | Encoding function |
+|---|---|
+| `TextValue` | `encode_text_value(V)` |
+| `NumericValue` | `encode_numeric_value(V)` |
+| `DateValue` | `encode_date_value(V)` |
+| `TimeValue` | `encode_time_value(V)` |
+| `DateTimeValue` | `encode_datetime_value(V)` |
+| `ControlledTermValue` | `encode_controlled_term_value(V)` |
+| `ChoiceValue` | `encode_choice_value(V)` |
+| `LinkValue` | `encode_link_value(V)` |
+| `EmailValue` | `encode_email_value(V)` |
+| `PhoneNumberValue` | `encode_phone_number_value(V)` |
+| `ExternalAuthorityValue` | `encode_external_authority_value(V)` |
+| `AttributeValue` | `encode_attribute_value(V)` |
 
 ---
 
@@ -1001,13 +1019,13 @@ if V.text_literal is LangStringLiteral:
 
 #### `encode_date_value(V: DateValue) → Object`
 
-Dispatch on the kind of `V`:
+Returns `{ "@value": <literal>, "@type": <xsd-type> }` where the sources depend on the `DateValue` kind:
 
-```
-YearValue:      { "@value": V.year_literal.lexical_form.unicode_string,       "@type": "xsd:gYear" }
-YearMonthValue: { "@value": V.year_month_literal.lexical_form.unicode_string, "@type": "xsd:gYearMonth" }
-FullDateValue:  { "@value": V.full_date_literal.lexical_form.unicode_string,  "@type": "xsd:date" }
-```
+| `DateValue` kind | `"@value"` source | `"@type"` |
+|---|---|---|
+| `YearValue` | `V.year_literal.lexical_form.unicode_string` | `"xsd:gYear"` |
+| `YearMonthValue` | `V.year_month_literal.lexical_form.unicode_string` | `"xsd:gYearMonth"` |
+| `FullDateValue` | `V.full_date_literal.lexical_form.unicode_string` | `"xsd:date"` |
 
 ---
 
@@ -1029,14 +1047,14 @@ FullDateValue:  { "@value": V.full_date_literal.lexical_form.unicode_string,  "@
 
 #### `encode_controlled_term_value(V: ControlledTermValue) → Object`
 
-```
-{
-  "@id":           iri(V.term_iri.iri),
-  if V.label is present:           "rdfs:label":     V.label.unicode_string,
-  if V.notation is present:        "skos:notation":  V.notation.unicode_string,
-  if V.preferred_label is present: "skos:prefLabel": V.preferred_label.unicode_string
-}
-```
+Returns a JSON object with the following keys:
+
+| Key | Value | Condition |
+|---|---|---|
+| `"@id"` | `iri(V.term_iri.iri)` | Always present |
+| `"rdfs:label"` | `V.label.unicode_string` | Omit if absent |
+| `"skos:notation"` | `V.notation.unicode_string` | Omit if absent |
+| `"skos:prefLabel"` | `V.preferred_label.unicode_string` | Omit if absent |
 
 ---
 
@@ -1086,16 +1104,16 @@ Iri:
 
 #### `encode_external_authority_value(V: ExternalAuthorityValue) → Object`
 
-Dispatch on the kind of `V`:
+Each kind produces `{ "@id": <iri>, "rdfs:label": <label> }` where `"rdfs:label"` is omitted when `V.label` is absent.
 
-```
-OrcidValue:      { "@id": iri(V.orcid_iri.iri),      if V.label present: "rdfs:label": V.label.unicode_string }
-RorValue:        { "@id": iri(V.ror_iri.iri),          if V.label present: "rdfs:label": V.label.unicode_string }
-DoiValue:        { "@id": iri(V.doi_iri.iri),          if V.label present: "rdfs:label": V.label.unicode_string }
-PubMedIdValue:   { "@id": iri(V.pub_med_iri.iri),      if V.label present: "rdfs:label": V.label.unicode_string }
-RridValue:       { "@id": iri(V.rrid_iri.iri),          if V.label present: "rdfs:label": V.label.unicode_string }
-NihGrantIdValue: { "@id": iri(V.nih_grant_iri.iri),    if V.label present: "rdfs:label": V.label.unicode_string }
-```
+| `ExternalAuthorityValue` kind | `"@id"` source |
+|---|---|
+| `OrcidValue` | `iri(V.orcid_iri.iri)` |
+| `RorValue` | `iri(V.ror_iri.iri)` |
+| `DoiValue` | `iri(V.doi_iri.iri)` |
+| `PubMedIdValue` | `iri(V.pub_med_iri.iri)` |
+| `RridValue` | `iri(V.rrid_iri.iri)` |
+| `NihGrantIdValue` | `iri(V.nih_grant_iri.iri)` |
 
 ---
 
