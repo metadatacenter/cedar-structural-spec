@@ -96,6 +96,81 @@ A conceptual overview of the model — describing the principal categories, thei
 
 The kernel grammar defines the primary abstract categories of the model and the core schema-level structure that connects them. It introduces reusable schema artifacts, templates, and the embedding constructs through which templates assemble fields, nested templates, and presentation components. Subsequent sections refine the metadata, field-type families, instance structures, and supporting constructs referenced here.
 
+The diagram below gives an overview of the kernel. `Template` is the central container: it holds an ordered sequence of `EmbeddedArtifact` constructs, each of which contextualises a reusable artifact — a `Field`, a nested `Template`, or a `PresentationComponent` — within that specific template. A `TemplateInstance` records data conforming to a `Template`. Concrete `Field` variants and `FieldType` configurations are omitted for clarity.
+
+```mermaid
+classDiagram
+  class Artifact {
+    <<abstract>>
+  }
+  class SchemaArtifact {
+    <<abstract>>
+  }
+  class Field {
+    <<abstract>>
+  }
+  class Template {
+    TemplateId
+    SchemaArtifactMetadata
+    [Header]
+    [Footer]
+  }
+  class PresentationComponent
+  class TemplateInstance
+
+  class EmbeddedArtifact {
+    <<abstract>>
+  }
+  class EmbeddedField {
+    EmbeddedArtifactKey
+    [ValueRequirement]
+    [Cardinality]
+    [Visibility]
+    [DefaultValue]
+    [LabelOverride]
+    [Property]
+  }
+  class EmbeddedTemplate {
+    EmbeddedArtifactKey
+    [ValueRequirement]
+    [Cardinality]
+    [Visibility]
+    [LabelOverride]
+    [Property]
+  }
+  class EmbeddedPresentationComponent {
+    EmbeddedArtifactKey
+    [Visibility]
+    [LabelOverride]
+  }
+  class Property {
+    PropertyIri
+    [PropertyLabel]
+  }
+
+  Artifact <|-- SchemaArtifact
+  Artifact <|-- PresentationComponent
+  Artifact <|-- TemplateInstance
+
+  SchemaArtifact <|-- Field
+  SchemaArtifact <|-- Template
+
+  Template "1" *-- "0..*" EmbeddedArtifact : contains ordered
+
+  EmbeddedArtifact <|-- EmbeddedField
+  EmbeddedArtifact <|-- EmbeddedTemplate
+  EmbeddedArtifact <|-- EmbeddedPresentationComponent
+
+  EmbeddedField --> Field : references
+  EmbeddedTemplate --> Template : references
+  EmbeddedPresentationComponent --> PresentationComponent : references
+
+  EmbeddedField ..> Property : carries
+  EmbeddedTemplate ..> Property : carries
+
+  TemplateInstance --> Template : conforms to
+```
+
 ### Core Structure
 
 This subsection establishes the top-level taxonomy of the model and introduces its two principal concrete schema artifacts. `Artifact` is the broadest category, encompassing reusable schema artifacts, presentation components, and template instances. `Template` is defined here as the central container that organises embedded artifacts into a structured form. `Field` is introduced as an abstract category whose concrete variants are defined in the following subsection.
@@ -555,81 +630,6 @@ EmbeddedPresentationComponent ::= embedded_presentation_component(
                                     [Visibility]
                                     [LabelOverride]
                                   )
-```
-
-The diagram below summarises the kernel grammar. Concrete `Field` variants and `FieldType` configurations are omitted; the `Field` hierarchy is shown only at the level of its abstract groupings.
-
-```mermaid
-classDiagram
-  class Artifact {
-    <<abstract>>
-  }
-  class SchemaArtifact {
-    <<abstract>>
-  }
-  class Field {
-    <<abstract>>
-  }
-  class Template {
-    TemplateId
-    SchemaArtifactMetadata
-    [Header]
-    [Footer]
-  }
-  class PresentationComponent
-  class TemplateInstance
-
-  class EmbeddedArtifact {
-    <<abstract>>
-  }
-  class EmbeddedField {
-    EmbeddedArtifactKey
-    [ValueRequirement]
-    [Cardinality]
-    [Visibility]
-    [DefaultValue]
-    [LabelOverride]
-    [Property]
-  }
-  class EmbeddedTemplate {
-    EmbeddedArtifactKey
-    [ValueRequirement]
-    [Cardinality]
-    [Visibility]
-    [LabelOverride]
-    [Property]
-  }
-  class EmbeddedPresentationComponent {
-    EmbeddedArtifactKey
-    [Visibility]
-    [LabelOverride]
-  }
-  class Property {
-    PropertyIri
-    [PropertyLabel]
-  }
-
-  Artifact <|-- SchemaArtifact
-  Artifact <|-- PresentationComponent
-  Artifact <|-- TemplateInstance
-
-  SchemaArtifact <|-- Field
-  SchemaArtifact <|-- Template
-
-  Template "1" *-- "0..*" EmbeddedArtifact : contains ordered
-
-  EmbeddedArtifact <|-- EmbeddedField
-  EmbeddedArtifact <|-- EmbeddedTemplate
-  EmbeddedArtifact <|-- EmbeddedPresentationComponent
-
-  EmbeddedField --> Field : references
-  EmbeddedTemplate --> Template : references
-  EmbeddedPresentationComponent --> PresentationComponent : references
-
-  EmbeddedField ..> Property : carries
-  EmbeddedTemplate ..> Property : carries
-
-  TemplateInstance --> Template : conforms to
 ```
 
 ## Artifact Identity
