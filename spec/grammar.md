@@ -557,6 +557,81 @@ EmbeddedPresentationComponent ::= embedded_presentation_component(
                                   )
 ```
 
+The diagram below summarises the kernel grammar. Concrete `Field` variants and `FieldType` configurations are omitted; the `Field` hierarchy is shown only at the level of its abstract groupings.
+
+```mermaid
+classDiagram
+  class Artifact {
+    <<abstract>>
+  }
+  class SchemaArtifact {
+    <<abstract>>
+  }
+  class Field {
+    <<abstract>>
+  }
+  class Template {
+    TemplateId
+    SchemaArtifactMetadata
+    [Header]
+    [Footer]
+  }
+  class PresentationComponent
+  class TemplateInstance
+
+  class EmbeddedArtifact {
+    <<abstract>>
+  }
+  class EmbeddedField {
+    EmbeddedArtifactKey
+    [ValueRequirement]
+    [Cardinality]
+    [Visibility]
+    [DefaultValue]
+    [LabelOverride]
+    [Property]
+  }
+  class EmbeddedTemplate {
+    EmbeddedArtifactKey
+    [ValueRequirement]
+    [Cardinality]
+    [Visibility]
+    [LabelOverride]
+    [Property]
+  }
+  class EmbeddedPresentationComponent {
+    EmbeddedArtifactKey
+    [Visibility]
+    [LabelOverride]
+  }
+  class Property {
+    PropertyIri
+    [PropertyLabel]
+  }
+
+  Artifact <|-- SchemaArtifact
+  Artifact <|-- PresentationComponent
+  Artifact <|-- TemplateInstance
+
+  SchemaArtifact <|-- Field
+  SchemaArtifact <|-- Template
+
+  Template "1" *-- "0..*" EmbeddedArtifact : contains ordered
+
+  EmbeddedArtifact <|-- EmbeddedField
+  EmbeddedArtifact <|-- EmbeddedTemplate
+  EmbeddedArtifact <|-- EmbeddedPresentationComponent
+
+  EmbeddedField --> Field : references
+  EmbeddedTemplate --> Template : references
+  EmbeddedPresentationComponent --> PresentationComponent : references
+
+  EmbeddedField ..> Property : carries
+  EmbeddedTemplate ..> Property : carries
+
+  TemplateInstance --> Template : conforms to
+```
+
 ## Artifact Identity
 
 Artifact identity defines the typed identifiers by which artifacts and artifact references are denoted in the model. These identity constructs are distinct from descriptive metadata, provenance, versioning, and annotations.
