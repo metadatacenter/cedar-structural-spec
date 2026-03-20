@@ -34,8 +34,11 @@ Dot notation is used on grammar constructs, e.g. `T.schema_artifact_metadata` or
 - `iri(I)` — the IRI string of an `Iri` construct; defined as `I.iri_string`
 - `merge(a, b, ...)` — merge JSON objects left-to-right; later objects take precedence on key conflicts
 - `if P then k: v` — include key `k` with value `v` only when predicate `P` holds; otherwise omit
-- `[x for each E in xs]` — JSON array built by evaluating `x` for each element `E` of sequence `xs`
-- `{ k(E): v(E) for each E in xs }` — JSON object built from key-value pairs, one per element
+- `[ x(E) for each E in xs ]` — JSON array built by evaluating `x(E)` for each element `E` of sequence `xs`
+- `{ k(E): v(E) for each E in xs }` — JSON object built from key-value pairs, one per element; `xs` must be a plain sequence with no inline filter
+- `let x = expr` — within a function body, binds the name `x` to the value of `expr`; `x` may then be used in subsequent expressions in the same body
+- `[ E in xs | P(E) ]` — the subsequence of `xs` retaining only those elements for which predicate `P(E)` holds; used in `let` bindings to pre-filter before passing to a comprehension
+- `xs ++ ys` — concatenation of arrays `xs` and `ys`
 
 ### Cardinality Helper
 
@@ -176,14 +179,12 @@ merge(
 Produces the `@context` of the template, combining standard namespaces with property IRI mappings for data-bearing embedded artifacts that carry a `Property`.
 
 ```
+let prop_embs = [ E in T.embedded_artifacts
+                | (E is EmbeddedField or E is EmbeddedTemplate) and E.property is present ]
+
 merge(
   STANDARD_NS,
-  {
-    key(E): encode_property_context_entry(E.property)
-    for each E in T.embedded_artifacts
-    where E is EmbeddedField or EmbeddedTemplate
-    and E.property is present
-  }
+  { key(E): encode_property_context_entry(E.property) for each E in prop_embs }
 )
 ```
 
@@ -233,18 +234,14 @@ merge(
 #### `encode_template_required(T: Template) → Array`
 
 ```
-[
-  "@context", "@id", "schema:isBasedOn", "schema:name",
+let required_embs = [ E in T.embedded_artifacts
+                    | (E is EmbeddedField or E is EmbeddedTemplate)
+                      and effective value_requirement of E is Required ]
+
+[ "@context", "@id", "schema:isBasedOn", "schema:name",
   "schema:description", "pav:createdOn", "pav:createdBy",
-  "pav:lastUpdatedOn", "oslc:modifiedBy"
-]
-++
-[
-  key(E)
-  for each E in T.embedded_artifacts
-  where E is EmbeddedField or EmbeddedTemplate
-  and effective value_requirement of E is Required
-]
+  "pav:lastUpdatedOn", "oslc:modifiedBy" ]
+++ [ key(E) for each E in required_embs ]
 ```
 
 ---
@@ -252,16 +249,13 @@ merge(
 #### `encode_template_ui(T: Template) → Object`
 
 ```
+let label_embs = [ E in T.embedded_artifacts | E.label_override is present ]
+
 merge(
+  { "order": [ key(E) for each E in T.embedded_artifacts ] },
+  if label_embs is non-empty:
   {
-    "order": [ key(E) for each E in T.embedded_artifacts ]
-  },
-  if any E in T.embedded_artifacts has LabelOverride:
-  {
-    "propertyLabels": {
-      key(E): E.label_override.label.unicode_string
-      for each E in T.embedded_artifacts where E has LabelOverride
-    }
+    "propertyLabels": { key(E): E.label_override.label.unicode_string for each E in label_embs }
   }
 )
 ```
@@ -1120,26 +1114,26 @@ Nested `AttributeValue` constructs produce nested objects. Multiple `AttributeVa
 #### `encode_template_instance(I: TemplateInstance, T: Template) → Object`
 
 ```
+let fvs  = [ IV in I.instance_values | IV is FieldValue ]
+let ntis = [ IV in I.instance_values | IV is NestedTemplateInstance ]
+let emb_fields     = [ E in T.embedded_artifacts | E is EmbeddedField ]
+let emb_templates  = [ E in T.embedded_artifacts | E is EmbeddedTemplate ]
+
 merge(
   {
-    "@context": encode_template_context(T),
-    "@id":      iri(I.template_instance_id),
+    "@context":         encode_template_context(T),
+    "@id":              iri(I.template_instance_id),
     "schema:isBasedOn": iri(T.template_id)
   },
   encode_artifact_metadata(I.artifact_metadata),
-  {
-    key(EF): encode_field_value(FV, EF)
-    for each FieldValue FV in I.instance_values
-    where EF = the EmbeddedField in T with key = FV.key
-  },
-  {
-    key(ET): encode_nested_template_instance_slot(NTIs, ET)
-    for each group of NestedTemplateInstance NTIs in I.instance_values
-    grouped by key
-    where ET = the EmbeddedTemplate in T with that key
-  }
+  { EF.key: encode_field_value(fv(EF), EF)
+    for each EF in emb_fields },
+  { ET.key: encode_nested_template_instance_slot(ntis_for(ET), ET)
+    for each ET in emb_templates }
 )
 ```
+
+where `fv(EF)` denotes the `FieldValue` in `fvs` whose key equals `EF.key`, and `ntis_for(ET)` denotes `[ NTI in ntis | NTI.key = ET.key ]`.
 
 ---
 
