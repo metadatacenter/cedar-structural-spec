@@ -99,6 +99,7 @@ The kernel grammar defines the primary abstract categories of the model and the 
 The diagram below gives an overview of the kernel. `Template` is the central container: it holds an ordered sequence of `EmbeddedArtifact` constructs, each of which contextualises a reusable artifact — a `Field`, a nested `Template`, or a `PresentationComponent` — within that specific template. A `TemplateInstance` records data conforming to a `Template`. Concrete `Field` variants and `FieldType` configurations are omitted for clarity.
 
 ```mermaid
+%%{init: {'themeVariables': {'fontSize': '12px'}}}%%
 classDiagram
   class Artifact {
     <<abstract>>
