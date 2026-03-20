@@ -82,6 +82,7 @@ A conceptual overview of the model — describing the principal categories, thei
   - [Visibility](#visibility)
   - [Defaults](#defaults)
   - [Label Override](#label-override)
+  - [Properties](#properties)
 - [Field Types](#field-types)
   - [Temporal Field Types](#temporal-field-types)
   - [Controlled Term Sources](#controlled-term-sources)
@@ -334,7 +335,7 @@ EmbeddedField ::= EmbeddedTextField
                 | EmbeddedAttributeValueField
 ```
 
-Every concrete `EmbeddedField` variant follows the same structural pattern. Each carries: an `EmbeddedArtifactKey` uniquely identifying the embedding site within the containing `Template`; a typed field reference identifying the reusable `Field` being embedded; an optional `ValueRequirement` specifying whether a value is required, recommended, or optional; an optional `Cardinality` bounding the permitted number of values; an optional `Visibility` controlling whether the field is shown in rendered interfaces; an optional typed `DefaultValue` providing an embedding-specific default; and an optional `LabelOverride` allowing the template to override the field's label in this context. The only variation across concrete `EmbeddedField` variants is the typed field reference and the typed default value, both of which match the value family of the referenced field.
+Every concrete `EmbeddedField` variant follows the same structural pattern. Each carries: an `EmbeddedArtifactKey` uniquely identifying the embedding site within the containing `Template`; a typed field reference identifying the reusable `Field` being embedded; an optional `ValueRequirement` specifying whether a value is required, recommended, or optional; an optional `Cardinality` bounding the permitted number of values; an optional `Visibility` controlling whether the field is shown in rendered interfaces; an optional typed `DefaultValue` providing an embedding-specific default; an optional `LabelOverride` allowing the template to override the field's label in this context; and an optional `Property` associating a semantic property IRI with the embedding site. The only variation across concrete `EmbeddedField` variants is the typed field reference and the typed default value, both of which match the value family of the referenced field.
 
 ```ebnf
 EmbeddedTextField ::= embedded_text_field(
@@ -345,6 +346,7 @@ EmbeddedTextField ::= embedded_text_field(
                         [Visibility]
                         [TextDefaultValue]
                         [LabelOverride]
+                        [Property]
                       )
 
 EmbeddedNumericField ::= embedded_numeric_field(
@@ -355,6 +357,7 @@ EmbeddedNumericField ::= embedded_numeric_field(
                            [Visibility]
                            [NumericDefaultValue]
                            [LabelOverride]
+                           [Property]
                          )
 
 EmbeddedDateField ::= embedded_date_field(
@@ -365,6 +368,7 @@ EmbeddedDateField ::= embedded_date_field(
                         [Visibility]
                         [DateDefaultValue]
                         [LabelOverride]
+                        [Property]
                       )
 
 EmbeddedTimeField ::= embedded_time_field(
@@ -375,6 +379,7 @@ EmbeddedTimeField ::= embedded_time_field(
                         [Visibility]
                         [TimeDefaultValue]
                         [LabelOverride]
+                        [Property]
                       )
 
 EmbeddedDateTimeField ::= embedded_date_time_field(
@@ -385,6 +390,7 @@ EmbeddedDateTimeField ::= embedded_date_time_field(
                             [Visibility]
                             [DateTimeDefaultValue]
                             [LabelOverride]
+                            [Property]
                           )
 
 EmbeddedControlledTermField ::= embedded_controlled_term_field(
@@ -395,6 +401,7 @@ EmbeddedControlledTermField ::= embedded_controlled_term_field(
                                   [Visibility]
                                   [ControlledTermDefaultValue]
                                   [LabelOverride]
+                                  [Property]
                                 )
 
 EmbeddedSingleChoiceField ::= embedded_single_choice_field(
@@ -405,6 +412,7 @@ EmbeddedSingleChoiceField ::= embedded_single_choice_field(
                                  [Visibility]
                                  [ChoiceDefaultValue]
                                  [LabelOverride]
+                                 [Property]
                                )
 
 EmbeddedMultipleChoiceField ::= embedded_multiple_choice_field(
@@ -415,6 +423,7 @@ EmbeddedMultipleChoiceField ::= embedded_multiple_choice_field(
                                    [Visibility]
                                    [ChoiceDefaultValue]
                                    [LabelOverride]
+                                   [Property]
                                  )
 
 EmbeddedLinkField ::= embedded_link_field(
@@ -425,6 +434,7 @@ EmbeddedLinkField ::= embedded_link_field(
                         [Visibility]
                         [LinkDefaultValue]
                         [LabelOverride]
+                        [Property]
                       )
 
 EmbeddedEmailField ::= embedded_email_field(
@@ -435,6 +445,7 @@ EmbeddedEmailField ::= embedded_email_field(
                          [Visibility]
                          [EmailDefaultValue]
                          [LabelOverride]
+                         [Property]
                        )
 
 EmbeddedPhoneNumberField ::= embedded_phone_number_field(
@@ -445,6 +456,7 @@ EmbeddedPhoneNumberField ::= embedded_phone_number_field(
                                [Visibility]
                                [PhoneNumberDefaultValue]
                                [LabelOverride]
+                               [Property]
                              )
 
 EmbeddedOrcidField ::= embedded_orcid_field(
@@ -455,6 +467,7 @@ EmbeddedOrcidField ::= embedded_orcid_field(
                          [Visibility]
                          [OrcidDefaultValue]
                          [LabelOverride]
+                         [Property]
                        )
 
 EmbeddedRorField ::= embedded_ror_field(
@@ -465,6 +478,7 @@ EmbeddedRorField ::= embedded_ror_field(
                        [Visibility]
                        [RorDefaultValue]
                        [LabelOverride]
+                       [Property]
                      )
 
 EmbeddedDoiField ::= embedded_doi_field(
@@ -475,6 +489,7 @@ EmbeddedDoiField ::= embedded_doi_field(
                        [Visibility]
                        [DoiDefaultValue]
                        [LabelOverride]
+                       [Property]
                      )
 
 EmbeddedPubMedIdField ::= embedded_pub_med_id_field(
@@ -485,6 +500,7 @@ EmbeddedPubMedIdField ::= embedded_pub_med_id_field(
                             [Visibility]
                             [PubMedIdDefaultValue]
                             [LabelOverride]
+                            [Property]
                           )
 
 EmbeddedRridField ::= embedded_rrid_field(
@@ -495,6 +511,7 @@ EmbeddedRridField ::= embedded_rrid_field(
                         [Visibility]
                         [RridDefaultValue]
                         [LabelOverride]
+                        [Property]
                       )
 
 EmbeddedNihGrantIdField ::= embedded_nih_grant_id_field(
@@ -505,6 +522,7 @@ EmbeddedNihGrantIdField ::= embedded_nih_grant_id_field(
                                [Visibility]
                                [NihGrantIdDefaultValue]
                                [LabelOverride]
+                               [Property]
                              )
 
 EmbeddedAttributeValueField ::= embedded_attribute_value_field(
@@ -514,10 +532,11 @@ EmbeddedAttributeValueField ::= embedded_attribute_value_field(
                                   [Cardinality]
                                   [Visibility]
                                   [LabelOverride]
+                                  [Property]
                                 )
 ```
 
-`EmbeddedTemplate` and `EmbeddedPresentationComponent` follow a similar pattern to embedded fields but differ in what embedding properties they carry. `EmbeddedTemplate` supports cardinality to permit multiple nested instances of the referenced template but carries no typed default value. `EmbeddedPresentationComponent` carries neither a value requirement, cardinality, nor default value, as it contributes no instance data and exists purely to contribute presentational structure.
+`EmbeddedTemplate` and `EmbeddedPresentationComponent` follow a similar pattern to embedded fields but differ in what embedding properties they carry. `EmbeddedTemplate` supports cardinality to permit multiple nested instances of the referenced template, carries no typed default value, and carries an optional `Property` associating a semantic property IRI with the embedding site. `EmbeddedPresentationComponent` carries neither a value requirement, cardinality, default value, nor property, as it contributes no instance data and exists purely to contribute presentational structure.
 
 ```ebnf
 EmbeddedTemplate ::= embedded_template(
@@ -527,6 +546,7 @@ EmbeddedTemplate ::= embedded_template(
                        [Cardinality]
                        [Visibility]
                        [LabelOverride]
+                       [Property]
                      )
 
 EmbeddedPresentationComponent ::= embedded_presentation_component(
@@ -1459,6 +1479,22 @@ LabelOverride ::= label_override(
                     Label
                     AlternativeLabel*
                   )
+```
+
+### Properties
+
+A `Property` associates a semantic property IRI with an `EmbeddedField` or `EmbeddedTemplate` within a specific `Template`. The property IRI identifies the RDF property that the embedded artifact's value represents in that template context. The optional `PropertyLabel` provides a human-readable label for the property.
+
+`Property` is an embedding-level construct. It is distinct from the intrinsic metadata of the referenced `Field` or `Template` artifact. The same reusable artifact may be embedded in different templates under different property IRIs.
+
+```ebnf
+Property ::= property(
+               PropertyIri
+               [PropertyLabel]
+             )
+
+PropertyIri   ::= property_iri( Iri )
+PropertyLabel ::= property_label( UnicodeString )
 ```
 
 ## Field Types
