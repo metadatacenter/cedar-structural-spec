@@ -8,7 +8,7 @@ This document specifies a one-directional, function-based mapping from the CEDAR
 
 ## 2. Conventions
 
-### Function Signature Form
+**Function Signature Form**
 
 ```
 encode_X(x: X) → JSON-kind
@@ -16,7 +16,7 @@ encode_X(x: X) → JSON-kind
 
 `X` is a grammar production name, `x` is the parameter, and `JSON-kind` is one of: Object, String, Array, Number, Boolean, or null.
 
-### JSON Notation in Function Bodies
+**JSON Notation in Function Bodies**
 
 - `{ k₁: v₁, k₂: v₂ }` — JSON object literal
 - `[ v₁, v₂ ]` — JSON array
@@ -24,11 +24,11 @@ encode_X(x: X) → JSON-kind
 - `null` — JSON null
 - `omit` — the key is absent from the output (not even present as null)
 
-### Accessor Notation
+**Accessor Notation**
 
 Dot notation is used on grammar constructs, e.g. `T.schema_artifact_metadata` or `E.embedded_artifact_key`. Where a grammar construct wraps a primitive string (e.g. `Name ::= name(UnicodeString)`), write `T.name.unicode_string` to reach the string value.
 
-### Helper Functions
+**Helper Functions**
 
 - `key(E)` — the ASCII identifier string of `E`'s `EmbeddedArtifactKey`; defined as `E.embedded_artifact_key.key_identifier.ascii_identifier`
 - `iri(I)` — the IRI string of an `Iri` construct; defined as `I.iri_string`
@@ -40,11 +40,11 @@ Dot notation is used on grammar constructs, e.g. `T.schema_artifact_metadata` or
 - `[ E in xs | P(E) ]` — the subsequence of `xs` retaining only those elements for which predicate `P(E)` holds; used in `let` bindings to pre-filter before passing to a comprehension
 - `xs ++ ys` — concatenation of arrays `xs` and `ys`
 
-### Cardinality Helper
+**Cardinality Helper**
 
 - `is_multi(E)` — true if `E.cardinality` is present and `max_cardinality` is either `UnboundedCardinality` or a `NonNegativeInteger` greater than 1
 
-### Default Conventions
+**Default Conventions**
 
 - When `Cardinality` is absent, effective min = 1, effective max = 1 (single-valued).
 - When `ValueRequirement` is absent, effective requirement is `Optional`.
@@ -71,7 +71,7 @@ Dot notation is used on grammar constructs, e.g. `T.schema_artifact_metadata` or
 
 ## 4. Metadata Encoding Functions
 
-#### `encode_schema_artifact_metadata(M: SchemaArtifactMetadata) → Object`
+### `encode_schema_artifact_metadata(M: SchemaArtifactMetadata) → Object`
 
 Returns a flat JSON object of key-value pairs to be merged into an artifact object.
 
@@ -84,7 +84,7 @@ merge(
 
 ---
 
-#### `encode_artifact_metadata(M: ArtifactMetadata) → Object`
+### `encode_artifact_metadata(M: ArtifactMetadata) → Object`
 
 ```
 merge(
@@ -95,7 +95,7 @@ merge(
 
 ---
 
-#### `encode_descriptive_metadata(D: DescriptiveMetadata) → Object`
+### `encode_descriptive_metadata(D: DescriptiveMetadata) → Object`
 
 Returns a JSON object with the following keys:
 
@@ -110,7 +110,7 @@ Returns a JSON object with the following keys:
 
 ---
 
-#### `encode_temporal_provenance(P: TemporalProvenance) → Object`
+### `encode_temporal_provenance(P: TemporalProvenance) → Object`
 
 Returns a JSON object with the following keys:
 
@@ -123,7 +123,7 @@ Returns a JSON object with the following keys:
 
 ---
 
-#### `encode_schema_versioning(V: SchemaVersioning) → Object`
+### `encode_schema_versioning(V: SchemaVersioning) → Object`
 
 Returns a JSON object with the following keys:
 
@@ -137,7 +137,7 @@ Returns a JSON object with the following keys:
 
 ---
 
-#### `encode_status(S: Status) → String`
+### `encode_status(S: Status) → String`
 
 Returns the string corresponding to the `Status` kind:
 
@@ -150,7 +150,7 @@ Returns the string corresponding to the `Status` kind:
 
 ## 5. Template Encoding
 
-#### `encode_template(T: Template) → Object`
+### `encode_template(T: Template) → Object`
 
 Produces the top-level CTM 1.6.0 template object.
 
@@ -176,7 +176,7 @@ merge(
 
 ---
 
-#### `encode_template_context(T: Template) → Object`
+### `encode_template_context(T: Template) → Object`
 
 Produces the `@context` of the template, combining standard namespaces with property IRI mappings for data-bearing embedded artifacts that carry a `Property`.
 
@@ -192,22 +192,16 @@ merge(
 
 ---
 
-#### `encode_property_context_entry(P: Property) → String or Object`
+### `encode_property_context_entry(P: Property) → String or Object`
 
-```
-if P.property_label is absent:
-  iri(P.property_iri.iri)
-
-if P.property_label is present:
-  {
-    "@id":        iri(P.property_iri.iri),
-    "rdfs:label": P.property_label.unicode_string
-  }
-```
+| Condition | Returns |
+|---|---|
+| `P.property_label` absent | `iri(P.property_iri.iri)` |
+| `P.property_label` present | `{ "@id": iri(P.property_iri.iri), "rdfs:label": P.property_label.unicode_string }` |
 
 ---
 
-#### `encode_template_properties(T: Template) → Object`
+### `encode_template_properties(T: Template) → Object`
 
 Produces the `properties` object for the template's JSON Schema layer. Includes fixed instance-metadata shape entries followed by one entry per embedded artifact.
 
@@ -233,7 +227,7 @@ merge(
 
 ---
 
-#### `encode_template_required(T: Template) → Array`
+### `encode_template_required(T: Template) → Array`
 
 ```
 let required_embs = [ E in T.embedded_artifacts
@@ -248,7 +242,7 @@ let required_embs = [ E in T.embedded_artifacts
 
 ---
 
-#### `encode_template_ui(T: Template) → Object`
+### `encode_template_ui(T: Template) → Object`
 
 ```
 let label_embs = [ E in T.embedded_artifacts | E.label_override is present ]
@@ -270,17 +264,19 @@ merge(
 
 These functions produce the value placed at `properties[key(E)]` within the containing template or template element.
 
-#### `encode_embedded_artifact_schema(E: EmbeddedArtifact) → Object`
+### `encode_embedded_artifact_schema(E: EmbeddedArtifact) → Object`
 
-Dispatch on the kind of `E`:
+Dispatches to the encoding function for the `EmbeddedArtifact` kind:
 
-- If `E` is an `EmbeddedField`: `encode_embedded_field_schema(E)`
-- If `E` is an `EmbeddedTemplate`: `encode_embedded_template_schema(E)`
-- If `E` is an `EmbeddedPresentationComponent`: `encode_embedded_presentation_component_schema(E)`
+| `EmbeddedArtifact` kind | Encoding function |
+|---|---|
+| `EmbeddedField` | `encode_embedded_field_schema(E)` |
+| `EmbeddedTemplate` | `encode_embedded_template_schema(E)` |
+| `EmbeddedPresentationComponent` | `encode_embedded_presentation_component_schema(E)` |
 
 ---
 
-#### `encode_embedded_field_schema(E: EmbeddedField) → Object`
+### `encode_embedded_field_schema(E: EmbeddedField) → Object`
 
 Produces the field schema object, wrapping in array form if `is_multi(E)`. Let `field_obj` = `encode_field(referenced_field(E), E)`, where `referenced_field(E)` is the `Field` identified by the reference in `E`.
 
@@ -301,7 +297,7 @@ else (single-valued):
 
 ---
 
-#### `encode_embedded_template_schema(E: EmbeddedTemplate) → Object`
+### `encode_embedded_template_schema(E: EmbeddedTemplate) → Object`
 
 Let `elem_obj` = `encode_template_element(referenced_template(E), E)`.
 
@@ -322,7 +318,7 @@ else:
 
 ---
 
-#### `encode_embedded_presentation_component_schema(E: EmbeddedPresentationComponent) → Object`
+### `encode_embedded_presentation_component_schema(E: EmbeddedPresentationComponent) → Object`
 
 Presentation components have no standardised CTM 1.6.0 schema representation. Produces an empty object `{}` as a placeholder. See Section 13, Known Gaps.
 
@@ -330,7 +326,7 @@ Presentation components have no standardised CTM 1.6.0 schema representation. Pr
 
 ## 7. Field Encoding
 
-#### `encode_field(F: Field, E: EmbeddedField) → Object`
+### `encode_field(F: Field, E: EmbeddedField) → Object`
 
 Produces the CTM 1.6.0 field object. `E` provides the embedding context for properties such as `_valueConstraints.requiredValue` and `_ui.hidden`.
 
@@ -351,77 +347,96 @@ merge(
 )
 ```
 
-`encode_field_type(FT: FieldType, E: EmbeddedField) → Object` is defined per field type in Section 8. It returns an object containing `"properties"`, `"required"`, `"additionalProperties"`, `"_valueConstraints"`, and `"_ui"` entries appropriate to `FT`, with embedding-level information from `E` merged in.
+`encode_field_type(FT: FieldType, E: EmbeddedField) → Object` is defined per field type in Section 8 using a common skeleton with per-type value shape and constraint entries.
 
 ---
 
 ## 8. Field Type Encoding
 
-Each field type encoding function has the form:
+**Skeleton**
 
-```
-encode_field_type(FT: FieldType, E: EmbeddedField) → Object
-```
-
-It produces the JSON Schema value shape, `_valueConstraints`, and `_ui` portions of the field object. The embedding parameter `E` is used to encode:
-
-- `_valueConstraints.requiredValue`: `true` if `E.value_requirement = Required`, else `false`
-- `_ui.hidden`: `true` if `E.visibility = Hidden`, else omit
-
-#### `encode_embedding_constraints(E: EmbeddedField) → Object`
+Each field type encoding function returns an object of the following form:
 
 ```
 {
-  "requiredValue": true   if effective value_requirement = Required,
-  "requiredValue": false  if effective value_requirement = Recommended or Optional
+  "properties":           <value-shape>,
+  "required":             <required>,
+  "additionalProperties": false,
+  "_valueConstraints":    merge(encode_embedding_constraints(E), <vc-extras>),
+  "_ui":                  merge(encode_embedding_ui(E), <ui-extras>)
 }
 ```
 
-#### `encode_embedding_ui(E: EmbeddedField) → Object`
+When `<vc-extras>` is empty, `_valueConstraints` is `encode_embedding_constraints(E)` directly with no merge. Field types that do not follow this skeleton are noted explicitly.
 
-```
+**Value Shapes**
+
+Three value shapes recur across field types:
+
+**`STRING_VALUE_SHAPE`** — used by text, date, time, datetime, email, and phone number fields:
+```json
 {
-  "hidden": true   if E.visibility = Hidden
+  "@type":  { "oneOf": [{ "type": "string", "format": "uri" }, { "type": "null" }] },
+  "@value": { "type": ["string", "null"] }
 }
 ```
 
-If `E.visibility` is not `Hidden`, the `"hidden"` key is omitted.
+**`NUMBER_VALUE_SHAPE`** — used by numeric fields:
+```json
+{
+  "@type":  { "oneOf": [{ "type": "string", "format": "uri" }, { "type": "null" }] },
+  "@value": { "type": ["number", "null"] }
+}
+```
+
+**`IRI_VALUE_SHAPE`** — used by controlled term, link, and external authority fields:
+```json
+{
+  "@type":      { "oneOf": [{ "type": "string", "format": "uri" }, { "type": "null" }] },
+  "@id":        { "type": "string", "format": "uri" },
+  "rdfs:label": { "type": ["string", "null"] }
+}
+```
+
+**Embedding Helper Functions**
+
+### `encode_embedding_constraints(E: EmbeddedField) → Object`
+
+Returns `{ "requiredValue": V }` where `V` depends on the effective value requirement:
+
+| Effective `ValueRequirement` | `"requiredValue"` |
+|---|---|
+| `Required` | `true` |
+| `Recommended` or `Optional` | `false` |
+
+### `encode_embedding_ui(E: EmbeddedField) → Object`
+
+Returns a JSON object with the following keys:
+
+| Key | Value | Condition |
+|---|---|---|
+| `"hidden"` | `true` | Only when `E.visibility = Hidden`; omit otherwise |
 
 ---
 
-#### `encode_text_field_type(FT: TextFieldType, E: EmbeddedField) → Object`
+**Field Type Definitions**
 
-```
-{
-  "properties": {
-    "@type":  { "oneOf": [{ "format": "uri", "type": "string" }, { "type": "null" }] },
-    "@value": { "type": ["string", "null"] }
-  },
-  "required": ["@value"],
-  "additionalProperties": false,
-  "_valueConstraints": merge(
-    encode_embedding_constraints(E),
-    {
-      if FT.text_default_value is present:
-        "defaultValue": FT.text_default_value.text_value.text_literal.lexical_form.unicode_string,
-      if FT.min_length is present:
-        "minLength": FT.min_length.non_negative_integer (as integer),
-      if FT.max_length is present:
-        "maxLength": FT.max_length.non_negative_integer (as integer),
-      if FT.validation_regex is present:
-        "regex": FT.validation_regex.regex_pattern.unicode_string
-    }
-  ),
-  "_ui": merge(
-    encode_embedding_ui(E),
-    {
-      "inputType": encode_text_rendering_hint(FT.text_rendering_hint)
-    }
-  )
-}
-```
+### `encode_text_field_type(FT: TextFieldType, E: EmbeddedField) → Object`
 
-#### `encode_text_rendering_hint(hint: TextRenderingHint or absent) → String`
+**Value shape:** `STRING_VALUE_SHAPE` | **Required:** `["@value"]`
+
+**`_valueConstraints` extras:**
+
+| Key | Value | Condition |
+|---|---|---|
+| `"defaultValue"` | `FT.text_default_value.text_value.text_literal.lexical_form.unicode_string` | Omit if absent |
+| `"minLength"` | `FT.min_length.non_negative_integer (as integer)` | Omit if absent |
+| `"maxLength"` | `FT.max_length.non_negative_integer (as integer)` | Omit if absent |
+| `"regex"` | `FT.validation_regex.regex_pattern.unicode_string` | Omit if absent |
+
+**`_ui` extras:** `{ "inputType": encode_text_rendering_hint(FT.text_rendering_hint) }`
+
+### `encode_text_rendering_hint(hint: TextRenderingHint or absent) → String`
 
 Returns the string corresponding to the hint kind:
 
@@ -432,40 +447,25 @@ Returns the string corresponding to the hint kind:
 
 ---
 
-#### `encode_numeric_field_type(FT: NumericFieldType, E: EmbeddedField) → Object`
+### `encode_numeric_field_type(FT: NumericFieldType, E: EmbeddedField) → Object`
 
-```
-{
-  "properties": {
-    "@type":  { "oneOf": [{ "format": "uri", "type": "string" }, { "type": "null" }] },
-    "@value": { "type": ["number", "null"] }
-  },
-  "required": ["@value"],
-  "additionalProperties": false,
-  "_valueConstraints": merge(
-    encode_embedding_constraints(E),
-    {
-      "numberType": encode_numeric_datatype(FT.numeric_datatype),
-      if FT.unit is present:
-        "unitOfMeasure": iri(FT.unit.iri),
-      if FT.numeric_precision is present:
-        "decimalPlaces": FT.numeric_precision.non_negative_integer (as integer),
-      if FT.numeric_min_value is present:
-        "minValue": FT.numeric_min_value.numeric_value.numeric_literal (as number),
-      if FT.numeric_max_value is present:
-        "maxValue": FT.numeric_max_value.numeric_value.numeric_literal (as number)
-    }
-  ),
-  "_ui": merge(
-    encode_embedding_ui(E),
-    { "inputType": "numeric" }
-  )
-}
-```
+**Value shape:** `NUMBER_VALUE_SHAPE` | **Required:** `["@value"]`
+
+**`_valueConstraints` extras:**
+
+| Key | Value | Condition |
+|---|---|---|
+| `"numberType"` | `encode_numeric_datatype(FT.numeric_datatype)` | Always present |
+| `"unitOfMeasure"` | `iri(FT.unit.iri)` | Omit if absent |
+| `"decimalPlaces"` | `FT.numeric_precision.non_negative_integer (as integer)` | Omit if absent |
+| `"minValue"` | `FT.numeric_min_value.numeric_value.numeric_literal (as number)` | Omit if absent |
+| `"maxValue"` | `FT.numeric_max_value.numeric_value.numeric_literal (as number)` | Omit if absent |
+
+**`_ui` extras:** `{ "inputType": "numeric" }`
 
 `Unit` carries an `Iri` in the Structural Model; CTM 1.6.0 `unitOfMeasure` is a plain string. The IRI string value is used directly.
 
-#### `encode_numeric_datatype(D: NumericDatatype) → String`
+### `encode_numeric_datatype(D: NumericDatatype) → String`
 
 Returns the string corresponding to the `NumericDatatypeIri` kind:
 
@@ -490,35 +490,21 @@ Returns the string corresponding to the `NumericDatatypeIri` kind:
 
 ---
 
-#### `encode_date_field_type(FT: DateFieldType, E: EmbeddedField) → Object`
+### `encode_date_field_type(FT: DateFieldType, E: EmbeddedField) → Object`
 
-```
-{
-  "properties": {
-    "@type":  { "oneOf": [{ "format": "uri", "type": "string" }, { "type": "null" }] },
-    "@value": { "type": ["string", "null"] }
-  },
-  "required": ["@value"],
-  "additionalProperties": false,
-  "_valueConstraints": merge(
-    encode_embedding_constraints(E),
-    {
-      "temporalType": encode_date_value_type(FT.date_value_type)
-    }
-  ),
-  "_ui": merge(
-    encode_embedding_ui(E),
-    {
-      "inputType": "temporal",
-      "temporalGranularity": encode_date_granularity(FT.date_value_type),
-      if FT.date_rendering_hint is present and FT.date_rendering_hint.date_format is present:
-        "dateFormat": encode_date_format(FT.date_rendering_hint.date_format)
-    }
-  )
-}
-```
+**Value shape:** `STRING_VALUE_SHAPE` | **Required:** `["@value"]`
 
-#### `encode_date_value_type(DVT: DateValueType) → String`
+**`_valueConstraints` extras:** `{ "temporalType": encode_date_value_type(FT.date_value_type) }`
+
+**`_ui` extras:**
+
+| Key | Value | Condition |
+|---|---|---|
+| `"inputType"` | `"temporal"` | Always present |
+| `"temporalGranularity"` | `encode_date_granularity(FT.date_value_type)` | Always present |
+| `"dateFormat"` | `encode_date_format(FT.date_rendering_hint.date_format)` | Omit if `FT.date_rendering_hint` absent or `date_format` absent |
+
+### `encode_date_value_type(DVT: DateValueType) → String`
 
 Returns the XSD datatype string for the `DateValueType` kind:
 
@@ -528,7 +514,7 @@ Returns the XSD datatype string for the `DateValueType` kind:
 | `YearMonthValueType` | `"xsd:gYearMonth"` |
 | `FullDateValueType` | `"xsd:date"` |
 
-#### `encode_date_granularity(DVT: DateValueType) → String`
+### `encode_date_granularity(DVT: DateValueType) → String`
 
 Returns the `temporalGranularity` string for the `DateValueType` kind:
 
@@ -538,7 +524,7 @@ Returns the `temporalGranularity` string for the `DateValueType` kind:
 | `YearMonthValueType` | `"month"` |
 | `FullDateValueType` | `"day"` |
 
-#### `encode_date_format(DF: DateComponentOrder) → String`
+### `encode_date_format(DF: DateComponentOrder) → String`
 
 Returns the `dateFormat` string for the `DateComponentOrder` kind:
 
@@ -550,37 +536,24 @@ Returns the `dateFormat` string for the `DateComponentOrder` kind:
 
 ---
 
-#### `encode_time_field_type(FT: TimeFieldType, E: EmbeddedField) → Object`
+### `encode_time_field_type(FT: TimeFieldType, E: EmbeddedField) → Object`
 
-```
-{
-  "properties": {
-    "@type":  { "oneOf": [{ "format": "uri", "type": "string" }, { "type": "null" }] },
-    "@value": { "type": ["string", "null"] }
-  },
-  "required": ["@value"],
-  "additionalProperties": false,
-  "_valueConstraints": merge(
-    encode_embedding_constraints(E),
-    { "temporalType": "xsd:time" }
-  ),
-  "_ui": merge(
-    encode_embedding_ui(E),
-    {
-      "inputType": "temporal",
-      "temporalGranularity": encode_time_precision(FT.time_precision),
-      if FT.timezone_requirement = TimezoneRequired:    "timezoneEnabled": true,
-      if FT.timezone_requirement = TimezoneNotRequired: "timezoneEnabled": false,
-      if FT.time_rendering_hint is present and time_format is TwelveHourTimeFormat:
-        "inputTimeFormat": "12h",
-      if FT.time_rendering_hint is present and time_format is TwentyFourHourTimeFormat:
-        "inputTimeFormat": "24h"
-    }
-  )
-}
-```
+**Value shape:** `STRING_VALUE_SHAPE` | **Required:** `["@value"]`
 
-#### `encode_time_precision(TP: TimePrecision or absent) → String`
+**`_valueConstraints` extras:** `{ "temporalType": "xsd:time" }`
+
+**`_ui` extras:**
+
+| Key | Value | Condition |
+|---|---|---|
+| `"inputType"` | `"temporal"` | Always present |
+| `"temporalGranularity"` | `encode_time_precision(FT.time_precision)` | Always present |
+| `"timezoneEnabled"` | `true` | Only when `FT.timezone_requirement = TimezoneRequired` |
+| `"timezoneEnabled"` | `false` | Only when `FT.timezone_requirement = TimezoneNotRequired` |
+| `"inputTimeFormat"` | `"12h"` | Only when `FT.time_rendering_hint.time_format = TwelveHourTimeFormat` |
+| `"inputTimeFormat"` | `"24h"` | Only when `FT.time_rendering_hint.time_format = TwentyFourHourTimeFormat` |
+
+### `encode_time_precision(TP: TimePrecision or absent) → String`
 
 Returns the `temporalGranularity` string for the `TimePrecision` kind:
 
@@ -593,37 +566,24 @@ Returns the `temporalGranularity` string for the `TimePrecision` kind:
 
 ---
 
-#### `encode_datetime_field_type(FT: DateTimeFieldType, E: EmbeddedField) → Object`
+### `encode_datetime_field_type(FT: DateTimeFieldType, E: EmbeddedField) → Object`
 
-```
-{
-  "properties": {
-    "@type":  { "oneOf": [{ "format": "uri", "type": "string" }, { "type": "null" }] },
-    "@value": { "type": ["string", "null"] }
-  },
-  "required": ["@value"],
-  "additionalProperties": false,
-  "_valueConstraints": merge(
-    encode_embedding_constraints(E),
-    { "temporalType": "xsd:dateTime" }
-  ),
-  "_ui": merge(
-    encode_embedding_ui(E),
-    {
-      "inputType": "temporal",
-      "temporalGranularity": encode_datetime_value_type(FT.datetime_value_type),
-      if FT.timezone_requirement = TimezoneRequired:    "timezoneEnabled": true,
-      if FT.timezone_requirement = TimezoneNotRequired: "timezoneEnabled": false,
-      if FT.date_time_rendering_hint is present and time_format is TwelveHourTimeFormat:
-        "inputTimeFormat": "12h",
-      if FT.date_time_rendering_hint is present and time_format is TwentyFourHourTimeFormat:
-        "inputTimeFormat": "24h"
-    }
-  )
-}
-```
+**Value shape:** `STRING_VALUE_SHAPE` | **Required:** `["@value"]`
 
-#### `encode_datetime_value_type(DVT: DateTimeValueType) → String`
+**`_valueConstraints` extras:** `{ "temporalType": "xsd:dateTime" }`
+
+**`_ui` extras:**
+
+| Key | Value | Condition |
+|---|---|---|
+| `"inputType"` | `"temporal"` | Always present |
+| `"temporalGranularity"` | `encode_datetime_value_type(FT.datetime_value_type)` | Always present |
+| `"timezoneEnabled"` | `true` | Only when `FT.timezone_requirement = TimezoneRequired` |
+| `"timezoneEnabled"` | `false` | Only when `FT.timezone_requirement = TimezoneNotRequired` |
+| `"inputTimeFormat"` | `"12h"` | Only when `FT.date_time_rendering_hint.time_format = TwelveHourTimeFormat` |
+| `"inputTimeFormat"` | `"24h"` | Only when `FT.date_time_rendering_hint.time_format = TwentyFourHourTimeFormat` |
+
+### `encode_datetime_value_type(DVT: DateTimeValueType) → String`
 
 Returns the `temporalGranularity` string for the `DateTimeValueType` kind:
 
@@ -635,35 +595,23 @@ Returns the `temporalGranularity` string for the `DateTimeValueType` kind:
 
 ---
 
-#### `encode_controlled_term_field_type(FT: ControlledTermFieldType, E: EmbeddedField) → Object`
+### `encode_controlled_term_field_type(FT: ControlledTermFieldType, E: EmbeddedField) → Object`
 
-```
-{
-  "properties": {
-    "@type":      { "oneOf": [{ "format": "uri", "type": "string" }, { "type": "null" }] },
-    "@id":        { "type": "string", "format": "uri" },
-    "rdfs:label": { "type": ["string", "null"] }
-  },
-  "required": [],
-  "additionalProperties": false,
-  "_valueConstraints": merge(
-    encode_embedding_constraints(E),
-    {
-      "multipleChoice": false,
-      "ontologies":  [ encode_ontology_source(S) for each S in FT.controlled_term_sources where S is OntologySource ],
-      "branches":    [ encode_branch_source(S)   for each S in FT.controlled_term_sources where S is BranchSource ],
-      "classes":     [ encode_class_source_entry(C) for each ClassSource S in FT.controlled_term_sources for each C in S.controlled_term_classes ],
-      "valueSets":   [ encode_value_set_source(S) for each S in FT.controlled_term_sources where S is ValueSetSource ]
-    }
-  ),
-  "_ui": merge(
-    encode_embedding_ui(E),
-    { "inputType": "textfield" }
-  )
-}
-```
+**Value shape:** `IRI_VALUE_SHAPE` | **Required:** `[]`
 
-#### `encode_ontology_source(S: OntologySource) → Object`
+**`_valueConstraints` extras:**
+
+| Key | Value | Condition |
+|---|---|---|
+| `"multipleChoice"` | `false` | Always present |
+| `"ontologies"` | `[ encode_ontology_source(S) for each OntologySource S in FT.controlled_term_sources ]` | Always present |
+| `"branches"` | `[ encode_branch_source(S) for each BranchSource S in FT.controlled_term_sources ]` | Always present |
+| `"classes"` | `[ encode_class_source_entry(C) for each ClassSource S in FT.controlled_term_sources, for each C in S.controlled_term_classes ]` | Always present |
+| `"valueSets"` | `[ encode_value_set_source(S) for each ValueSetSource S in FT.controlled_term_sources ]` | Always present |
+
+**`_ui` extras:** `{ "inputType": "textfield" }`
+
+### `encode_ontology_source(S: OntologySource) → Object`
 
 Returns a JSON object with the following keys:
 
@@ -673,7 +621,7 @@ Returns a JSON object with the following keys:
 | `"acronym"` | `S.ontology_reference.ontology_display_hint.ontology_acronym.unicode_string` | Omit if absent |
 | `"name"` | `S.ontology_reference.ontology_display_hint.ontology_name.unicode_string` | Omit if absent |
 
-#### `encode_branch_source(S: BranchSource) → Object`
+### `encode_branch_source(S: BranchSource) → Object`
 
 Returns a JSON object with the following keys:
 
@@ -685,7 +633,7 @@ Returns a JSON object with the following keys:
 | `"rootTermLabel"` | `S.root_term_label.unicode_string` | Always present |
 | `"maxDepth"` | `S.max_traversal_depth.non_negative_integer (as integer)` | Omit if absent |
 
-#### `encode_class_source_entry(C: ControlledTermClass) → Object`
+### `encode_class_source_entry(C: ControlledTermClass) → Object`
 
 Returns a JSON object with the following keys:
 
@@ -697,7 +645,7 @@ Returns a JSON object with the following keys:
 | `"type"` | `"OntologyClass"` | Always present |
 | `"source"` | `iri(C.ontology_reference.ontology_iri.iri)` | Always present |
 
-#### `encode_value_set_source(S: ValueSetSource) → Object`
+### `encode_value_set_source(S: ValueSetSource) → Object`
 
 Returns a JSON object with the following keys:
 
@@ -709,37 +657,23 @@ Returns a JSON object with the following keys:
 
 ---
 
-#### `encode_single_choice_field_type(FT: SingleChoiceFieldType, E: EmbeddedField) → Object`
+### `encode_single_choice_field_type(FT: SingleChoiceFieldType, E: EmbeddedField) → Object`
 
 Choice fields may be literal-valued or IRI-valued. Determine the value form by inspecting the options: if any option carries a `ControlledTermValue` or `Iri`, use IRI-form; otherwise use literal-form.
 
-For **literal-form** single choice:
+**Value shape:** `STRING_VALUE_SHAPE` (literal-form); for IRI-form replace `"@value"` with `"@id": { "type": "string", "format": "uri" }` | **Required:** `[]`
 
-```
-{
-  "properties": {
-    "@type":  { "oneOf": [{ "format": "uri", "type": "string" }, { "type": "null" }] },
-    "@value": { "type": ["string", "null"] }
-  },
-  "required": [],
-  "additionalProperties": false,
-  "_valueConstraints": merge(
-    encode_embedding_constraints(E),
-    {
-      "multipleChoice": false,
-      "literals": [ encode_choice_option_literal(O) for each O in FT.options ]
-    }
-  ),
-  "_ui": merge(
-    encode_embedding_ui(E),
-    { "inputType": encode_single_choice_rendering_hint(FT.single_choice_rendering_hint) }
-  )
-}
-```
+**`_valueConstraints` extras:**
 
-For **IRI-form** single choice: replace the `"@value"` property entry with `"@id": { "type": "string", "format": "uri" }`, and encode options using `encode_choice_option_iri`.
+| Key | Value | Condition |
+|---|---|---|
+| `"multipleChoice"` | `false` | Always present |
+| `"literals"` | `[ encode_choice_option_literal(O) for each O in FT.options ]` | Literal-form |
+| `"literals"` | `[ encode_choice_option_iri(O) for each O in FT.options ]` | IRI-form |
 
-#### `encode_single_choice_rendering_hint(hint: SingleChoiceRenderingHint or absent) → String`
+**`_ui` extras:** `{ "inputType": encode_single_choice_rendering_hint(FT.single_choice_rendering_hint) }`
+
+### `encode_single_choice_rendering_hint(hint: SingleChoiceRenderingHint or absent) → String`
 
 Returns the `inputType` string for the hint kind:
 
@@ -748,11 +682,32 @@ Returns the `inputType` string for the hint kind:
 | `RadioRenderingHint` or absent | `"radio"` |
 | `SingleSelectDropdownRenderingHint` | `"list"` |
 
+### `encode_choice_option_literal(O: ChoiceOption) → Object`
+
+Returns a JSON object with the following keys:
+
+| Key | Value | Condition |
+|---|---|---|
+| `"label"` | `O.choice_option_value` (lexical form as string) | Always present |
+| `"selectedByDefault"` | `true` | Omit if `O.default_option` absent |
+
+`ChoiceOptionValue` may be a `Literal`, `ControlledTermValue`, or `Iri`. For literal choice options, use the lexical form of the `Literal`. For `ControlledTermValue` or `Iri` choice options, encode as IRI-form options using `encode_choice_option_iri`.
+
+### `encode_choice_option_iri(O: ChoiceOption) → Object`
+
+Returns a JSON object with the following keys:
+
+| Key | Value | Condition |
+|---|---|---|
+| `"@id"` | `iri(O.choice_option_value.iri)`, or `iri(O.choice_option_value.term_iri.iri)` for `ControlledTermValue` | Always present |
+| `"rdfs:label"` | label of `O.choice_option_value` | Omit if no label |
+| `"selectedByDefault"` | `true` | Omit if `O.default_option` absent |
+
 ---
 
-#### `encode_multiple_choice_field_type(FT: MultipleChoiceFieldType, E: EmbeddedField) → Object`
+### `encode_multiple_choice_field_type(FT: MultipleChoiceFieldType, E: EmbeddedField) → Object`
 
-For literal-form multiple choice (IRI-form: replace `"@value"` with `"@id"` and use `encode_choice_option_iri`):
+This field type does not follow the standard skeleton. It wraps the value schema in an array:
 
 ```
 {
@@ -760,27 +715,28 @@ For literal-form multiple choice (IRI-form: replace `"@value"` with `"@id"` and 
   "minItems": 0,
   "items": {
     "type": "object",
-    "properties": {
-      "@value": { "type": ["string", "null"] }
-    },
+    "properties": { "@value": { "type": ["string", "null"] } },
     "required": [],
     "additionalProperties": false
   },
-  "_valueConstraints": merge(
-    encode_embedding_constraints(E),
-    {
-      "multipleChoice": true,
-      "literals": [ encode_choice_option_literal(O) for each O in FT.options ]
-    }
-  ),
-  "_ui": merge(
-    encode_embedding_ui(E),
-    { "inputType": encode_multiple_choice_rendering_hint(FT.multiple_choice_rendering_hint) }
-  )
+  "_valueConstraints": merge(encode_embedding_constraints(E), <vc-extras>),
+  "_ui":               merge(encode_embedding_ui(E), <ui-extras>)
 }
 ```
 
-#### `encode_multiple_choice_rendering_hint(hint: MultipleChoiceRenderingHint or absent) → String`
+For IRI-form multiple choice, replace `"@value"` in `items.properties` with `"@id": { "type": "string", "format": "uri" }`.
+
+**`_valueConstraints` extras:**
+
+| Key | Value | Condition |
+|---|---|---|
+| `"multipleChoice"` | `true` | Always present |
+| `"literals"` | `[ encode_choice_option_literal(O) for each O in FT.options ]` | Literal-form |
+| `"literals"` | `[ encode_choice_option_iri(O) for each O in FT.options ]` | IRI-form |
+
+**`_ui` extras:** `{ "inputType": encode_multiple_choice_rendering_hint(FT.multiple_choice_rendering_hint) }`
+
+### `encode_multiple_choice_rendering_hint(hint: MultipleChoiceRenderingHint or absent) → String`
 
 Returns the `inputType` string for the hint kind:
 
@@ -789,114 +745,37 @@ Returns the `inputType` string for the hint kind:
 | `CheckboxRenderingHint` or absent | `"checkbox"` |
 | `MultiSelectDropdownRenderingHint` | `"list"` |
 
-#### `encode_choice_option_literal(O: ChoiceOption) → Object`
+---
 
-```
-{
-  "label":              O.choice_option_value (lexical form as string),
-  if O.default_option is present: "selectedByDefault": true
-}
-```
+### `encode_link_field_type(FT: LinkFieldType, E: EmbeddedField) → Object`
 
-`ChoiceOptionValue` may be a `Literal`, `ControlledTermValue`, or `Iri`. For literal choice options, use the lexical form of the `Literal`. For `ControlledTermValue` or `Iri` choice options, encode as IRI-form options using `encode_choice_option_iri`.
-
-#### `encode_choice_option_iri(O: ChoiceOption) → Object`
-
-```
-{
-  "@id":   iri(O.choice_option_value.iri)  (or iri(O.choice_option_value.term_iri.iri) for ControlledTermValue),
-  if O.choice_option_value has a label: "rdfs:label": label.unicode_string,
-  if O.default_option is present: "selectedByDefault": true
-}
-```
+**Value shape:** `IRI_VALUE_SHAPE` | **Required:** `[]` | **`_valueConstraints` extras:** none | **`_ui` extras:** `{ "inputType": "link" }`
 
 ---
 
-#### `encode_link_field_type(FT: LinkFieldType, E: EmbeddedField) → Object`
+### `encode_email_field_type(FT: EmailFieldType, E: EmbeddedField) → Object`
 
-```
-{
-  "properties": {
-    "@type":      { "oneOf": [{ "format": "uri", "type": "string" }, { "type": "null" }] },
-    "@id":        { "type": "string", "format": "uri" },
-    "rdfs:label": { "type": ["string", "null"] }
-  },
-  "required": [],
-  "additionalProperties": false,
-  "_valueConstraints": encode_embedding_constraints(E),
-  "_ui": merge(
-    encode_embedding_ui(E),
-    { "inputType": "link" }
-  )
-}
-```
+**Value shape:** `STRING_VALUE_SHAPE` | **Required:** `[]` | **`_valueConstraints` extras:** none | **`_ui` extras:** `{ "inputType": "email" }`
 
 ---
 
-#### `encode_email_field_type(FT: EmailFieldType, E: EmbeddedField) → Object`
+### `encode_phone_number_field_type(FT: PhoneNumberFieldType, E: EmbeddedField) → Object`
 
-```
-{
-  "properties": {
-    "@type":  { "oneOf": [{ "format": "uri", "type": "string" }, { "type": "null" }] },
-    "@value": { "type": ["string", "null"] }
-  },
-  "required": [],
-  "additionalProperties": false,
-  "_valueConstraints": encode_embedding_constraints(E),
-  "_ui": merge(
-    encode_embedding_ui(E),
-    { "inputType": "email" }
-  )
-}
-```
+**Value shape:** `STRING_VALUE_SHAPE` | **Required:** `[]` | **`_valueConstraints` extras:** none | **`_ui` extras:** `{ "inputType": "phone-number" }`
 
 ---
 
-#### `encode_phone_number_field_type(FT: PhoneNumberFieldType, E: EmbeddedField) → Object`
+**External Authority Field Types**
 
-```
-{
-  "properties": {
-    "@type":  { "oneOf": [{ "format": "uri", "type": "string" }, { "type": "null" }] },
-    "@value": { "type": ["string", "null"] }
-  },
-  "required": [],
-  "additionalProperties": false,
-  "_valueConstraints": encode_embedding_constraints(E),
-  "_ui": merge(
-    encode_embedding_ui(E),
-    { "inputType": "phone-number" }
-  )
-}
-```
+All six external authority field types share the same skeleton entry:
 
----
+**Value shape:** `IRI_VALUE_SHAPE` | **Required:** `[]` | **`_valueConstraints` extras:** none | **`_ui` extras:** `{ "inputType": encode_external_authority_input_type(FT) }`
 
-### External Authority Field Types
+### `encode_external_authority_field_type(FT: ExternalAuthorityFieldType, E: EmbeddedField) → Object`
 
-All six external authority field types encode as IRI-valued fields with a type-specific `inputType`.
+Applies the skeleton with the above parameters.
 
-#### `encode_external_authority_field_type(FT: ExternalAuthorityFieldType, E: EmbeddedField) → Object`
-
-```
-{
-  "properties": {
-    "@type":      { "oneOf": [{ "format": "uri", "type": "string" }, { "type": "null" }] },
-    "@id":        { "type": "string", "format": "uri" },
-    "rdfs:label": { "type": ["string", "null"] }
-  },
-  "required": [],
-  "additionalProperties": false,
-  "_valueConstraints": encode_embedding_constraints(E),
-  "_ui": merge(
-    encode_embedding_ui(E),
-    { "inputType": encode_external_authority_input_type(FT) }
-  )
-}
-```
-
-#### `encode_external_authority_input_type(FT: ExternalAuthorityFieldType) → String`
+### `encode_external_authority_input_type(FT: ExternalAuthorityFieldType) → String`
 
 Returns the `inputType` string for the field type kind:
 
@@ -913,7 +792,9 @@ The `inputType` string values for external authority fields are not standardised
 
 ---
 
-#### `encode_attribute_value_field_type(FT: AttributeValueFieldType, E: EmbeddedField) → Object`
+### `encode_attribute_value_field_type(FT: AttributeValueFieldType, E: EmbeddedField) → Object`
+
+This field type does not follow the standard skeleton. It uses a top-level array type:
 
 ```
 {
@@ -921,14 +802,8 @@ The `inputType` string values for external authority fields are not standardised
   "items": { "type": "string" },
   "minItems": 0,
   "additionalProperties": false,
-  "_valueConstraints": merge(
-    encode_embedding_constraints(E),
-    { "requiredValue": false }
-  ),
-  "_ui": merge(
-    encode_embedding_ui(E),
-    { "inputType": "attribute-value" }
-  )
+  "_valueConstraints": merge(encode_embedding_constraints(E), { "requiredValue": false }),
+  "_ui":               merge(encode_embedding_ui(E), { "inputType": "attribute-value" })
 }
 ```
 
@@ -940,7 +815,7 @@ The instance representation of `AttributeValue` fields in CTM 1.6.0 uses `additi
 
 When a `Template` is referenced by an `EmbeddedTemplate`, it is encoded as a CTM 1.6.0 template element object.
 
-#### `encode_template_element(T: Template, E: EmbeddedTemplate) → Object`
+### `encode_template_element(T: Template, E: EmbeddedTemplate) → Object`
 
 ```
 merge(
@@ -970,7 +845,7 @@ merge(
 
 These functions encode `Value` constructs as they appear within a `TemplateInstance`.
 
-#### `encode_value(V: Value) → Object`
+### `encode_value(V: Value) → Object`
 
 Dispatches to the encoding function for the `Value` kind:
 
@@ -991,22 +866,18 @@ Dispatches to the encoding function for the `Value` kind:
 
 ---
 
-#### `encode_text_value(V: TextValue) → Object`
+### `encode_text_value(V: TextValue) → Object`
 
-```
-if V.text_literal is StringLiteral:
-  { "@value": V.text_literal.lexical_form.unicode_string }
+Returns a JSON object whose keys depend on the `TextLiteral` kind:
 
-if V.text_literal is LangStringLiteral:
-  {
-    "@value":    V.text_literal.lexical_form.unicode_string,
-    "@language": V.text_literal.language_tag.bcp_47_tag
-  }
-```
+| `TextLiteral` kind | `"@value"` source | `"@language"` |
+|---|---|---|
+| `StringLiteral` | `V.text_literal.lexical_form.unicode_string` | Omit |
+| `LangStringLiteral` | `V.text_literal.lexical_form.unicode_string` | `V.text_literal.language_tag.bcp_47_tag` |
 
 ---
 
-#### `encode_numeric_value(V: NumericValue) → Object`
+### `encode_numeric_value(V: NumericValue) → Object`
 
 ```
 {
@@ -1017,7 +888,7 @@ if V.text_literal is LangStringLiteral:
 
 ---
 
-#### `encode_date_value(V: DateValue) → Object`
+### `encode_date_value(V: DateValue) → Object`
 
 Returns `{ "@value": <literal>, "@type": <xsd-type> }` where the sources depend on the `DateValue` kind:
 
@@ -1029,7 +900,7 @@ Returns `{ "@value": <literal>, "@type": <xsd-type> }` where the sources depend 
 
 ---
 
-#### `encode_time_value(V: TimeValue) → Object`
+### `encode_time_value(V: TimeValue) → Object`
 
 ```
 { "@value": V.time_literal.lexical_form.unicode_string, "@type": "xsd:time" }
@@ -1037,7 +908,7 @@ Returns `{ "@value": <literal>, "@type": <xsd-type> }` where the sources depend 
 
 ---
 
-#### `encode_datetime_value(V: DateTimeValue) → Object`
+### `encode_datetime_value(V: DateTimeValue) → Object`
 
 ```
 { "@value": V.date_time_literal.lexical_form.unicode_string, "@type": "xsd:dateTime" }
@@ -1045,7 +916,7 @@ Returns `{ "@value": <literal>, "@type": <xsd-type> }` where the sources depend 
 
 ---
 
-#### `encode_controlled_term_value(V: ControlledTermValue) → Object`
+### `encode_controlled_term_value(V: ControlledTermValue) → Object`
 
 Returns a JSON object with the following keys:
 
@@ -1058,35 +929,30 @@ Returns a JSON object with the following keys:
 
 ---
 
-#### `encode_choice_value(V: ChoiceValue) → Object`
+### `encode_choice_value(V: ChoiceValue) → Object`
 
-Dispatch on the form of `V.choice_selection`:
+Dispatches on the kind of `V.choice_selection`:
 
-```
-Literal (StringLiteral or LangStringLiteral):
-  encode_text_value(as TextValue wrapping the literal)
-
-ControlledTermValue:
-  encode_controlled_term_value(V.choice_selection)
-
-Iri:
-  { "@id": iri(V.choice_selection) }
-```
+| `V.choice_selection` kind | Returns |
+|---|---|
+| `Literal` (`StringLiteral` or `LangStringLiteral`) | `encode_text_value(as TextValue wrapping the literal)` |
+| `ControlledTermValue` | `encode_controlled_term_value(V.choice_selection)` |
+| `Iri` | `{ "@id": iri(V.choice_selection) }` |
 
 ---
 
-#### `encode_link_value(V: LinkValue) → Object`
+### `encode_link_value(V: LinkValue) → Object`
 
-```
-{
-  "@id": iri(V.iri),
-  if V.link_label is present: "rdfs:label": V.link_label.unicode_string
-}
-```
+Returns a JSON object with the following keys:
+
+| Key | Value | Condition |
+|---|---|---|
+| `"@id"` | `iri(V.iri)` | Always present |
+| `"rdfs:label"` | `V.link_label.unicode_string` | Omit if `V.link_label` absent |
 
 ---
 
-#### `encode_email_value(V: EmailValue) → Object`
+### `encode_email_value(V: EmailValue) → Object`
 
 ```
 { "@value": V.string_literal.lexical_form.unicode_string }
@@ -1094,7 +960,7 @@ Iri:
 
 ---
 
-#### `encode_phone_number_value(V: PhoneNumberValue) → Object`
+### `encode_phone_number_value(V: PhoneNumberValue) → Object`
 
 ```
 { "@value": V.string_literal.lexical_form.unicode_string }
@@ -1102,7 +968,7 @@ Iri:
 
 ---
 
-#### `encode_external_authority_value(V: ExternalAuthorityValue) → Object`
+### `encode_external_authority_value(V: ExternalAuthorityValue) → Object`
 
 Each kind produces `{ "@id": <iri>, "rdfs:label": <label> }` where `"rdfs:label"` is omitted when `V.label` is absent.
 
@@ -1117,7 +983,7 @@ Each kind produces `{ "@id": <iri>, "rdfs:label": <label> }` where `"rdfs:label"
 
 ---
 
-#### `encode_attribute_value(V: AttributeValue) → Object`
+### `encode_attribute_value(V: AttributeValue) → Object`
 
 ```
 { V.attribute_name.unicode_string: encode_value(V.value) }
@@ -1129,7 +995,7 @@ Nested `AttributeValue` constructs produce nested objects. Multiple `AttributeVa
 
 ## 11. Instance Encoding
 
-#### `encode_template_instance(I: TemplateInstance, T: Template) → Object`
+### `encode_template_instance(I: TemplateInstance, T: Template) → Object`
 
 ```
 let fvs  = [ IV in I.instance_values | IV is FieldValue ]
@@ -1155,7 +1021,7 @@ where `fv(EF)` denotes the `FieldValue` in `fvs` whose key equals `EF.key`, and 
 
 ---
 
-#### `encode_field_value(FV: FieldValue, EF: EmbeddedField) → Object or Array`
+### `encode_field_value(FV: FieldValue, EF: EmbeddedField) → Object or Array`
 
 ```
 if is_multi(EF):
@@ -1167,7 +1033,7 @@ else:
 
 ---
 
-#### `encode_nested_template_instance_slot(NTIs: NestedTemplateInstance+, ET: EmbeddedTemplate) → Object or Array`
+### `encode_nested_template_instance_slot(NTIs: NestedTemplateInstance+, ET: EmbeddedTemplate) → Object or Array`
 
 Let `RT` = the referenced `Template` of `ET`.
 
@@ -1185,7 +1051,7 @@ else:
 
 `Annotation` constructs on `ArtifactMetadata` have no standardised CTM 1.6.0 equivalent. They are encoded as top-level properties on the artifact object using the annotation name IRI as the JSON key.
 
-#### `encode_annotation(A: Annotation) → { key: value }`
+### `encode_annotation(A: Annotation) → { key: value }`
 
 ```
 key:   iri(A.annotation_name.iri)
