@@ -38,9 +38,9 @@ An `EmbeddedPresentationComponent` carries embedding-specific properties such as
 
 `PresentationComponent` does not produce `InstanceValue`.
 
-Conforming implementations MUST NOT create `FieldValue`, `NestedTemplateInstance`, or any other `InstanceValue` solely for a `PresentationComponent`.
+Conforming implementations MUST NOT create `FieldValue`, `NestedTemplateInstance`, or any other `InstanceValue` for a `PresentationComponent`.
 
 ## Open Questions
 
-- Should all `PresentationComponent` variants require reusable artifact identity, or should some later be modeled as inline-only constructs?
+- **Model revision candidate:** The current model requires all `PresentationComponent` variants to carry full reusable artifact identity. This is uniform but may be unnecessarily heavy for simple structural elements such as `PageBreakComponent`, which carry no meaningful content and are unlikely to be shared across templates. A future revision should consider whether lightweight inline-only variants could be introduced for such cases, and define the criteria for determining which components warrant reusable identity.
 - Which presentation-specific properties belong on the reusable `PresentationComponent` versus on `EmbeddedPresentationComponent`?

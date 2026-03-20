@@ -24,13 +24,15 @@ Each `EmbeddedPresentationComponent` MUST reference a `PresentationComponent`.
 
 If an embedding defines minimum and maximum cardinality, the minimum cardinality MUST NOT exceed the maximum cardinality.
 
-If an embedding is marked `Required`, its minimum cardinality MUST be at least one.
+`ValueRequirement` and `Cardinality` are orthogonal: `ValueRequirement` governs whether any values must be supplied at all; `Cardinality` governs the permitted count if values are supplied.
+
+If an embedding is marked `Required`, its minimum cardinality MUST be at least one. For `EmbeddedTemplate`, this means at least one `NestedTemplateInstance` keyed to that embedding MUST be present in the `TemplateInstance`.
 
 If an embedding is marked `Recommended`, absence of a value MUST NOT by itself cause conformance failure, though implementations MAY issue warnings or other authoring guidance.
 
 If an embedding is marked `Optional`, absence of a value MUST NOT by itself cause conformance failure.
 
-> **TODO:** Clarify with the CEDAR team whether `ValueRequirement` and `MinCardinality` are intended to be orthogonal. The current rules treat `Required` as implying `min_cardinality ≥ 1`, but do not address `Optional` combined with `min_cardinality ≥ 2` — a combination that may be intentional and meaningful (e.g. a "PCR primer pair" field that is not obligatory but, if supplied, must include both the forward and reverse primer to be interpretable). If the two are orthogonal, the rules in this section need to be extended to cover all combinations.
+If values are present for a `Recommended` or `Optional` embedding, their count MUST satisfy the `Cardinality` constraints of that embedding.
 
 ### Cardinality Defaults and Multiplicity
 
@@ -94,6 +96,10 @@ For numeric values:
 
 - `NumericValue` MUST contain `NumericLiteral`
 - `NumericLiteral` uses `NumericDatatypeIri`
+- if both `NumericMinValue` and `NumericMaxValue` are present, `NumericMinValue` MUST NOT exceed `NumericMaxValue`
+- if `NumericMinValue` is present, each `NumericLiteral` value MUST be greater than or equal to that minimum
+- if `NumericMaxValue` is present, each `NumericLiteral` value MUST be less than or equal to that maximum
+- `NumericDefaultValue`, if present, MUST satisfy any defined `NumericMinValue` and `NumericMaxValue`
 
 For date values:
 
@@ -124,13 +130,12 @@ For choice values:
 - `ChoiceOptionValue` MUST be either a `Literal`, a `ControlledTermValue`, or an `Iri`
 - if a `FieldValue` conforms to `SingleChoiceFieldType` or `MultipleChoiceFieldType`, each contained `ChoiceValue` MUST match one of the declared `ChoiceOption` values of the referenced field
 
-A `ChoiceValue` matches a `ChoiceOption` if and only if:
+A `ChoiceValue` matches a `ChoiceOption` if and only if one of the following holds:
 
-- when both carry a `Literal`, they are term-equal: their lexical forms and their datatype IRIs or language tags compare equal character by character
-- when both carry a `ControlledTermValue`, their `TermIri` values are equal
-- when both carry an `Iri`, their IRI values are equal
-
-A `ChoiceValue` MUST NOT be considered to match a `ChoiceOption` whose `ChoiceOptionValue` is of a different structural form.
+- both carry a `Literal` and they are term-equal: their lexical forms and their datatype IRIs or language tags compare equal character by character
+- both carry a `ControlledTermValue` and their `TermIri` values are equal
+- both carry an `Iri` and their IRI values are equal
+- one carries a `ControlledTermValue` and the other carries an `Iri`, and the `TermIri` of the `ControlledTermValue` equals the `Iri`
 
 For controlled-term values:
 
@@ -183,7 +188,6 @@ For multiplicity:
 - if an `EmbeddedField` is multi-valued, the number of values in its `FieldValue` MUST satisfy the embedding cardinality constraints
 - if an `EmbeddedTemplate` has multiplicity greater than one, the number of corresponding `NestedTemplateInstance` constructs MUST satisfy the embedding cardinality constraints
 
-> **TODO:** `FieldValue` uses `Value*`, permitting zero values. Whether an empty `FieldValue` is a valid representation of absence for an optional field, or whether absence must be represented by omitting the `FieldValue` entirely, is unresolved pending clarification from the CEDAR team. Until resolved, implementations SHOULD treat an empty `FieldValue` and an absent `FieldValue` as equivalent for the purposes of conformance checking against `ValueRequirement`.
 
 ### Rendering Hint Compatibility
 

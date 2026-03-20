@@ -62,4 +62,3 @@ External authority instance values SHOULD preserve both the typed authority IRI 
 ## Open Questions
 
 - Should `TemplateInstance` permit partial conformance during authoring workflows, or should the model define only fully conforming instances?
-- Should an empty repeated `FieldValue` be permitted for optional `EmbeddedField` constructs, or should omission be the only representation of absence?

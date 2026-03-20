@@ -727,7 +727,7 @@ ArtifactMetadata ::= artifact_metadata(
 
 ### Descriptive Metadata
 
-`DescriptiveMetadata` identifies the human-oriented descriptive properties of an artifact. These properties support naming, explanatory text, and external or local identifiers used for cataloging. `Name` is the required user-supplied name of the artifact. `Description`, when present, is extended textual description explaining the artifact's purpose and content. `Identifier`, when present, is a user-specified external identifier intended for integration with institutional or external systems.
+`DescriptiveMetadata` identifies the human-oriented descriptive properties of an artifact. These properties support naming, explanatory text, and external or local identifiers used for cataloging. `Name` is the required user-supplied name of the artifact. `Description`, when present, is extended textual description explaining the artifact's purpose and content. `Identifier`, when present, is a user-specified external identifier intended for integration with institutional or external systems. `PreferredLabel`, when present, is the primary display label shown to end users — for fields, this is the question text presented in a rendered form. `AlternativeLabel`, when present, provides additional display labels for the artifact.
 
 ```ebnf
 Name ::= name(
@@ -746,12 +746,14 @@ DescriptiveMetadata ::= descriptive_metadata(
                           Name
                           [Description]
                           [Identifier]
+                          [PreferredLabel]
+                          AlternativeLabel*
                         )
 ```
 
-`Name`, `Description`, and `Identifier` carry Unicode string values. See [`UnicodeString`](#primitive-string-types).
+`Name`, `Description`, and `Identifier` carry Unicode string values. See [`UnicodeString`](#primitive-string-types). `PreferredLabel` is defined in the [Controlled Term Value](#controlled-term-value) section; `AlternativeLabel` is defined in the [Label Override](#label-override) section.
 
-> **TODO:** Clarify with the CEDAR team whether `Field` artifacts carry a preferred label (the question text shown to users) and alternative labels as distinct properties separate from `Name`. The v2.0.0 conceptual document (§4.1) describes "a preferred label (the actual question text) and alternative labels for display flexibility", which suggests these may be field-level descriptor properties rather than embedding-level overrides. If so, `DescriptiveMetadata` or a field-specific metadata structure would need to accommodate them.
+> **Note:** Confirm with the CEDAR team that `PreferredLabel` and `AlternativeLabel` belong on `DescriptiveMetadata` for all artifact kinds rather than on a field-specific metadata structure. The v2.0.0 conceptual document (§4.1) describes these in the context of fields specifically; it is worth verifying whether templates, presentation components, and instances should carry them too.
 
 ### Temporal Provenance
 
@@ -1191,7 +1193,7 @@ PreferredLabel ::= preferred_label(
 
 ControlledTermValue ::= controlled_term_value(
                           TermIri
-                          Label
+                          [Label]
                           [Notation]
                           [PreferredLabel]
                         )
@@ -1213,11 +1215,16 @@ ChoiceSelection ::= Literal
 
 ### Link Value
 
-A link value represents a hyperlink or URL-valued field. It carries a single `Iri` identifying the linked resource, with no additional metadata.
+A link value represents a hyperlink or URL-valued field. It carries an `Iri` identifying the linked resource and an optional `LinkLabel` providing a human-readable display label for the link.
 
 ```ebnf
 LinkValue ::= link_value(
                 Iri
+                [LinkLabel]
+              )
+
+LinkLabel ::= link_label(
+                UnicodeString
               )
 ```
 
@@ -1298,7 +1305,7 @@ The final character of an ORCID iD MAY be `X`, serving as an ISO 7064 Mod 11-2 c
 
 ### Attribute Value
 
-An attribute value is a name-value pair used to represent arbitrary named properties whose names are not known at schema definition time. `AttributeName` carries the name of the attribute as a Unicode string. The value component is itself a `Value`, permitting attribute values to carry any value type including nested attribute values.
+An attribute value is a name-value pair used to represent arbitrary named properties whose names are not known at schema definition time. `AttributeName` carries the name of the attribute as a Unicode string. The value component is itself a `Value`, permitting attribute values to carry any value type including nested attribute values. Nesting depth is unbounded at the model level; concrete implementations MAY impose practical limits.
 
 ```ebnf
 AttributeName ::= attribute_name(
@@ -1402,9 +1409,7 @@ PresentationComponentReference ::= PresentationComponentId
 
 ### Requirements
 
-`ValueRequirement` identifies whether a value is required, recommended, or optional in the embedding context. `Required` means that a value must be supplied for conformance. `Recommended` means that a value is not required for conformance, but implementations SHOULD encourage entry and MAY warn when it is absent. `Optional` means that a value may be omitted without conformance failure.
-
-**TODO:** Confirm with the CEDAR team whether `Recommended` is intended to have normative meaning beyond authoring guidance and warnings.
+`ValueRequirement` identifies whether a value is required, recommended, or optional in the embedding context. `Required` means that a value must be supplied for conformance. `Recommended` and `Optional` are identical for conformance purposes: absence of a value MUST NOT cause conformance failure in either case. The distinction is one of authoring guidance only: implementations SHOULD encourage entry for `Recommended` fields and MAY issue warnings when such fields are left empty.
 
 ```ebnf
 ValueRequirement ::= Required
@@ -1440,7 +1445,7 @@ UnboundedCardinality ::= unbounded_cardinality()
 
 When `Cardinality` is absent from an `EmbeddedArtifact`, the implied default is `min_cardinality(1)` with `max_cardinality(1)`: the embedded artifact MUST appear exactly once.
 
-> **TODO:** Clarify with the CEDAR team the intended relationship between `ValueRequirement` and `MinCardinality`. One possible interpretation is that `ValueRequirement` governs whether the user is obligated to supply the field at all, while `MinCardinality` governs how many values must be present *if* any are supplied — making the two orthogonal rather than overlapping. For example, a "parents" field might be `Optional` (the user is not required to fill it in) but carry `min_cardinality(2)` (if they do fill it in, they must specify at least two). In a biomedical context, a "PCR primer pair" field could similarly be `Optional` but require `min_cardinality(2)` because a primer pair is only meaningful when both the forward and reverse primers are specified together. Under this reading, `Optional` with `min_cardinality(2)` would be a valid and meaningful combination, and the current validation rule that `Required` implies `min_cardinality ≥ 1` would need to be re-examined to address the full range of combinations.
+`ValueRequirement` and `Cardinality` are orthogonal. `ValueRequirement` governs whether the user is obligated to supply any values at all. `Cardinality` governs the permitted count of values if any are supplied. A field may therefore be `Optional` — meaning the user is not required to fill it in — while carrying a `min_cardinality` greater than one, meaning that if values are supplied, at least that many must be present. For example, a primer pair field might be `Optional` but carry `min_cardinality(2)`, because a primer pair is only interpretable when both the forward and reverse primers are specified together.
 
 ### Visibility
 
@@ -1765,7 +1770,19 @@ TimezoneNotRequired ::= timezone_not_required()
 
 `TimezoneRequirement` identifies whether timezone information is required by the field type.
 
-> **TODO:** The lexical conformance semantics of `TimePrecision` and `DateTimeValueType` — specifically, whether a value at a coarser precision must omit finer components entirely or may zero them — are unresolved pending clarification from the CEDAR team. No normative lexical constraint is defined here until that is resolved.
+The declared `TimePrecision` determines the required lexical form of conforming `TimeValue` constructs. Finer components than the declared precision MUST be omitted entirely; zeroing them is not equivalent to omitting them. Specifically:
+
+- `HourMinutePrecision`: `TimeLiteral` MUST carry only hour and minute components (`HH:MM`).
+- `HourMinuteSecondPrecision`: `TimeLiteral` MUST carry hour, minute, and second components (`HH:MM:SS`), with no fractional seconds.
+- `HourMinuteSecondFractionPrecision`: `TimeLiteral` MAY carry a fractional seconds component.
+
+When `TimePrecision` is absent from a `TimeFieldType`, no precision constraint applies and any well-formed `TimeLiteral` is conforming.
+
+The same strict-truncation rule applies to `DateTimeValueType` for `DateTimeValue` constructs:
+
+- `DateHourMinuteValueType`: the time component of `DateTimeLiteral` MUST carry only hour and minute (`YYYY-MM-DDTHH:MM`).
+- `DateHourMinuteSecondValueType`: the time component MUST carry hour, minute, and second (`YYYY-MM-DDTHH:MM:SS`), with no fractional seconds.
+- `DateHourMinuteSecondFractionValueType`: the time component MAY carry a fractional seconds component.
 
 ```ebnf
 DateTimeFieldType ::= date_time_field_type(
@@ -2041,9 +2058,7 @@ HtmlContent ::= html_content(
 
 `HtmlContent` denotes an HTML fragment represented as a Unicode string and used by a `RichTextComponent`.
 
-This specification does not define a required HTML feature set.
-
-Implementations MAY restrict or sanitize HTML content for security, portability, or rendering reasons.
+The permitted HTML feature set and any sanitization requirements are outside the scope of this abstract specification and SHOULD be defined by concrete serialization specifications that build on this model.
 
 ```ebnf
 ImageSource ::= image_source(
@@ -2109,7 +2124,7 @@ InstanceValue ::= FieldValue
 
 FieldValue ::= field_value(
                  EmbeddedArtifactKey
-                 Value*
+                 Value+
                )
 
 NestedTemplateInstance ::= nested_template_instance(
@@ -2128,7 +2143,7 @@ For multi-valued `EmbeddedField`, all values for a single field occurrence are c
 
 Instance conformance may be enforced at data-entry time, preventing submission of a non-conforming instance, or retrospectively, by validating existing instances against their referenced template. Both modes apply the same conformance rules; the distinction is an implementation concern rather than a model-level distinction.
 
-> **TODO:** `FieldValue` uses `Value*`, which permits a `FieldValue` with zero values. Whether an empty `FieldValue` is a valid representation of absence for an optional field, or whether absence must be represented by omitting the `FieldValue` entirely (which would make `Value+` correct), is unresolved pending clarification from the CEDAR team.
+Absence of a value for an optional field is represented by omitting the `FieldValue` entirely rather than including an empty one; hence `FieldValue` requires `Value+`. Note that concrete serializations and authoring tools may have their own conventions for representing absence — for example, a JSON serialization may choose to omit a key entirely or include it with a null value — but such distinctions are a concern of the serialization layer and do not affect the abstract model defined here.
 
 ## Open Questions
 
