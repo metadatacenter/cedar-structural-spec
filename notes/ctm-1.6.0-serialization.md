@@ -163,7 +163,7 @@ Two embedded fields:
 
 ### 3.3 Encoding the Embedded Fields
 
-Both fields are single-valued (`is_multi` = false), so `encode_embedded_field_schema` returns the field object directly with no array wrapper.
+Both fields are single-valued ([`is_multi`](#2-conventions) = false), so `encode_embedded_field_schema` returns the field object directly with no array wrapper.
 
 **`title` field** — `encode_text_field_type` applies `STRING_VALUE_SHAPE`. `encode_embedding_constraints` sets `requiredValue: true` (Required). `encode_text_rendering_hint` returns `"textfield"` (absent hint defaults to single-line).
 
@@ -528,7 +528,7 @@ This function is the bridge between the abstract `EmbeddedField` and the CTM 1.6
 
 There are two distinct concerns to resolve here:
 
-**1. Single-valued vs. multi-valued.** The Structural Model represents cardinality on the `EmbeddedField` (the embedding), not on the `Field` definition itself. CTM 1.6.0 expresses multi-valued fields by wrapping the field schema in a JSON Schema array object (`"type": "array", "items": ...`), with optional `minItems` and `maxItems` bounds. Single-valued fields need no wrapper — the field object is used directly. This wrapping decision is therefore made here, at the embedding level, where the cardinality information lives.
+**1. Single-valued vs. multi-valued.** The Structural Model represents cardinality on the `EmbeddedField` (the embedding), not on the `Field` definition itself. CTM 1.6.0 expresses multi-valued fields by wrapping the field schema in a JSON Schema array object (`"type": "array", "items": ...`), with optional `minItems` and `maxItems` bounds. Single-valued fields need no wrapper — the field object is used directly. This wrapping decision is therefore made here, at the embedding level, where the cardinality information lives. The [`is_multi(E)`](#2-conventions) helper encapsulates this check.
 
 **2. Merging embedding context into the field encoding.** The `EmbeddedField` also carries embedding-specific properties — most notably whether the field is required and whether it is hidden — that are not part of the reusable `Field` definition. These are passed down to `encode_field` via the `E` parameter so they can be incorporated into `_valueConstraints` and `_ui` within the field object itself.
 
@@ -559,7 +559,7 @@ else (single-valued):
 
 ### `encode_embedded_template_schema(E: EmbeddedTemplate) → Object`
 
-Parallel to `encode_embedded_field_schema`, but for nested template elements. Single-valued embeddings return the element object directly; multi-valued embeddings wrap it in an array descriptor with cardinality bounds.
+Parallel to `encode_embedded_field_schema`, but for nested template elements. Single-valued embeddings return the element object directly; multi-valued embeddings (determined by [`is_multi(E)`](#2-conventions)) wrap it in an array descriptor with cardinality bounds.
 
 Let `elem_obj` = `encode_template_element(referenced_template(E), E)`.
 
@@ -1361,7 +1361,7 @@ where `fv(EF)` denotes the `FieldValue` in `fvs` whose key equals `EF.key`, and 
 
 ### `encode_field_value(FV: FieldValue, EF: EmbeddedField) → Object or Array`
 
-Encodes a single field's data within an instance. When the field is multi-valued the result is a JSON array of encoded values; when single-valued it is a single encoded value object.
+Encodes a single field's data within an instance. When the field is multi-valued (per [`is_multi(EF)`](#2-conventions)) the result is a JSON array of encoded values; when single-valued it is a single encoded value object.
 
 ```javascript
 if is_multi(EF):
@@ -1377,7 +1377,7 @@ else:
 
 ### `encode_nested_template_instance_slot(NTIs: NestedTemplateInstance+, ET: EmbeddedTemplate) → Object or Array`
 
-Encodes a nested template slot within a parent instance. Multi-valued embeddings produce a JSON array of encoded child instances; single-valued embeddings produce a single child instance object. Encoding recurses through `encode_template_instance`.
+Encodes a nested template slot within a parent instance. Multi-valued embeddings (per [`is_multi(ET)`](#2-conventions)) produce a JSON array of encoded child instances; single-valued embeddings produce a single child instance object. Encoding recurses through `encode_template_instance`.
 
 Let `RT` = the referenced `Template` of `ET`.
 
