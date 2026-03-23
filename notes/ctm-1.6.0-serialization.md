@@ -272,7 +272,7 @@ Both fields are single-valued (`is_multi` = false), so `encode_embedded_field_sc
 
 ### `encode_schema_artifact_metadata(M: SchemaArtifactMetadata) → Object`
 
-Returns a flat JSON object of key-value pairs to be merged into an artifact object.
+CTM 1.6.0 schema artifacts (templates and fields) carry both human-readable metadata and versioning information at the top level of their JSON object. This function combines both concerns by delegating to `encode_artifact_metadata` for names and timestamps and to `encode_schema_versioning` for version and status, then merging the results into a single flat object.
 
 ```javascript
 merge(
@@ -285,6 +285,8 @@ merge(
 
 ### `encode_artifact_metadata(M: ArtifactMetadata) → Object`
 
+Combines the descriptive metadata (name, description) and temporal provenance (creation and modification timestamps with actor IRIs) of an artifact into a single flat object. This is used both for schema artifacts and for template instances.
+
 ```javascript
 merge(
   encode_descriptive_metadata(M.descriptive_metadata),
@@ -295,6 +297,8 @@ merge(
 ---
 
 ### `encode_descriptive_metadata(D: DescriptiveMetadata) → Object`
+
+Encodes the human-readable identity of an artifact. The `schema:name` and `schema:description` keys are always written; `schema:identifier` and `rdfs:label` appear only when set in the Structural Model. Alternative labels have no CTM 1.6.0 equivalent and are dropped.
 
 Returns a JSON object with the following keys:
 
@@ -311,6 +315,8 @@ Returns a JSON object with the following keys:
 
 ### `encode_temporal_provenance(P: TemporalProvenance) → Object`
 
+Records when an artifact was created and last modified, and by whom. All four keys are always present; values are ISO 8601 date-time strings and IRI strings respectively.
+
 Returns a JSON object with the following keys:
 
 | Key | Value |
@@ -323,6 +329,8 @@ Returns a JSON object with the following keys:
 ---
 
 ### `encode_schema_versioning(V: SchemaVersioning) → Object`
+
+Encodes the version number, publication status, and schema format version of a schema artifact. Optional `pav:previousVersion` and `pav:derivedFrom` links are included only when the Structural Model carries them.
 
 Returns a JSON object with the following keys:
 
@@ -338,6 +346,8 @@ Returns a JSON object with the following keys:
 
 ### `encode_status(S: Status) → String`
 
+Maps the two-valued `Status` enumeration to its corresponding `bibo:` vocabulary string.
+
 Returns the string corresponding to the `Status` kind:
 
 | `Status` kind | Returns |
@@ -351,7 +361,7 @@ Returns the string corresponding to the `Status` kind:
 
 ### `encode_template(T: Template) → Object`
 
-Produces the top-level CTM 1.6.0 template object.
+The top-level template object is the root of a CTM 1.6.0 template document. It merges fixed structural keys (`@id`, `@type`, `$schema`, `type`), the JSON Schema layer (`properties`, `required`, `additionalProperties`), the UI configuration (`_ui`), the `@context`, and the flat metadata block into a single JSON object. All sub-functions are called and their results merged here.
 
 ```javascript
 merge(
@@ -377,7 +387,7 @@ merge(
 
 ### `encode_template_context(T: Template) → Object`
 
-Produces the `@context` of the template, combining standard namespaces with property IRI mappings for data-bearing embedded artifacts that carry a `Property`.
+The `@context` maps compact term names to full IRIs for JSON-LD interpretation. Every template context begins with `STANDARD_NS`. For each data-bearing embedded artifact that carries a `Property`, an additional entry maps the artifact's key string to its property IRI — or to a labelled mapping object if a `property_label` is also present. Artifacts without a `Property` (such as presentation components) contribute no context entry.
 
 ```javascript
 let prop_embs = [ E in T.embedded_artifacts
@@ -392,6 +402,8 @@ merge(
 ---
 
 ### `encode_property_context_entry(P: Property) → String or Object`
+
+Determines the form of a single entry in the template's `@context`. When only a property IRI is available the entry is a plain string. When a human-readable label is also present the entry is an object with both `@id` and `rdfs:label` to support labelled JSON-LD mapping.
 
 | Condition | Returns |
 |---|---|
@@ -428,6 +440,8 @@ merge(
 
 ### `encode_template_required(T: Template) → Array`
 
+Builds the `required` array for the template's JSON Schema. The fixed instance-metadata keys are always required. In addition, any data-bearing embedded artifact whose effective `ValueRequirement` is `Required` contributes its key to this array.
+
 ```javascript
 let required_embs = [ E in T.embedded_artifacts
                     | (E is EmbeddedField or E is EmbeddedTemplate)
@@ -442,6 +456,8 @@ let required_embs = [ E in T.embedded_artifacts
 ---
 
 ### `encode_template_ui(T: Template) → Object`
+
+Encodes the `_ui` object for the template. The `order` entry lists all embedded artifact keys in their sequence order, controlling display order in rendering tools. When any embedding carries a label override, a `propertyLabels` map is also included.
 
 ```javascript
 let label_embs = [ E in T.embedded_artifacts | E.label_override is present ]
@@ -465,6 +481,8 @@ These functions produce the value placed at `properties[key(E)]` within the cont
 
 ### `encode_embedded_artifact_schema(E: EmbeddedArtifact) → Object`
 
+Selects the appropriate encoding function based on whether the embedded artifact is a field, a nested template, or a presentation component. The result becomes the value placed at the artifact's key in the parent template's `properties` object.
+
 Dispatches to the encoding function for the `EmbeddedArtifact` kind:
 
 | `EmbeddedArtifact` kind | Encoding function |
@@ -476,6 +494,8 @@ Dispatches to the encoding function for the `EmbeddedArtifact` kind:
 ---
 
 ### `encode_embedded_field_schema(E: EmbeddedField) → Object`
+
+When the field is single-valued the field object is returned directly. When it is multi-valued the field object is wrapped in a JSON Schema array descriptor that also carries optional `minItems` and `maxItems` bounds derived from the embedding's `Cardinality`.
 
 Produces the field schema object, wrapping in array form if `is_multi(E)`. Let `field_obj` = `encode_field(referenced_field(E), E)`, where `referenced_field(E)` is the `Field` identified by the reference in `E`.
 
@@ -497,6 +517,8 @@ else (single-valued):
 ---
 
 ### `encode_embedded_template_schema(E: EmbeddedTemplate) → Object`
+
+Parallel to `encode_embedded_field_schema`, but for nested template elements. Single-valued embeddings return the element object directly; multi-valued embeddings wrap it in an array descriptor with cardinality bounds.
 
 Let `elem_obj` = `encode_template_element(referenced_template(E), E)`.
 
@@ -527,7 +549,7 @@ Presentation components have no standardised CTM 1.6.0 schema representation. Pr
 
 ### `encode_field(F: Field, E: EmbeddedField) → Object`
 
-Produces the CTM 1.6.0 field object. `E` provides the embedding context for properties such as `_valueConstraints.requiredValue` and `_ui.hidden`.
+A CTM 1.6.0 field object merges fixed structural keys (`@id`, `@type`, `$schema`, `type`, `title`, `description`), the artifact metadata block, and the field-type-specific encoding. The embedding `E` is passed to `encode_field_type` because properties such as `requiredValue` and `hidden` depend on how the field is embedded rather than on the field definition itself.
 
 ```javascript
 merge(
@@ -622,6 +644,8 @@ Returns a JSON object with the following keys:
 
 ### `encode_text_field_type(FT: TextFieldType, E: EmbeddedField) → Object`
 
+Text fields accept free-form string input. The rendering hint determines whether the input is single-line (`textfield`) or multi-line (`textarea`), defaulting to single-line when absent. Optional constraints — default value, length bounds, and a validation regex — are written to `_valueConstraints` only when present in the field definition.
+
 **Value shape:** `STRING_VALUE_SHAPE` | **Required:** `["@value"]`
 
 **`_valueConstraints` extras:**
@@ -647,6 +671,8 @@ Returns the string corresponding to the hint kind:
 ---
 
 ### `encode_numeric_field_type(FT: NumericFieldType, E: EmbeddedField) → Object`
+
+Numeric fields hold typed numeric literals. The `numberType` key is always written and carries the XSD datatype IRI string. Optional unit, precision, and range constraints are included only when present. Note that `Unit` is modelled as an IRI in the Structural Model, but CTM 1.6.0 `unitOfMeasure` takes a plain string, so the IRI string value is used directly.
 
 **Value shape:** `NUMBER_VALUE_SHAPE` | **Required:** `["@value"]`
 
@@ -690,6 +716,8 @@ Returns the string corresponding to the `NumericDatatypeIri` kind:
 ---
 
 ### `encode_date_field_type(FT: DateFieldType, E: EmbeddedField) → Object`
+
+Date fields encode values at year, year-month, or full-date precision. Both `_valueConstraints.temporalType` (the XSD datatype) and `_ui.temporalGranularity` are derived from the same `DateValueType`. An optional `dateFormat` hint controls the display ordering of day, month, and year components.
 
 **Value shape:** `STRING_VALUE_SHAPE` | **Required:** `["@value"]`
 
@@ -737,6 +765,8 @@ Returns the `dateFormat` string for the `DateComponentOrder` kind:
 
 ### `encode_time_field_type(FT: TimeFieldType, E: EmbeddedField) → Object`
 
+Time fields always use the `xsd:time` datatype. The `temporalGranularity` and optional timezone and format hints are placed in `_ui`. The `timezoneEnabled` key is only written when the timezone requirement is explicitly stated; it is omitted when unset.
+
 **Value shape:** `STRING_VALUE_SHAPE` | **Required:** `["@value"]`
 
 **`_valueConstraints` extras:** `{ "temporalType": "xsd:time" }`
@@ -767,6 +797,8 @@ Returns the `temporalGranularity` string for the `TimePrecision` kind:
 
 ### `encode_datetime_field_type(FT: DateTimeFieldType, E: EmbeddedField) → Object`
 
+Date-time fields always use the `xsd:dateTime` datatype. They follow the same pattern as time fields for timezone and format hints, with granularity derived from `DateTimeValueType` rather than `TimePrecision`.
+
 **Value shape:** `STRING_VALUE_SHAPE` | **Required:** `["@value"]`
 
 **`_valueConstraints` extras:** `{ "temporalType": "xsd:dateTime" }`
@@ -795,6 +827,8 @@ Returns the `temporalGranularity` string for the `DateTimeValueType` kind:
 ---
 
 ### `encode_controlled_term_field_type(FT: ControlledTermFieldType, E: EmbeddedField) → Object`
+
+Controlled term fields constrain values to terms drawn from ontologies, branches of ontologies, named classes, or value sets. The four `_valueConstraints` list keys (`ontologies`, `branches`, `classes`, `valueSets`) are always present, each holding an array that is empty when no sources of that kind are configured. The `multipleChoice: false` flag distinguishes this from multi-select choice fields.
 
 **Value shape:** `IRI_VALUE_SHAPE` | **Required:** `[]`
 
@@ -906,6 +940,8 @@ Returns a JSON object with the following keys:
 
 ### `encode_multiple_choice_field_type(FT: MultipleChoiceFieldType, E: EmbeddedField) → Object`
 
+Multiple choice fields allow instances to carry zero or more selected options, so the value schema is wrapped in a JSON Schema array with `minItems: 0`. This field type does not follow the standard skeleton. The `multipleChoice: true` flag distinguishes this from single-choice fields.
+
 This field type does not follow the standard skeleton. It wraps the value schema in an array:
 
 ```javascript
@@ -948,11 +984,15 @@ Returns the `inputType` string for the hint kind:
 
 ### `encode_link_field_type(FT: LinkFieldType, E: EmbeddedField) → Object`
 
+Link fields hold a URI value with an optional human-readable label. They use `IRI_VALUE_SHAPE` and the `link` input type with no additional value constraints.
+
 **Value shape:** `IRI_VALUE_SHAPE` | **Required:** `[]` | **`_valueConstraints` extras:** none | **`_ui` extras:** `{ "inputType": "link" }`
 
 ---
 
 ### `encode_email_field_type(FT: EmailFieldType, E: EmbeddedField) → Object`
+
+Email fields hold a string value interpreted as an email address. They use `STRING_VALUE_SHAPE` and the `email` input type with no additional value constraints.
 
 **Value shape:** `STRING_VALUE_SHAPE` | **Required:** `[]` | **`_valueConstraints` extras:** none | **`_ui` extras:** `{ "inputType": "email" }`
 
@@ -960,13 +1000,15 @@ Returns the `inputType` string for the hint kind:
 
 ### `encode_phone_number_field_type(FT: PhoneNumberFieldType, E: EmbeddedField) → Object`
 
+Phone number fields hold a string value interpreted as a phone number. They use `STRING_VALUE_SHAPE` and the `phone-number` input type with no additional value constraints.
+
 **Value shape:** `STRING_VALUE_SHAPE` | **Required:** `[]` | **`_valueConstraints` extras:** none | **`_ui` extras:** `{ "inputType": "phone-number" }`
 
 ---
 
 **External Authority Field Types**
 
-All six external authority field types share the same skeleton entry:
+External authority fields identify entities from well-known registries such as ORCID, ROR, DOI, PubMed, RRID, and NIH Grant. All six types use `IRI_VALUE_SHAPE` and differ only in the `inputType` string written to `_ui`. They share the same skeleton entry:
 
 **Value shape:** `IRI_VALUE_SHAPE` | **Required:** `[]` | **`_valueConstraints` extras:** none | **`_ui` extras:** `{ "inputType": encode_external_authority_input_type(FT) }`
 
@@ -993,6 +1035,8 @@ The `inputType` string values for external authority fields are not standardised
 
 ### `encode_attribute_value_field_type(FT: AttributeValueFieldType, E: EmbeddedField) → Object`
 
+Attribute-value fields hold dynamic key-value pairs whose attribute names are not known at schema definition time. CTM 1.6.0 represents this with a top-level array type and defers the dynamic key handling to the instance level via `additionalProperties`. This field type does not follow the standard skeleton.
+
 This field type does not follow the standard skeleton. It uses a top-level array type:
 
 ```javascript
@@ -1015,6 +1059,8 @@ The instance representation of `AttributeValue` fields in CTM 1.6.0 uses `additi
 When a `Template` is referenced by an `EmbeddedTemplate`, it is encoded as a CTM 1.6.0 template element object.
 
 ### `encode_template_element(T: Template, E: EmbeddedTemplate) → Object`
+
+When a `Template` is used as a nested element, it is encoded identically to a top-level template except that `@type` becomes `TemplateElement`. All sub-functions (`encode_template_context`, `encode_template_properties`, `encode_template_required`, `encode_template_ui`) operate identically regardless of nesting depth.
 
 ```javascript
 merge(
@@ -1045,6 +1091,8 @@ merge(
 These functions encode `Value` constructs as they appear within a `TemplateInstance`.
 
 ### `encode_value(V: Value) → Object`
+
+All value types are encoded as JSON objects, though the specific keys differ by type. This function dispatches to the appropriate type-specific encoder.
 
 Dispatches to the encoding function for the `Value` kind:
 
@@ -1078,6 +1126,8 @@ Returns a JSON object whose keys depend on the `TextLiteral` kind:
 
 ### `encode_numeric_value(V: NumericValue) → Object`
 
+Numeric instance values carry both a lexical form and an explicit XSD datatype IRI, encoded as `@value` and `@type` respectively. The datatype string is produced by the same `encode_numeric_datatype` function used for field schema encoding.
+
 ```javascript
 {
   "@value": V.numeric_literal.lexical_form.unicode_string,
@@ -1101,6 +1151,8 @@ Returns `{ "@value": <literal>, "@type": <xsd-type> }` where the sources depend 
 
 ### `encode_time_value(V: TimeValue) → Object`
 
+Time instance values always use the `xsd:time` datatype. The lexical form is written directly from the time literal.
+
 ```javascript
 { "@value": V.time_literal.lexical_form.unicode_string, "@type": "xsd:time" }
 ```
@@ -1108,6 +1160,8 @@ Returns `{ "@value": <literal>, "@type": <xsd-type> }` where the sources depend 
 ---
 
 ### `encode_datetime_value(V: DateTimeValue) → Object`
+
+Date-time instance values always use the `xsd:dateTime` datatype. The lexical form is written directly from the date-time literal.
 
 ```javascript
 { "@value": V.date_time_literal.lexical_form.unicode_string, "@type": "xsd:dateTime" }
@@ -1153,6 +1207,8 @@ Returns a JSON object with the following keys:
 
 ### `encode_email_value(V: EmailValue) → Object`
 
+Email instance values are plain string objects with a single `@value` key. No type annotation is included.
+
 ```javascript
 { "@value": V.string_literal.lexical_form.unicode_string }
 ```
@@ -1160,6 +1216,8 @@ Returns a JSON object with the following keys:
 ---
 
 ### `encode_phone_number_value(V: PhoneNumberValue) → Object`
+
+Phone number instance values are plain string objects with a single `@value` key. No type annotation is included.
 
 ```javascript
 { "@value": V.string_literal.lexical_form.unicode_string }
@@ -1196,6 +1254,8 @@ Nested `AttributeValue` constructs produce nested objects. Multiple `AttributeVa
 
 ### `encode_template_instance(I: TemplateInstance, T: Template) → Object`
 
+A template instance is encoded by reusing the template's `@context`, writing instance identity and provenance metadata, and then encoding each field value and nested template instance slot. The template `T` is required as a parameter because the context and embedded artifact structure are derived from it rather than from the instance itself.
+
 ```javascript
 let fvs  = [ IV in I.instance_values | IV is FieldValue ]
 let ntis = [ IV in I.instance_values | IV is NestedTemplateInstance ]
@@ -1222,6 +1282,8 @@ where `fv(EF)` denotes the `FieldValue` in `fvs` whose key equals `EF.key`, and 
 
 ### `encode_field_value(FV: FieldValue, EF: EmbeddedField) → Object or Array`
 
+Encodes a single field's data within an instance. When the field is multi-valued the result is a JSON array of encoded values; when single-valued it is a single encoded value object.
+
 ```javascript
 if is_multi(EF):
   [ encode_value(V) for each V in FV.values ]
@@ -1233,6 +1295,8 @@ else:
 ---
 
 ### `encode_nested_template_instance_slot(NTIs: NestedTemplateInstance+, ET: EmbeddedTemplate) → Object or Array`
+
+Encodes a nested template slot within a parent instance. Multi-valued embeddings produce a JSON array of encoded child instances; single-valued embeddings produce a single child instance object. Encoding recurses through `encode_template_instance`.
 
 Let `RT` = the referenced `Template` of `ET`.
 
