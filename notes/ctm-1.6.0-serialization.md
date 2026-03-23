@@ -433,7 +433,13 @@ Determines the form of a single entry in the template's `@context`. When only a 
 
 ### `encode_template_properties(T: Template) → Object`
 
-Produces the `properties` object for the template's JSON Schema layer. Includes fixed instance-metadata shape entries followed by one entry per embedded artifact.
+Produces the `"properties"` object for the template's JSON Schema layer. This is one of the primary sites where embedded artifacts are encoded — each `EmbeddedField` and `EmbeddedTemplate` in the template contributes exactly one entry here, keyed by its `EmbeddedArtifactKey`.
+
+The output has two parts merged together:
+
+1. **Fixed instance-metadata entries.** Nine fixed keys (`@context`, `@id`, `schema:isBasedOn`, `schema:name`, `schema:description`, and the four provenance keys) are always present. These define the schema for the instance-level metadata properties that every CTM 1.6.0 instance must carry, regardless of what fields the template defines.
+
+2. **One entry per embedded artifact.** For each `EmbeddedArtifact E` in the template, the entry at `key(E)` is produced by `encode_embedded_artifact_schema(E)`. For an `EmbeddedField` this ultimately encodes the value shape, value constraints, and UI input type of the referenced `Field` — meaning the bulk of the field encoding (what kind of value it holds, what type annotations are required, whether it is multi-valued) is expressed here inside `properties`, not at the top level. For an `EmbeddedTemplate` the entry contains the full nested element schema. `EmbeddedPresentationComponent` entries are stubs (`{}`).
 
 ```javascript
 merge(
