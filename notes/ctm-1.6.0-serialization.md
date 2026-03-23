@@ -532,7 +532,10 @@ There are two distinct concerns to resolve here:
 
 **2. Merging embedding context into the field encoding.** The `EmbeddedField` also carries embedding-specific properties — most notably whether the field is required and whether it is hidden — that are not part of the reusable `Field` definition. These are passed down to `encode_field` via the `E` parameter so they can be incorporated into `_valueConstraints` and `_ui` within the field object itself.
 
-Let `field_obj` = `encode_field(referenced_field(E), E)`, where `referenced_field(E)` is the `Field` identified by the reference in `E`.
+```javascript
+let field_obj = encode_field(referenced_field(E), E)
+// referenced_field(E) is the Field identified by the reference in E
+```
 
 ```javascript
 if is_multi(E):
