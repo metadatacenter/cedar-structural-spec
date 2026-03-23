@@ -4,6 +4,24 @@
 
 This document specifies a one-directional, function-based mapping from the CEDAR Structural Model (defined in `spec/grammar.md`) to CTM 1.6.0 JSON-LD format. The Structural Model remains the authoritative definition of the model; this document defines how constructs in that model are encoded as CTM 1.6.0 JSON-LD values. Each encoding function takes one or more abstract grammar constructs as arguments and produces a JSON value. The functions are defined precisely enough to be directly implementable.
 
+### What CTM 1.6.0 is
+
+CTM 1.6.0 (CEDAR Template Model version 1.6.0) is the concrete JSON-LD format used by the CEDAR Workbench to store and exchange metadata templates and their filled-in instances. A CTM 1.6.0 document is a JSON object that simultaneously serves three roles: it is a **JSON-LD document** (it carries `@context`, `@id`, and `@type` for RDF interpretation), a **JSON Schema document** (it carries `$schema`, `type`, `properties`, and `required` so that conforming instances can be validated), and a **CEDAR-specific descriptor** (it carries `_valueConstraints` and `_ui` keys understood by CEDAR tooling). These three concerns are all mixed into the same flat JSON object rather than being kept separate.
+
+### The abstract model vs. the serialization
+
+The CEDAR Structural Model (`spec/grammar.md`) is the authoritative, format-independent definition of what a template *means*. It describes templates, fields, embedded artifacts, and instances in abstract terms — without committing to any particular wire format. This document defines how to translate that abstract model into CTM 1.6.0 JSON-LD. The mapping is one-directional (abstract → concrete) and lossy in places: some Structural Model constructs have no CTM 1.6.0 equivalent and are dropped (see Section 14).
+
+### Key structural ideas
+
+**Templates and fields are separate reusable artifacts.** In the Structural Model, a `Template` does not contain `Field` objects directly — it contains `EmbeddedField` references that point to separately-defined `Field` artifacts. When encoding, information from both the embedding (`EmbeddedField`) and the referenced definition (`Field`) must be combined. Most field schema content (value shape, value constraints, UI hints) ends up inside the template's `"properties"` object, keyed by the embedding's key identifier.
+
+**Embedded artifact information is distributed across four top-level keys.** For each field or nested template in a template, there is no single output key that corresponds to it. Instead its information is spread across `"properties"` (the field schema), `"required"` (whether it is mandatory), `"_ui"` (display order and label overrides), and `"@context"` (the property IRI mapping for JSON-LD). Understanding this distribution is essential to reading the encoding functions correctly.
+
+**The field object carries both schema structure and rendering hints.** Each field's entry inside `"properties"` is itself a JSON object that combines JSON Schema structure (what type of value the field holds, expressed via `"properties"`, `"required"`, `"additionalProperties"`) with CTM-specific keys (`"_valueConstraints"` for validation rules such as required/optional, numeric type, or controlled term sources; `"_ui"` for rendering instructions such as input type and visibility). These are merged into a single flat field object.
+
+**Instance values are plain JSON-LD objects.** A template instance is a flat JSON object whose keys are the field key identifiers from the template. Each key maps to a small JSON-LD value object — typically `{ "@value": "..." }` for text and numeric fields, or `{ "@id": "..." }` for IRI-valued fields. Multi-valued fields produce a JSON array of such objects. The template's `"@context"` is reused in the instance so that each field key resolves to its property IRI for RDF interpretation.
+
 ---
 
 ## 2. Conventions
