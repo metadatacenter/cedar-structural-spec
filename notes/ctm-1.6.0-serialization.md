@@ -611,7 +611,7 @@ merge(
 )
 ```
 
-`encode_field_type(FT: FieldType, E: EmbeddedField) → Object` is defined per field type in Section 9 using a common skeleton with per-type value shape and constraint entries.
+`encode_field_type(FT: FieldType, E: EmbeddedField) → Object` is defined per field type in [Section 9](#9-field-type-encoding) using a common skeleton with per-type value shape and constraint entries.
 
 **Calls:** [`encode_schema_artifact_metadata`](#encode_schema_artifact_metadatam-schemaartifactmetadata--object)
 
