@@ -51,7 +51,206 @@ Dot notation is used on grammar constructs, e.g. `T.schema_artifact_metadata` or
 
 ---
 
-## 3. Standard Namespace Context Object
+## 3. Worked Example
+
+This section traces a minimal template and a corresponding instance through the encoding functions. The goal is to show concretely what the abstract model constructs look like as CTM 1.6.0 JSON-LD, and which functions are responsible for each part of the output.
+
+### 3.1 The Example Model
+
+**Template — "Sample Record"**
+
+| Property | Value |
+|---|---|
+| `template_id` | `https://repo.example.org/templates/sample-record` |
+| Name | `"Sample Record"` |
+| Description | `"A minimal metadata template for biological samples"` |
+| Version | `1.0.0` |
+| Status | `DraftStatus` |
+| Model version | `1.6.0` |
+| Created / modified | `2024-01-15T10:00:00Z` by `https://orcid.example.org/0000-0001-2345-6789` |
+
+Two embedded fields:
+
+| Key | Property IRI | ValueRequirement | FieldType |
+|---|---|---|---|
+| `title` | `https://schema.org/name` | `Required` | `TextFieldType` (single line) |
+| `count` | `https://example.org/sampleCount` | `Optional` | `NumericFieldType` (`XsdIntegerDatatypeIri`) |
+
+**Instance — "Sample 42"**
+
+| Property | Value |
+|---|---|
+| `template_instance_id` | `https://repo.example.org/instances/abc123` |
+| `schema:name` | `"Sample 42"` |
+| Based on | the template above |
+| Created / modified | `2024-03-10T09:30:00Z` by `https://orcid.example.org/0000-0001-2345-6789` |
+| `title` value | `TextValue` — `"Mouse Sample 42"` |
+| `count` value | `NumericValue` — `5` (`xsd:integer`) |
+
+---
+
+### 3.2 Encoding the Template
+
+`encode_template(T)` assembles the output by calling several sub-functions and merging their results. The annotations below identify the responsible function for each part.
+
+```javascript
+{
+  // encode_template — fixed identity and schema keys
+  "@id":    "https://repo.example.org/templates/sample-record",
+  "@type":  "https://schema.metadatacenter.org/core/Template",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type":   "object",
+  "title":  "Sample Record",
+  "description": "A minimal metadata template for biological samples",
+  "additionalProperties": false,
+
+  // encode_template_context — STANDARD_NS plus one entry per embedded field
+  // that carries a Property (both do here); encode_property_context_entry
+  // returns a plain IRI string when no property_label is present
+  "@context": {
+    "schema":   "http://schema.org/",
+    "pav":      "http://purl.org/pav/",
+    "oslc":     "http://open-services.net/ns/core#",
+    "bibo":     "http://purl.org/ontology/bibo/",
+    "rdfs":     "http://www.w3.org/2000/01/rdf-schema#",
+    "skos":     "http://www.w3.org/2004/02/skos/core#",
+    "xsd":      "http://www.w3.org/2001/XMLSchema#",
+    "title":    "https://schema.org/name",
+    "count":    "https://example.org/sampleCount"
+  },
+
+  // encode_template_properties — fixed instance-metadata entries followed
+  // by one entry per embedded artifact (encode_embedded_field_schema for each)
+  "properties": {
+    "@context":           { "type": ["object", "null"] },
+    "@id":                { "type": "string", "format": "uri" },
+    "schema:isBasedOn":   { "type": "string", "format": "uri" },
+    "schema:name":        { "type": "string" },
+    "schema:description": { "type": ["string", "null"] },
+    "pav:createdOn":      { "type": ["string", "null"], "format": "date-time" },
+    "pav:createdBy":      { "type": ["string", "null"], "format": "uri" },
+    "pav:lastUpdatedOn":  { "type": ["string", "null"], "format": "date-time" },
+    "oslc:modifiedBy":    { "type": ["string", "null"], "format": "uri" },
+    "title": { /* encode_embedded_field_schema — see Section 3.3 */ },
+    "count": { /* encode_embedded_field_schema — see Section 3.3 */ }
+  },
+
+  // encode_template_required — fixed keys plus "title" (the only Required field)
+  "required": [
+    "@context", "@id", "schema:isBasedOn", "schema:name",
+    "schema:description", "pav:createdOn", "pav:createdBy",
+    "pav:lastUpdatedOn", "oslc:modifiedBy",
+    "title"
+  ],
+
+  // encode_template_ui — order reflects embedded_artifacts sequence
+  "_ui": { "order": ["title", "count"] },
+
+  // encode_schema_artifact_metadata — metadata keys merged at top level
+  "schema:name":        "Sample Record",
+  "schema:description": "A minimal metadata template for biological samples",
+  "pav:version":        "1.0.0",
+  "bibo:status":        "bibo:draft",
+  "schema:schemaVersion": "1.6.0",
+  "pav:createdOn":      "2024-01-15T10:00:00Z",
+  "pav:createdBy":      "https://orcid.example.org/0000-0001-2345-6789",
+  "pav:lastUpdatedOn":  "2024-01-15T10:00:00Z",
+  "oslc:modifiedBy":    "https://orcid.example.org/0000-0001-2345-6789"
+}
+```
+
+---
+
+### 3.3 Encoding the Embedded Fields
+
+Both fields are single-valued (`is_multi` = false), so `encode_embedded_field_schema` returns the field object directly with no array wrapper.
+
+**`title` field** — `encode_text_field_type` applies `STRING_VALUE_SHAPE`. `encode_embedding_constraints` sets `requiredValue: true` (Required). `encode_text_rendering_hint` returns `"textfield"` (absent hint defaults to single-line).
+
+```javascript
+{
+  "@id":    "https://repo.example.org/fields/title",
+  "@type":  "https://schema.metadatacenter.org/core/TemplateField",
+  "@context": { /* STANDARD_NS */ },
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type":   "object",
+  "title":  "Title",
+  "description": "",
+  "properties": {
+    "@type":  { "oneOf": [{ "type": "string", "format": "uri" }, { "type": "null" }] },
+    "@value": { "type": ["string", "null"] }
+  },
+  "required": ["@value"],
+  "additionalProperties": false,
+  "_valueConstraints": { "requiredValue": true },
+  "_ui":   { "inputType": "textfield" },
+  // encode_schema_artifact_metadata for the field:
+  "schema:name": "Title", "schema:description": null,
+  "pav:version": "1.0.0", "bibo:status": "bibo:draft",
+  "schema:schemaVersion": "1.6.0",
+  "pav:createdOn": "2024-01-15T10:00:00Z", ...
+}
+```
+
+**`count` field** — `encode_numeric_field_type` applies `NUMBER_VALUE_SHAPE`. `encode_numeric_datatype` maps `XsdIntegerDatatypeIri` to `"xsd:integer"`. `encode_embedding_constraints` sets `requiredValue: false` (Optional).
+
+```javascript
+{
+  "@id":    "https://repo.example.org/fields/count",
+  "@type":  "https://schema.metadatacenter.org/core/TemplateField",
+  "@context": { /* STANDARD_NS */ },
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type":   "object",
+  "title":  "Sample Count",
+  "description": "",
+  "properties": {
+    "@type":  { "oneOf": [{ "type": "string", "format": "uri" }, { "type": "null" }] },
+    "@value": { "type": ["number", "null"] }
+  },
+  "required": ["@value"],
+  "additionalProperties": false,
+  "_valueConstraints": { "requiredValue": false, "numberType": "xsd:integer" },
+  "_ui":   { "inputType": "numeric" },
+  "schema:name": "Sample Count", ...
+}
+```
+
+---
+
+### 3.4 Encoding the Instance
+
+`encode_template_instance(I, T)` reuses the template context and maps each `FieldValue` using `encode_field_value` → `encode_value`.
+
+```javascript
+{
+  // reuses encode_template_context(T) — same @context as the template
+  "@context": {
+    "schema": "http://schema.org/", /* ... STANDARD_NS ... */
+    "title":  "https://schema.org/name",
+    "count":  "https://example.org/sampleCount"
+  },
+  "@id":              "https://repo.example.org/instances/abc123",
+  "schema:isBasedOn": "https://repo.example.org/templates/sample-record",
+
+  // encode_artifact_metadata
+  "schema:name":        "Sample 42",
+  "schema:description": null,
+  "pav:createdOn":      "2024-03-10T09:30:00Z",
+  "pav:createdBy":      "https://orcid.example.org/0000-0001-2345-6789",
+  "pav:lastUpdatedOn":  "2024-03-10T09:30:00Z",
+  "oslc:modifiedBy":    "https://orcid.example.org/0000-0001-2345-6789",
+
+  // encode_field_value → encode_text_value (StringLiteral, no language tag)
+  "title": { "@value": "Mouse Sample 42" },
+
+  // encode_field_value → encode_numeric_value
+  "count": { "@value": "5", "@type": "xsd:integer" }
+}
+```
+
+---
+
+## 4. Standard Namespace Context Object
 
 `STANDARD_NS` is the following JSON object. It is included in every `@context` produced by this mapping.
 
@@ -69,7 +268,7 @@ Dot notation is used on grammar constructs, e.g. `T.schema_artifact_metadata` or
 
 ---
 
-## 4. Metadata Encoding Functions
+## 5. Metadata Encoding Functions
 
 ### `encode_schema_artifact_metadata(M: SchemaArtifactMetadata) → Object`
 
@@ -148,7 +347,7 @@ Returns the string corresponding to the `Status` kind:
 
 ---
 
-## 5. Template Encoding
+## 6. Template Encoding
 
 ### `encode_template(T: Template) → Object`
 
@@ -260,7 +459,7 @@ merge(
 
 ---
 
-## 6. Embedded Artifact Schema Encoding
+## 7. Embedded Artifact Schema Encoding
 
 These functions produce the value placed at `properties[key(E)]` within the containing template or template element.
 
@@ -320,11 +519,11 @@ else:
 
 ### `encode_embedded_presentation_component_schema(E: EmbeddedPresentationComponent) → Object`
 
-Presentation components have no standardised CTM 1.6.0 schema representation. Produces an empty object `{}` as a placeholder. See Section 13, Known Gaps.
+Presentation components have no standardised CTM 1.6.0 schema representation. Produces an empty object `{}` as a placeholder. See Section 14, Known Gaps.
 
 ---
 
-## 7. Field Encoding
+## 8. Field Encoding
 
 ### `encode_field(F: Field, E: EmbeddedField) → Object`
 
@@ -347,11 +546,11 @@ merge(
 )
 ```
 
-`encode_field_type(FT: FieldType, E: EmbeddedField) → Object` is defined per field type in Section 8 using a common skeleton with per-type value shape and constraint entries.
+`encode_field_type(FT: FieldType, E: EmbeddedField) → Object` is defined per field type in Section 9 using a common skeleton with per-type value shape and constraint entries.
 
 ---
 
-## 8. Field Type Encoding
+## 9. Field Type Encoding
 
 **Skeleton**
 
@@ -807,11 +1006,11 @@ This field type does not follow the standard skeleton. It uses a top-level array
 }
 ```
 
-The instance representation of `AttributeValue` fields in CTM 1.6.0 uses `additionalProperties` at the instance level rather than a structured value schema. See Section 13, Known Gaps.
+The instance representation of `AttributeValue` fields in CTM 1.6.0 uses `additionalProperties` at the instance level rather than a structured value schema. See Section 14, Known Gaps.
 
 ---
 
-## 9. Template Element Encoding
+## 10. Template Element Encoding
 
 When a `Template` is referenced by an `EmbeddedTemplate`, it is encoded as a CTM 1.6.0 template element object.
 
@@ -837,11 +1036,11 @@ merge(
 )
 ```
 
-`encode_template_context`, `encode_template_properties`, `encode_template_required`, and `encode_template_ui` are as defined in Section 5 and operate identically on `Template` constructs whether they are top-level templates or nested template elements.
+`encode_template_context`, `encode_template_properties`, `encode_template_required`, and `encode_template_ui` are as defined in Section 6 and operate identically on `Template` constructs whether they are top-level templates or nested template elements.
 
 ---
 
-## 10. Value Encoding (Instance Level)
+## 11. Value Encoding (Instance Level)
 
 These functions encode `Value` constructs as they appear within a `TemplateInstance`.
 
@@ -993,7 +1192,7 @@ Nested `AttributeValue` constructs produce nested objects. Multiple `AttributeVa
 
 ---
 
-## 11. Instance Encoding
+## 12. Instance Encoding
 
 ### `encode_template_instance(I: TemplateInstance, T: Template) → Object`
 
@@ -1047,7 +1246,7 @@ else:
 
 ---
 
-## 12. Annotations
+## 13. Annotations
 
 `Annotation` constructs on `ArtifactMetadata` have no standardised CTM 1.6.0 equivalent. They are encoded as top-level properties on the artifact object using the annotation name IRI as the JSON key.
 
@@ -1066,7 +1265,7 @@ Implementations SHOULD confirm that annotation IRI keys are valid within the CTM
 
 ---
 
-## 13. Known Gaps and Lossy Areas
+## 14. Known Gaps and Lossy Areas
 
 1. **`PresentationComponent` variants** — `RichTextComponent`, `ImageComponent`, `YoutubeVideoComponent`, `SectionBreakComponent`, and `PageBreakComponent` have no clean CTM 1.6.0 reusable artifact equivalent. `encode_embedded_presentation_component_schema` produces `{}` as a placeholder. Concrete implementations may use ad hoc CTM 1.6.0 conventions.
 
