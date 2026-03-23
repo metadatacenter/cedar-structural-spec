@@ -12,6 +12,8 @@ CTM 1.6.0 (CEDAR Template Model version 1.6.0) is the concrete JSON-LD format us
 
 The CEDAR Structural Model (`spec/grammar.md`) is the authoritative, format-independent definition of what a template *means*. It describes templates, fields, embedded artifacts, and instances in abstract terms — without committing to any particular wire format. This document defines how to translate that abstract model into CTM 1.6.0 JSON-LD. The mapping is one-directional (abstract → concrete) and lossy in places: some Structural Model constructs have no CTM 1.6.0 equivalent and are dropped (see Section 14).
 
+> **Caution:** This mapping is not round-trippable. Encoding a Structural Model construct to CTM 1.6.0 and then decoding back will not always recover the original construct. See [Section 14](#14-known-gaps-and-lossy-areas) for a full list of known gaps and lossy areas before implementing.
+
 ### Key structural ideas
 
 **Templates and fields are separate reusable artifacts.** In the Structural Model, a `Template` does not contain `Field` objects directly — it contains `EmbeddedField` references that point to separately-defined `Field` artifacts. When encoding, information from both the embedding (`EmbeddedField`) and the referenced definition (`Field`) must be combined. Most field schema content (value shape, value constraints, UI hints) ends up inside the template's `"properties"` object, keyed by the embedding's key identifier.
@@ -604,6 +606,8 @@ else:
 
 Presentation components have no standardised CTM 1.6.0 schema representation. Produces an empty object `{}` as a placeholder. See Section 14, Known Gaps.
 
+> **Caution:** The `{}` placeholder means a JSON Schema validator will accept any value at this key in an instance, including values that are structurally invalid from the Structural Model's perspective. Implementations that need meaningful validation of presentation component slots must apply additional constraints outside this mapping.
+
 ---
 
 ## 8. Field Encoding
@@ -704,6 +708,8 @@ Returns `{ "requiredValue": V }` where `V` depends on the effective value requir
 |---|---|
 | `Required` | `true` |
 | `Recommended` or `Optional` | `false` |
+
+> **Caution:** The `Recommended` and `Optional` distinctions from the Structural Model are both encoded as `"requiredValue": false` and are therefore indistinguishable in CTM 1.6.0 output. This is not a JSON Schema concept — `"requiredValue"` is a CEDAR tooling hint only. The JSON Schema `"required"` array (produced by `encode_template_required`) separately handles enforcement, and it too only distinguishes `Required` from everything else. The `Recommended`/`Optional` distinction is entirely lost in this encoding.
 
 ### `encode_embedding_ui(E: EmbeddedField) → Object`
 
@@ -981,6 +987,8 @@ Returns a JSON object with the following keys:
 
 Choice fields may be literal-valued or IRI-valued. Determine the value form by inspecting the options: if any option carries a `ControlledTermValue` or `Iri`, use IRI-form; otherwise use literal-form.
 
+> **Caution:** The IRI vs. literal distinction is determined at encoding time by inspecting the option values, not by a type flag on the field itself. If a field's options are mixed (some literal, some IRI-valued), the behaviour is underspecified — apply IRI-form in that case to avoid data loss, but treat this as an invalid model state that should be rejected upstream.
+
 **Value shape:** `STRING_VALUE_SHAPE` (literal-form); for IRI-form replace `"@value"` with `"@id": { "type": "string", "format": "uri" }` | **Required:** `[]`
 
 **`_valueConstraints` extras:**
@@ -1128,7 +1136,7 @@ Returns the `inputType` string for the field type kind:
 | `RridFieldType` | `"rrid"` |
 | `NihGrantIdFieldType` | `"nih-grant"` |
 
-The `inputType` string values for external authority fields are not standardised in the published CTM 1.6.0 specification. The values above reflect common practice and SHOULD be confirmed against the deployed CTM 1.6.0 implementation.
+> **Caution:** The `inputType` string values for external authority fields are not standardised in the published CTM 1.6.0 specification. The values in the table above reflect common practice but MUST be confirmed against the deployed CTM 1.6.0 implementation before use. Encoding with incorrect `inputType` values may cause CEDAR tooling to misrender or reject these fields.
 
 ---
 
@@ -1392,6 +1400,8 @@ where `fv(EF)` denotes the `FieldValue` in `fvs` whose key equals `EF.key`, and 
 ### `encode_field_value(FV: FieldValue, EF: EmbeddedField) → Object or Array`
 
 Encodes a single field's data within an instance. When the field is multi-valued (per [`is_multi(EF)`](#2-conventions)) the result is a JSON array of encoded values; when single-valued it is a single encoded value object.
+
+> **Caution:** Consumers of CTM 1.6.0 instances must handle both forms at any given field key — either a plain JSON object or a JSON array. A consumer that always expects an object will silently misread or discard data for multi-valued fields. The cardinality information needed to know which form to expect is carried in the template schema (the `"type": "array"` wrapper on the field entry in `"properties"`), not in the instance itself.
 
 ```javascript
 if is_multi(EF):
