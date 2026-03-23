@@ -621,7 +621,7 @@ merge(
 
 **Skeleton**
 
-Each field type encoding function returns an object of the following form:
+Every standard field type encoding function returns a fragment — an object with five keys — that gets merged into the full field object by `encode_field`. The skeleton below shows the structure, with placeholders for the parts that vary per field type:
 
 ```javascript
 {
@@ -633,13 +633,23 @@ Each field type encoding function returns an object of the following form:
 }
 ```
 
-When `<vc-extras>` is empty, `_valueConstraints` is `encode_embedding_constraints(E)` directly with no merge. Field types that do not follow this skeleton are noted explicitly.
+The placeholders mean:
+
+- **`<value-shape>`** — a JSON Schema `properties` object describing the keys an instance value for this field must (or may) carry. For example, a text field's instance value is a JSON object with `"@value"` and optionally `"@type"`; a controlled term field's value uses `"@id"` and `"rdfs:label"` instead. Three named shapes (`STRING_VALUE_SHAPE`, `NUMBER_VALUE_SHAPE`, `IRI_VALUE_SHAPE`) cover most field types; each is defined below.
+
+- **`<required>`** — the JSON Schema `required` array listing which keys from the value shape must be present in an instance value. Most field types require `["@value"]` or `[]`; the exact list is given per field type.
+
+- **`<vc-extras>`** — additional keys to merge into `_valueConstraints` beyond the base `requiredValue` flag. For example, a numeric field adds `"numberType"` here; a text field may add `"defaultValue"`, `"minLength"`, etc. When a field type has no extras, `_valueConstraints` is just `encode_embedding_constraints(E)` directly.
+
+- **`<ui-extras>`** — additional keys to merge into `_ui` beyond the base `hidden` flag. At minimum, every field type adds `"inputType"` here. Temporal fields also add `"temporalGranularity"` and similar hints.
+
+Field types that do not follow this skeleton (multiple choice and attribute-value) are noted explicitly in their entries.
 
 **Value Shapes**
 
-Three value shapes recur across field types:
+A value shape is a JSON Schema `properties` object that defines what keys an instance value object for this field type must or may contain. Rather than repeat the same structures throughout, three shapes are named here and referenced by the per-field-type entries.
 
-**`STRING_VALUE_SHAPE`** — used by text, date, time, datetime, email, and phone number fields:
+**`STRING_VALUE_SHAPE`** — used by text, date, time, datetime, email, and phone number fields. Instance values carry a string `"@value"` and an optional `"@type"` IRI for typed literals:
 ```json
 {
   "@type":  { "oneOf": [{ "type": "string", "format": "uri" }, { "type": "null" }] },
@@ -647,7 +657,7 @@ Three value shapes recur across field types:
 }
 ```
 
-**`NUMBER_VALUE_SHAPE`** — used by numeric fields:
+**`NUMBER_VALUE_SHAPE`** — used by numeric fields. Instance values carry a numeric `"@value"` and an `"@type"` IRI identifying the XSD numeric datatype:
 ```json
 {
   "@type":  { "oneOf": [{ "type": "string", "format": "uri" }, { "type": "null" }] },
@@ -655,7 +665,7 @@ Three value shapes recur across field types:
 }
 ```
 
-**`IRI_VALUE_SHAPE`** — used by controlled term, link, and external authority fields:
+**`IRI_VALUE_SHAPE`** — used by controlled term, link, and external authority fields. Instance values carry an `"@id"` IRI rather than an `"@value"` string, plus an optional human-readable `"rdfs:label"`:
 ```json
 {
   "@type":      { "oneOf": [{ "type": "string", "format": "uri" }, { "type": "null" }] },
@@ -665,6 +675,8 @@ Three value shapes recur across field types:
 ```
 
 **Embedding Helper Functions**
+
+The two helpers below produce the base content of `_valueConstraints` and `_ui` from the `EmbeddedField` context. Every standard field type merges these as the starting point before adding its own extras.
 
 ### `encode_embedding_constraints(E: EmbeddedField) → Object`
 
