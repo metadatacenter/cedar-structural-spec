@@ -1603,19 +1603,19 @@ Implementations SHOULD confirm that annotation IRI keys are valid within the CTM
 
 ## 14. Known Gaps and Lossy Areas
 
-1. **`PresentationComponent` variants** — Encoded as `StaticTemplateField` objects with no value shape or `_valueConstraints`. Content is stored in `_ui._content`. Because presentation components produce no instance value, they MUST NOT be added to the template's `"required"` array and MUST NOT appear as `FieldValue` entries in instances.
+1. **`skos:prefLabel` on `StaticTemplateField`** — Real CTM 1.6.0 output includes a `skos:prefLabel` key at the top level of static field objects (presentation components). This is not currently produced by `encode_presentation_component` because `encode_schema_artifact_metadata` maps preferred labels to `rdfs:label`. The relationship between the Structural Model's `preferred_label` and CTM 1.6.0's `skos:prefLabel` on static fields needs clarification.
 
-2. **`Header` and `Footer` on `Template`** — Encoded as `"header"` and `"footer"` string keys inside `_ui` when present.
+2. **`propertyDescriptions` in `_ui`** — Real CTM 1.6.0 templates include a `"propertyDescriptions"` map inside `_ui`, keyed by embedded artifact key, containing the description/help text for each field. This is not currently produced by `encode_template_ui`. The source of these descriptions (whether from the `EmbeddedField` or the referenced `Field`) needs to be confirmed and the function updated accordingly.
 
 3. **`AlternativeLabel*` on `DescriptiveMetadata`** — No CTM 1.6.0 equivalent; omitted.
 
-4. **`DefaultOption` on `ChoiceOption`** — The CTM 1.6.0 `literals` array has no standard `selectedByDefault` equivalent. Implementations MAY include a custom flag such as `"selectedByDefault": true` if the target system supports it.
+4. **`DefaultOption` on `ChoiceOption`** — CTM 1.6.0 has no standardised `selectedByDefault` key in the `literals` array. `encode_choice_option_literal` includes `"selectedByDefault": true` as a custom extension when a default is set. Support in CTM 1.6.0 tooling is not guaranteed.
 
-5. **Default values for link, contact, and external authority field types** — CTM 1.6.0 `_valueConstraints.defaultValue` is primarily defined for text fields. Default value encoding for `LinkDefaultValue`, `EmailDefaultValue`, `PhoneNumberDefaultValue`, and external authority defaults is implementation-defined.
+5. **Default values for link, email, phone number, and external authority field types** — CTM 1.6.0 `_valueConstraints.defaultValue` is primarily defined for text fields. Default value encoding for `LinkDefaultValue`, `EmailDefaultValue`, `PhoneNumberDefaultValue`, and external authority defaults is implementation-defined.
 
-6. **`AttributeValue` instance representation** — CTM 1.6.0 uses `additionalProperties` on the instance object for attribute-value fields. The instance-level encoding of `AttributeValue` therefore injects key-value pairs directly into the parent instance object rather than nesting them under a field key.
+6. **`AttributeValue` instance representation** — CTM 1.6.0 uses `additionalProperties` on the instance object for attribute-value fields. The instance-level encoding of `AttributeValue` injects key-value pairs directly into the parent instance object rather than nesting them under a field key.
 
-7. **`Recommended` vs `Optional` in `_valueConstraints.requiredValue`** — Both map to `"requiredValue": false`. The distinction is not preserved in the CTM 1.6.0 encoding.
+7. **`Recommended` vs `Optional`** — Both map to `"requiredValue": false` in `_valueConstraints` and neither contributes to the `"required"` array. The distinction is entirely lost in CTM 1.6.0 output.
 
 8. **`Unit` as IRI** — CTM 1.6.0 `unitOfMeasure` is a plain string. The IRI string value is used directly; any human-readable label associated with `Unit` is omitted.
 
