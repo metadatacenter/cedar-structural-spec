@@ -75,7 +75,7 @@ Dot notation is used on grammar constructs, e.g. `T.schema_artifact_metadata` or
 
 Returns a flat JSON object of key-value pairs to be merged into an artifact object.
 
-```
+```javascript
 merge(
   encode_artifact_metadata(M.artifact_metadata),
   encode_schema_versioning(M.schema_versioning)
@@ -86,7 +86,7 @@ merge(
 
 ### `encode_artifact_metadata(M: ArtifactMetadata) → Object`
 
-```
+```javascript
 merge(
   encode_descriptive_metadata(M.descriptive_metadata),
   encode_temporal_provenance(M.temporal_provenance)
@@ -154,7 +154,7 @@ Returns the string corresponding to the `Status` kind:
 
 Produces the top-level CTM 1.6.0 template object.
 
-```
+```javascript
 merge(
   {
     "@id":    iri(T.template_id),
@@ -180,7 +180,7 @@ merge(
 
 Produces the `@context` of the template, combining standard namespaces with property IRI mappings for data-bearing embedded artifacts that carry a `Property`.
 
-```
+```javascript
 let prop_embs = [ E in T.embedded_artifacts
                 | (E is EmbeddedField or E is EmbeddedTemplate) and E.property is present ]
 
@@ -205,7 +205,7 @@ merge(
 
 Produces the `properties` object for the template's JSON Schema layer. Includes fixed instance-metadata shape entries followed by one entry per embedded artifact.
 
-```
+```javascript
 merge(
   {
     "@context": { "type": ["object", "null"] },
@@ -229,7 +229,7 @@ merge(
 
 ### `encode_template_required(T: Template) → Array`
 
-```
+```javascript
 let required_embs = [ E in T.embedded_artifacts
                     | (E is EmbeddedField or E is EmbeddedTemplate)
                       and effective value_requirement of E is Required ]
@@ -244,7 +244,7 @@ let required_embs = [ E in T.embedded_artifacts
 
 ### `encode_template_ui(T: Template) → Object`
 
-```
+```javascript
 let label_embs = [ E in T.embedded_artifacts | E.label_override is present ]
 
 merge(
@@ -280,7 +280,7 @@ Dispatches to the encoding function for the `EmbeddedArtifact` kind:
 
 Produces the field schema object, wrapping in array form if `is_multi(E)`. Let `field_obj` = `encode_field(referenced_field(E), E)`, where `referenced_field(E)` is the `Field` identified by the reference in `E`.
 
-```
+```javascript
 if is_multi(E):
   {
     "type": "array",
@@ -301,7 +301,7 @@ else (single-valued):
 
 Let `elem_obj` = `encode_template_element(referenced_template(E), E)`.
 
-```
+```javascript
 if is_multi(E):
   {
     "type": "array",
@@ -330,7 +330,7 @@ Presentation components have no standardised CTM 1.6.0 schema representation. Pr
 
 Produces the CTM 1.6.0 field object. `E` provides the embedding context for properties such as `_valueConstraints.requiredValue` and `_ui.hidden`.
 
-```
+```javascript
 merge(
   {
     "@id":   iri(F.field_id),
@@ -357,7 +357,7 @@ merge(
 
 Each field type encoding function returns an object of the following form:
 
-```
+```javascript
 {
   "properties":           <value-shape>,
   "required":             <required>,
@@ -709,7 +709,7 @@ Returns a JSON object with the following keys:
 
 This field type does not follow the standard skeleton. It wraps the value schema in an array:
 
-```
+```javascript
 {
   "type": "array",
   "minItems": 0,
@@ -796,7 +796,7 @@ The `inputType` string values for external authority fields are not standardised
 
 This field type does not follow the standard skeleton. It uses a top-level array type:
 
-```
+```javascript
 {
   "type": "array",
   "items": { "type": "string" },
@@ -817,7 +817,7 @@ When a `Template` is referenced by an `EmbeddedTemplate`, it is encoded as a CTM
 
 ### `encode_template_element(T: Template, E: EmbeddedTemplate) → Object`
 
-```
+```javascript
 merge(
   {
     "@id":    iri(T.template_id),
@@ -879,7 +879,7 @@ Returns a JSON object whose keys depend on the `TextLiteral` kind:
 
 ### `encode_numeric_value(V: NumericValue) → Object`
 
-```
+```javascript
 {
   "@value": V.numeric_literal.lexical_form.unicode_string,
   "@type":  encode_numeric_datatype(V.numeric_literal.numeric_datatype_iri)
@@ -902,7 +902,7 @@ Returns `{ "@value": <literal>, "@type": <xsd-type> }` where the sources depend 
 
 ### `encode_time_value(V: TimeValue) → Object`
 
-```
+```javascript
 { "@value": V.time_literal.lexical_form.unicode_string, "@type": "xsd:time" }
 ```
 
@@ -910,7 +910,7 @@ Returns `{ "@value": <literal>, "@type": <xsd-type> }` where the sources depend 
 
 ### `encode_datetime_value(V: DateTimeValue) → Object`
 
-```
+```javascript
 { "@value": V.date_time_literal.lexical_form.unicode_string, "@type": "xsd:dateTime" }
 ```
 
@@ -954,7 +954,7 @@ Returns a JSON object with the following keys:
 
 ### `encode_email_value(V: EmailValue) → Object`
 
-```
+```javascript
 { "@value": V.string_literal.lexical_form.unicode_string }
 ```
 
@@ -962,7 +962,7 @@ Returns a JSON object with the following keys:
 
 ### `encode_phone_number_value(V: PhoneNumberValue) → Object`
 
-```
+```javascript
 { "@value": V.string_literal.lexical_form.unicode_string }
 ```
 
@@ -985,7 +985,7 @@ Each kind produces `{ "@id": <iri>, "rdfs:label": <label> }` where `"rdfs:label"
 
 ### `encode_attribute_value(V: AttributeValue) → Object`
 
-```
+```javascript
 { V.attribute_name.unicode_string: encode_value(V.value) }
 ```
 
@@ -997,7 +997,7 @@ Nested `AttributeValue` constructs produce nested objects. Multiple `AttributeVa
 
 ### `encode_template_instance(I: TemplateInstance, T: Template) → Object`
 
-```
+```javascript
 let fvs  = [ IV in I.instance_values | IV is FieldValue ]
 let ntis = [ IV in I.instance_values | IV is NestedTemplateInstance ]
 let emb_fields     = [ E in T.embedded_artifacts | E is EmbeddedField ]
@@ -1023,7 +1023,7 @@ where `fv(EF)` denotes the `FieldValue` in `fvs` whose key equals `EF.key`, and 
 
 ### `encode_field_value(FV: FieldValue, EF: EmbeddedField) → Object or Array`
 
-```
+```javascript
 if is_multi(EF):
   [ encode_value(V) for each V in FV.values ]
 
@@ -1037,7 +1037,7 @@ else:
 
 Let `RT` = the referenced `Template` of `ET`.
 
-```
+```javascript
 if is_multi(ET):
   [ encode_template_instance(NTI, RT) for each NTI in NTIs ]
 
@@ -1053,7 +1053,7 @@ else:
 
 ### `encode_annotation(A: Annotation) → { key: value }`
 
-```
+```javascript
 key:   iri(A.annotation_name.iri)
 
 value: if A.annotation_value is LiteralAnnotationValue:
