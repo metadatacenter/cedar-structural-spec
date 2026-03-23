@@ -588,7 +588,7 @@ let required_embs = [ E in T.embedded_artifacts
 
 ### `encode_template_ui(T: Template) → Object`
 
-Encodes the `_ui` object for the template. The `order` entry lists all embedded artifact keys in their sequence order, controlling display order in rendering tools. When any embedding carries a label override, a `propertyLabels` map is also included.
+Encodes the `_ui` object for the template. The `order` entry lists all embedded artifact keys in their sequence order, controlling display order in rendering tools. When any embedding carries a label override, a `propertyLabels` map is also included. `Header` and `Footer` on the template are encoded as `"header"` and `"footer"` string keys when present.
 
 ```javascript
 let label_embs = [ E in T.embedded_artifacts | E.label_override is present ]
@@ -598,11 +598,11 @@ merge(
   if label_embs is non-empty:
   {
     "propertyLabels": { key(E): E.label_override.label.unicode_string for each E in label_embs }
-  }
+  },
+  if T.header is present: { "header": T.header.unicode_string },
+  if T.footer is present: { "footer": T.footer.unicode_string }
 )
 ```
-
-`Header` and `Footer` on `Template` have no direct CTM 1.6.0 equivalent and are omitted.
 
 ---
 
@@ -1542,7 +1542,7 @@ Implementations SHOULD confirm that annotation IRI keys are valid within the CTM
 
 1. **`PresentationComponent` variants** — `RichTextComponent`, `ImageComponent`, `YoutubeVideoComponent`, `SectionBreakComponent`, and `PageBreakComponent` have no clean CTM 1.6.0 reusable artifact equivalent. `encode_embedded_presentation_component_schema` produces `{}` as a placeholder. Concrete implementations may use ad hoc CTM 1.6.0 conventions.
 
-2. **`Header` and `Footer` on `Template`** — No CTM 1.6.0 equivalent; omitted.
+2. **`Header` and `Footer` on `Template`** — Encoded as `"header"` and `"footer"` string keys inside `_ui` when present.
 
 3. **`AlternativeLabel*` on `DescriptiveMetadata`** — No CTM 1.6.0 equivalent; omitted.
 
