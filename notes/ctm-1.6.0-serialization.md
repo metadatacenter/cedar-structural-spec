@@ -281,6 +281,8 @@ merge(
 )
 ```
 
+**Calls:** [`encode_artifact_metadata`](#encode_artifact_metadatam-artifactmetadata--object), [`encode_schema_versioning`](#encode_schema_versioningv-schemaversioning--object)
+
 ---
 
 ### `encode_artifact_metadata(M: ArtifactMetadata) → Object`
@@ -293,6 +295,8 @@ merge(
   encode_temporal_provenance(M.temporal_provenance)
 )
 ```
+
+**Calls:** [`encode_descriptive_metadata`](#encode_descriptive_metadatad-descriptivemetadata--object), [`encode_temporal_provenance`](#encode_temporal_provenancep-temporalprovenance--object)
 
 ---
 
@@ -342,6 +346,8 @@ Returns a JSON object with the following keys:
 | `"pav:previousVersion"` | `iri(V.previous_version.iri)` | Omit if `V.previous_version` absent |
 | `"pav:derivedFrom"` | `iri(V.derived_from.iri)` | Omit if `V.derived_from` absent |
 
+**Calls:** [`encode_status`](#encode_statuss-status--string)
+
 ---
 
 ### `encode_status(S: Status) → String`
@@ -383,6 +389,8 @@ merge(
 )
 ```
 
+**Calls:** [`encode_template_context`](#encode_template_contextt-template--object), [`encode_template_properties`](#encode_template_propertiest-template--object), [`encode_template_required`](#encode_template_requiredt-template--array), [`encode_template_ui`](#encode_template_uit-template--object), [`encode_schema_artifact_metadata`](#encode_schema_artifact_metadatam-schemaartifactmetadata--object)
+
 ---
 
 ### `encode_template_context(T: Template) → Object`
@@ -398,6 +406,8 @@ merge(
   { key(E): encode_property_context_entry(E.property) for each E in prop_embs }
 )
 ```
+
+**Calls:** [`encode_property_context_entry`](#encode_property_context_entryp-property--string-or-object)
 
 ---
 
@@ -435,6 +445,8 @@ merge(
   }
 )
 ```
+
+**Calls:** [`encode_embedded_artifact_schema`](#encode_embedded_artifact_schemae-embeddedartifact--object)
 
 ---
 
@@ -491,6 +503,8 @@ Dispatches to the encoding function for the `EmbeddedArtifact` kind:
 | `EmbeddedTemplate` | `encode_embedded_template_schema(E)` |
 | `EmbeddedPresentationComponent` | `encode_embedded_presentation_component_schema(E)` |
 
+**Calls:** [`encode_embedded_field_schema`](#encode_embedded_field_schemae-embeddedfield--object), [`encode_embedded_template_schema`](#encode_embedded_template_schemae-embeddedtemplate--object), [`encode_embedded_presentation_component_schema`](#encode_embedded_presentation_component_schemae-embeddedpresentationcomponent--object)
+
 ---
 
 ### `encode_embedded_field_schema(E: EmbeddedField) → Object`
@@ -514,6 +528,8 @@ else (single-valued):
   field_obj
 ```
 
+**Calls:** [`encode_field`](#encode_fieldf-field-e-embeddedfield--object)
+
 ---
 
 ### `encode_embedded_template_schema(E: EmbeddedTemplate) → Object`
@@ -536,6 +552,8 @@ if is_multi(E):
 else:
   elem_obj
 ```
+
+**Calls:** [`encode_template_element`](#encode_template_elementt-template-e-embeddedtemplate--object)
 
 ---
 
@@ -569,6 +587,8 @@ merge(
 ```
 
 `encode_field_type(FT: FieldType, E: EmbeddedField) → Object` is defined per field type in Section 9 using a common skeleton with per-type value shape and constraint entries.
+
+**Calls:** [`encode_schema_artifact_metadata`](#encode_schema_artifact_metadatam-schemaartifactmetadata--object)
 
 ---
 
@@ -659,6 +679,8 @@ Text fields accept free-form string input. The rendering hint determines whether
 
 **`_ui` extras:** `{ "inputType": encode_text_rendering_hint(FT.text_rendering_hint) }`
 
+**Calls:** [`encode_embedding_constraints`](#encode_embedding_constraintse-embeddedfield--object), [`encode_embedding_ui`](#encode_embedding_uie-embeddedfield--object), [`encode_text_rendering_hint`](#encode_text_rendering_hinthint-textrenderinghint-or-absent--string)
+
 ### `encode_text_rendering_hint(hint: TextRenderingHint or absent) → String`
 
 Returns the string corresponding to the hint kind:
@@ -689,6 +711,8 @@ Numeric fields hold typed numeric literals. The `numberType` key is always writt
 **`_ui` extras:** `{ "inputType": "numeric" }`
 
 `Unit` carries an `Iri` in the Structural Model; CTM 1.6.0 `unitOfMeasure` is a plain string. The IRI string value is used directly.
+
+**Calls:** [`encode_embedding_constraints`](#encode_embedding_constraintse-embeddedfield--object), [`encode_embedding_ui`](#encode_embedding_uie-embeddedfield--object), [`encode_numeric_datatype`](#encode_numeric_datatyped-numericdatatype--string)
 
 ### `encode_numeric_datatype(D: NumericDatatype) → String`
 
@@ -730,6 +754,8 @@ Date fields encode values at year, year-month, or full-date precision. Both `_va
 | `"inputType"` | `"temporal"` | Always present |
 | `"temporalGranularity"` | `encode_date_granularity(FT.date_value_type)` | Always present |
 | `"dateFormat"` | `encode_date_format(FT.date_rendering_hint.date_format)` | Omit if `FT.date_rendering_hint` absent or `date_format` absent |
+
+**Calls:** [`encode_embedding_constraints`](#encode_embedding_constraintse-embeddedfield--object), [`encode_embedding_ui`](#encode_embedding_uie-embeddedfield--object), [`encode_date_value_type`](#encode_date_value_typedvt-datevaluetype--string), [`encode_date_granularity`](#encode_date_granularitydvt-datevaluetype--string), [`encode_date_format`](#encode_date_formatdf-datecomponentorder--string)
 
 ### `encode_date_value_type(DVT: DateValueType) → String`
 
@@ -782,6 +808,8 @@ Time fields always use the `xsd:time` datatype. The `temporalGranularity` and op
 | `"inputTimeFormat"` | `"12h"` | Only when `FT.time_rendering_hint.time_format = TwelveHourTimeFormat` |
 | `"inputTimeFormat"` | `"24h"` | Only when `FT.time_rendering_hint.time_format = TwentyFourHourTimeFormat` |
 
+**Calls:** [`encode_embedding_constraints`](#encode_embedding_constraintse-embeddedfield--object), [`encode_embedding_ui`](#encode_embedding_uie-embeddedfield--object), [`encode_time_precision`](#encode_time_precisiontp-timeprecision-or-absent--string)
+
 ### `encode_time_precision(TP: TimePrecision or absent) → String`
 
 Returns the `temporalGranularity` string for the `TimePrecision` kind:
@@ -814,6 +842,8 @@ Date-time fields always use the `xsd:dateTime` datatype. They follow the same pa
 | `"inputTimeFormat"` | `"12h"` | Only when `FT.date_time_rendering_hint.time_format = TwelveHourTimeFormat` |
 | `"inputTimeFormat"` | `"24h"` | Only when `FT.date_time_rendering_hint.time_format = TwentyFourHourTimeFormat` |
 
+**Calls:** [`encode_embedding_constraints`](#encode_embedding_constraintse-embeddedfield--object), [`encode_embedding_ui`](#encode_embedding_uie-embeddedfield--object), [`encode_datetime_value_type`](#encode_datetime_value_typedvt-datetimevaluetype--string)
+
 ### `encode_datetime_value_type(DVT: DateTimeValueType) → String`
 
 Returns the `temporalGranularity` string for the `DateTimeValueType` kind:
@@ -843,6 +873,8 @@ Controlled term fields constrain values to terms drawn from ontologies, branches
 | `"valueSets"` | `[ encode_value_set_source(S) for each ValueSetSource S in FT.controlled_term_sources ]` | Always present |
 
 **`_ui` extras:** `{ "inputType": "textfield" }`
+
+**Calls:** [`encode_embedding_constraints`](#encode_embedding_constraintse-embeddedfield--object), [`encode_embedding_ui`](#encode_embedding_uie-embeddedfield--object), [`encode_ontology_source`](#encode_ontology_sources-ontologysource--object), [`encode_branch_source`](#encode_branch_sources-branchsource--object), [`encode_class_source_entry`](#encode_class_source_entryc-controlledtermclass--object), [`encode_value_set_source`](#encode_value_set_sources-valuesetsource--object)
 
 ### `encode_ontology_source(S: OntologySource) → Object`
 
@@ -905,6 +937,8 @@ Choice fields may be literal-valued or IRI-valued. Determine the value form by i
 | `"literals"` | `[ encode_choice_option_iri(O) for each O in FT.options ]` | IRI-form |
 
 **`_ui` extras:** `{ "inputType": encode_single_choice_rendering_hint(FT.single_choice_rendering_hint) }`
+
+**Calls:** [`encode_embedding_constraints`](#encode_embedding_constraintse-embeddedfield--object), [`encode_embedding_ui`](#encode_embedding_uie-embeddedfield--object), [`encode_single_choice_rendering_hint`](#encode_single_choice_rendering_hinthint-singlechoicerenderinghint-or-absent--string), [`encode_choice_option_literal`](#encode_choice_option_literalo-choiceoption--object), [`encode_choice_option_iri`](#encode_choice_option_irio-choiceoption--object)
 
 ### `encode_single_choice_rendering_hint(hint: SingleChoiceRenderingHint or absent) → String`
 
@@ -971,6 +1005,8 @@ For IRI-form multiple choice, replace `"@value"` in `items.properties` with `"@i
 
 **`_ui` extras:** `{ "inputType": encode_multiple_choice_rendering_hint(FT.multiple_choice_rendering_hint) }`
 
+**Calls:** [`encode_embedding_constraints`](#encode_embedding_constraintse-embeddedfield--object), [`encode_embedding_ui`](#encode_embedding_uie-embeddedfield--object), [`encode_multiple_choice_rendering_hint`](#encode_multiple_choice_rendering_hinthint-multiplechoicerenderinghint-or-absent--string), [`encode_choice_option_literal`](#encode_choice_option_literalo-choiceoption--object), [`encode_choice_option_iri`](#encode_choice_option_irio-choiceoption--object)
+
 ### `encode_multiple_choice_rendering_hint(hint: MultipleChoiceRenderingHint or absent) → String`
 
 Returns the `inputType` string for the hint kind:
@@ -988,6 +1024,8 @@ Link fields hold a URI value with an optional human-readable label. They use `IR
 
 **Value shape:** `IRI_VALUE_SHAPE` | **Required:** `[]` | **`_valueConstraints` extras:** none | **`_ui` extras:** `{ "inputType": "link" }`
 
+**Calls:** [`encode_embedding_constraints`](#encode_embedding_constraintse-embeddedfield--object), [`encode_embedding_ui`](#encode_embedding_uie-embeddedfield--object)
+
 ---
 
 ### `encode_email_field_type(FT: EmailFieldType, E: EmbeddedField) → Object`
@@ -996,6 +1034,8 @@ Email fields hold a string value interpreted as an email address. They use `STRI
 
 **Value shape:** `STRING_VALUE_SHAPE` | **Required:** `[]` | **`_valueConstraints` extras:** none | **`_ui` extras:** `{ "inputType": "email" }`
 
+**Calls:** [`encode_embedding_constraints`](#encode_embedding_constraintse-embeddedfield--object), [`encode_embedding_ui`](#encode_embedding_uie-embeddedfield--object)
+
 ---
 
 ### `encode_phone_number_field_type(FT: PhoneNumberFieldType, E: EmbeddedField) → Object`
@@ -1003,6 +1043,8 @@ Email fields hold a string value interpreted as an email address. They use `STRI
 Phone number fields hold a string value interpreted as a phone number. They use `STRING_VALUE_SHAPE` and the `phone-number` input type with no additional value constraints.
 
 **Value shape:** `STRING_VALUE_SHAPE` | **Required:** `[]` | **`_valueConstraints` extras:** none | **`_ui` extras:** `{ "inputType": "phone-number" }`
+
+**Calls:** [`encode_embedding_constraints`](#encode_embedding_constraintse-embeddedfield--object), [`encode_embedding_ui`](#encode_embedding_uie-embeddedfield--object)
 
 ---
 
@@ -1015,6 +1057,8 @@ External authority fields identify entities from well-known registries such as O
 ### `encode_external_authority_field_type(FT: ExternalAuthorityFieldType, E: EmbeddedField) → Object`
 
 Applies the skeleton with the above parameters.
+
+**Calls:** [`encode_embedding_constraints`](#encode_embedding_constraintse-embeddedfield--object), [`encode_embedding_ui`](#encode_embedding_uie-embeddedfield--object), [`encode_external_authority_input_type`](#encode_external_authority_input_typeft-externalauthorityfieldtype--string)
 
 ### `encode_external_authority_input_type(FT: ExternalAuthorityFieldType) → String`
 
@@ -1052,6 +1096,8 @@ This field type does not follow the standard skeleton. It uses a top-level array
 
 The instance representation of `AttributeValue` fields in CTM 1.6.0 uses `additionalProperties` at the instance level rather than a structured value schema. See Section 14, Known Gaps.
 
+**Calls:** [`encode_embedding_constraints`](#encode_embedding_constraintse-embeddedfield--object), [`encode_embedding_ui`](#encode_embedding_uie-embeddedfield--object)
+
 ---
 
 ## 10. Template Element Encoding
@@ -1084,6 +1130,8 @@ merge(
 
 `encode_template_context`, `encode_template_properties`, `encode_template_required`, and `encode_template_ui` are as defined in Section 6 and operate identically on `Template` constructs whether they are top-level templates or nested template elements.
 
+**Calls:** [`encode_template_context`](#encode_template_contextt-template--object), [`encode_template_properties`](#encode_template_propertiest-template--object), [`encode_template_required`](#encode_template_requiredt-template--array), [`encode_template_ui`](#encode_template_uit-template--object), [`encode_schema_artifact_metadata`](#encode_schema_artifact_metadatam-schemaartifactmetadata--object)
+
 ---
 
 ## 11. Value Encoding (Instance Level)
@@ -1110,6 +1158,8 @@ Dispatches to the encoding function for the `Value` kind:
 | `PhoneNumberValue` | `encode_phone_number_value(V)` |
 | `ExternalAuthorityValue` | `encode_external_authority_value(V)` |
 | `AttributeValue` | `encode_attribute_value(V)` |
+
+**Calls:** [`encode_text_value`](#encode_text_valuev-textvalue--object), [`encode_numeric_value`](#encode_numeric_valuev-numericvalue--object), [`encode_date_value`](#encode_date_valuev-datevalue--object), [`encode_time_value`](#encode_time_valuev-timevalue--object), [`encode_datetime_value`](#encode_datetime_valuev-datetimevalue--object), [`encode_controlled_term_value`](#encode_controlled_term_valuev-controlledtermvalue--object), [`encode_choice_value`](#encode_choice_valuev-choicevalue--object), [`encode_link_value`](#encode_link_valuev-linkvalue--object), [`encode_email_value`](#encode_email_valuev-emailvalue--object), [`encode_phone_number_value`](#encode_phone_number_valuev-phonenumbervalue--object), [`encode_external_authority_value`](#encode_external_authority_valuev-externalauthorityvalue--object), [`encode_attribute_value`](#encode_attribute_valuev-attributevalue--object)
 
 ---
 
@@ -1191,6 +1241,8 @@ Dispatches on the kind of `V.choice_selection`:
 | `Literal` (`StringLiteral` or `LangStringLiteral`) | `encode_text_value(as TextValue wrapping the literal)` |
 | `ControlledTermValue` | `encode_controlled_term_value(V.choice_selection)` |
 | `Iri` | `{ "@id": iri(V.choice_selection) }` |
+
+**Calls:** [`encode_text_value`](#encode_text_valuev-textvalue--object), [`encode_controlled_term_value`](#encode_controlled_term_valuev-controlledtermvalue--object)
 
 ---
 
@@ -1278,6 +1330,8 @@ merge(
 
 where `fv(EF)` denotes the `FieldValue` in `fvs` whose key equals `EF.key`, and `ntis_for(ET)` denotes `[ NTI in ntis | NTI.key = ET.key ]`.
 
+**Calls:** [`encode_template_context`](#encode_template_contextt-template--object), [`encode_artifact_metadata`](#encode_artifact_metadatam-artifactmetadata--object), [`encode_field_value`](#encode_field_valuefv-fieldvalue-ef-embeddedfield--object-or-array), [`encode_nested_template_instance_slot`](#encode_nested_template_instance_slotntis-nestedtemplateinstance-et-embeddedtemplate--object-or-array)
+
 ---
 
 ### `encode_field_value(FV: FieldValue, EF: EmbeddedField) → Object or Array`
@@ -1291,6 +1345,8 @@ if is_multi(EF):
 else:
   encode_value(first(FV.values))
 ```
+
+**Calls:** [`encode_value`](#encode_valuev-value--object)
 
 ---
 
@@ -1307,6 +1363,8 @@ if is_multi(ET):
 else:
   encode_template_instance(first(NTIs), RT)
 ```
+
+**Calls:** [`encode_template_instance`](#encode_template_instancei-templateinstance-t-template--object)
 
 ---
 
@@ -1326,6 +1384,8 @@ value: if A.annotation_value is LiteralAnnotationValue:
 ```
 
 Implementations SHOULD confirm that annotation IRI keys are valid within the CTM 1.6.0 `@context` before including them.
+
+**Calls:** [`encode_text_value`](#encode_text_valuev-textvalue--object)
 
 ---
 
