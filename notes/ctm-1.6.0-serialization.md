@@ -534,8 +534,9 @@ There are two distinct concerns to resolve here:
 
 ```javascript
 let field_obj = encode_field(referenced_field(E), E)
-// referenced_field(E) is the Field identified by the reference in E
 ```
+
+where `referenced_field(E)` is the `Field` identified by the reference in `E`.
 
 ```javascript
 if is_multi(E):
