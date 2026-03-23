@@ -35,7 +35,7 @@ Dot notation is used on grammar constructs, e.g. `T.schema_artifact_metadata` or
 - `merge(a, b, ...)` — merge JSON objects left-to-right; later objects take precedence on key conflicts
 - `if P then k: v` — include key `k` with value `v` only when predicate `P` holds; otherwise omit
 - `[ x(E) for each E in xs ]` — JSON array built by evaluating `x(E)` for each element `E` of sequence `xs`
-- `{ k(E): v(E) for each E in xs }` — JSON object built from key-value pairs, one per element; `xs` must be a plain sequence with no inline filter
+- `{ k(E): v(E) for each E in xs }` — JSON object built from key-value pairs, one per element (inline form); `xs` must be a plain sequence with no inline filter. In multi-line blocks, the iteration clause comes first: `{ for each E in xs: k(E): v(E) }`
 - `let x = expr` — within a function body, binds the name `x` to the value of `expr`; `x` may then be used in subsequent expressions in the same body
 - `[ E in xs | P(E) ]` — the subsequence of `xs` retaining only those elements for which predicate `P(E)` holds; used in `let` bindings to pre-filter before passing to a comprehension
 - `xs ++ ys` — concatenation of arrays `xs` and `ys`
@@ -219,8 +219,8 @@ merge(
     "oslc:modifiedBy":    { "type": ["string", "null"], "format": "uri" }
   },
   {
-    key(E): encode_embedded_artifact_schema(E)
-    for each E in T.embedded_artifacts
+    for each E in T.embedded_artifacts:
+      key(E): encode_embedded_artifact_schema(E)
   }
 )
 ```
@@ -1010,10 +1010,10 @@ merge(
     "schema:isBasedOn": iri(T.template_id)
   },
   encode_artifact_metadata(I.artifact_metadata),
-  { EF.key: encode_field_value(fv(EF), EF)
-    for each EF in emb_fields },
-  { ET.key: encode_nested_template_instance_slot(ntis_for(ET), ET)
-    for each ET in emb_templates }
+  { for each EF in emb_fields:
+      EF.key: encode_field_value(fv(EF), EF) },
+  { for each ET in emb_templates:
+      ET.key: encode_nested_template_instance_slot(ntis_for(ET), ET) }
 )
 ```
 
