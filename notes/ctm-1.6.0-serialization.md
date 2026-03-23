@@ -370,6 +370,17 @@ Both fields are single-valued ([`is_multi`](#2-conventions) = false), so `encode
 }
 ```
 
+`STATIC_FIELD_NS` is the smaller `@context` used by `StaticTemplateField` objects (presentation components). It omits `rdfs`, `skos`, and `xsd`.
+
+```json
+{
+  "schema":   "http://schema.org/",
+  "pav":      "http://purl.org/pav/",
+  "bibo":     "http://purl.org/ontology/bibo/",
+  "oslc":     "http://open-services.net/ns/core#"
+}
+```
+
 ---
 
 ## 5. Metadata Encoding Functions
@@ -688,9 +699,61 @@ else:
 
 ### `encode_embedded_presentation_component_schema(E: EmbeddedPresentationComponent) → Object`
 
-Presentation components have no standardised CTM 1.6.0 schema representation. Produces an empty object `{}` as a placeholder. See Section 14, Known Gaps.
+Presentation components are encoded as `StaticTemplateField` objects — regular field-like objects with a specific `@type` and no value shape, required array, or `_valueConstraints`. The component's content (HTML, image URL, YouTube identifier) is stored in `_ui._content`.
 
-> **Caution:** The `{}` placeholder means a JSON Schema validator will accept any value at this key in an instance, including values that are structurally invalid from the Structural Model's perspective. Implementations that need meaningful validation of presentation component slots must apply additional constraints outside this mapping.
+```javascript
+let pc_obj = encode_presentation_component(referenced_presentation_component(E), E)
+```
+
+where `referenced_presentation_component(E)` is the `PresentationComponent` identified by the reference in `E`.
+
+```javascript
+pc_obj
+```
+
+**Calls:** [`encode_presentation_component`](#encode_presentation_componentpc-presentationcomponent-e-embeddedpresentationcomponent--object)
+
+---
+
+### `encode_presentation_component(PC: PresentationComponent, E: EmbeddedPresentationComponent) → Object`
+
+Produces a `StaticTemplateField` object. Unlike regular fields, this object carries no `"properties"`, `"required"`, or `"_valueConstraints"` keys — the component holds no instance data. The `@context` is the smaller `STATIC_FIELD_NS` rather than `STANDARD_NS`.
+
+```javascript
+merge(
+  {
+    "@id":    iri(PC.presentation_component_id),
+    "@type":  "https://schema.metadatacenter.org/core/StaticTemplateField",
+    "@context": STATIC_FIELD_NS,
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "type":   "object",
+    "title":  PC.schema_artifact_metadata.artifact_metadata.descriptive_metadata.name.unicode_string,
+    "description": PC.schema_artifact_metadata.artifact_metadata.descriptive_metadata.description.unicode_string
+                   if present, else "",
+    "additionalProperties": false,
+    "_ui":    encode_presentation_component_ui(PC)
+  },
+  encode_schema_artifact_metadata(PC.schema_artifact_metadata)
+)
+```
+
+**Calls:** [`encode_presentation_component_ui`](#encode_presentation_component_uipc-presentationcomponent--object), [`encode_schema_artifact_metadata`](#encode_schema_artifact_metadatam-schemaartifactmetadata--object)
+
+---
+
+### `encode_presentation_component_ui(PC: PresentationComponent) → Object`
+
+Returns the `_ui` object for a static field. All component kinds carry `"inputType"` and `"_content"`. `YoutubeVideoComponent` additionally carries `"_size"` when dimensions are present.
+
+| `PresentationComponent` kind | `"inputType"` | `"_content"` |
+|---|---|---|
+| `PageBreakComponent` | `"page-break"` | `null` |
+| `SectionBreakComponent` | `"section-break"` | `null` |
+| `RichTextComponent` | `"richtext"` | `PC.html_content.unicode_string` |
+| `ImageComponent` | `"image"` | `iri(PC.image_source)` |
+| `YoutubeVideoComponent` | `"youtube"` | `PC.video_identifier.unicode_string` |
+
+For `YoutubeVideoComponent`, if `PC.size` is present, also merge `{ "_size": { "width": PC.size.width, "height": PC.size.height } }` into the result.
 
 ---
 
@@ -1540,7 +1603,7 @@ Implementations SHOULD confirm that annotation IRI keys are valid within the CTM
 
 ## 14. Known Gaps and Lossy Areas
 
-1. **`PresentationComponent` variants** — `RichTextComponent`, `ImageComponent`, `YoutubeVideoComponent`, `SectionBreakComponent`, and `PageBreakComponent` have no clean CTM 1.6.0 reusable artifact equivalent. `encode_embedded_presentation_component_schema` produces `{}` as a placeholder. Concrete implementations may use ad hoc CTM 1.6.0 conventions.
+1. **`PresentationComponent` variants** — Encoded as `StaticTemplateField` objects with no value shape or `_valueConstraints`. Content is stored in `_ui._content`. Because presentation components produce no instance value, they MUST NOT be added to the template's `"required"` array and MUST NOT appear as `FieldValue` entries in instances.
 
 2. **`Header` and `Footer` on `Template`** — Encoded as `"header"` and `"footer"` string keys inside `_ui` when present.
 
