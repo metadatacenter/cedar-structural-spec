@@ -367,7 +367,16 @@ Returns the string corresponding to the `Status` kind:
 
 ### `encode_template(T: Template) → Object`
 
-The top-level template object is the root of a CTM 1.6.0 template document. It merges fixed structural keys (`@id`, `@type`, `$schema`, `type`), the JSON Schema layer (`properties`, `required`, `additionalProperties`), the UI configuration (`_ui`), the `@context`, and the flat metadata block into a single JSON object. All sub-functions are called and their results merged here.
+The top-level template object is the root of a CTM 1.6.0 template document. It is produced by merging several independently constructed fragments into one flat JSON object.
+
+A key characteristic of this encoding is that information about each embedded field is **spread across multiple top-level keys** — it does not appear under a single nested key. For each embedded field `E` referencing a field `F`:
+
+- `"properties"` receives an entry at `key(E)` containing the full field schema (value shape, constraints, and UI hints) produced by `encode_embedded_field_schema`.
+- `"required"` receives `key(E)` if the embedding's value requirement is `Required`.
+- `"_ui"` receives `key(E)` in its `"order"` array (and optionally in `"propertyLabels"`), derived from the embedding itself.
+- `"@context"` receives `key(E)` mapped to the field's property IRI, if the embedding carries a `Property`.
+
+This means the `_ui` key contains ordering and display information drawn from the *embedding* (`EmbeddedField`), while `properties[key(E)]` contains schema information drawn from the *referenced* `Field`. There is no single place in the output that corresponds one-to-one with an `EmbeddedField` — the embedding's information is hoisted and distributed across these four top-level keys.
 
 ```javascript
 merge(
@@ -398,12 +407,12 @@ merge(
 The `@context` maps compact term names to full IRIs for JSON-LD interpretation. Every template context begins with `STANDARD_NS`. For each data-bearing embedded artifact that carries a `Property`, an additional entry maps the artifact's key string to its property IRI — or to a labelled mapping object if a `property_label` is also present. Artifacts without a `Property` (such as presentation components) contribute no context entry.
 
 ```javascript
-let prop_embs = [ E in T.embedded_artifacts
-                | (E is EmbeddedField or E is EmbeddedTemplate) and E.property is present ]
+let embedded_properties = [ E in T.embedded_artifacts
+                           | (E is EmbeddedField or E is EmbeddedTemplate) and E.property is present ]
 
 merge(
   STANDARD_NS,
-  { key(E): encode_property_context_entry(E.property) for each E in prop_embs }
+  { key(E): encode_property_context_entry(E.property) for each E in embedded_properties }
 )
 ```
 
