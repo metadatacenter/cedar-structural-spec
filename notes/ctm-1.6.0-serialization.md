@@ -24,6 +24,90 @@ The CEDAR Structural Model (`spec/grammar.md`) is the authoritative, format-inde
 
 **Instance values are plain JSON-LD objects.** A template instance is a flat JSON object whose keys are the field key identifiers from the template. Each key maps to a small JSON-LD value object — typically `{ "@value": "..." }` for text and numeric fields, or `{ "@id": "..." }` for IRI-valued fields. Multi-valued fields produce a JSON array of such objects. The template's `"@context"` is reused in the instance so that each field key resolves to its property IRI for RDF interpretation.
 
+### Call graph
+
+The diagram below shows the main call relationships between encoding functions. Nodes marked `×N` represent a group of similar functions; see the relevant section for the individual entries. Dashed arrows indicate recursion.
+
+```mermaid
+flowchart TD
+    ET(["encode_template"])
+    ETI(["encode_template_instance"])
+
+    subgraph S5["§5 · Metadata"]
+        ESAM["encode_schema_artifact_metadata"]
+        EAM["encode_artifact_metadata"]
+        ESV["encode_schema_versioning"]
+        ESAM --> EAM
+        ESAM --> ESV
+    end
+
+    subgraph S6["§6 · Template Structure"]
+        ETC["encode_template_context"]
+        ETP["encode_template_properties"]
+        ETR["encode_template_required"]
+        ETUI["encode_template_ui"]
+        ETC --> EPCE["encode_property_context_entry"]
+    end
+
+    subgraph S7["§7 · Embedded Artifacts"]
+        EEAS["encode_embedded_artifact_schema"]
+        EEFS["encode_embedded_field_schema"]
+        EETS["encode_embedded_template_schema"]
+        EEPCS["encode_embedded_presentation\n_component_schema"]
+        EEAS --> EEFS
+        EEAS --> EETS
+        EEAS --> EEPCS
+    end
+
+    subgraph S8["§8 · Field"]
+        EF["encode_field"]
+    end
+
+    subgraph S9["§9 · Field Types"]
+        EFT["encode_*_field_type ×13"]
+        EEC["encode_embedding_constraints"]
+        EEUI["encode_embedding_ui"]
+        EFT --> EEC
+        EFT --> EEUI
+    end
+
+    ETE["encode_template_element §10"]
+
+    subgraph S11["§11 · Values"]
+        EV["encode_value"]
+        EVX["encode_*_value ×12"]
+        EV --> EVX
+    end
+
+    subgraph S12["§12 · Instance"]
+        EFV["encode_field_value"]
+        ENTS["encode_nested_template_instance_slot"]
+    end
+
+    ET --> ESAM
+    ET --> ETC
+    ET --> ETP
+    ET --> ETR
+    ET --> ETUI
+    ETP --> EEAS
+    EEFS --> EF
+    EETS --> ETE
+    ETE -->|"reuses"| ETC
+    ETE -->|"reuses"| ETP
+    ETE -->|"reuses"| ETR
+    ETE -->|"reuses"| ETUI
+    ETE --> ESAM
+    EF --> ESAM
+    EF -->|"dispatch"| EFT
+
+    ETI --> ETC
+    ETI --> EAM
+    ETI --> EFV
+    ETI --> ENTS
+    EFV --> EV
+    ENTS -.->|"recursive"| ETI
+```
+
 ---
 
 ## 2. Conventions
