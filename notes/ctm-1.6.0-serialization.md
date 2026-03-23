@@ -524,9 +524,15 @@ Dispatches to the encoding function for the `EmbeddedArtifact` kind:
 
 ### `encode_embedded_field_schema(E: EmbeddedField) → Object`
 
-When the field is single-valued the field object is returned directly. When it is multi-valued the field object is wrapped in a JSON Schema array descriptor that also carries optional `minItems` and `maxItems` bounds derived from the embedding's `Cardinality`.
+This function is the bridge between the abstract `EmbeddedField` and the CTM 1.6.0 JSON Schema representation that an instance validator will actually use. Its job is to produce the value that goes at `properties[key(E)]` in the containing template.
 
-Produces the field schema object, wrapping in array form if `is_multi(E)`. Let `field_obj` = `encode_field(referenced_field(E), E)`, where `referenced_field(E)` is the `Field` identified by the reference in `E`.
+There are two distinct concerns to resolve here:
+
+**1. Single-valued vs. multi-valued.** The Structural Model represents cardinality on the `EmbeddedField` (the embedding), not on the `Field` definition itself. CTM 1.6.0 expresses multi-valued fields by wrapping the field schema in a JSON Schema array object (`"type": "array", "items": ...`), with optional `minItems` and `maxItems` bounds. Single-valued fields need no wrapper — the field object is used directly. This wrapping decision is therefore made here, at the embedding level, where the cardinality information lives.
+
+**2. Merging embedding context into the field encoding.** The `EmbeddedField` also carries embedding-specific properties — most notably whether the field is required and whether it is hidden — that are not part of the reusable `Field` definition. These are passed down to `encode_field` via the `E` parameter so they can be incorporated into `_valueConstraints` and `_ui` within the field object itself.
+
+Let `field_obj` = `encode_field(referenced_field(E), E)`, where `referenced_field(E)` is the `Field` identified by the reference in `E`.
 
 ```javascript
 if is_multi(E):
