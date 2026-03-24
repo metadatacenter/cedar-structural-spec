@@ -101,9 +101,9 @@ The attribute range is determined by the `FieldSpec` carried by the referenced
 | `EmbeddedDateTimeField` | `DateTimeFieldSpec` | `datetime` |
 | `EmbeddedControlledTermField` | `ControlledTermFieldSpec` | `ControlledTermValue` |
 | `EmbeddedSingleChoiceField` | `LiteralSingleChoiceFieldSpec` | `<EnumName>` (generated enum, see below) |
-| `EmbeddedSingleChoiceField` | `ControlledTermSingleChoiceFieldSpec` | `ControlledTermValue` |
+| `EmbeddedSingleChoiceField` | `ControlledTermSingleChoiceFieldSpec` | `<EnumName>` (generated enum with `meaning:`, see below) |
 | `EmbeddedMultipleChoiceField` | `LiteralMultipleChoiceFieldSpec` | `<EnumName>` (generated enum, see below) |
-| `EmbeddedMultipleChoiceField` | `ControlledTermMultipleChoiceFieldSpec` | `ControlledTermValue` |
+| `EmbeddedMultipleChoiceField` | `ControlledTermMultipleChoiceFieldSpec` | `<EnumName>` (generated enum with `meaning:`, see below) |
 | `EmbeddedLinkField` | `LinkFieldSpec` | `LinkValue` |
 | `EmbeddedEmailField` | `EmailFieldSpec` | `string` |
 | `EmbeddedPhoneNumberField` | `PhoneNumberFieldSpec` | `string` |
@@ -220,14 +220,13 @@ carries no `title:` (consumers fall back to the attribute name).
 
 ---
 
-## Enum generation for literal choice fields
+## Enum generation for choice fields
 
-When a `SingleChoiceField` or `MultipleChoiceField` references a field whose
-`FieldSpec` is `LiteralSingleChoiceFieldSpec` or `LiteralMultipleChoiceFieldSpec`,
-the options are literal values that map cleanly to a LinkML `enum`.
-
-Enums are declared in the schema-level `enums:` block (not inside a class) and
-referenced by name from the attribute's `range:`.
+All four concrete `ChoiceFieldSpec` variants — `LiteralSingleChoiceFieldSpec`,
+`LiteralMultipleChoiceFieldSpec`, `ControlledTermSingleChoiceFieldSpec`, and
+`ControlledTermMultipleChoiceFieldSpec` — generate a named LinkML enum. Enums
+are declared in the schema-level `enums:` block and referenced by name from the
+attribute's `range:`.
 
 ### Enum name
 
@@ -238,10 +237,11 @@ and appending `Options`:
 attribute name: study_type  →  enum name: StudyTypeOptions
 ```
 
-### Enum values
+### Enum values for literal choice fields
 
-Each `LiteralChoiceOption` in the spec's option list contributes one
-`permissible_value`. The key is the lexical form of the option's `Literal`:
+Each `LiteralChoiceOption` contributes one `permissible_value`. The key is the
+lexical form of the option's `Literal`. No `meaning:` annotation is emitted
+because literal options carry no associated ontology term IRI.
 
 ```yaml
 enums:
@@ -252,23 +252,36 @@ enums:
       ExpandedAccess: {}
 ```
 
-If two options have identical lexical forms (which is a structural error in the
-template), the generator SHOULD report a conflict and use the first occurrence.
+### Enum values for controlled-term choice fields
 
-### Controlled-term choice fields
+Each `ControlledTermChoiceOption` contributes one `permissible_value`. The key
+is the `label` of the option's `ControlledTermValue`, and the `meaning:`
+annotation carries the `term_iri`. LinkML generators use `meaning:` to emit the
+correct ontology IRI in RDF, OWL, and JSON-LD output, preserving full semantic
+fidelity while keeping instance values as plain readable strings.
 
-`ControlledTermSingleChoiceFieldSpec` and `ControlledTermMultipleChoiceFieldSpec`
-declare options as `ControlledTermChoiceOption` values, each holding a
-`ControlledTermValue`. LinkML enums are string-keyed and cannot natively
-represent OBO/SKOS term objects, so no `enum` is generated. Instead:
+```yaml
+enums:
+  TissueTypeOptions:
+    permissible_values:
+      "Liver":
+        meaning: uberon:0002107
+      "Lung":
+        meaning: uberon:0002048
+      "Kidney":
+        meaning: uberon:0002113
+      "Blood":
+        meaning: uberon:0000178
+```
 
-- The attribute range is `ControlledTermValue` (imported from the metamodel schema).
-- The permitted term IRIs are recorded as `todos:` or `comments:` annotations on
-  the attribute for informational purposes.
+If two options share the same label but have different `term_iri` values (a
+poorly-formed template), the label key would clash. In that case the generator
+SHOULD use the CURIE form of the `term_iri` as the key and place the label in a
+`description:` annotation instead.
 
-If SHACL output is required and the permitted term set is closed, the SHACL
-generator post-processor SHOULD add a `sh:in` constraint listing the permitted
-`ControlledTermValue.term_iri` values.
+If two options have identical lexical forms in a literal choice spec (also a
+structural error), the generator SHOULD report a conflict and use the first
+occurrence.
 
 ---
 
@@ -339,8 +352,12 @@ map_template(T) → LinkML schema S where:
       F = resolve(A.field_reference)
       C.attributes[A.key] = map_attribute(A, F)
       if F.field_spec is LiteralSingleChoiceFieldSpec
-      or F.field_spec is LiteralMultipleChoiceFieldSpec:
+      or F.field_spec is LiteralMultipleChoiceFieldSpec
+      or F.field_spec is ControlledTermSingleChoiceFieldSpec
+      or F.field_spec is ControlledTermMultipleChoiceFieldSpec:
         S.enums[enum_name(A.key)] = map_enum(F.field_spec)
+        # map_enum emits meaning: term_iri for ControlledTerm variants,
+        # omits meaning: for Literal variants
 
   S.classes += C
 
@@ -446,8 +463,9 @@ Template(
 )
 ```
 
-The referenced `tissue_type` field carries a `LiteralSingleChoiceFieldSpec`
-with options `Blood`, `Liver`, `Lung`, `Kidney`.
+The referenced `tissue_type` field carries a `ControlledTermSingleChoiceFieldSpec`
+with options drawn from UBERON: `Blood` (`uberon:0000178`), `Liver`
+(`uberon:0002107`), `Lung` (`uberon:0002048`), `Kidney` (`uberon:0002113`).
 
 The referenced `age_at_collection` field carries a `NumericFieldSpec` with
 `numeric_datatype` = `xsd:decimal`.
@@ -486,12 +504,17 @@ imports:
 enums:
 
   TissueTypeOptions:
-    # Generated from LiteralSingleChoiceFieldSpec on the referenced field
+    # Generated from ControlledTermSingleChoiceFieldSpec on the referenced field;
+    # meaning: carries the term_iri from each ControlledTermChoiceOption
     permissible_values:
-      Blood: {}
-      Liver: {}
-      Lung: {}
-      Kidney: {}
+      "Blood":
+        meaning: uberon:0000178
+      "Liver":
+        meaning: uberon:0002107
+      "Lung":
+        meaning: uberon:0002048
+      "Kidney":
+        meaning: uberon:0002113
 
 # ── Classes ──────────────────────────────────────────────────────────────────
 
@@ -521,7 +544,7 @@ classes:
         range: TissueTypeOptions
         required: true
         slot_uri: uberon:0000479
-        # EmbeddedSingleChoiceField; LiteralSingleChoiceFieldSpec → TissueTypeOptions enum
+        # EmbeddedSingleChoiceField; ControlledTermSingleChoiceFieldSpec → TissueTypeOptions enum with meaning:
 
       age_at_collection:
         range: decimal
