@@ -282,6 +282,18 @@ The nested class is **not** marked `tree_root: true`.
 
 ## Complete mapping summary
 
+The pseudocode below consolidates all the rules described in the preceding
+sections into a single function `map_template`. It is written in a
+language-neutral notation where `resolve(iri)` fetches the artifact identified
+by that IRI, `to_identifier` converts a human-readable name to a valid
+lowercase-with-hyphens schema identifier, and `to_class_name` converts it to
+`UpperCamelCase`.
+
+The function is recursive: an `EmbeddedTemplate` triggers a nested call to
+`map_template` for the referenced template, and the resulting classes are merged
+into the same schema document. `map_slot` is a helper that assembles a single
+slot from an embedding site `A` and the resolved `Field` `F` it references.
+
 ```
 map_template(T) → LinkML schema S where:
 
@@ -313,7 +325,7 @@ map_template(T) → LinkML schema S where:
         S.enums[enum_name(A.key)] = map_enum(F.field_spec)
 
 map_slot(A, F):
-  slot.range      = range_for_spec(F.field_spec)
+  slot.range      = range_for_spec(F.field_spec)   # see Slot range table
   slot.multivalued= multivalued_for(A.cardinality, F.field_spec)
   slot.required   = (A.value_requirement == Required)
   slot.recommended= (A.value_requirement == Recommended)
@@ -321,6 +333,13 @@ map_slot(A, F):
   slot.title      = A.label_override.value   (if LabelOverride present)
   + cardinality annotations from map_cardinality(A.cardinality)
 ```
+
+The three helper functions referenced above (`range_for_spec`,
+`multivalued_for`, `map_cardinality`) are fully specified in the
+[Slot range](#slot-range), [Cardinality](#cardinality), and preceding sections.
+`map_enum` produces the `permissible_values` block from a
+`LiteralSingleChoiceFieldSpec` or `LiteralMultipleChoiceFieldSpec` as described
+in [Enum generation for literal choice fields](#enum-generation-for-literal-choice-fields).
 
 ---
 
