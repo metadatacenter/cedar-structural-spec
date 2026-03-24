@@ -11,12 +11,12 @@
 #  - EBNF union productions (e.g. Field ::= TextField | …) become
 #    abstract LinkML classes whose concrete subclasses use `is_a`.
 #  - EBNF constructor productions (e.g. TextField ::= text_field(…))
-#    become concrete classes with typed slots.
+#    become concrete classes with typed attributes.
 #  - Typed identifier wrappers (TextFieldId, NumericFieldId, …) are
 #    kept as distinct classes to preserve the CEDAR strong-typing
 #    guarantee: you cannot reference a field of the wrong kind.
 #  - Simple string/IRI wrapper productions (Label, Notation, …) are
-#    collapsed to typed slots rather than full classes for brevity.
+#    collapsed to typed attributes rather than full classes for brevity.
 #  - Choice field specs are split into uniform-value-kind variants
 #    (LiteralSingleChoiceFieldSpec, ControlledTermSingleChoiceFieldSpec, etc.)
 #    eliminating mixed-value-kind unions entirely for the choice subsystem.
@@ -24,6 +24,9 @@
 #    NestedTemplateInstance carrying InstanceValue*) are expressed
 #    with a forward reference; concrete generators may need to handle
 #    these specially.
+#  - All properties are expressed as inline class attributes rather
+#    than global slots, avoiding cross-class name conflicts in generated
+#    artefacts.
 #
 # Fit assessment notes are inline where the mapping is non-trivial.
 
@@ -54,16 +57,6 @@ imports:
 # Primitive types
 # ──────────────────────────────────────────────────────────────────
 types:
-  Iri:
-    uri: xsd:anyURI
-    base: str
-    description: An Internationalized Resource Identifier.
-
-  UnicodeString:
-    uri: xsd:string
-    base: str
-    description: A Unicode string value with no additional character-set restrictions.
-
   AsciiIdentifier:
     uri: xsd:string
     base: str
@@ -77,10 +70,15 @@ types:
     base: int
     description: A non-negative integer (≥ 0).
 
-  RegexPattern:
-    uri: xsd:string
+  Year:
+    uri: xsd:gYear
     base: str
-    description: A regular expression pattern string.
+    description: A calendar year in ISO 8601 / XSD gYear format (e.g. "2024").
+
+  YearMonth:
+    uri: xsd:gYearMonth
+    base: str
+    description: A calendar year-month in ISO 8601 / XSD gYearMonth format (e.g. "2024-06").
 
 
 # ──────────────────────────────────────────────────────────────────
@@ -166,390 +164,10 @@ enums:
       CheckboxRenderingHint: {}
       MultiSelectDropdownRenderingHint: {}
 
-
-# ──────────────────────────────────────────────────────────────────
-# Slots (shared definitions)
-# ──────────────────────────────────────────────────────────────────
-slots:
-
-  # --- artifact identity ---
-  artifact_iri:
-    range: Iri
-    identifier: true
-    description: The IRI that uniquely and persistently identifies this artifact.
-
-  # --- descriptive metadata ---
-  schema_name:
-    range: UnicodeString
-    required: true
-    description: Human-readable name of the artifact (schema:name).
-
-  schema_description:
-    range: UnicodeString
-    description: Human-readable description of the artifact (schema:description).
-
-  # --- temporal provenance ---
-  pav_created_on:
-    range: string          # xsd:dateTime in practice
-    description: Creation timestamp (pav:createdOn).
-
-  pav_last_updated_on:
-    range: string
-    description: Last-update timestamp (pav:lastUpdatedOn).
-
-  pav_created_by:
-    range: Iri
-    description: IRI of the agent that created the artifact (pav:createdBy).
-
-  pav_modified_by:
-    range: Iri
-    description: IRI of the agent that last modified the artifact (pav:authoredBy).
-
-  # --- schema versioning ---
-  schema_version:
-    range: UnicodeString
-    required: true
-    description: Version string of the JSON Schema used (schema:schemaVersion).
-
-  bibo_status:
-    range: UnicodeString
-    description: Publication status of the artifact (bibo:status).
-
-  pav_version:
-    range: UnicodeString
-    description: Version of the artifact itself (pav:version).
-
-  oslc_modified_by:
-    range: Iri
-    description: IRI of the agent recorded in OSLC modification provenance.
-
-  # --- template structure ---
-  header:
-    range: UnicodeString
-    description: Optional header text displayed above the template form.
-
-  footer:
-    range: UnicodeString
-    description: Optional footer text displayed below the template form.
-
-  embedded_artifacts:
-    range: EmbeddedArtifact
-    multivalued: true
-    inlined: true
-    description: The ordered list of embedded artifacts within a Template.
-
-  # --- embedded artifact properties ---
-  embedded_artifact_key:
-    range: AsciiIdentifier
-    required: true
-    description: >-
-      Local identifier of an EmbeddedArtifact within its containing Template.
-      Must be unique within that Template.
-
-  value_requirement:
-    range: ValueRequirementEnum
-    description: >-
-      Whether a value for this embedded artifact is required, recommended,
-      or optional. Defaults to Optional when absent.
-
-  visibility:
-    range: VisibilityEnum
-    description: >-
-      Whether the embedded artifact is shown in rendered interfaces.
-      Defaults to Visible when absent.
-
-  min_cardinality:
-    range: NonNegativeInteger
-    description: Minimum number of occurrences. Default is 1.
-
-  max_cardinality:
-    range: NonNegativeInteger
-    description: >-
-      Maximum number of occurrences. Absent means unbounded. Default is 1
-      when Cardinality as a whole is absent.
-
-  label_override:
-    range: UnicodeString
-    description: >-
-      Template-specific label that overrides the referenced artifact's
-      default label at this embedding site.
-
-  alternative_labels:
-    range: UnicodeString
-    multivalued: true
-    description: Additional alternative labels for this embedding site.
-
-  property_iri:
-    range: Iri
-    description: >-
-      The RDF property IRI that the embedded artifact's value represents
-      in this template context.
-
-  property_label:
-    range: UnicodeString
-    description: Human-readable label for the property IRI.
-
-  # --- field spec configuration ---
-  min_length:
-    range: NonNegativeInteger
-    description: Minimum number of Unicode characters permitted in a text value.
-
-  max_length:
-    range: NonNegativeInteger
-    description: Maximum number of Unicode characters permitted in a text value.
-
-  validation_regex:
-    range: RegexPattern
-    description: >-
-      A regular expression that the text value must match. Conforming values
-      must satisfy this pattern when present.
-
-  text_rendering_hint:
-    range: TextRenderingHintEnum
-    description: Preferred rendering style for the text input widget.
-
-  numeric_datatype:
-    range: Iri
-    required: true
-    description: XML Schema numeric datatype IRI (e.g. xsd:decimal, xsd:integer).
-
-  numeric_precision:
-    range: NonNegativeInteger
-    description: Maximum number of decimal places permitted in a numeric value.
-
-  numeric_rendering_hint:
-    description: Currently only NumericInputRenderingHint is defined.
-    range: string
-
-  date_value_type:
-    range: DateValueTypeEnum
-    required: true
-    description: >-
-      Permitted granularity for a date field — year only, year-month, or
-      full calendar date.
-
-  date_component_order:
-    range: DateComponentOrderEnum
-    description: Preferred display order of day, month, and year components.
-
-  time_precision:
-    range: TimePrecisionEnum
-    description: Finest permitted granularity for a time value (hours-minutes, seconds, or fractions).
-
-  timezone_requirement:
-    range: TimezoneRequirementEnum
-    description: Whether an explicit timezone offset is required on time or date-time values.
-
-  time_format:
-    range: TimeFormatEnum
-    description: Preferred clock format (12-hour or 24-hour) for rendering a time field.
-
-  date_time_value_type:
-    range: DateTimeValueTypeEnum
-    required: true
-    description: >-
-      Finest permitted granularity for a date-time value — hours-minutes,
-      seconds, or fractional seconds.
-
-  single_choice_rendering_hint:
-    range: SingleChoiceRenderingHintEnum
-    description: Preferred rendering style for a single-selection choice widget.
-
-  multiple_choice_rendering_hint:
-    range: MultipleChoiceRenderingHintEnum
-    description: Preferred rendering style for a multiple-selection choice widget.
-
-  literal_choice_options:
-    range: LiteralChoiceOption
-    multivalued: true
-    required: true
-    inlined: true
-    description: The declared literal options for a LiteralSingleChoiceFieldSpec or LiteralMultipleChoiceFieldSpec.
-
-  controlled_term_choice_options:
-    range: ControlledTermChoiceOption
-    multivalued: true
-    required: true
-    inlined: true
-    description: The declared controlled-term options for a ControlledTermSingleChoiceFieldSpec or ControlledTermMultipleChoiceFieldSpec.
-
-  is_default_option:
-    range: boolean
-    description: Whether this ChoiceOption is pre-selected by default.
-
-  controlled_term_sources:
-    range: ControlledTermSource
-    multivalued: true
-    required: true
-    inlined: true
-    description: The ordered set of controlled term sources authorised for this field.
-
-  # --- controlled term source fields ---
-  ontology_iri:
-    range: Iri
-    description: IRI that uniquely identifies the ontology.
-
-  ontology_acronym:
-    range: UnicodeString
-    description: Short acronym for the ontology (e.g. OBI, UBERON).
-
-  ontology_name:
-    range: UnicodeString
-    description: Full human-readable name of the ontology.
-
-  root_term_iri:
-    range: Iri
-    description: IRI of the ontology class at the root of a BranchSource.
-
-  root_term_label:
-    range: UnicodeString
-    description: Human-readable label of the root term for a BranchSource.
-
-  max_traversal_depth:
-    range: NonNegativeInteger
-    description: Maximum depth of the ontology hierarchy to traverse from the root term.
-
-  value_set_identifier:
-    range: UnicodeString
-    required: true
-    description: Stable string identifier for the value set.
-
-  value_set_name:
-    range: UnicodeString
-    description: Human-readable name of the value set.
-
-  value_set_iri:
-    range: Iri
-    description: Resolvable IRI for the value set.
-
-  term_iri:
-    range: Iri
-    required: true
-    description: IRI identifying a controlled vocabulary term.
-
-  # --- value fields ---
-  text_value:
-    range: UnicodeString
-    description: Lexical form of a TextValue.
-
-  language_tag:
-    range: string
-    description: BCP 47 language tag for a language-tagged string.
-
-  numeric_lexical_form:
-    range: string
-    description: Lexical form of a numeric literal.
-
-  numeric_datatype_iri:
-    range: Iri
-    description: XML Schema datatype IRI for this numeric literal.
-
-  temporal_lexical_form:
-    range: string
-    description: Lexical form of a temporal literal (ISO 8601).
-
-  temporal_datatype_iri:
-    range: Iri
-    description: Datatype IRI for this temporal literal.
-
-  label:
-    range: UnicodeString
-    description: Human-readable label.
-
-  notation:
-    range: UnicodeString
-    description: Symbolic notation or code from the source ontology.
-
-  preferred_label:
-    range: UnicodeString
-    description: The source ontology's own preferred label for the term.
-
-  link_iri:
-    range: Iri
-    required: true
-    description: IRI (URL) carried by a LinkValue.
-
-  link_label:
-    range: UnicodeString
-    description: Human-readable label accompanying the link IRI.
-
-  attribute_name:
-    range: UnicodeString
-    required: true
-    description: Name of the named attribute in an AttributeValue pair.
-
-  # --- instance fields ---
-  template_reference:
-    range: Iri
-    required: true
-    description: >-
-      IRI of the Template that this TemplateInstance conforms to.
-      Persistent link; basis for all validation and interpretation.
-
-  instance_values:
-    range: InstanceValue
-    multivalued: true
-    inlined: true
-    description: >-
-      Ordered collection of InstanceValue entries for a TemplateInstance
-      or NestedTemplateInstance.
-
-  field_values:
-    range: Value
-    multivalued: true
-    required: true
-    inlined: true
-    description: >-
-      One or more typed values for this FieldValue. Multiplicity must
-      satisfy the Cardinality of the corresponding EmbeddedField.
-
-  # typed authority IRIs
-  orcid_iri:
-    range: Iri
-    pattern: "^https://orcid\\.org/\\d{4}-\\d{4}-\\d{4}-\\d{3}[\\dX]$"
-    description: ORCID identifier IRI (https://orcid.org/…).
-
-  ror_iri:
-    range: Iri
-    pattern: "^https://ror\\.org/0[a-z0-9]{8}$"
-    description: ROR (Research Organization Registry) identifier IRI (https://ror.org/…).
-
-  doi_iri:
-    range: Iri
-    pattern: "^https://doi\\.org/10\\.\\d{4,}/.+"
-    description: DOI identifier IRI (https://doi.org/…).
-
-  pub_med_iri:
-    range: Iri
-    pattern: "^https://pubmed\\.ncbi\\.nlm\\.nih\\.gov/\\d+$"
-    description: PubMed identifier IRI (https://pubmed.ncbi.nlm.nih.gov/…).
-
-  rrid_iri:
-    range: Iri
-    pattern: "^https://identifiers\\.org/RRID:[A-Z]+_\\d+$"
-    description: RRID (Research Resource Identifier) IRI (https://identifiers.org/RRID:…).
-
-  nih_grant_iri:
-    range: Iri
-    description: NIH grant identifier IRI.
-
-  # presentation component content
-  html_content:
-    range: UnicodeString
-    description: HTML fragment carried by a RichTextComponent.
-
-  image_source:
-    range: Iri
-    description: IRI of the image resource for an ImageComponent.
-
-  youtube_video_source:
-    range: Iri
-    description: IRI of the YouTube video for a YoutubeVideoComponent.
-
-  unit_iri:
-    range: Iri
-    required: true
-    description: IRI identifying the unit of measurement.
+  NumericRenderingHintEnum:
+    description: Preferred rendering style for a numeric field input.
+    permissible_values:
+      NumericInputRenderingHint: {}
 
 
 # ──────────────────────────────────────────────────────────────────
@@ -563,24 +181,53 @@ classes:
 
   DescriptiveMetadata:
     description: Human-readable name and description of an artifact.
-    slots:
-      - schema_name
-      - schema_description
+    attributes:
+      name:
+        range: string
+        required: true
+        slot_uri: schema:name
+        description: Human-readable name of the artifact.
+      description:
+        range: string
+        slot_uri: schema:description
+        description: Human-readable description of the artifact.
 
   TemporalProvenance:
     description: Creation and modification timestamps for an artifact.
-    slots:
-      - pav_created_on
-      - pav_last_updated_on
-      - pav_created_by
-      - pav_modified_by
+    attributes:
+      created_on:
+        range: datetime
+        slot_uri: pav:createdOn
+        description: Creation timestamp.
+      last_updated_on:
+        range: datetime
+        slot_uri: pav:lastUpdatedOn
+        description: Last-update timestamp.
+      created_by:
+        range: uri
+        slot_uri: pav:createdBy
+        description: IRI of the agent that created the artifact.
+      modified_by:
+        range: uri
+        slot_uri: pav:authoredBy
+        description: IRI of the agent that last modified the artifact.
 
   SchemaVersioning:
     description: Schema version, publication status, and artifact version.
-    slots:
-      - schema_version
-      - bibo_status
-      - pav_version
+    attributes:
+      schema_version:
+        range: string
+        required: true
+        slot_uri: schema:schemaVersion
+        description: Version string of the JSON Schema used.
+      status:
+        range: string
+        slot_uri: bibo:status
+        description: Publication status of the artifact.
+      artifact_version:
+        range: string
+        slot_uri: pav:version
+        description: Version of the artifact itself.
 
   ArtifactMetadata:
     description: Core metadata carried by every CEDAR artifact.
@@ -594,8 +241,9 @@ classes:
         range: TemporalProvenance
         inlined: true
         description: Creation and modification timestamps for the artifact.
-      oslc_modified_by:
-        range: Iri
+      modified_by:
+        range: uri
+        slot_uri: oslc:modifiedBy
         description: IRI of the agent recorded in OSLC modification provenance.
 
   SchemaArtifactMetadata:
@@ -615,8 +263,11 @@ classes:
   Artifact:
     abstract: true
     description: Abstract root of all CEDAR artifact types.
-    slots:
-      - artifact_iri
+    attributes:
+      artifact_iri:
+        range: uri
+        identifier: true
+        description: The IRI that uniquely and persistently identifies this artifact.
 
   SchemaArtifact:
     is_a: Artifact
@@ -643,10 +294,18 @@ classes:
       A reusable schema artifact that composes embedded fields, nested
       templates, and presentation components into a form for capturing
       structured metadata.
-    slots:
-      - header
-      - footer
-      - embedded_artifacts
+    attributes:
+      header:
+        range: string
+        description: Optional header text displayed above the template form.
+      footer:
+        range: string
+        description: Optional footer text displayed below the template form.
+      embedded_artifacts:
+        range: EmbeddedArtifact
+        multivalued: true
+        inlined: true
+        description: The ordered list of embedded artifacts within a Template.
 
   # ----------------------------------------------------------------
   # Field hierarchy
@@ -801,20 +460,26 @@ classes:
   RichTextComponent:
     is_a: PresentationComponent
     description: A PresentationComponent that displays a fragment of HTML rich text.
-    slots:
-      - html_content
+    attributes:
+      html_content:
+        range: string
+        description: HTML fragment carried by a RichTextComponent.
 
   ImageComponent:
     is_a: PresentationComponent
     description: A PresentationComponent that displays an image at a specified IRI.
-    slots:
-      - image_source
+    attributes:
+      image_source:
+        range: uri
+        description: IRI of the image resource for an ImageComponent.
 
   YoutubeVideoComponent:
     is_a: PresentationComponent
     description: A PresentationComponent that embeds a YouTube video.
-    slots:
-      - youtube_video_source
+    attributes:
+      youtube_video_source:
+        range: uri
+        description: IRI of the YouTube video for a YoutubeVideoComponent.
 
   SectionBreakComponent:
     is_a: PresentationComponent
@@ -833,14 +498,40 @@ classes:
     description: >-
       An artifact reference embedded within a Template, together with the
       embedding-specific properties that govern its use in that context.
-    slots:
-      - embedded_artifact_key
-      - value_requirement
-      - min_cardinality
-      - max_cardinality
-      - visibility
-      - label_override
-      - alternative_labels
+    attributes:
+      embedded_artifact_key:
+        range: AsciiIdentifier
+        required: true
+        description: >-
+          Local identifier of an EmbeddedArtifact within its containing Template.
+          Must be unique within that Template.
+      value_requirement:
+        range: ValueRequirementEnum
+        description: >-
+          Whether a value for this embedded artifact is required, recommended,
+          or optional. Defaults to Optional when absent.
+      min_cardinality:
+        range: NonNegativeInteger
+        description: Minimum number of occurrences. Default is 1.
+      max_cardinality:
+        range: NonNegativeInteger
+        description: >-
+          Maximum number of occurrences. Absent means unbounded. Default is 1
+          when Cardinality as a whole is absent.
+      visibility:
+        range: VisibilityEnum
+        description: >-
+          Whether the embedded artifact is shown in rendered interfaces.
+          Defaults to Visible when absent.
+      label_override:
+        range: string
+        description: >-
+          Template-specific label that overrides the referenced artifact's
+          default label at this embedding site.
+      alternative_labels:
+        range: string
+        multivalued: true
+        description: Additional alternative labels for this embedding site.
 
   EmbeddedField:
     is_a: EmbeddedArtifact
@@ -863,7 +554,7 @@ classes:
     description: An embedded reference to a TextField within a Template.
     attributes:
       field_reference:
-        range: Iri
+        range: uri
         required: true
         description: IRI of the referenced TextField.
       default_value:
@@ -876,7 +567,7 @@ classes:
     description: An embedded reference to a NumericField within a Template.
     attributes:
       field_reference:
-        range: Iri
+        range: uri
         required: true
         description: IRI of the referenced NumericField.
       default_value:
@@ -889,7 +580,7 @@ classes:
     description: An embedded reference to a DateField within a Template.
     attributes:
       field_reference:
-        range: Iri
+        range: uri
         required: true
         description: IRI of the referenced DateField.
       default_value:
@@ -902,7 +593,7 @@ classes:
     description: An embedded reference to a TimeField within a Template.
     attributes:
       field_reference:
-        range: Iri
+        range: uri
         required: true
         description: IRI of the referenced TimeField.
       default_value:
@@ -915,7 +606,7 @@ classes:
     description: An embedded reference to a DateTimeField within a Template.
     attributes:
       field_reference:
-        range: Iri
+        range: uri
         required: true
         description: IRI of the referenced DateTimeField.
       default_value:
@@ -928,7 +619,7 @@ classes:
     description: An embedded reference to a ControlledTermField within a Template.
     attributes:
       field_reference:
-        range: Iri
+        range: uri
         required: true
         description: IRI of the referenced ControlledTermField.
       default_value:
@@ -941,7 +632,7 @@ classes:
     description: An embedded reference to a SingleChoiceField within a Template.
     attributes:
       field_reference:
-        range: Iri
+        range: uri
         required: true
         description: IRI of the referenced SingleChoiceField.
       default_value:
@@ -954,7 +645,7 @@ classes:
     description: An embedded reference to a MultipleChoiceField within a Template.
     attributes:
       field_reference:
-        range: Iri
+        range: uri
         required: true
         description: IRI of the referenced MultipleChoiceField.
       default_values:
@@ -968,7 +659,7 @@ classes:
     description: An embedded reference to a LinkField within a Template.
     attributes:
       field_reference:
-        range: Iri
+        range: uri
         required: true
         description: IRI of the referenced LinkField.
       default_value:
@@ -981,7 +672,7 @@ classes:
     description: An embedded reference to an EmailField within a Template.
     attributes:
       field_reference:
-        range: Iri
+        range: uri
         required: true
         description: IRI of the referenced EmailField.
 
@@ -990,7 +681,7 @@ classes:
     description: An embedded reference to a PhoneNumberField within a Template.
     attributes:
       field_reference:
-        range: Iri
+        range: uri
         required: true
         description: IRI of the referenced PhoneNumberField.
 
@@ -999,7 +690,7 @@ classes:
     description: An embedded reference to an OrcidField within a Template.
     attributes:
       field_reference:
-        range: Iri
+        range: uri
         required: true
         description: IRI of the referenced OrcidField.
       default_value:
@@ -1012,7 +703,7 @@ classes:
     description: An embedded reference to a RorField within a Template.
     attributes:
       field_reference:
-        range: Iri
+        range: uri
         required: true
         description: IRI of the referenced RorField.
       default_value:
@@ -1025,7 +716,7 @@ classes:
     description: An embedded reference to a DoiField within a Template.
     attributes:
       field_reference:
-        range: Iri
+        range: uri
         required: true
         description: IRI of the referenced DoiField.
       default_value:
@@ -1038,7 +729,7 @@ classes:
     description: An embedded reference to a PubMedIdField within a Template.
     attributes:
       field_reference:
-        range: Iri
+        range: uri
         required: true
         description: IRI of the referenced PubMedIdField.
       default_value:
@@ -1051,7 +742,7 @@ classes:
     description: An embedded reference to an RridField within a Template.
     attributes:
       field_reference:
-        range: Iri
+        range: uri
         required: true
         description: IRI of the referenced RridField.
       default_value:
@@ -1064,7 +755,7 @@ classes:
     description: An embedded reference to an NihGrantIdField within a Template.
     attributes:
       field_reference:
-        range: Iri
+        range: uri
         required: true
         description: IRI of the referenced NihGrantIdField.
       default_value:
@@ -1077,7 +768,7 @@ classes:
     description: An embedded reference to an AttributeValueField within a Template.
     attributes:
       field_reference:
-        range: Iri
+        range: uri
         required: true
         description: IRI of the referenced AttributeValueField.
 
@@ -1086,7 +777,7 @@ classes:
     description: An embedded reference to a nested Template.
     attributes:
       template_reference:
-        range: Iri
+        range: uri
         required: true
         description: IRI of the referenced Template.
       embedding_property:
@@ -1103,7 +794,7 @@ classes:
       InstanceValue; invisible to the instance model.
     attributes:
       component_reference:
-        range: Iri
+        range: uri
         required: true
         description: IRI of the referenced PresentationComponent.
 
@@ -1111,9 +802,15 @@ classes:
     description: >-
       Associates a semantic RDF property IRI with an EmbeddedField or
       EmbeddedTemplate in a specific template context.
-    slots:
-      - property_iri
-      - property_label
+    attributes:
+      property_iri:
+        range: uri
+        description: >-
+          The RDF property IRI that the embedded artifact's value represents
+          in this template context.
+      property_label:
+        range: string
+        description: Human-readable label for the property IRI.
 
   # ----------------------------------------------------------------
   # Field specs
@@ -1130,12 +827,21 @@ classes:
     description: >-
       Configuration for a TextField, specifying optional text constraints
       (length bounds, regex) and a rendering hint.
-    slots:
-      - min_length
-      - max_length
-      - validation_regex
-      - text_rendering_hint
     attributes:
+      min_length:
+        range: NonNegativeInteger
+        description: Minimum number of Unicode characters permitted in a text value.
+      max_length:
+        range: NonNegativeInteger
+        description: Maximum number of Unicode characters permitted in a text value.
+      validation_regex:
+        range: string
+        description: >-
+          A regular expression that the text value must match. Conforming values
+          must satisfy this pattern when present.
+      text_rendering_hint:
+        range: TextRenderingHintEnum
+        description: Preferred rendering style for the text input widget.
       default_value:
         range: TextValue
         inlined: true
@@ -1146,11 +852,17 @@ classes:
     description: >-
       Configuration for a NumericField, specifying the XML Schema datatype,
       optional precision, unit, and value bounds.
-    slots:
-      - numeric_datatype
-      - numeric_precision
-      - numeric_rendering_hint
     attributes:
+      numeric_datatype:
+        range: uri
+        required: true
+        description: XML Schema numeric datatype IRI (e.g. xsd:decimal, xsd:integer).
+      numeric_precision:
+        range: NonNegativeInteger
+        description: Maximum number of decimal places permitted in a numeric value.
+      numeric_rendering_hint:
+        range: NumericRenderingHintEnum
+        description: Preferred rendering style for the numeric input widget.
       unit:
         range: Unit
         inlined: true
@@ -1169,9 +881,13 @@ classes:
     description: >-
       Configuration for a DateField, specifying the permitted date precision
       and an optional display-order rendering hint.
-    slots:
-      - date_value_type
     attributes:
+      date_value_type:
+        range: DateValueTypeEnum
+        required: true
+        description: >-
+          Permitted granularity for a date field — year only, year-month, or
+          full calendar date.
       rendering_hint:
         range: DateRenderingHint
         inlined: true
@@ -1182,10 +898,13 @@ classes:
     description: >-
       Configuration for a TimeField, specifying precision, timezone requirement,
       and an optional clock-format rendering hint.
-    slots:
-      - time_precision
-      - timezone_requirement
     attributes:
+      time_precision:
+        range: TimePrecisionEnum
+        description: Finest permitted granularity for a time value (hours-minutes, seconds, or fractions).
+      timezone_requirement:
+        range: TimezoneRequirementEnum
+        description: Whether an explicit timezone offset is required on time or date-time values.
       rendering_hint:
         range: TimeRenderingHint
         inlined: true
@@ -1196,10 +915,16 @@ classes:
     description: >-
       Configuration for a DateTimeField, specifying the permitted datetime
       precision, timezone requirement, and an optional rendering hint.
-    slots:
-      - date_time_value_type
-      - timezone_requirement
     attributes:
+      date_time_value_type:
+        range: DateTimeValueTypeEnum
+        required: true
+        description: >-
+          Finest permitted granularity for a date-time value — hours-minutes,
+          seconds, or fractional seconds.
+      timezone_requirement:
+        range: TimezoneRequirementEnum
+        description: Whether an explicit timezone offset is required on time or date-time values.
       rendering_hint:
         range: DateTimeRenderingHint
         inlined: true
@@ -1210,8 +935,13 @@ classes:
     description: >-
       Configuration for a ControlledTermField, specifying the authorised
       controlled term sources from which values may be drawn.
-    slots:
-      - controlled_term_sources
+    attributes:
+      controlled_term_sources:
+        range: ControlledTermSource
+        multivalued: true
+        required: true
+        inlined: true
+        description: The ordered set of controlled term sources authorised for this field.
 
   SingleChoiceFieldSpec:
     is_a: FieldSpec
@@ -1223,16 +953,30 @@ classes:
   LiteralSingleChoiceFieldSpec:
     is_a: SingleChoiceFieldSpec
     description: A single-selection choice field spec whose options are literal values.
-    slots:
-      - literal_choice_options
-      - single_choice_rendering_hint
+    attributes:
+      literal_choice_options:
+        range: LiteralChoiceOption
+        multivalued: true
+        required: true
+        inlined: true
+        description: The declared literal options for this choice field.
+      single_choice_rendering_hint:
+        range: SingleChoiceRenderingHintEnum
+        description: Preferred rendering style for a single-selection choice widget.
 
   ControlledTermSingleChoiceFieldSpec:
     is_a: SingleChoiceFieldSpec
     description: A single-selection choice field spec whose options are controlled vocabulary terms.
-    slots:
-      - controlled_term_choice_options
-      - single_choice_rendering_hint
+    attributes:
+      controlled_term_choice_options:
+        range: ControlledTermChoiceOption
+        multivalued: true
+        required: true
+        inlined: true
+        description: The declared controlled-term options for this choice field.
+      single_choice_rendering_hint:
+        range: SingleChoiceRenderingHintEnum
+        description: Preferred rendering style for a single-selection choice widget.
 
   MultipleChoiceFieldSpec:
     is_a: FieldSpec
@@ -1244,16 +988,30 @@ classes:
   LiteralMultipleChoiceFieldSpec:
     is_a: MultipleChoiceFieldSpec
     description: A multiple-selection choice field spec whose options are literal values.
-    slots:
-      - literal_choice_options
-      - multiple_choice_rendering_hint
+    attributes:
+      literal_choice_options:
+        range: LiteralChoiceOption
+        multivalued: true
+        required: true
+        inlined: true
+        description: The declared literal options for this choice field.
+      multiple_choice_rendering_hint:
+        range: MultipleChoiceRenderingHintEnum
+        description: Preferred rendering style for a multiple-selection choice widget.
 
   ControlledTermMultipleChoiceFieldSpec:
     is_a: MultipleChoiceFieldSpec
     description: A multiple-selection choice field spec whose options are controlled vocabulary terms.
-    slots:
-      - controlled_term_choice_options
-      - multiple_choice_rendering_hint
+    attributes:
+      controlled_term_choice_options:
+        range: ControlledTermChoiceOption
+        multivalued: true
+        required: true
+        inlined: true
+        description: The declared controlled-term options for this choice field.
+      multiple_choice_rendering_hint:
+        range: MultipleChoiceRenderingHintEnum
+        description: Preferred rendering style for a multiple-selection choice widget.
 
   LinkFieldSpec:
     is_a: FieldSpec
@@ -1317,17 +1075,24 @@ classes:
 
   Unit:
     description: An identified measurement or quantity unit with an optional label.
-    slots:
-      - unit_iri
-      - label
+    attributes:
+      unit_iri:
+        range: uri
+        required: true
+        description: IRI identifying the unit of measurement.
+      label:
+        range: string
+        description: Human-readable label for this unit.
 
   ChoiceOption:
     abstract: true
     description: >-
       Abstract base for a single permissible option in a ChoiceFieldSpec.
       Concrete subclasses are LiteralChoiceOption and ControlledTermChoiceOption.
-    slots:
-      - is_default_option
+    attributes:
+      is_default_option:
+        range: boolean
+        description: Whether this ChoiceOption is pre-selected by default.
 
   LiteralChoiceOption:
     is_a: ChoiceOption
@@ -1351,18 +1116,24 @@ classes:
 
   DateRenderingHint:
     description: A rendering hint specifying the preferred display order of date components.
-    slots:
-      - date_component_order
+    attributes:
+      date_component_order:
+        range: DateComponentOrderEnum
+        description: Preferred display order of day, month, and year components.
 
   TimeRenderingHint:
     description: A rendering hint specifying the preferred clock format for a time field.
-    slots:
-      - time_format
+    attributes:
+      time_format:
+        range: TimeFormatEnum
+        description: Preferred clock format (12-hour or 24-hour) for rendering a time field.
 
   DateTimeRenderingHint:
     description: A rendering hint specifying the preferred clock format for a date-time field.
-    slots:
-      - time_format
+    attributes:
+      time_format:
+        range: TimeFormatEnum
+        description: Preferred clock format (12-hour or 24-hour) for rendering a date-time field.
 
   # ----------------------------------------------------------------
   # Controlled term sources
@@ -1387,16 +1158,21 @@ classes:
   BranchSource:
     is_a: ControlledTermSource
     description: A branch of an ontology rooted at a given term.
-    slots:
-      - root_term_iri
-      - root_term_label
-      - max_traversal_depth
     attributes:
       ontology_reference:
         range: OntologyReference
         required: true
         inlined: true
         description: The ontology used as the source of controlled terms.
+      root_term_iri:
+        range: uri
+        description: IRI of the ontology class at the root of a BranchSource.
+      root_term_label:
+        range: string
+        description: Human-readable label of the root term for a BranchSource.
+      max_traversal_depth:
+        range: NonNegativeInteger
+        description: Maximum depth of the ontology hierarchy to traverse from the root term.
 
   ClassSource:
     is_a: ControlledTermSource
@@ -1412,24 +1188,41 @@ classes:
   ValueSetSource:
     is_a: ControlledTermSource
     description: An external value set referenced by identifier, name, and IRI.
-    slots:
-      - value_set_identifier
-      - value_set_name
-      - value_set_iri
+    attributes:
+      value_set_identifier:
+        range: string
+        required: true
+        description: Stable string identifier for the value set.
+      value_set_name:
+        range: string
+        description: Human-readable name of the value set.
+      value_set_iri:
+        range: uri
+        description: Resolvable IRI for the value set.
 
   OntologyReference:
     description: Identifies an ontology, optionally with display hint metadata.
-    slots:
-      - ontology_iri
-      - ontology_acronym
-      - ontology_name
+    attributes:
+      ontology_iri:
+        range: uri
+        description: IRI that uniquely identifies the ontology.
+      ontology_acronym:
+        range: string
+        description: Short acronym for the ontology (e.g. OBI, UBERON).
+      ontology_name:
+        range: string
+        description: Full human-readable name of the ontology.
 
   ControlledTermClass:
     description: A single ontology class within a ClassSource.
-    slots:
-      - term_iri
-      - label
     attributes:
+      term_iri:
+        range: uri
+        required: true
+        description: IRI identifying a controlled vocabulary term.
+      label:
+        range: string
+        description: Human-readable label for this ontology class.
       ontology_reference:
         range: OntologyReference
         required: true
@@ -1449,7 +1242,7 @@ classes:
     description: A plain Unicode string literal without a language tag.
     attributes:
       lexical_form:
-        range: UnicodeString
+        range: string
         required: true
         description: The string content of this literal.
 
@@ -1458,7 +1251,7 @@ classes:
     description: A string literal paired with a BCP 47 language tag.
     attributes:
       lexical_form:
-        range: UnicodeString
+        range: string
         required: true
         description: The string content of this language-tagged literal.
       language_tag:
@@ -1472,45 +1265,15 @@ classes:
   NumericLiteral:
     is_a: Literal
     description: A typed numeric literal with an XML Schema datatype IRI.
-    slots:
-      - numeric_datatype_iri
     attributes:
+      numeric_datatype_iri:
+        range: uri
+        description: XML Schema datatype IRI for this numeric literal.
       lexical_form:
         range: string
         required: true
         description: The numeric lexical form as defined by the associated XML Schema datatype.
 
-  TemporalLiteral:
-    is_a: Literal
-    abstract: true
-    description: A typed temporal literal with an ISO 8601 lexical form.
-    slots:
-      - temporal_datatype_iri
-    attributes:
-      lexical_form:
-        range: string
-        required: true
-        description: The ISO 8601 lexical form of this temporal literal.
-
-  YearLiteral:
-    is_a: TemporalLiteral
-    description: A temporal literal representing a calendar year (ISO 8601 year form).
-
-  YearMonthLiteral:
-    is_a: TemporalLiteral
-    description: A temporal literal representing a calendar year-month (ISO 8601 year-month form).
-
-  FullDateLiteral:
-    is_a: TemporalLiteral
-    description: A temporal literal representing a full calendar date (ISO 8601 date form).
-
-  TimeLiteral:
-    is_a: TemporalLiteral
-    description: A temporal literal representing a time of day (ISO 8601 time form).
-
-  DateTimeLiteral:
-    is_a: TemporalLiteral
-    description: A temporal literal representing a combined date and time (ISO 8601 date-time form).
 
   # ----------------------------------------------------------------
   # Values
@@ -1558,62 +1321,66 @@ classes:
     is_a: DateValue
     description: A date value refined to year precision.
     attributes:
-      literal:
-        range: YearLiteral
+      value:
+        range: Year
         required: true
-        inlined: true
-        description: The year-precision temporal literal carried by this value.
+        description: The calendar year carried by this value (xsd:gYear).
 
   YearMonthValue:
     is_a: DateValue
     description: A date value refined to year-month precision.
     attributes:
-      literal:
-        range: YearMonthLiteral
+      value:
+        range: YearMonth
         required: true
-        inlined: true
-        description: The year-month-precision temporal literal carried by this value.
+        description: The calendar year-month carried by this value (xsd:gYearMonth).
 
   FullDateValue:
     is_a: DateValue
     description: A date value refined to full calendar date precision.
     attributes:
-      literal:
-        range: FullDateLiteral
+      value:
+        range: date
         required: true
-        inlined: true
-        description: The full-date temporal literal carried by this value.
+        description: The full calendar date carried by this value (xsd:date).
 
   TimeValue:
     is_a: Value
-    description: A value carrying a time-of-day literal.
+    description: A value carrying a time-of-day.
     attributes:
-      literal:
-        range: TimeLiteral
+      value:
+        range: time
         required: true
-        inlined: true
-        description: The time literal carried by this value.
+        description: The time-of-day carried by this value (xsd:time).
 
   DateTimeValue:
     is_a: Value
-    description: A value carrying a combined date-time literal.
+    description: A value carrying a combined date and time.
     attributes:
-      literal:
-        range: DateTimeLiteral
+      value:
+        range: datetime
         required: true
-        inlined: true
-        description: The date-time literal carried by this value.
+        description: The date-time carried by this value (xsd:dateTime).
 
   ControlledTermValue:
     is_a: Value
     description: >-
       A value identifying a term drawn from a controlled vocabulary. Carries
       the term IRI, a mandatory label, and optional notation and preferred label.
-    slots:
-      - term_iri
-      - label
-      - notation
-      - preferred_label
+    attributes:
+      term_iri:
+        range: uri
+        required: true
+        description: IRI identifying a controlled vocabulary term.
+      label:
+        range: string
+        description: Human-readable label for this controlled term.
+      notation:
+        range: string
+        description: Symbolic notation or code from the source ontology.
+      preferred_label:
+        range: string
+        description: The source ontology's own preferred label for the term.
 
   ChoiceValue:
     is_a: Value
@@ -1646,9 +1413,14 @@ classes:
   LinkValue:
     is_a: Value
     description: A value carrying a hyperlink IRI and optional human-readable label.
-    slots:
-      - link_iri
-      - link_label
+    attributes:
+      link_iri:
+        range: uri
+        required: true
+        description: IRI (URL) carried by a LinkValue.
+      link_label:
+        range: string
+        description: Human-readable label accompanying the link IRI.
 
   EmailValue:
     is_a: Value
@@ -1676,44 +1448,63 @@ classes:
     description: >-
       A value representing an identifier issued by a recognised external
       authority, paired with an optional human-readable label.
-    slots:
-      - label
+    attributes:
+      label:
+        range: string
+        description: Human-readable label for this external authority identifier.
 
   OrcidValue:
     is_a: ExternalAuthorityValue
     description: A value carrying an ORCID identifier IRI.
-    slots:
-      - orcid_iri
+    attributes:
+      orcid_iri:
+        range: uri
+        pattern: "^https://orcid\\.org/\\d{4}-\\d{4}-\\d{4}-\\d{3}[\\dX]$"
+        description: ORCID identifier IRI (https://orcid.org/…).
 
   RorValue:
     is_a: ExternalAuthorityValue
     description: A value carrying a ROR (Research Organization Registry) identifier IRI.
-    slots:
-      - ror_iri
+    attributes:
+      ror_iri:
+        range: uri
+        pattern: "^https://ror\\.org/0[a-z0-9]{8}$"
+        description: ROR (Research Organization Registry) identifier IRI (https://ror.org/…).
 
   DoiValue:
     is_a: ExternalAuthorityValue
     description: A value carrying a DOI (Digital Object Identifier) IRI.
-    slots:
-      - doi_iri
+    attributes:
+      doi_iri:
+        range: uri
+        pattern: "^https://doi\\.org/10\\.\\d{4,}/.+"
+        description: DOI identifier IRI (https://doi.org/…).
 
   PubMedIdValue:
     is_a: ExternalAuthorityValue
     description: A value carrying a PubMed identifier IRI.
-    slots:
-      - pub_med_iri
+    attributes:
+      pub_med_iri:
+        range: uri
+        pattern: "^https://pubmed\\.ncbi\\.nlm\\.nih\\.gov/\\d+$"
+        description: PubMed identifier IRI (https://pubmed.ncbi.nlm.nih.gov/…).
 
   RridValue:
     is_a: ExternalAuthorityValue
     description: A value carrying an RRID (Research Resource Identifier) IRI.
-    slots:
-      - rrid_iri
+    attributes:
+      rrid_iri:
+        range: uri
+        pattern: "^https://identifiers\\.org/RRID:[A-Z]+_\\d+$"
+        description: RRID (Research Resource Identifier) IRI (https://identifiers.org/RRID:…).
 
   NihGrantIdValue:
     is_a: ExternalAuthorityValue
     description: A value carrying an NIH grant identifier IRI.
-    slots:
-      - nih_grant_iri
+    attributes:
+      nih_grant_iri:
+        range: uri
+        description: NIH grant identifier IRI.
 
   AttributeValue:
     is_a: Value
@@ -1721,9 +1512,11 @@ classes:
       A name–value pair for an arbitrary named property not known at
       schema-definition time. The value component may itself be any Value,
       permitting unbounded nesting.
-    slots:
-      - attribute_name
     attributes:
+      attribute_name:
+        range: string
+        required: true
+        description: Name of the named attribute in an AttributeValue pair.
       value:
         range: Value          # recursive; generators may need special handling
         required: true
@@ -1740,23 +1533,37 @@ classes:
       An Artifact that records data conforming to a specific Template.
       Carries its own identity, descriptive metadata, and temporal
       provenance, making it independently identifiable and catalogable.
-    slots:
-      - template_reference
-      - instance_values
     attributes:
       artifact_metadata:
         range: ArtifactMetadata
         required: true
         inlined: true
         description: Identity, descriptive, and provenance metadata for this artifact.
+      template_reference:
+        range: uri
+        required: true
+        description: >-
+          IRI of the Template that this TemplateInstance conforms to.
+          Persistent link; basis for all validation and interpretation.
+      instance_values:
+        range: InstanceValue
+        multivalued: true
+        inlined: true
+        description: >-
+          Ordered collection of InstanceValue entries for this TemplateInstance.
 
   InstanceValue:
     abstract: true
     description: >-
       An abstract base for the two forms of instance value: FieldValue and
       NestedTemplateInstance.
-    slots:
-      - embedded_artifact_key
+    attributes:
+      embedded_artifact_key:
+        range: AsciiIdentifier
+        required: true
+        description: >-
+          Key identifying which embedded artifact in the Template this
+          InstanceValue corresponds to.
 
   FieldValue:
     is_a: InstanceValue
@@ -1764,13 +1571,26 @@ classes:
       Associates an EmbeddedArtifactKey with one or more typed values for
       an EmbeddedField. Absence of a value is represented by omitting the
       FieldValue entirely; hence values requires Value+.
-    slots:
-      - field_values
+    attributes:
+      field_values:
+        range: Value
+        multivalued: true
+        required: true
+        inlined: true
+        description: >-
+          One or more typed values for this FieldValue. Multiplicity must
+          satisfy the Cardinality of the corresponding EmbeddedField.
 
   NestedTemplateInstance:
     is_a: InstanceValue
     description: >-
       Associates an EmbeddedArtifactKey with nested InstanceValue constructs
       for an EmbeddedTemplate. Supports arbitrarily deep recursive structure.
-    slots:
-      - instance_values
+    attributes:
+      instance_values:
+        range: InstanceValue
+        multivalued: true
+        inlined: true
+        description: >-
+          Ordered collection of InstanceValue entries for this
+          NestedTemplateInstance.
