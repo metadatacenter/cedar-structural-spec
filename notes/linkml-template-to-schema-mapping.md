@@ -201,7 +201,7 @@ this annotation on both named slots and inline attributes.)
 
 ```
 Property(property_iri(<http://purl.obolibrary.org/obo/OBI_0100026>))
-  → slot_uri: obi:0100026
+  → slot_uri: OBI:0100026
 ```
 
 The prefix must be added to the schema's `prefixes:` block. If the IRI cannot
@@ -265,13 +265,13 @@ enums:
   TissueTypeOptions:
     permissible_values:
       "Liver":
-        meaning: uberon:0002107
+        meaning: UBERON:0002107
       "Lung":
-        meaning: uberon:0002048
+        meaning: UBERON:0002048
       "Kidney":
-        meaning: uberon:0002113
+        meaning: UBERON:0002113
       "Blood":
-        meaning: uberon:0000178
+        meaning: UBERON:0000178
 ```
 
 If two options share the same label but have different `term_iri` values (a
@@ -490,9 +490,9 @@ version: "1.0.0"
 prefixes:
   linkml:  https://w3id.org/linkml/
   cedar:   https://metadatacenter.org/cedar-model/
-  ncit:    http://purl.obolibrary.org/obo/NCIT_
-  obi:     http://purl.obolibrary.org/obo/OBI_
-  uberon:  http://purl.obolibrary.org/obo/UBERON_
+  NCIT:    http://purl.obolibrary.org/obo/NCIT_
+  OBI:     http://purl.obolibrary.org/obo/OBI_
+  UBERON:  http://purl.obolibrary.org/obo/UBERON_
 
 default_prefix: https://repo.metadatacenter.org/templates/biosample-form/schema/
 imports:
@@ -508,13 +508,13 @@ enums:
     # meaning: carries the term_iri from each ControlledTermChoiceOption
     permissible_values:
       "Blood":
-        meaning: uberon:0000178
+        meaning: UBERON:0000178
       "Liver":
-        meaning: uberon:0002107
+        meaning: UBERON:0002107
       "Lung":
-        meaning: uberon:0002048
+        meaning: UBERON:0002048
       "Kidney":
-        meaning: uberon:0002113
+        meaning: UBERON:0002113
 
 # ── Classes ──────────────────────────────────────────────────────────────────
 
@@ -527,7 +527,7 @@ classes:
       sample_name:
         range: string
         required: true
-        slot_uri: ncit:C164388
+        slot_uri: NCIT:C164388
         # EmbeddedTextField, Required, Property → slot_uri
 
       description:
@@ -537,30 +537,30 @@ classes:
       organism:
         range: ControlledTermValue
         required: true
-        slot_uri: obi:0100026
+        slot_uri: OBI:0100026
         # EmbeddedControlledTermField, Required, Property → slot_uri
 
       tissue_type:
         range: TissueTypeOptions
         required: true
-        slot_uri: uberon:0000479
+        slot_uri: UBERON:0000479
         # EmbeddedSingleChoiceField; ControlledTermSingleChoiceFieldSpec → TissueTypeOptions enum with meaning:
 
       age_at_collection:
         range: decimal
-        slot_uri: ncit:C25150
+        slot_uri: NCIT:C25150
         # EmbeddedNumericField, Optional; numeric_datatype xsd:decimal → range: decimal
 
       collection_date:
         range: date
-        slot_uri: obi:0001619
+        slot_uri: OBI:0001619
         # EmbeddedDateField, Optional; date_value_type FullDateValueType → range: date
 
       treatment:
         range: TreatmentForm
         multivalued: true
         minimum_cardinality: 0
-        slot_uri: obi:0000070
+        slot_uri: OBI:0000070
         inlined_as_list: true
         # EmbeddedTemplate; Cardinality(0, unbounded) → multivalued: true, minimum_cardinality: 0
 

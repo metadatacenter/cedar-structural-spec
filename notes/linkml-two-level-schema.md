@@ -157,7 +157,7 @@ description: Captures core study-level metadata.
 prefixes:
   linkml: https://w3id.org/linkml/
   cedar:  https://metadatacenter.org/cedar-model/
-  obi:    http://purl.obolibrary.org/obo/OBI_
+  OBI:    http://purl.obolibrary.org/obo/OBI_
 
 default_prefix: https://repo.metadatacenter.org/templates/study-metadata-form/schema/
 imports:
@@ -200,7 +200,7 @@ slots:
   organism:
     range: ControlledTermValue
     required: true
-    slot_uri: obi:0100026
+    slot_uri: OBI:0100026
     # embedding_property.property_iri → slot_uri
     # ControlledTermFieldSpec → range: ControlledTermValue
 
@@ -263,14 +263,14 @@ predicates automatically):
   "@context": "https://repo.metadatacenter.org/templates/study-metadata-form/schema/context.jsonld",
   "@type": "StudyMetadataForm",
   "study_title": "Effect of Drug X on Biomarker Y",
-  "obi:0100026": {
+  "OBI:0100026": {
     "@type": "cedar:ControlledTermValue",
     "cedar:termIri": "http://purl.obolibrary.org/obo/NCBITaxon_9606",
     "rdfs:label": "Homo sapiens"
   },
   "study_type": "Interventional",
   "study_start_date": "2024-06-01",
-  "obi:0000750": [
+  "OBI:0000750": [
     { "arm_name": "Treatment arm", "arm_type": "Active comparator" },
     { "arm_name": "Control arm",   "arm_type": "Placebo comparator" }
   ]
