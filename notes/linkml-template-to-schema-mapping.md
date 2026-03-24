@@ -275,13 +275,13 @@ fidelity while keeping instance values as plain readable strings.
 enums:
   TissueTypeOptions:
     permissible_values:
-      "Liver":
+      "liver":
         meaning: UBERON:0002107
-      "Lung":
+      "lung":
         meaning: UBERON:0002048
-      "Kidney":
+      "kidney":
         meaning: UBERON:0002113
-      "Blood":
+      "blood":
         meaning: UBERON:0000178
 ```
 
@@ -478,8 +478,8 @@ Template(
 ```
 
 The referenced `tissue_type` field carries a `ControlledTermSingleChoiceFieldSpec`
-with options drawn from UBERON: `Blood` (`uberon:0000178`), `Liver`
-(`uberon:0002107`), `Lung` (`uberon:0002048`), `Kidney` (`uberon:0002113`).
+with options drawn from UBERON: `blood` (`UBERON:0000178`), `liver`
+(`UBERON:0002107`), `lung` (`UBERON:0002048`), `kidney` (`UBERON:0002113`).
 
 The referenced `age_at_collection` field carries a `NumericFieldSpec` with
 `numeric_datatype` = `xsd:decimal`.
@@ -521,13 +521,13 @@ enums:
     # Generated from ControlledTermSingleChoiceFieldSpec on the referenced field;
     # meaning: carries the term_iri from each ControlledTermChoiceOption
     permissible_values:
-      "Blood":
+      "blood":
         meaning: UBERON:0000178
-      "Liver":
+      "liver":
         meaning: UBERON:0002107
-      "Lung":
+      "lung":
         meaning: UBERON:0002048
-      "Kidney":
+      "kidney":
         meaning: UBERON:0002113
 
 # ── Classes ──────────────────────────────────────────────────────────────────
@@ -611,7 +611,7 @@ organism:
   term_iri: http://purl.obolibrary.org/obo/NCBITaxon_9606
   label: Homo sapiens
 
-tissue_type: Liver
+tissue_type: liver
 
 age_at_collection: 42
 
