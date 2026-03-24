@@ -14,7 +14,7 @@ A `SchemaArtifact` is a reusable artifact that defines schema structure. `Templa
 
 A `Template` is the central container of the model. It specifies an ordered arrangement of `EmbeddedArtifact` constructs and defines the schema that `TemplateInstance` constructs must conform to.
 
-A `Field` is an abstract category refined into typed concrete variants — `TextField`, `NumericField`, `DateField`, `TimeField`, `DateTimeField`, `ControlledTermField`, `SingleChoiceField`, `MultipleChoiceField`, `LinkField`, `EmailField`, `PhoneNumberField`, the external authority fields, and `AttributeValueField`. Each concrete field carries a matching `FieldType` that specifies its value semantics and configuration. The field artifact carries identity, metadata, and provenance; the `FieldType` carries value rules and rendering properties. See `grammar.md` for the rationale behind this separation.
+A `Field` is an abstract category refined into typed concrete variants — `TextField`, `NumericField`, `DateField`, `TimeField`, `DateTimeField`, `ControlledTermField`, `SingleChoiceField`, `MultipleChoiceField`, `LinkField`, `EmailField`, `PhoneNumberField`, the external authority fields, and `AttributeValueField`. Each concrete field carries a matching `FieldSpec` that specifies its value semantics and configuration. The field artifact carries identity, metadata, and provenance; the `FieldSpec` carries value rules and rendering properties. See `grammar.md` for the rationale behind this separation.
 
 A `PresentationComponent` is a reusable non-data-bearing artifact that contributes presentational or instructional structure within a template. Examples include rich text, images, YouTube videos, section breaks, and page breaks. Presentation components do not produce instance values.
 
@@ -26,7 +26,7 @@ A `TemplateInstance` is an artifact that records data conforming to a `Template`
 
 ## Field Hierarchy
 
-The diagram below shows the complete `Field` hierarchy and the `FieldType` each concrete field variant carries.
+The diagram below shows the complete `Field` hierarchy and the `FieldSpec` each concrete field variant carries.
 
 ```mermaid
 classDiagram
@@ -65,24 +65,24 @@ classDiagram
   class NihGrantIdField
   class AttributeValueField
 
-  class TextFieldType
-  class NumericFieldType
-  class DateFieldType
-  class TimeFieldType
-  class DateTimeFieldType
-  class ControlledTermFieldType
-  class SingleChoiceFieldType
-  class MultipleChoiceFieldType
-  class LinkFieldType
-  class EmailFieldType
-  class PhoneNumberFieldType
-  class OrcidFieldType
-  class RorFieldType
-  class DoiFieldType
-  class PubMedIdFieldType
-  class RridFieldType
-  class NihGrantIdFieldType
-  class AttributeValueFieldType
+  class TextFieldSpec
+  class NumericFieldSpec
+  class DateFieldSpec
+  class TimeFieldSpec
+  class DateTimeFieldSpec
+  class ControlledTermFieldSpec
+  class SingleChoiceFieldSpec
+  class MultipleChoiceFieldSpec
+  class LinkFieldSpec
+  class EmailFieldSpec
+  class PhoneNumberFieldSpec
+  class OrcidFieldSpec
+  class RorFieldSpec
+  class DoiFieldSpec
+  class PubMedIdFieldSpec
+  class RridFieldSpec
+  class NihGrantIdFieldSpec
+  class AttributeValueFieldSpec
 
   Field <|-- TextField
   Field <|-- NumericField
@@ -111,22 +111,22 @@ classDiagram
   ExternalAuthorityField <|-- RridField
   ExternalAuthorityField <|-- NihGrantIdField
 
-  TextField --> TextFieldType : carries
-  NumericField --> NumericFieldType : carries
-  DateField --> DateFieldType : carries
-  TimeField --> TimeFieldType : carries
-  DateTimeField --> DateTimeFieldType : carries
-  ControlledTermField --> ControlledTermFieldType : carries
-  SingleChoiceField --> SingleChoiceFieldType : carries
-  MultipleChoiceField --> MultipleChoiceFieldType : carries
-  LinkField --> LinkFieldType : carries
-  EmailField --> EmailFieldType : carries
-  PhoneNumberField --> PhoneNumberFieldType : carries
-  OrcidField --> OrcidFieldType : carries
-  RorField --> RorFieldType : carries
-  DoiField --> DoiFieldType : carries
-  PubMedIdField --> PubMedIdFieldType : carries
-  RridField --> RridFieldType : carries
-  NihGrantIdField --> NihGrantIdFieldType : carries
-  AttributeValueField --> AttributeValueFieldType : carries
+  TextField --> TextFieldSpec : carries
+  NumericField --> NumericFieldSpec : carries
+  DateField --> DateFieldSpec : carries
+  TimeField --> TimeFieldSpec : carries
+  DateTimeField --> DateTimeFieldSpec : carries
+  ControlledTermField --> ControlledTermFieldSpec : carries
+  SingleChoiceField --> SingleChoiceFieldSpec : carries
+  MultipleChoiceField --> MultipleChoiceFieldSpec : carries
+  LinkField --> LinkFieldSpec : carries
+  EmailField --> EmailFieldSpec : carries
+  PhoneNumberField --> PhoneNumberFieldSpec : carries
+  OrcidField --> OrcidFieldSpec : carries
+  RorField --> RorFieldSpec : carries
+  DoiField --> DoiFieldSpec : carries
+  PubMedIdField --> PubMedIdFieldSpec : carries
+  RridField --> RridFieldSpec : carries
+  NihGrantIdField --> NihGrantIdFieldSpec : carries
+  AttributeValueField --> AttributeValueFieldSpec : carries
 ```

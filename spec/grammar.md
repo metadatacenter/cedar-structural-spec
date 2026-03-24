@@ -24,9 +24,9 @@ X+     one or more occurrences of X
 
 Whitespace separates symbols within a production.
 
-Production names use `UpperCamelCase`. A production name denotes the abstract category being defined, such as `Template`, `Field`, or `DateFieldType`.
+Production names use `UpperCamelCase`. A production name denotes the abstract category being defined, such as `Template`, `Field`, or `DateFieldSpec`.
 
-Abstract constructor forms use `lower_snake_case`. In this document, a constructor form is the schematic form used to show how an abstract construct is composed, such as `template(...)`, `field(...)`, or `date_field_type(...)`. The difference between `UpperCamelCase` production names and `lower_snake_case` constructor forms is purely a visual distinction used to make it clear when the grammar is naming a category and when it is showing the abstract form of a construct belonging to that category.
+Abstract constructor forms use `lower_snake_case`. In this document, a constructor form is the schematic form used to show how an abstract construct is composed, such as `template(...)`, `field(...)`, or `date_field_spec(...)`. The difference between `UpperCamelCase` production names and `lower_snake_case` constructor forms is purely a visual distinction used to make it clear when the grammar is naming a category and when it is showing the abstract form of a construct belonging to that category.
 
 For example, in the production
 
@@ -83,20 +83,20 @@ A conceptual overview of the model — describing the principal categories, thei
   - [Defaults](#defaults)
   - [Label Override](#label-override)
   - [Properties](#properties)
-- [Field Types](#field-types)
-  - [Temporal Field Types](#temporal-field-types)
+- [Field Specs](#field-specs)
+  - [Temporal Field Specs](#temporal-field-specs)
   - [Controlled Term Sources](#controlled-term-sources)
   - [Rendering Hints](#rendering-hints)
 - [Presentation Components](#presentation-components)
-- [Field Type And Value Correspondence](#field-type-and-value-correspondence)
+- [Field Spec And Value Correspondence](#field-spec-and-value-correspondence)
 - [Instances](#instances)
 - [Open Questions](#open-questions)
 
 ## Kernel Grammar
 
-The kernel grammar defines the primary abstract categories of the model and the core schema-level structure that connects them. It introduces reusable schema artifacts, templates, and the embedding constructs through which templates assemble fields, nested templates, and presentation components. Subsequent sections refine the metadata, field-type families, instance structures, and supporting constructs referenced here.
+The kernel grammar defines the primary abstract categories of the model and the core schema-level structure that connects them. It introduces reusable schema artifacts, templates, and the embedding constructs through which templates assemble fields, nested templates, and presentation components. Subsequent sections refine the metadata, field-spec families, instance structures, and supporting constructs referenced here.
 
-The diagram below gives an overview of the kernel. `Template` is the central container: it holds an ordered sequence of `EmbeddedArtifact` constructs, each of which contextualises a reusable artifact — a `Field`, a nested `Template`, or a `PresentationComponent` — within that specific template. A `TemplateInstance` records data conforming to a `Template`. Concrete `Field` variants and `FieldType` configurations are omitted for clarity.
+The diagram below gives an overview of the kernel. `Template` is the central container: it holds an ordered sequence of `EmbeddedArtifact` constructs, each of which contextualises a reusable artifact — a `Field`, a nested `Template`, or a `PresentationComponent` — within that specific template. A `TemplateInstance` records data conforming to a `Template`. Concrete `Field` variants and `FieldSpec` configurations are omitted for clarity.
 
 ```mermaid
 %%{init: {'themeVariables': {'fontSize': '12px'}}}%%
@@ -240,43 +240,43 @@ ExternalAuthorityField ::= OrcidField
 
 ### Concrete Field Artifacts
 
-Each concrete `Field` variant carries exactly three components: a typed artifact identifier that permanently identifies the reusable field; `SchemaArtifactMetadata` providing the descriptive, provenance, versioning, and annotation metadata common to all schema artifacts; and a typed `FieldType` that specifies the value semantics and configuration for that field category. The identifier and `FieldType` are specific to each concrete variant; `SchemaArtifactMetadata` is uniform across all fields. The groupings below mirror the abstract `Field` hierarchy defined in Core Structure.
+Each concrete `Field` variant carries exactly three components: a typed artifact identifier that permanently identifies the reusable field; `SchemaArtifactMetadata` providing the descriptive, provenance, versioning, and annotation metadata common to all schema artifacts; and a typed `FieldSpec` that specifies the value semantics and configuration for that field category. The identifier and `FieldSpec` are specific to each concrete variant; `SchemaArtifactMetadata` is uniform across all fields. The groupings below mirror the abstract `Field` hierarchy defined in Core Structure.
 
-`TextField` and `NumericField` are the two simple scalar field types. Each carries the most basic value semantics — free text and typed numeric values respectively.
+`TextField` and `NumericField` are the two simple scalar field specs. Each carries the most basic value semantics — free text and typed numeric values respectively.
 
 ```ebnf
 TextField ::= text_field(
                TextFieldId
                SchemaArtifactMetadata
-               TextFieldType
+               TextFieldSpec
              )
 
 NumericField ::= numeric_field(
                   NumericFieldId
                   SchemaArtifactMetadata
-                  NumericFieldType
+                  NumericFieldSpec
                 )
 ```
 
-The temporal field variants correspond to the `TemporalField` abstract category. Each is typed to a distinct temporal semantic — date, time of day, or combined date-time — and carries its own `FieldType` with precision and rendering options appropriate to that category.
+The temporal field variants correspond to the `TemporalField` abstract category. Each is typed to a distinct temporal semantic — date, time of day, or combined date-time — and carries its own `FieldSpec` with precision and rendering options appropriate to that category.
 
 ```ebnf
 DateField ::= date_field(
                DateFieldId
                SchemaArtifactMetadata
-               DateFieldType
+               DateFieldSpec
              )
 
 TimeField ::= time_field(
                TimeFieldId
                SchemaArtifactMetadata
-               TimeFieldType
+               TimeFieldSpec
              )
 
 DateTimeField ::= date_time_field(
                    DateTimeFieldId
                    SchemaArtifactMetadata
-                   DateTimeFieldType
+                   DateTimeFieldSpec
                  )
 ```
 
@@ -286,29 +286,29 @@ DateTimeField ::= date_time_field(
 ControlledTermField ::= controlled_term_field(
                           ControlledTermFieldId
                           SchemaArtifactMetadata
-                          ControlledTermFieldType
+                          ControlledTermFieldSpec
                         )
 
 LinkField ::= link_field(
                LinkFieldId
                SchemaArtifactMetadata
-               LinkFieldType
+               LinkFieldSpec
              )
 ```
 
-`SingleChoiceField` and `MultipleChoiceField` correspond to the `ChoiceField` abstract category and are the two concrete choice field variants. They differ in whether they permit exactly one or multiple simultaneous selections from a declared set of options. The permitted options are declared in the corresponding `ChoiceFieldType` and are validated against at the instance level.
+`SingleChoiceField` and `MultipleChoiceField` correspond to the `ChoiceField` abstract category and are the two concrete choice field variants. They differ in whether they permit exactly one or multiple simultaneous selections from a declared set of options. The permitted options are declared in the corresponding `ChoiceFieldSpec` and are validated against at the instance level.
 
 ```ebnf
 SingleChoiceField ::= single_choice_field(
                          SingleChoiceFieldId
                          SchemaArtifactMetadata
-                         SingleChoiceFieldType
+                         SingleChoiceFieldSpec
                        )
 
 MultipleChoiceField ::= multiple_choice_field(
                            MultipleChoiceFieldId
                            SchemaArtifactMetadata
-                           MultipleChoiceFieldType
+                           MultipleChoiceFieldSpec
                          )
 ```
 
@@ -318,13 +318,13 @@ The contact field variants correspond to the `ContactField` abstract category an
 EmailField ::= email_field(
                 EmailFieldId
                 SchemaArtifactMetadata
-                EmailFieldType
+                EmailFieldSpec
               )
 
 PhoneNumberField ::= phone_number_field(
                       PhoneNumberFieldId
                       SchemaArtifactMetadata
-                      PhoneNumberFieldType
+                      PhoneNumberFieldSpec
                     )
 ```
 
@@ -334,37 +334,37 @@ The external authority field variants correspond to the `ExternalAuthorityField`
 OrcidField ::= orcid_field(
                 OrcidFieldId
                 SchemaArtifactMetadata
-                OrcidFieldType
+                OrcidFieldSpec
               )
 
 RorField ::= ror_field(
               RorFieldId
               SchemaArtifactMetadata
-              RorFieldType
+              RorFieldSpec
             )
 
 DoiField ::= doi_field(
               DoiFieldId
               SchemaArtifactMetadata
-              DoiFieldType
+              DoiFieldSpec
             )
 
 PubMedIdField ::= pub_med_id_field(
                     PubMedIdFieldId
                     SchemaArtifactMetadata
-                    PubMedIdFieldType
+                    PubMedIdFieldSpec
                   )
 
 RridField ::= rrid_field(
                RridFieldId
                SchemaArtifactMetadata
-               RridFieldType
+               RridFieldSpec
              )
 
 NihGrantIdField ::= nih_grant_id_field(
                      NihGrantIdFieldId
                      SchemaArtifactMetadata
-                     NihGrantIdFieldType
+                     NihGrantIdFieldSpec
                    )
 ```
 
@@ -374,7 +374,7 @@ NihGrantIdField ::= nih_grant_id_field(
 AttributeValueField ::= attribute_value_field(
                           AttributeValueFieldId
                           SchemaArtifactMetadata
-                          AttributeValueFieldType
+                          AttributeValueFieldSpec
                         )
 ```
 
@@ -873,7 +873,7 @@ The following nonterminals are intentionally left abstract. They define the stri
 
 ### Core IRI and String Types
 
-This subsection defines the fundamental IRI, string, and numeric leaf types that appear throughout the grammar. `Iri` is the base construct for all IRI-valued positions. `DatatypeIri` and `TermIri` are specialised IRI forms used in literal typing and controlled-vocabulary references respectively. `LanguageTag` and `LexicalForm` support RDF literal construction. `IsoDateTimeStamp` carries ISO 8601 date-time values used in temporal provenance. `NonNegativeInteger` and `RegexPattern` support field-type constraints.
+This subsection defines the fundamental IRI, string, and numeric leaf types that appear throughout the grammar. `Iri` is the base construct for all IRI-valued positions. `DatatypeIri` and `TermIri` are specialised IRI forms used in literal typing and controlled-vocabulary references respectively. `LanguageTag` and `LexicalForm` support RDF literal construction. `IsoDateTimeStamp` carries ISO 8601 date-time values used in temporal provenance. `NonNegativeInteger` and `RegexPattern` support field-spec constraints.
 
 ```ebnf
 Iri ::= iri(
@@ -1048,7 +1048,7 @@ NumericLiteral ::= numeric_literal(
 
 ### Temporal Literals
 
-A temporal literal is a typed literal that represents a date, a time of day, or a combined date-time value, carried as an RDF literal with an XML Schema temporal datatype IRI. Temporal literals are strongly typed at each precision level. `TemporalLiteral` is the abstract supertype; `DateLiteral`, `TimeLiteral`, and `DateTimeLiteral` correspond to the three temporal field types. Within `DateLiteral`, the three alternatives preserve year-only, year-month, and full-date precision explicitly rather than collapsing them into a single form.
+A temporal literal is a typed literal that represents a date, a time of day, or a combined date-time value, carried as an RDF literal with an XML Schema temporal datatype IRI. Temporal literals are strongly typed at each precision level. `TemporalLiteral` is the abstract supertype; `DateLiteral`, `TimeLiteral`, and `DateTimeLiteral` correspond to the three temporal field specs. Within `DateLiteral`, the three alternatives preserve year-only, year-month, and full-date precision explicitly rather than collapsing them into a single form.
 
 ```ebnf
 TemporalLiteral ::= DateLiteral
@@ -1113,7 +1113,7 @@ Two literals are term-equal if and only if their lexical forms and their datatyp
 
 ## Values
 
-This section defines the `Value` types that represent instance-level data. `Value` constructs appear in `FieldValue` instances and as typed default values in `EmbeddedArtifact` properties. The value types are defined here independently of the `FieldType` productions that constrain them; the normative mapping between each `FieldType` and its permitted `Value` form is given in the [Field Type And Value Correspondence](#field-type-and-value-correspondence) section.
+This section defines the `Value` types that represent instance-level data. `Value` constructs appear in `FieldValue` instances and as typed default values in `EmbeddedArtifact` properties. The value types are defined here independently of the `FieldSpec` productions that constrain them; the normative mapping between each `FieldSpec` and its permitted `Value` form is given in the [Field Spec And Value Correspondence](#field-spec-and-value-correspondence) section.
 
 ```ebnf
 Value ::= TextValue
@@ -1132,7 +1132,7 @@ Value ::= TextValue
 
 ### Scalar Values
 
-`TextValue` and `NumericValue` are the simplest value forms, each wrapping a single typed literal that corresponds directly to its field type. `TextValue` accepts either a plain string or a language-tagged string via `TextLiteral`. `NumericValue` carries a typed numeric literal with an XML Schema numeric datatype IRI.
+`TextValue` and `NumericValue` are the simplest value forms, each wrapping a single typed literal that corresponds directly to its field spec. `TextValue` accepts either a plain string or a language-tagged string via `TextLiteral`. `NumericValue` carries a typed numeric literal with an XML Schema numeric datatype IRI.
 
 ```ebnf
 TextValue ::= text_value(
@@ -1146,7 +1146,7 @@ NumericValue ::= numeric_value(
 
 ### Temporal Values
 
-Temporal values represent date, time, and date-time data, corresponding directly to `DateFieldType`, `TimeFieldType`, and `DateTimeFieldType` respectively. `DateValue` is further refined into three precision variants — `YearValue`, `YearMonthValue`, and `FullDateValue` — to preserve the intended granularity explicitly rather than collapsing all date forms into a single type.
+Temporal values represent date, time, and date-time data, corresponding directly to `DateFieldSpec`, `TimeFieldSpec`, and `DateTimeFieldSpec` respectively. `DateValue` is further refined into three precision variants — `YearValue`, `YearMonthValue`, and `FullDateValue` — to preserve the intended granularity explicitly rather than collapsing all date forms into a single type.
 
 ```ebnf
 DateValue ::= YearValue
@@ -1176,7 +1176,7 @@ DateTimeValue ::= date_time_value(
 
 ### Controlled Term Value
 
-A controlled term value identifies a term drawn from an ontology, branch, class set, or value set declared in the corresponding `ControlledTermFieldType`. It carries a `TermIri` identifying the term and a mandatory human-readable `Label`. `Notation` and `PreferredLabel` carry optional terminology metadata from the source ontology, such as a symbolic code or the ontology's own preferred label for the term.
+A controlled term value identifies a term drawn from an ontology, branch, class set, or value set declared in the corresponding `ControlledTermFieldSpec`. It carries a `TermIri` identifying the term and a mandatory human-readable `Label`. `Notation` and `PreferredLabel` carry optional terminology metadata from the source ontology, such as a symbolic code or the ontology's own preferred label for the term.
 
 ```ebnf
 Label ::= label(
@@ -1201,7 +1201,7 @@ ControlledTermValue ::= controlled_term_value(
 
 ### Choice Value
 
-A choice value carries a selection from the options declared by a `ChoiceFieldType`. The form of the selection is determined by the kind of `ChoiceFieldType` the field carries: a field with a `LiteralSingleChoiceFieldType` or `LiteralMultipleChoiceFieldType` produces a `LiteralChoiceValue`, while a field with a `ControlledTermSingleChoiceFieldType` or `ControlledTermMultipleChoiceFieldType` produces a `ControlledTermChoiceValue`. A conforming instance value must correspond to one of the declared options of the referenced field's choice field type.
+A choice value carries a selection from the options declared by a `ChoiceFieldSpec`. The form of the selection is determined by the kind of `ChoiceFieldSpec` the field carries: a field with a `LiteralSingleChoiceFieldSpec` or `LiteralMultipleChoiceFieldSpec` produces a `LiteralChoiceValue`, while a field with a `ControlledTermSingleChoiceFieldSpec` or `ControlledTermMultipleChoiceFieldSpec` produces a `ControlledTermChoiceValue`. A conforming instance value must correspond to one of the declared options of the referenced field's choice field spec.
 
 ```ebnf
 ChoiceValue ::= LiteralChoiceValue
@@ -1465,7 +1465,7 @@ When `Visibility` is absent from an `EmbeddedArtifact`, the default is `Visible`
 
 A `DefaultValue` specifies the value to be pre-populated for an embedded artifact when no explicit value has been supplied by the user. Each concrete `DefaultValue` variant wraps the `Value` type of its corresponding field family, ensuring that a default is always structurally compatible with the values the field accepts. The concrete variants are grouped by field family, mirroring the groupings in the Values and Concrete Field Artifacts sections.
 
-`TextDefaultValue` occupies a special position: it may appear both on `TextFieldType` as a reusable field-level default, and on `EmbeddedTextField` as an embedding-specific override. All other default value types appear only at the embedding level. When both a field-level and an embedding-specific text default are present, the embedding-specific one takes precedence as it is more specific to the template context.
+`TextDefaultValue` occupies a special position: it may appear both on `TextFieldSpec` as a reusable field-level default, and on `EmbeddedTextField` as an embedding-specific override. All other default value types appear only at the embedding level. When both a field-level and an embedding-specific text default are present, the embedding-specific one takes precedence as it is more specific to the template context.
 
 ```ebnf
 DefaultValue ::= TextDefaultValue
@@ -1581,26 +1581,26 @@ PropertyIri   ::= property_iri( Iri )
 PropertyLabel ::= property_label( UnicodeString )
 ```
 
-## Field Types
+## Field Specs
 
-A `FieldType` is the semantic configuration block carried by a concrete `Field` artifact. It specifies what kind of value the field accepts, any constraints on that value, and any compatible rendering hints for presentation. Each concrete `Field` variant carries exactly one `FieldType` that matches its kind: a `TextField` carries a `TextFieldType`, a `DateField` carries a `DateFieldType`, and so on. The correspondence between each `FieldType` and its permitted `Value` form is given in the [Field Type And Value Correspondence](#field-type-and-value-correspondence) section.
+A `FieldSpec` is the semantic configuration block carried by a concrete `Field` artifact. It specifies what kind of value the field accepts, any constraints on that value, and any compatible rendering hints for presentation. Each concrete `Field` variant carries exactly one `FieldSpec` that matches its kind: a `TextField` carries a `TextFieldSpec`, a `DateField` carries a `DateFieldSpec`, and so on. The correspondence between each `FieldSpec` and its permitted `Value` form is given in the [Field Spec And Value Correspondence](#field-spec-and-value-correspondence) section.
 
-One might ask why `FieldType` exists as a separate construct rather than folding its content directly into the concrete `Field` artifact. The answer is separation of concerns: the concrete field artifact — `TextField`, `DateField`, and so on — answers the question "what kind of reusable field is this?" and carries the artifact's identity, descriptive metadata, provenance, and versioning. The `FieldType` answers the separate question "what are the value rules and rendering-compatible properties for this kind of field?" Keeping these concerns distinct means that artifact identity and lifecycle metadata remain uniform across all field kinds, while value semantics and field-specific configuration vary per family through `FieldType`. It also preserves a clean, uniform pattern: every concrete field artifact carries exactly one identifier, one `SchemaArtifactMetadata`, and one `FieldType`.
+One might ask why `FieldSpec` exists as a separate construct rather than folding its content directly into the concrete `Field` artifact. The answer is separation of concerns: the concrete field artifact — `TextField`, `DateField`, and so on — answers the question "what kind of reusable field is this?" and carries the artifact's identity, descriptive metadata, provenance, and versioning. The `FieldSpec` answers the separate question "what are the value rules and rendering-compatible properties for this kind of field?" Keeping these concerns distinct means that artifact identity and lifecycle metadata remain uniform across all field kinds, while value semantics and field-specific configuration vary per family through `FieldSpec`. It also preserves a clean, uniform pattern: every concrete field artifact carries exactly one identifier, one `SchemaArtifactMetadata`, and one `FieldSpec`.
 
-`FieldType` productions are grouped here by field family, mirroring the abstract `Field` hierarchy in the Kernel Grammar. Temporal field types, which carry additional precision and rendering configuration, are detailed in the [Temporal Field Types](#temporal-field-types) subsection. Controlled term source declarations, which specify the ontological authorities from which controlled-term values may be drawn, are covered in the [Controlled Term Sources](#controlled-term-sources) subsection. Rendering hints for all field families are defined in the [Rendering Hints](#rendering-hints) subsection, with the exception of temporal rendering hints which are defined alongside their field types.
+`FieldSpec` productions are grouped here by field family, mirroring the abstract `Field` hierarchy in the Kernel Grammar. Temporal field specs, which carry additional precision and rendering configuration, are detailed in the [Temporal Field Specs](#temporal-field-specs) subsection. Controlled term source declarations, which specify the ontological authorities from which controlled-term values may be drawn, are covered in the [Controlled Term Sources](#controlled-term-sources) subsection. Rendering hints for all field families are defined in the [Rendering Hints](#rendering-hints) subsection, with the exception of temporal rendering hints which are defined alongside their field specs.
 
 ```ebnf
-FieldType ::= TextFieldType
-            | NumericFieldType
-            | TemporalFieldType
-            | ControlledTermFieldType
-            | ChoiceFieldType
-            | LinkFieldType
-            | ContactFieldType
-            | ExternalAuthorityFieldType
-            | AttributeValueFieldType
+FieldSpec ::= TextFieldSpec
+            | NumericFieldSpec
+            | TemporalFieldSpec
+            | ControlledTermFieldSpec
+            | ChoiceFieldSpec
+            | LinkFieldSpec
+            | ContactFieldSpec
+            | ExternalAuthorityFieldSpec
+            | AttributeValueFieldSpec
 
-TextFieldType ::= text_field_type(
+TextFieldSpec ::= text_field_spec(
                     [TextDefaultValue]
                     [MinLength]
                     [MaxLength]
@@ -1608,7 +1608,7 @@ TextFieldType ::= text_field_type(
                     [TextRenderingHint]
                   )
 
-NumericFieldType ::= numeric_field_type(
+NumericFieldSpec ::= numeric_field_spec(
                        NumericDatatype
                        [Unit]
                        [NumericPrecision]
@@ -1646,39 +1646,39 @@ NumericMaxValue ::= numeric_max_value(
                       NumericValue
                     )
 
-TemporalFieldType ::= DateFieldType
-                    | TimeFieldType
-                    | DateTimeFieldType
+TemporalFieldSpec ::= DateFieldSpec
+                    | TimeFieldSpec
+                    | DateTimeFieldSpec
 
-ControlledTermFieldType ::= controlled_term_field_type(
+ControlledTermFieldSpec ::= controlled_term_field_spec(
                               ControlledTermSource+
                             )
 
-ChoiceFieldType ::= SingleChoiceFieldType
-                  | MultipleChoiceFieldType
+ChoiceFieldSpec ::= SingleChoiceFieldSpec
+                  | MultipleChoiceFieldSpec
 
-SingleChoiceFieldType ::= LiteralSingleChoiceFieldType
-                        | ControlledTermSingleChoiceFieldType
+SingleChoiceFieldSpec ::= LiteralSingleChoiceFieldSpec
+                        | ControlledTermSingleChoiceFieldSpec
 
-MultipleChoiceFieldType ::= LiteralMultipleChoiceFieldType
-                          | ControlledTermMultipleChoiceFieldType
+MultipleChoiceFieldSpec ::= LiteralMultipleChoiceFieldSpec
+                          | ControlledTermMultipleChoiceFieldSpec
 
-LiteralSingleChoiceFieldType ::= literal_single_choice_field_type(
+LiteralSingleChoiceFieldSpec ::= literal_single_choice_field_spec(
                                    LiteralChoiceOption+
                                    [SingleChoiceRenderingHint]
                                  )
 
-ControlledTermSingleChoiceFieldType ::= controlled_term_single_choice_field_type(
+ControlledTermSingleChoiceFieldSpec ::= controlled_term_single_choice_field_spec(
                                           ControlledTermChoiceOption+
                                           [SingleChoiceRenderingHint]
                                         )
 
-LiteralMultipleChoiceFieldType ::= literal_multiple_choice_field_type(
+LiteralMultipleChoiceFieldSpec ::= literal_multiple_choice_field_spec(
                                      LiteralChoiceOption+
                                      [MultipleChoiceRenderingHint]
                                    )
 
-ControlledTermMultipleChoiceFieldType ::= controlled_term_multiple_choice_field_type(
+ControlledTermMultipleChoiceFieldSpec ::= controlled_term_multiple_choice_field_spec(
                                             ControlledTermChoiceOption+
                                             [MultipleChoiceRenderingHint]
                                           )
@@ -1695,55 +1695,55 @@ ControlledTermChoiceOption ::= controlled_term_choice_option(
 
 DefaultOption ::= default_option()
 
-LinkFieldType ::= link_field_type()
+LinkFieldSpec ::= link_field_spec()
 
-ContactFieldType ::= EmailFieldType
-                   | PhoneNumberFieldType
+ContactFieldSpec ::= EmailFieldSpec
+                   | PhoneNumberFieldSpec
 
-EmailFieldType ::= email_field_type()
+EmailFieldSpec ::= email_field_spec()
 
-PhoneNumberFieldType ::= phone_number_field_type()
+PhoneNumberFieldSpec ::= phone_number_field_spec()
 
-ExternalAuthorityFieldType ::= OrcidFieldType
-                             | RorFieldType
-                             | DoiFieldType
-                             | PubMedIdFieldType
-                             | RridFieldType
-                             | NihGrantIdFieldType
+ExternalAuthorityFieldSpec ::= OrcidFieldSpec
+                             | RorFieldSpec
+                             | DoiFieldSpec
+                             | PubMedIdFieldSpec
+                             | RridFieldSpec
+                             | NihGrantIdFieldSpec
 
-OrcidFieldType ::= orcid_field_type()
+OrcidFieldSpec ::= orcid_field_spec()
 
-RorFieldType ::= ror_field_type()
+RorFieldSpec ::= ror_field_spec()
 
-DoiFieldType ::= doi_field_type()
+DoiFieldSpec ::= doi_field_spec()
 
-PubMedIdFieldType ::= pub_med_id_field_type()
+PubMedIdFieldSpec ::= pub_med_id_field_spec()
 
-RridFieldType ::= rrid_field_type()
+RridFieldSpec ::= rrid_field_spec()
 
-NihGrantIdFieldType ::= nih_grant_id_field_type()
+NihGrantIdFieldSpec ::= nih_grant_id_field_spec()
 
-AttributeValueFieldType ::= attribute_value_field_type()
+AttributeValueFieldSpec ::= attribute_value_field_spec()
 ```
 
 `Unit` denotes an identified measurement or quantity unit optionally paired with a human-readable label.
 
-The current placement of `Unit` on `NumericFieldType` is a pragmatic compromise. A later revision may introduce a distinct `QuantityFieldType` to model numeric values with fixed units more explicitly.
+The current placement of `Unit` on `NumericFieldSpec` is a pragmatic compromise. A later revision may introduce a distinct `QuantityFieldSpec` to model numeric values with fixed units more explicitly.
 
 `NumericMinValue` and `NumericMaxValue` specify inclusive lower and upper bounds on the numeric values that a field accepts. Both are expressed as `NumericValue` constructs so that the datatype of the bound matches the datatype of the field values it constrains.
 
-`ChoiceFieldType` is refined along two independent dimensions: cardinality and value kind. The cardinality dimension distinguishes `SingleChoiceFieldType` — which permits exactly one selection — from `MultipleChoiceFieldType` — which permits one or more simultaneous selections. The value kind dimension distinguishes `LiteralSingleChoiceFieldType` and `LiteralMultipleChoiceFieldType`, whose options are plain string or typed literals, from `ControlledTermSingleChoiceFieldType` and `ControlledTermMultipleChoiceFieldType`, whose options are ontology-backed controlled terms carrying an IRI and a human-readable label. All options within a single choice field type must be of the same kind: a literal choice field type carries only `LiteralChoiceOption` entries, and a controlled term choice field type carries only `ControlledTermChoiceOption` entries. This uniformity means that the value kind of a choice field is declared structurally rather than inferred by inspecting individual options.
+`ChoiceFieldSpec` is refined along two independent dimensions: cardinality and value kind. The cardinality dimension distinguishes `SingleChoiceFieldSpec` — which permits exactly one selection — from `MultipleChoiceFieldSpec` — which permits one or more simultaneous selections. The value kind dimension distinguishes `LiteralSingleChoiceFieldSpec` and `LiteralMultipleChoiceFieldSpec`, whose options are plain string or typed literals, from `ControlledTermSingleChoiceFieldSpec` and `ControlledTermMultipleChoiceFieldSpec`, whose options are ontology-backed controlled terms carrying an IRI and a human-readable label. All options within a single choice field spec must be of the same kind: a literal choice field spec carries only `LiteralChoiceOption` entries, and a controlled term choice field spec carries only `ControlledTermChoiceOption` entries. This uniformity means that the value kind of a choice field is declared structurally rather than inferred by inspecting individual options.
 
 `LiteralChoiceOption` and `ControlledTermChoiceOption` each carry an optional `DefaultOption`. When `DefaultOption` is present, the option is pre-selected when a new instance is created. This is a field-level default baked into the option definition itself; an embedding-level `ChoiceDefaultValue` on the corresponding `EmbeddedField` takes precedence when both are present.
 
 `ControlledTermSource` is defined in [Controlled Term Sources](#controlled-term-sources).
 
-### Temporal Field Types
+### Temporal Field Specs
 
-`TemporalFieldType` denotes temporal-valued fields and is refined into strongly typed date, time, and date-time forms. This section groups the temporal field-type productions together with their compatible rendering hints and value-type constraints.
+`TemporalFieldSpec` denotes temporal-valued fields and is refined into strongly typed date, time, and date-time forms. This section groups the temporal field-spec productions together with their compatible rendering hints and value-type constraints.
 
 ```ebnf
-DateFieldType ::= date_field_type(
+DateFieldSpec ::= date_field_spec(
                     DateValueType
                     [DateRenderingHint]
                   )
@@ -1760,7 +1760,7 @@ FullDateValueType ::= full_date_value_type()
 ```
 
 ```ebnf
-TimeFieldType ::= time_field_type(
+TimeFieldSpec ::= time_field_spec(
                     [TimePrecision]
                     [TimezoneRequirement]
                     [TimeRenderingHint]
@@ -1784,11 +1784,11 @@ TimezoneRequired ::= timezone_required()
 TimezoneNotRequired ::= timezone_not_required()
 ```
 
-`TimePrecision` identifies the finest time precision permitted by a `TimeFieldType`.
+`TimePrecision` identifies the finest time precision permitted by a `TimeFieldSpec`.
 
 `HourMinutePrecision`, `HourMinuteSecondPrecision`, and `HourMinuteSecondFractionPrecision` identify time values constrained respectively to hour-and-minute precision, second precision, and fractional-second precision.
 
-`TimezoneRequirement` identifies whether timezone information is required by the field type.
+`TimezoneRequirement` identifies whether timezone information is required by the field spec.
 
 The declared `TimePrecision` determines the required lexical form of conforming `TimeValue` constructs. Finer components than the declared precision MUST be omitted entirely; zeroing them is not equivalent to omitting them. Specifically:
 
@@ -1796,7 +1796,7 @@ The declared `TimePrecision` determines the required lexical form of conforming 
 - `HourMinuteSecondPrecision`: `TimeLiteral` MUST carry hour, minute, and second components (`HH:MM:SS`), with no fractional seconds.
 - `HourMinuteSecondFractionPrecision`: `TimeLiteral` MAY carry a fractional seconds component.
 
-When `TimePrecision` is absent from a `TimeFieldType`, no precision constraint applies and any well-formed `TimeLiteral` is conforming.
+When `TimePrecision` is absent from a `TimeFieldSpec`, no precision constraint applies and any well-formed `TimeLiteral` is conforming.
 
 The same strict-truncation rule applies to `DateTimeValueType` for `DateTimeValue` constructs:
 
@@ -1805,7 +1805,7 @@ The same strict-truncation rule applies to `DateTimeValueType` for `DateTimeValu
 - `DateHourMinuteSecondFractionValueType`: the time component MAY carry a fractional seconds component.
 
 ```ebnf
-DateTimeFieldType ::= date_time_field_type(
+DateTimeFieldSpec ::= date_time_field_spec(
                         DateTimeValueType
                         [TimezoneRequirement]
                         [DateTimeRenderingHint]
@@ -1882,7 +1882,7 @@ TwentyFourHourTimeFormat ::= twenty_four_hour_time_format()
 
 ### Controlled Term Sources
 
-Controlled term sources define the ontological authorities from which controlled-term values may be drawn. A `ControlledTermFieldType` requires one or more `ControlledTermSource` entries. Each source specifies either an entire ontology, a branch of an ontology rooted at a given term, a set of individual ontology classes, or an external value set. `TermIri` is defined in the Scalar and Datatype Leaves section.
+Controlled term sources define the ontological authorities from which controlled-term values may be drawn. A `ControlledTermFieldSpec` requires one or more `ControlledTermSource` entries. Each source specifies either an entire ontology, a branch of an ontology rooted at a given term, a set of individual ontology classes, or an external value set. `TermIri` is defined in the Scalar and Datatype Leaves section.
 
 ```ebnf
 ControlledTermSource ::= OntologySource
@@ -1977,7 +1977,7 @@ ValueSetIri ::= value_set_iri(
 
 ### Rendering Hints
 
-A `RenderingHint` is an optional presentational instruction carried by a `FieldType` that tells a rendering implementation how to display the field. Rendering hints are strictly presentational: they do not affect the meaning, structure, or validation of field values. Each rendering hint is typed to a specific `FieldType` family, so only compatible hint-and-field-type combinations are expressible. For example, a `TextRenderingHint` may only appear on a `TextFieldType`, and a `SingleChoiceRenderingHint` may only appear on a `SingleChoiceFieldType`. Note that temporal rendering hints (`DateRenderingHint`, `TimeRenderingHint`, and `DateTimeRenderingHint`) are defined alongside their respective field types in the [Temporal Field Types](#temporal-field-types) subsection.
+A `RenderingHint` is an optional presentational instruction carried by a `FieldSpec` that tells a rendering implementation how to display the field. Rendering hints are strictly presentational: they do not affect the meaning, structure, or validation of field values. Each rendering hint is typed to a specific `FieldSpec` family, so only compatible hint-and-field-spec combinations are expressible. For example, a `TextRenderingHint` may only appear on a `TextFieldSpec`, and a `SingleChoiceRenderingHint` may only appear on a `SingleChoiceFieldSpec`. Note that temporal rendering hints (`DateRenderingHint`, `TimeRenderingHint`, and `DateTimeRenderingHint`) are defined alongside their respective field specs in the [Temporal Field Specs](#temporal-field-specs) subsection.
 
 ```ebnf
 RenderingHint ::= TextRenderingHint
@@ -2014,15 +2014,15 @@ NumericRenderingHint ::= NumericInputRenderingHint
 NumericInputRenderingHint ::= numeric_input_rendering_hint()
 ```
 
-This specification draws a strict distinction between semantic structure and presentation. Semantic distinctions MUST be modeled in `FieldType` when they affect the meaning, cardinality, or value structure of a field. This includes distinctions such as single-choice versus multiple-choice, date versus time versus date-time, and permitted temporal precision. Purely presentational distinctions MUST NOT be modeled as separate field types. Instead, distinctions such as single-line versus multi-line text entry, date component ordering, and 12-hour versus 24-hour time display MUST be expressed only through compatible typed rendering hints.
+This specification draws a strict distinction between semantic structure and presentation. Semantic distinctions MUST be modeled in `FieldSpec` when they affect the meaning, cardinality, or value structure of a field. This includes distinctions such as single-choice versus multiple-choice, date versus time versus date-time, and permitted temporal precision. Purely presentational distinctions MUST NOT be modeled as separate field specs. Instead, distinctions such as single-line versus multi-line text entry, date component ordering, and 12-hour versus 24-hour time display MUST be expressed only through compatible typed rendering hints.
 
-Accordingly, `TextFieldType` is a single semantic field type whose single-line and multi-line display forms are represented by `TextRenderingHint`.
+Accordingly, `TextFieldSpec` is a single semantic field spec whose single-line and multi-line display forms are represented by `TextRenderingHint`.
 
-A `TextFieldType` MAY additionally define a default text value, minimum length, maximum length, and validating regular expression.
+A `TextFieldSpec` MAY additionally define a default text value, minimum length, maximum length, and validating regular expression.
 
-Similarly, `ChoiceFieldType` distinguishes `SingleChoiceFieldType` from `MultipleChoiceFieldType` semantically, and further distinguishes literal-valued from controlled-term-valued options, while the rendering hint determines whether the UI uses radio buttons, checkboxes, or dropdown presentation. Typed rendering hints make incompatible combinations structurally invalid.
+Similarly, `ChoiceFieldSpec` distinguishes `SingleChoiceFieldSpec` from `MultipleChoiceFieldSpec` semantically, and further distinguishes literal-valued from controlled-term-valued options, while the rendering hint determines whether the UI uses radio buttons, checkboxes, or dropdown presentation. Typed rendering hints make incompatible combinations structurally invalid.
 
-Temporal semantics are also split structurally: `DateFieldType`, `TimeFieldType`, and `DateTimeFieldType` are distinct semantic field types, and each carries only the rendering hints and temporal options that are meaningful for that temporal category.
+Temporal semantics are also split structurally: `DateFieldSpec`, `TimeFieldSpec`, and `DateTimeFieldSpec` are distinct semantic field specs, and each carries only the rendering hints and temporal options that are meaningful for that temporal category.
 
 The current rendering vocabulary is explicit but deliberately small: numeric fields use `NumericInputRenderingHint`, date fields use `DatePickerRenderingWidget`, time fields use `TimePickerRenderingWidget`, and date-time fields use `DateTimePickerRenderingWidget`.
 
@@ -2092,38 +2092,38 @@ YoutubeVideoSource ::= you_tube_video_source(
 
 `ImageSource` and `YoutubeVideoSource` denote IRIs identifying the image or video resource used by the corresponding presentation component.
 
-## Field Type And Value Correspondence
+## Field Spec And Value Correspondence
 
-The `FieldType` carried by a `Field` determines the `Value` form that MUST appear in any `FieldValue` corresponding to an embedding of that field. This is a normative constraint: a `FieldValue` that carries a `Value` of the wrong form for the referenced field's `FieldType` is non-conforming.
+The `FieldSpec` carried by a `Field` determines the `Value` form that MUST appear in any `FieldValue` corresponding to an embedding of that field. This is a normative constraint: a `FieldValue` that carries a `Value` of the wrong form for the referenced field's `FieldSpec` is non-conforming.
 
-The correspondence is applied through the `EmbeddedArtifactKey` chain. A `FieldValue` in a `TemplateInstance` carries an `EmbeddedArtifactKey` that identifies an `EmbeddedField` in the referenced `Template`. That `EmbeddedField` references a reusable `Field`, which carries a `FieldType`. It is that `FieldType` that determines the permitted `Value` form for the `FieldValue`. The correspondence therefore spans the full path from instance value through embedding context to reusable field definition.
+The correspondence is applied through the `EmbeddedArtifactKey` chain. A `FieldValue` in a `TemplateInstance` carries an `EmbeddedArtifactKey` that identifies an `EmbeddedField` in the referenced `Template`. That `EmbeddedField` references a reusable `Field`, which carries a `FieldSpec`. It is that `FieldSpec` that determines the permitted `Value` form for the `FieldValue`. The correspondence therefore spans the full path from instance value through embedding context to reusable field definition.
 
 The table below gives the complete correspondence. The Field Family column identifies the abstract category in the `Field` hierarchy to which the concrete field belongs; families group field kinds that share related value semantics. Where a field is a direct subclass of `Field` with no intermediate abstract category, this column is left blank.
 
-| Field Family | `FieldType` | `Value` |
+| Field Family | `FieldSpec` | `Value` |
 |---|---|---|
-| | `TextFieldType` | `TextValue` |
-| | `NumericFieldType` | `NumericValue` |
-| `TemporalField` | `DateFieldType` | `DateValue` |
-| `TemporalField` | `TimeFieldType` | `TimeValue` |
-| `TemporalField` | `DateTimeFieldType` | `DateTimeValue` |
-| | `ControlledTermFieldType` | `ControlledTermValue` |
-| `ChoiceField` | `LiteralSingleChoiceFieldType` | `LiteralChoiceValue` |
-| `ChoiceField` | `LiteralMultipleChoiceFieldType` | `LiteralChoiceValue` |
-| `ChoiceField` | `ControlledTermSingleChoiceFieldType` | `ControlledTermChoiceValue` |
-| `ChoiceField` | `ControlledTermMultipleChoiceFieldType` | `ControlledTermChoiceValue` |
-| | `LinkFieldType` | `LinkValue` |
-| `ContactField` | `EmailFieldType` | `EmailValue` |
-| `ContactField` | `PhoneNumberFieldType` | `PhoneNumberValue` |
-| `ExternalAuthorityField` | `OrcidFieldType` | `OrcidValue` |
-| `ExternalAuthorityField` | `RorFieldType` | `RorValue` |
-| `ExternalAuthorityField` | `DoiFieldType` | `DoiValue` |
-| `ExternalAuthorityField` | `PubMedIdFieldType` | `PubMedIdValue` |
-| `ExternalAuthorityField` | `RridFieldType` | `RridValue` |
-| `ExternalAuthorityField` | `NihGrantIdFieldType` | `NihGrantIdValue` |
-| | `AttributeValueFieldType` | `AttributeValue` |
+| | `TextFieldSpec` | `TextValue` |
+| | `NumericFieldSpec` | `NumericValue` |
+| `TemporalField` | `DateFieldSpec` | `DateValue` |
+| `TemporalField` | `TimeFieldSpec` | `TimeValue` |
+| `TemporalField` | `DateTimeFieldSpec` | `DateTimeValue` |
+| | `ControlledTermFieldSpec` | `ControlledTermValue` |
+| `ChoiceField` | `LiteralSingleChoiceFieldSpec` | `LiteralChoiceValue` |
+| `ChoiceField` | `LiteralMultipleChoiceFieldSpec` | `LiteralChoiceValue` |
+| `ChoiceField` | `ControlledTermSingleChoiceFieldSpec` | `ControlledTermChoiceValue` |
+| `ChoiceField` | `ControlledTermMultipleChoiceFieldSpec` | `ControlledTermChoiceValue` |
+| | `LinkFieldSpec` | `LinkValue` |
+| `ContactField` | `EmailFieldSpec` | `EmailValue` |
+| `ContactField` | `PhoneNumberFieldSpec` | `PhoneNumberValue` |
+| `ExternalAuthorityField` | `OrcidFieldSpec` | `OrcidValue` |
+| `ExternalAuthorityField` | `RorFieldSpec` | `RorValue` |
+| `ExternalAuthorityField` | `DoiFieldSpec` | `DoiValue` |
+| `ExternalAuthorityField` | `PubMedIdFieldSpec` | `PubMedIdValue` |
+| `ExternalAuthorityField` | `RridFieldSpec` | `RridValue` |
+| `ExternalAuthorityField` | `NihGrantIdFieldSpec` | `NihGrantIdValue` |
+| | `AttributeValueFieldSpec` | `AttributeValue` |
 
-The four concrete choice field types map to two value kinds. `LiteralSingleChoiceFieldType` and `LiteralMultipleChoiceFieldType` both require `LiteralChoiceValue` in instances; `ControlledTermSingleChoiceFieldType` and `ControlledTermMultipleChoiceFieldType` both require `ControlledTermChoiceValue`. The cardinality distinction — single versus multiple — is not visible in the value type itself but in the count of values permitted per `FieldValue`: a `SingleChoiceFieldType` permits exactly one `ChoiceValue`, while a `MultipleChoiceFieldType` permits one or more. This cardinality constraint is enforced at validation rather than through distinct value types.
+The four concrete choice field specs map to two value kinds. `LiteralSingleChoiceFieldSpec` and `LiteralMultipleChoiceFieldSpec` both require `LiteralChoiceValue` in instances; `ControlledTermSingleChoiceFieldSpec` and `ControlledTermMultipleChoiceFieldSpec` both require `ControlledTermChoiceValue`. The cardinality distinction — single versus multiple — is not visible in the value type itself but in the count of values permitted per `FieldValue`: a `SingleChoiceFieldSpec` permits exactly one `ChoiceValue`, while a `MultipleChoiceFieldSpec` permits one or more. This cardinality constraint is enforced at validation rather than through distinct value types.
 
 ## Instances
 
@@ -2171,4 +2171,4 @@ Absence of a value for an optional field is represented by omitting the `FieldVa
 
 - Should embedded artifacts always refer to reusable artifacts by explicit reference construct, or does the CEDAR model require some embeddings to support inline artifact definition?
 - Should `PresentationComponent` remain a direct subclass of `Artifact`, or should a later revision introduce an intermediate superclass for reusable non-schema artifacts? This would make the distinction between reusable schema artifacts such as `Template` and `Field` and reusable non-schema artifacts such as rich text, images, videos, and section breaks more explicit in the hierarchy.
-- Should a later revision introduce a distinct `QuantityFieldType` rather than attaching optional `Unit` information directly to `NumericFieldType`? The current model permits fixed units on numeric fields as a pragmatic compromise, but a dedicated quantity field type may provide a cleaner semantic distinction for numeric values that are intrinsically unit-bearing.
+- Should a later revision introduce a distinct `QuantityFieldSpec` rather than attaching optional `Unit` information directly to `NumericFieldSpec`? The current model permits fixed units on numeric fields as a pragmatic compromise, but a dedicated quantity field spec may provide a cleaner semantic distinction for numeric values that are intrinsically unit-bearing.

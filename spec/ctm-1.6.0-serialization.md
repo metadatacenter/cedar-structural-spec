@@ -63,8 +63,8 @@ flowchart TD
         EF["encode_field"]
     end
 
-    subgraph S9["§9 · Field Types"]
-        EFT["encode_*_field_type ×13"]
+    subgraph S9["§9 · Field Specs"]
+        EFT["encode_*_field_spec ×13"]
         EEC["encode_embedding_constraints"]
         EEUI["encode_embedding_ui"]
         EFT --> EEC
@@ -175,10 +175,10 @@ This section traces a minimal template and a corresponding instance through the 
 
 Two embedded fields:
 
-| Key | Property IRI | ValueRequirement | FieldType |
+| Key | Property IRI | ValueRequirement | FieldSpec |
 |---|---|---|---|
-| `title` | `https://schema.org/name` | `Required` | `TextFieldType` (single line) |
-| `count` | `https://example.org/sampleCount` | `Optional` | `NumericFieldType` (`XsdIntegerDatatypeIri`) |
+| `title` | `https://schema.org/name` | `Required` | `TextFieldSpec` (single line) |
+| `count` | `https://example.org/sampleCount` | `Optional` | `NumericFieldSpec` (`XsdIntegerDatatypeIri`) |
 
 **Instance — "Sample 42"**
 
@@ -269,7 +269,7 @@ Two embedded fields:
 
 Both fields are single-valued ([`is_multi`](#2-conventions) = false), so `encode_embedded_field_schema` returns the field object directly with no array wrapper.
 
-**`title` field** — `encode_text_field_type` applies `STRING_VALUE_SHAPE`. `encode_embedding_constraints` sets `requiredValue: true` (Required). `encode_text_rendering_hint` returns `"textfield"` (absent hint defaults to single-line).
+**`title` field** — `encode_text_field_spec` applies `STRING_VALUE_SHAPE`. `encode_embedding_constraints` sets `requiredValue: true` (Required). `encode_text_rendering_hint` returns `"textfield"` (absent hint defaults to single-line).
 
 ```javascript
 {
@@ -296,7 +296,7 @@ Both fields are single-valued ([`is_multi`](#2-conventions) = false), so `encode
 }
 ```
 
-**`count` field** — `encode_numeric_field_type` applies `NUMBER_VALUE_SHAPE`. `encode_numeric_datatype` maps `XsdIntegerDatatypeIri` to `"xsd:integer"`. `encode_embedding_constraints` sets `requiredValue: false` (Optional).
+**`count` field** — `encode_numeric_field_spec` applies `NUMBER_VALUE_SHAPE`. `encode_numeric_datatype` maps `XsdIntegerDatatypeIri` to `"xsd:integer"`. `encode_embedding_constraints` sets `requiredValue: false` (Optional).
 
 ```javascript
 {
@@ -761,7 +761,7 @@ For `YoutubeVideoComponent`, if `PC.size` is present, also merge `{ "_size": { "
 
 ### `encode_field(F: Field, E: EmbeddedField) → Object`
 
-A CTM 1.6.0 field object merges fixed structural keys (`@id`, `@type`, `$schema`, `type`, `title`, `description`), the artifact metadata block, and the field-type-specific encoding. The embedding `E` is passed to `encode_field_type` because properties such as `requiredValue` and `hidden` depend on how the field is embedded rather than on the field definition itself.
+A CTM 1.6.0 field object merges fixed structural keys (`@id`, `@type`, `$schema`, `type`, `title`, `description`), the artifact metadata block, and the field-spec-specific encoding. The embedding `E` is passed to `encode_field_spec` because properties such as `requiredValue` and `hidden` depend on how the field is embedded rather than on the field definition itself.
 
 ```javascript
 merge(
@@ -776,21 +776,21 @@ merge(
                    if description is present, else ""
   },
   encode_schema_artifact_metadata(F.schema_artifact_metadata),
-  encode_field_type(F.field_type, E)
+  encode_field_spec(F.field_spec, E)
 )
 ```
 
-`encode_field_type(FT: FieldType, E: EmbeddedField) → Object` is defined per field type in [Section 9](#9-field-type-encoding) using a common skeleton with per-type value shape and constraint entries.
+`encode_field_spec(FT: FieldSpec, E: EmbeddedField) → Object` is defined per field spec in [Section 9](#9-field-spec-encoding) using a common skeleton with per-type value shape and constraint entries.
 
 **Calls:** [`encode_schema_artifact_metadata`](#encode_schema_artifact_metadatam-schemaartifactmetadata--object)
 
 ---
 
-## 9. Field Type Encoding
+## 9. Field Spec Encoding
 
 **Skeleton**
 
-Every standard field type encoding function returns a fragment — an object with five keys — that gets merged into the full field object by `encode_field`. The skeleton below shows the structure, with placeholders for the parts that vary per field type:
+Every standard field spec encoding function returns a fragment — an object with five keys — that gets merged into the full field object by `encode_field`. The skeleton below shows the structure, with placeholders for the parts that vary per field spec:
 
 ```javascript
 {
@@ -804,19 +804,19 @@ Every standard field type encoding function returns a fragment — an object wit
 
 The placeholders mean:
 
-- **`<value-shape>`** — a JSON Schema `properties` object describing the keys an instance value for this field must (or may) carry. For example, a text field's instance value is a JSON object with `"@value"` and optionally `"@type"`; a controlled term field's value uses `"@id"` and `"rdfs:label"` instead. Three named shapes (`STRING_VALUE_SHAPE`, `NUMBER_VALUE_SHAPE`, `IRI_VALUE_SHAPE`) cover most field types; each is defined below.
+- **`<value-shape>`** — a JSON Schema `properties` object describing the keys an instance value for this field must (or may) carry. For example, a text field's instance value is a JSON object with `"@value"` and optionally `"@type"`; a controlled term field's value uses `"@id"` and `"rdfs:label"` instead. Three named shapes (`STRING_VALUE_SHAPE`, `NUMBER_VALUE_SHAPE`, `IRI_VALUE_SHAPE`) cover most field specs; each is defined below.
 
-- **`<required>`** — the JSON Schema `required` array listing which keys from the value shape must be present in an instance value. Most field types require `["@value"]` or `[]`; the exact list is given per field type.
+- **`<required>`** — the JSON Schema `required` array listing which keys from the value shape must be present in an instance value. Most field specs require `["@value"]` or `[]`; the exact list is given per field spec.
 
-- **`<vc-extras>`** — additional keys to merge into `_valueConstraints` beyond the base `requiredValue` flag. For example, a numeric field adds `"numberType"` here; a text field may add `"defaultValue"`, `"minLength"`, etc. When a field type has no extras, `_valueConstraints` is just `encode_embedding_constraints(E)` directly.
+- **`<vc-extras>`** — additional keys to merge into `_valueConstraints` beyond the base `requiredValue` flag. For example, a numeric field adds `"numberType"` here; a text field may add `"defaultValue"`, `"minLength"`, etc. When a field spec has no extras, `_valueConstraints` is just `encode_embedding_constraints(E)` directly.
 
-- **`<ui-extras>`** — additional keys to merge into `_ui` beyond the base `hidden` flag. At minimum, every field type adds `"inputType"` here. Temporal fields also add `"temporalGranularity"` and similar hints.
+- **`<ui-extras>`** — additional keys to merge into `_ui` beyond the base `hidden` flag. At minimum, every field spec adds `"inputType"` here. Temporal fields also add `"temporalGranularity"` and similar hints.
 
-Field types that do not follow this skeleton (multiple choice and attribute-value) are noted explicitly in their entries.
+Field specs that do not follow this skeleton (multiple choice and attribute-value) are noted explicitly in their entries.
 
 **Value Shapes**
 
-A value shape is a JSON Schema `properties` object that defines what keys an instance value object for this field type must or may contain. Rather than repeat the same structures throughout, three shapes are named here and referenced by the per-field-type entries.
+A value shape is a JSON Schema `properties` object that defines what keys an instance value object for this field spec must or may contain. Rather than repeat the same structures throughout, three shapes are named here and referenced by the per-field-spec entries.
 
 **`STRING_VALUE_SHAPE`** — used by text, date, time, datetime, email, and phone number fields. Instance values carry a string `"@value"` and an optional `"@type"` IRI for typed literals:
 ```json
@@ -845,7 +845,7 @@ A value shape is a JSON Schema `properties` object that defines what keys an ins
 
 **Embedding Helper Functions**
 
-The two helpers below produce the base content of `_valueConstraints` and `_ui` from the `EmbeddedField` context. Every standard field type merges these as the starting point before adding its own extras.
+The two helpers below produce the base content of `_valueConstraints` and `_ui` from the `EmbeddedField` context. Every standard field spec merges these as the starting point before adding its own extras.
 
 ### `encode_embedding_constraints(E: EmbeddedField) → Object`
 
@@ -868,9 +868,9 @@ Returns a JSON object with the following keys:
 
 ---
 
-**Field Type Definitions**
+**Field Spec Definitions**
 
-### `encode_text_field_type(FT: TextFieldType, E: EmbeddedField) → Object`
+### `encode_text_field_spec(FT: TextFieldSpec, E: EmbeddedField) → Object`
 
 Text fields accept free-form string input. The rendering hint determines whether the input is single-line (`textfield`) or multi-line (`textarea`), defaulting to single-line when absent. Optional constraints — default value, length bounds, and a validation regex — are written to `_valueConstraints` only when present in the field definition.
 
@@ -900,7 +900,7 @@ Returns the string corresponding to the hint kind:
 
 ---
 
-### `encode_numeric_field_type(FT: NumericFieldType, E: EmbeddedField) → Object`
+### `encode_numeric_field_spec(FT: NumericFieldSpec, E: EmbeddedField) → Object`
 
 Numeric fields hold typed numeric literals. The `numberType` key is always written and carries the XSD datatype IRI string. Optional unit, precision, and range constraints are included only when present. Note that `Unit` is modelled as an IRI in the Structural Model, but CTM 1.6.0 `unitOfMeasure` takes a plain string, so the IRI string value is used directly.
 
@@ -947,7 +947,7 @@ Returns the string corresponding to the `NumericDatatypeIri` kind:
 
 ---
 
-### `encode_date_field_type(FT: DateFieldType, E: EmbeddedField) → Object`
+### `encode_date_field_spec(FT: DateFieldSpec, E: EmbeddedField) → Object`
 
 Date fields encode values at year, year-month, or full-date precision. Both `_valueConstraints.temporalType` (the XSD datatype) and `_ui.temporalGranularity` are derived from the same `DateValueType`. An optional `dateFormat` hint controls the display ordering of day, month, and year components.
 
@@ -997,7 +997,7 @@ Returns the `dateFormat` string for the `DateComponentOrder` kind:
 
 ---
 
-### `encode_time_field_type(FT: TimeFieldType, E: EmbeddedField) → Object`
+### `encode_time_field_spec(FT: TimeFieldSpec, E: EmbeddedField) → Object`
 
 Time fields always use the `xsd:time` datatype. The `temporalGranularity` and optional timezone and format hints are placed in `_ui`. The `timezoneEnabled` key is only written when the timezone requirement is explicitly stated; it is omitted when unset.
 
@@ -1031,7 +1031,7 @@ Returns the `temporalGranularity` string for the `TimePrecision` kind:
 
 ---
 
-### `encode_datetime_field_type(FT: DateTimeFieldType, E: EmbeddedField) → Object`
+### `encode_datetime_field_spec(FT: DateTimeFieldSpec, E: EmbeddedField) → Object`
 
 Date-time fields always use the `xsd:dateTime` datatype. They follow the same pattern as time fields for timezone and format hints, with granularity derived from `DateTimeValueType` rather than `TimePrecision`.
 
@@ -1064,7 +1064,7 @@ Returns the `temporalGranularity` string for the `DateTimeValueType` kind:
 
 ---
 
-### `encode_controlled_term_field_type(FT: ControlledTermFieldType, E: EmbeddedField) → Object`
+### `encode_controlled_term_field_spec(FT: ControlledTermFieldSpec, E: EmbeddedField) → Object`
 
 Controlled term fields constrain values to terms drawn from ontologies, branches of ontologies, named classes, or value sets. The four `_valueConstraints` list keys (`ontologies`, `branches`, `classes`, `valueSets`) are always present, each holding an array that is empty when no sources of that kind are configured. The `multipleChoice: false` flag distinguishes this from multi-select choice fields.
 
@@ -1130,9 +1130,9 @@ Returns a JSON object with the following keys:
 
 ---
 
-### `encode_single_choice_field_type(FT: SingleChoiceFieldType, E: EmbeddedField) → Object`
+### `encode_single_choice_field_spec(FT: SingleChoiceFieldSpec, E: EmbeddedField) → Object`
 
-`SingleChoiceFieldType` is either a `LiteralSingleChoiceFieldType` or a `ControlledTermSingleChoiceFieldType`. The kind of `FT` determines the value shape and the option encoding function: literal-form fields use `STRING_VALUE_SHAPE` and encode options with `encode_literal_choice_option`; controlled-term-form fields replace `"@value"` with `"@id"` in the value shape and encode options with `encode_controlled_term_choice_option`. Because the value kind is declared structurally on the field type itself, no inspection of individual options is needed.
+`SingleChoiceFieldSpec` is either a `LiteralSingleChoiceFieldSpec` or a `ControlledTermSingleChoiceFieldSpec`. The kind of `FT` determines the value shape and the option encoding function: literal-form fields use `STRING_VALUE_SHAPE` and encode options with `encode_literal_choice_option`; controlled-term-form fields replace `"@value"` with `"@id"` in the value shape and encode options with `encode_controlled_term_choice_option`. Because the value kind is declared structurally on the field spec itself, no inspection of individual options is needed.
 
 **Value shape:** `STRING_VALUE_SHAPE` (literal-form); for controlled-term-form replace `"@value"` with `"@id": { "type": "string", "format": "uri" }` | **Required:** `[]`
 
@@ -1141,8 +1141,8 @@ Returns a JSON object with the following keys:
 | Key | Value | Condition |
 |---|---|---|
 | `"multipleChoice"` | `false` | Always present |
-| `"literals"` | `[ encode_literal_choice_option(O) for each O in FT.options ]` | `LiteralSingleChoiceFieldType` |
-| `"literals"` | `[ encode_controlled_term_choice_option(O) for each O in FT.options ]` | `ControlledTermSingleChoiceFieldType` |
+| `"literals"` | `[ encode_literal_choice_option(O) for each O in FT.options ]` | `LiteralSingleChoiceFieldSpec` |
+| `"literals"` | `[ encode_controlled_term_choice_option(O) for each O in FT.options ]` | `ControlledTermSingleChoiceFieldSpec` |
 
 **`_ui` extras:** `{ "inputType": encode_single_choice_rendering_hint(FT.single_choice_rendering_hint) }`
 
@@ -1159,7 +1159,7 @@ Returns the `inputType` string for the hint kind:
 
 ### `encode_literal_choice_option(O: LiteralChoiceOption) → Object`
 
-Encodes a single option from a `LiteralSingleChoiceFieldType` or `LiteralMultipleChoiceFieldType`. The option value is always a `Literal`; use its lexical form as the label string.
+Encodes a single option from a `LiteralSingleChoiceFieldSpec` or `LiteralMultipleChoiceFieldSpec`. The option value is always a `Literal`; use its lexical form as the label string.
 
 | Key | Value | Condition |
 |---|---|---|
@@ -1168,7 +1168,7 @@ Encodes a single option from a `LiteralSingleChoiceFieldType` or `LiteralMultipl
 
 ### `encode_controlled_term_choice_option(O: ControlledTermChoiceOption) → Object`
 
-Encodes a single option from a `ControlledTermSingleChoiceFieldType` or `ControlledTermMultipleChoiceFieldType`. The option value is always a `ControlledTermValue`; encode its IRI and label.
+Encodes a single option from a `ControlledTermSingleChoiceFieldSpec` or `ControlledTermMultipleChoiceFieldSpec`. The option value is always a `ControlledTermValue`; encode its IRI and label.
 
 | Key | Value | Condition |
 |---|---|---|
@@ -1178,13 +1178,13 @@ Encodes a single option from a `ControlledTermSingleChoiceFieldType` or `Control
 
 ---
 
-### `encode_multiple_choice_field_type(FT: MultipleChoiceFieldType, E: EmbeddedField) → Object`
+### `encode_multiple_choice_field_spec(FT: MultipleChoiceFieldSpec, E: EmbeddedField) → Object`
 
-Multiple choice fields allow instances to carry zero or more selected options, so the value schema is wrapped in a JSON Schema array with `minItems: 0`. This field type does not follow the standard skeleton. The `multipleChoice: true` flag distinguishes this from single-choice fields.
+Multiple choice fields allow instances to carry zero or more selected options, so the value schema is wrapped in a JSON Schema array with `minItems: 0`. This field spec does not follow the standard skeleton. The `multipleChoice: true` flag distinguishes this from single-choice fields.
 
-As with `encode_single_choice_field_type`, the kind of `FT` — `LiteralMultipleChoiceFieldType` or `ControlledTermMultipleChoiceFieldType` — determines the item value shape and the option encoding function directly. No inspection of individual options is needed.
+As with `encode_single_choice_field_spec`, the kind of `FT` — `LiteralMultipleChoiceFieldSpec` or `ControlledTermMultipleChoiceFieldSpec` — determines the item value shape and the option encoding function directly. No inspection of individual options is needed.
 
-This field type does not follow the standard skeleton. It wraps the value schema in an array:
+This field spec does not follow the standard skeleton. It wraps the value schema in an array:
 
 ```javascript
 {
@@ -1201,15 +1201,15 @@ This field type does not follow the standard skeleton. It wraps the value schema
 }
 ```
 
-For `ControlledTermMultipleChoiceFieldType`, replace `"@value"` in `items.properties` with `"@id": { "type": "string", "format": "uri" }`.
+For `ControlledTermMultipleChoiceFieldSpec`, replace `"@value"` in `items.properties` with `"@id": { "type": "string", "format": "uri" }`.
 
 **`_valueConstraints` extras:**
 
 | Key | Value | Condition |
 |---|---|---|
 | `"multipleChoice"` | `true` | Always present |
-| `"literals"` | `[ encode_literal_choice_option(O) for each O in FT.options ]` | `LiteralMultipleChoiceFieldType` |
-| `"literals"` | `[ encode_controlled_term_choice_option(O) for each O in FT.options ]` | `ControlledTermMultipleChoiceFieldType` |
+| `"literals"` | `[ encode_literal_choice_option(O) for each O in FT.options ]` | `LiteralMultipleChoiceFieldSpec` |
+| `"literals"` | `[ encode_controlled_term_choice_option(O) for each O in FT.options ]` | `ControlledTermMultipleChoiceFieldSpec` |
 
 **`_ui` extras:** `{ "inputType": encode_multiple_choice_rendering_hint(FT.multiple_choice_rendering_hint) }`
 
@@ -1226,7 +1226,7 @@ Returns the `inputType` string for the hint kind:
 
 ---
 
-### `encode_link_field_type(FT: LinkFieldType, E: EmbeddedField) → Object`
+### `encode_link_field_spec(FT: LinkFieldSpec, E: EmbeddedField) → Object`
 
 Link fields hold a URI value with an optional human-readable label. They use `IRI_VALUE_SHAPE` and the `link` input type with no additional value constraints.
 
@@ -1236,7 +1236,7 @@ Link fields hold a URI value with an optional human-readable label. They use `IR
 
 ---
 
-### `encode_email_field_type(FT: EmailFieldType, E: EmbeddedField) → Object`
+### `encode_email_field_spec(FT: EmailFieldSpec, E: EmbeddedField) → Object`
 
 Email fields hold a string value interpreted as an email address. They use `STRING_VALUE_SHAPE` and the `email` input type with no additional value constraints.
 
@@ -1246,7 +1246,7 @@ Email fields hold a string value interpreted as an email address. They use `STRI
 
 ---
 
-### `encode_phone_number_field_type(FT: PhoneNumberFieldType, E: EmbeddedField) → Object`
+### `encode_phone_number_field_spec(FT: PhoneNumberFieldSpec, E: EmbeddedField) → Object`
 
 Phone number fields hold a string value interpreted as a phone number. They use `STRING_VALUE_SHAPE` and the `phone-number` input type with no additional value constraints.
 
@@ -1256,40 +1256,40 @@ Phone number fields hold a string value interpreted as a phone number. They use 
 
 ---
 
-**External Authority Field Types**
+**External Authority Field Specs**
 
 External authority fields identify entities from well-known registries such as ORCID, ROR, DOI, PubMed, RRID, and NIH Grant. All six types use `IRI_VALUE_SHAPE` and differ only in the `inputType` string written to `_ui`. They share the same skeleton entry:
 
 **Value shape:** `IRI_VALUE_SHAPE` | **Required:** `[]` | **`_valueConstraints` extras:** none | **`_ui` extras:** `{ "inputType": encode_external_authority_input_type(FT) }`
 
-### `encode_external_authority_field_type(FT: ExternalAuthorityFieldType, E: EmbeddedField) → Object`
+### `encode_external_authority_field_spec(FT: ExternalAuthorityFieldSpec, E: EmbeddedField) → Object`
 
 Applies the skeleton with the above parameters.
 
 **Calls:** [`encode_embedding_constraints`](#encode_embedding_constraintse-embeddedfield--object), [`encode_embedding_ui`](#encode_embedding_uie-embeddedfield--object), [`encode_external_authority_input_type`](#encode_external_authority_input_typeft-externalauthorityfieldtype--string)
 
-### `encode_external_authority_input_type(FT: ExternalAuthorityFieldType) → String`
+### `encode_external_authority_input_type(FT: ExternalAuthorityFieldSpec) → String`
 
-Returns the `inputType` string for the field type kind:
+Returns the `inputType` string for the field spec kind:
 
-| `ExternalAuthorityFieldType` kind | Returns |
+| `ExternalAuthorityFieldSpec` kind | Returns |
 |---|---|
-| `OrcidFieldType` | `"orcid"` |
-| `RorFieldType` | `"ror"` |
-| `DoiFieldType` | `"doi"` |
-| `PubMedIdFieldType` | `"pubmed"` |
-| `RridFieldType` | `"rrid"` |
-| `NihGrantIdFieldType` | `"nih-grant"` |
+| `OrcidFieldSpec` | `"orcid"` |
+| `RorFieldSpec` | `"ror"` |
+| `DoiFieldSpec` | `"doi"` |
+| `PubMedIdFieldSpec` | `"pubmed"` |
+| `RridFieldSpec` | `"rrid"` |
+| `NihGrantIdFieldSpec` | `"nih-grant"` |
 
 > **Caution:** The `inputType` string values for external authority fields are not standardised in the published CTM 1.6.0 specification. The values in the table above reflect common practice but MUST be confirmed against the deployed CTM 1.6.0 implementation before use. Encoding with incorrect `inputType` values may cause CEDAR tooling to misrender or reject these fields.
 
 ---
 
-### `encode_attribute_value_field_type(FT: AttributeValueFieldType, E: EmbeddedField) → Object`
+### `encode_attribute_value_field_spec(FT: AttributeValueFieldSpec, E: EmbeddedField) → Object`
 
-Attribute-value fields hold dynamic key-value pairs whose attribute names are not known at schema definition time. CTM 1.6.0 represents this with a top-level array type and defers the dynamic key handling to the instance level via `additionalProperties`. This field type does not follow the standard skeleton.
+Attribute-value fields hold dynamic key-value pairs whose attribute names are not known at schema definition time. CTM 1.6.0 represents this with a top-level array type and defers the dynamic key handling to the instance level via `additionalProperties`. This field spec does not follow the standard skeleton.
 
-This field type does not follow the standard skeleton. It uses a top-level array type:
+This field spec does not follow the standard skeleton. It uses a top-level array type:
 
 ```javascript
 {
@@ -1608,7 +1608,7 @@ Implementations SHOULD confirm that annotation IRI keys are valid within the CTM
 
 4. **`DefaultOption` on `LiteralChoiceOption` and `ControlledTermChoiceOption`** — CTM 1.6.0 has no standardised `selectedByDefault` key in the `literals` array. `encode_literal_choice_option` and `encode_controlled_term_choice_option` include `"selectedByDefault": true` as a custom extension when a default is set. Support in CTM 1.6.0 tooling is not guaranteed.
 
-5. **Default values for link, email, phone number, and external authority field types** — CTM 1.6.0 `_valueConstraints.defaultValue` is primarily defined for text fields. Default value encoding for `LinkDefaultValue`, `EmailDefaultValue`, `PhoneNumberDefaultValue`, and external authority defaults is implementation-defined.
+5. **Default values for link, email, phone number, and external authority field specs** — CTM 1.6.0 `_valueConstraints.defaultValue` is primarily defined for text fields. Default value encoding for `LinkDefaultValue`, `EmailDefaultValue`, `PhoneNumberDefaultValue`, and external authority defaults is implementation-defined.
 
 6. **`AttributeValue` instance representation** — CTM 1.6.0 uses `additionalProperties` on the instance object for attribute-value fields. The instance-level encoding of `AttributeValue` injects key-value pairs directly into the parent instance object rather than nesting them under a field key.
 

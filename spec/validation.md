@@ -56,29 +56,29 @@ Each `NestedTemplateInstance` in a `TemplateInstance` MUST reference the `Embedd
 
 `TemplateInstance` MUST NOT contain an `InstanceValue` for an `EmbeddedPresentationComponent`.
 
-### Field Type Compatibility
+### Field Spec Compatibility
 
-Values in a `FieldValue` MUST satisfy the `FieldType` and any field-type-specific properties of the referenced `Field`.
+Values in a `FieldValue` MUST satisfy the `FieldSpec` and any field-spec-specific properties of the referenced `Field`.
 
-The contained values MUST follow the `FieldType`-to-`Value` correspondence defined in `spec/grammar.md`. In particular:
+The contained values MUST follow the `FieldSpec`-to-`Value` correspondence defined in `spec/grammar.md`. In particular:
 
-- `TextFieldType` values MUST be `TextValue`
-- `NumericFieldType` values MUST be `NumericValue`
-- `DateFieldType` values MUST be `DateValue`
-- `TimeFieldType` values MUST be `TimeValue`
-- `DateTimeFieldType` values MUST be `DateTimeValue`
-- `ControlledTermFieldType` values MUST be `ControlledTermValue`
-- `ChoiceFieldType` values MUST be `ChoiceValue`
-- `LinkFieldType` values MUST be `LinkValue`
-- `EmailFieldType` values MUST be `EmailValue`
-- `PhoneNumberFieldType` values MUST be `PhoneNumberValue`
-- `OrcidFieldType` values MUST be `OrcidValue`
-- `RorFieldType` values MUST be `RorValue`
-- `DoiFieldType` values MUST be `DoiValue`
-- `PubMedIdFieldType` values MUST be `PubMedIdValue`
-- `RridFieldType` values MUST be `RridValue`
-- `NihGrantIdFieldType` values MUST be `NihGrantIdValue`
-- `AttributeValueFieldType` values MUST be `AttributeValue`
+- `TextFieldSpec` values MUST be `TextValue`
+- `NumericFieldSpec` values MUST be `NumericValue`
+- `DateFieldSpec` values MUST be `DateValue`
+- `TimeFieldSpec` values MUST be `TimeValue`
+- `DateTimeFieldSpec` values MUST be `DateTimeValue`
+- `ControlledTermFieldSpec` values MUST be `ControlledTermValue`
+- `ChoiceFieldSpec` values MUST be `ChoiceValue`
+- `LinkFieldSpec` values MUST be `LinkValue`
+- `EmailFieldSpec` values MUST be `EmailValue`
+- `PhoneNumberFieldSpec` values MUST be `PhoneNumberValue`
+- `OrcidFieldSpec` values MUST be `OrcidValue`
+- `RorFieldSpec` values MUST be `RorValue`
+- `DoiFieldSpec` values MUST be `DoiValue`
+- `PubMedIdFieldSpec` values MUST be `PubMedIdValue`
+- `RridFieldSpec` values MUST be `RridValue`
+- `NihGrantIdFieldSpec` values MUST be `NihGrantIdValue`
+- `AttributeValueFieldSpec` values MUST be `AttributeValue`
 
 Additional well-formedness conditions apply as follows.
 
@@ -103,30 +103,30 @@ For numeric values:
 
 For date values:
 
-- `DateFieldType` with `YearValueType` MUST use `YearValue`, which MUST contain `YearLiteral`
+- `DateFieldSpec` with `YearValueType` MUST use `YearValue`, which MUST contain `YearLiteral`
 - `YearLiteral` uses `YearDatatypeIri`
-- `DateFieldType` with `YearMonthValueType` MUST use `YearMonthValue`, which MUST contain `YearMonthLiteral`
+- `DateFieldSpec` with `YearMonthValueType` MUST use `YearMonthValue`, which MUST contain `YearMonthLiteral`
 - `YearMonthLiteral` uses `YearMonthDatatypeIri`
-- `DateFieldType` with `FullDateValueType` MUST use `FullDateValue`, which MUST contain `FullDateLiteral`
+- `DateFieldSpec` with `FullDateValueType` MUST use `FullDateValue`, which MUST contain `FullDateLiteral`
 - `FullDateLiteral` uses `DateDatatypeIri`
 
 For time values:
 
 - `TimeValue` MUST contain `TimeLiteral`
 - `TimeLiteral` uses `TimeDatatypeIri`
-- `TimeFieldType` values MUST conform to any stated `TimePrecision`
+- `TimeFieldSpec` values MUST conform to any stated `TimePrecision`
 
 For date-time values:
 
 - `DateTimeValue` MUST contain `DateTimeLiteral`
 - `DateTimeLiteral` uses `DateTimeDatatypeIri`
-- `DateTimeFieldType` values MUST conform to the stated `DateTimeValueType`
+- `DateTimeFieldSpec` values MUST conform to the stated `DateTimeValueType`
 
 For choice values:
 
-- A `FieldValue` for a `LiteralSingleChoiceFieldType` or `LiteralMultipleChoiceFieldType` MUST contain `LiteralChoiceValue` constructs
-- A `FieldValue` for a `ControlledTermSingleChoiceFieldType` or `ControlledTermMultipleChoiceFieldType` MUST contain `ControlledTermChoiceValue` constructs
-- each contained `ChoiceValue` MUST match one of the declared options of the referenced field's choice field type
+- A `FieldValue` for a `LiteralSingleChoiceFieldSpec` or `LiteralMultipleChoiceFieldSpec` MUST contain `LiteralChoiceValue` constructs
+- A `FieldValue` for a `ControlledTermSingleChoiceFieldSpec` or `ControlledTermMultipleChoiceFieldSpec` MUST contain `ControlledTermChoiceValue` constructs
+- each contained `ChoiceValue` MUST match one of the declared options of the referenced field's choice field spec
 
 A `LiteralChoiceValue` matches a `LiteralChoiceOption` if and only if the two `Literal` values are term-equal: their lexical forms and their datatype IRIs or language tags compare equal character by character.
 
@@ -186,27 +186,27 @@ For multiplicity:
 
 ### Rendering Hint Compatibility
 
-Any rendering hint used by the model MUST be compatible with the associated `FieldType`.
+Any rendering hint used by the model MUST be compatible with the associated `FieldSpec`.
 
-`TextRenderingHint` MUST be used only with `TextFieldType`.
+`TextRenderingHint` MUST be used only with `TextFieldSpec`.
 
-`SingleChoiceRenderingHint` MUST be used only with `SingleChoiceFieldType`.
+`SingleChoiceRenderingHint` MUST be used only with `SingleChoiceFieldSpec`.
 
-`MultipleChoiceRenderingHint` MUST be used only with `MultipleChoiceFieldType`.
+`MultipleChoiceRenderingHint` MUST be used only with `MultipleChoiceFieldSpec`.
 
-`NumericRenderingHint` MUST be used only with `NumericFieldType`.
+`NumericRenderingHint` MUST be used only with `NumericFieldSpec`.
 
-`DateRenderingHint` MUST be used only with `DateFieldType`.
+`DateRenderingHint` MUST be used only with `DateFieldSpec`.
 
-`TimeRenderingHint` MUST be used only with `TimeFieldType`.
+`TimeRenderingHint` MUST be used only with `TimeFieldSpec`.
 
-`DateTimeRenderingHint` MUST be used only with `DateTimeFieldType`.
+`DateTimeRenderingHint` MUST be used only with `DateTimeFieldSpec`.
 
 ### Controlled Term Value Structure
 
-If a value conforms to `ControlledTermFieldType`, the value MUST include a term identifier and SHOULD include a human-readable label.
+If a value conforms to `ControlledTermFieldSpec`, the value MUST include a term identifier and SHOULD include a human-readable label.
 
-A `ControlledTermDefaultValue`, if present, MUST contain a `ControlledTermValue` whose `TermIri` identifies a term drawn from one of the declared `ControlledTermSource` entries of the referenced `ControlledTermFieldType`.
+A `ControlledTermDefaultValue`, if present, MUST contain a `ControlledTermValue` whose `TermIri` identifies a term drawn from one of the declared `ControlledTermSource` entries of the referenced `ControlledTermFieldSpec`.
 
 ## Canonical Validation Algorithm
 
@@ -228,7 +228,7 @@ Entry point for schema validation.
 
 1. Run `validate_artifact_metadata(T.schema_artifact_metadata)`.
 2. Let `fields` = the set of `Field` artifacts referenced by `EmbeddedField` constructs in `T`.
-3. For each `F` in `fields`: run `validate_artifact_metadata(F.schema_artifact_metadata)` and `validate_field_type(F.field_type)`.
+3. For each `F` in `fields`: run `validate_artifact_metadata(F.schema_artifact_metadata)` and `validate_field_spec(F.field_spec)`.
 4. Let `pcs` = the set of `PresentationComponent` artifacts referenced by `EmbeddedPresentationComponent` constructs in `T`.
 5. For each `PC` in `pcs`: run `validate_artifact_metadata(PC.artifact_metadata)`.
 6. Run `validate_embedded_artifact_keys(T)`.
@@ -304,34 +304,34 @@ Applies the [Cardinality Consistency](#cardinality-consistency) rules.
 
 ---
 
-#### Field Type Validation
+#### Field Spec Validation
 
-Applies the [Field Type Compatibility](#field-type-compatibility) rules. See also [Field Types](grammar.md#field-types) in the abstract grammar.
+Applies the [Field Spec Compatibility](#field-spec-compatibility) rules. See also [Field Specs](grammar.md#field-specs) in the abstract grammar.
 
-##### `validate_field_type(FT: FieldType)`
+##### `validate_field_spec(FT: FieldSpec)`
 
 Dispatch on the kind of `FT`:
 
-- If `FT` is `TextFieldType`: run `validate_text_field_type(FT)`.
-- If `FT` is `NumericFieldType`: run `validate_numeric_field_type(FT)`.
-- If `FT` is `SingleChoiceFieldType` or `MultipleChoiceFieldType`: run `validate_choice_field_type(FT)`.
-- All other field types have no additional schema-level well-formedness checks beyond structural grammar conformance.
+- If `FT` is `TextFieldSpec`: run `validate_text_field_spec(FT)`.
+- If `FT` is `NumericFieldSpec`: run `validate_numeric_field_spec(FT)`.
+- If `FT` is `SingleChoiceFieldSpec` or `MultipleChoiceFieldSpec`: run `validate_choice_field_spec(FT)`.
+- All other field specs have no additional schema-level well-formedness checks beyond structural grammar conformance.
 
 ---
 
-##### `validate_text_field_type(FT: TextFieldType)`
+##### `validate_text_field_spec(FT: TextFieldSpec)`
 
 1. If both `FT.min_length` and `FT.max_length` are present: verify `FT.min_length ≤ FT.max_length`.
 
 ---
 
-##### `validate_numeric_field_type(FT: NumericFieldType)`
+##### `validate_numeric_field_spec(FT: NumericFieldSpec)`
 
 1. If both `FT.min_value` and `FT.max_value` are present: verify `FT.min_value ≤ FT.max_value`.
 
 ---
 
-##### `validate_choice_field_type(FT: ChoiceFieldType)`
+##### `validate_choice_field_spec(FT: ChoiceFieldSpec)`
 
 1. For each option `O` in `FT.options`:
    1. Verify `O.value` is of structural form `Literal`, `ControlledTermValue`, or `Iri`.
@@ -342,9 +342,9 @@ Dispatch on the kind of `FT`:
 
 ##### `validate_default_value(D: DefaultValue, E: EmbeddedArtifact)`
 
-Let `FT` = the `FieldType` of the `Field` referenced by `E`.
+Let `FT` = the `FieldSpec` of the `Field` referenced by `E`.
 
-1. Verify `D` is of the correct type for `FT`: e.g. `TextDefaultValue` for `TextFieldType`, `NumericDefaultValue` for `NumericFieldType`, etc.
+1. Verify `D` is of the correct type for `FT`: e.g. `TextDefaultValue` for `TextFieldSpec`, `NumericDefaultValue` for `NumericFieldSpec`, etc.
 2. If `D` is `TextDefaultValue`:
    1. Let `s` = `D.text_value.text_literal.lexical_form`.
    2. If `FT.min_length` is present: verify `len(s) ≥ FT.min_length`.
@@ -365,15 +365,15 @@ Let `FT` = the `FieldType` of the `Field` referenced by `E`.
 
 Applies the [Rendering Hint Compatibility](#rendering-hint-compatibility) rules.
 
-Let `FT` = the `FieldType` of the `Field` referenced by `E`.
+Let `FT` = the `FieldSpec` of the `Field` referenced by `E`.
 
-1. If `E` carries a `TextRenderingHint`: verify `FT` is `TextFieldType`.
-2. If `E` carries a `SingleChoiceRenderingHint`: verify `FT` is `SingleChoiceFieldType`.
-3. If `E` carries a `MultipleChoiceRenderingHint`: verify `FT` is `MultipleChoiceFieldType`.
-4. If `E` carries a `NumericRenderingHint`: verify `FT` is `NumericFieldType`.
-5. If `E` carries a `DateRenderingHint`: verify `FT` is `DateFieldType`.
-6. If `E` carries a `TimeRenderingHint`: verify `FT` is `TimeFieldType`.
-7. If `E` carries a `DateTimeRenderingHint`: verify `FT` is `DateTimeFieldType`.
+1. If `E` carries a `TextRenderingHint`: verify `FT` is `TextFieldSpec`.
+2. If `E` carries a `SingleChoiceRenderingHint`: verify `FT` is `SingleChoiceFieldSpec`.
+3. If `E` carries a `MultipleChoiceRenderingHint`: verify `FT` is `MultipleChoiceFieldSpec`.
+4. If `E` carries a `NumericRenderingHint`: verify `FT` is `NumericFieldSpec`.
+5. If `E` carries a `DateRenderingHint`: verify `FT` is `DateFieldSpec`.
+6. If `E` carries a `TimeRenderingHint`: verify `FT` is `TimeFieldSpec`.
+7. If `E` carries a `DateTimeRenderingHint`: verify `FT` is `DateTimeFieldSpec`.
 
 ---
 
@@ -440,30 +440,30 @@ For each `EF` in `T.embedded_artifacts` where `EF` is an `EmbeddedField`:
 
 ##### `validate_field_value(FV: FieldValue, EF: EmbeddedField)`
 
-1. Let `FT` = the `FieldType` of the `Field` referenced by `EF`.
+1. Let `FT` = the `FieldSpec` of the `Field` referenced by `EF`.
 2. For each `V` in `FV.values`: run `validate_value(V, FT)`.
 
 ---
 
-##### `validate_value(V: Value, FT: FieldType)`
+##### `validate_value(V: Value, FT: FieldSpec)`
 
 Dispatch on the kind of `FT`:
 
-- `TextFieldType` → `validate_text_value(V, FT)`
-- `NumericFieldType` → `validate_numeric_value(V, FT)`
-- `DateFieldType` → `validate_date_value(V, FT)`
-- `TimeFieldType` → `validate_time_value(V, FT)`
-- `DateTimeFieldType` → `validate_datetime_value(V, FT)`
-- `ControlledTermFieldType` → `validate_controlled_term_value(V, FT)`
-- `SingleChoiceFieldType` or `MultipleChoiceFieldType` → `validate_choice_value(V, FT)`
-- `LinkFieldType` → `validate_link_value(V)`
-- `EmailFieldType` or `PhoneNumberFieldType` → `validate_contact_value(V)`
-- `OrcidFieldType`, `RorFieldType`, `DoiFieldType`, `PubMedIdFieldType`, `RridFieldType`, or `NihGrantIdFieldType` → `validate_external_authority_value(V, FT)`
-- `AttributeValueFieldType` → `validate_attribute_value(V)`
+- `TextFieldSpec` → `validate_text_value(V, FT)`
+- `NumericFieldSpec` → `validate_numeric_value(V, FT)`
+- `DateFieldSpec` → `validate_date_value(V, FT)`
+- `TimeFieldSpec` → `validate_time_value(V, FT)`
+- `DateTimeFieldSpec` → `validate_datetime_value(V, FT)`
+- `ControlledTermFieldSpec` → `validate_controlled_term_value(V, FT)`
+- `SingleChoiceFieldSpec` or `MultipleChoiceFieldSpec` → `validate_choice_value(V, FT)`
+- `LinkFieldSpec` → `validate_link_value(V)`
+- `EmailFieldSpec` or `PhoneNumberFieldSpec` → `validate_contact_value(V)`
+- `OrcidFieldSpec`, `RorFieldSpec`, `DoiFieldSpec`, `PubMedIdFieldSpec`, `RridFieldSpec`, or `NihGrantIdFieldSpec` → `validate_external_authority_value(V, FT)`
+- `AttributeValueFieldSpec` → `validate_attribute_value(V)`
 
 ---
 
-##### `validate_text_value(V: TextValue, FT: TextFieldType)`
+##### `validate_text_value(V: TextValue, FT: TextFieldSpec)`
 
 1. Verify `V` contains a `TextLiteral`. Let `s` = its lexical form.
 2. If `FT.min_length` is present: verify `len(s) ≥ FT.min_length`.
@@ -472,7 +472,7 @@ Dispatch on the kind of `FT`:
 
 ---
 
-##### `validate_numeric_value(V: NumericValue, FT: NumericFieldType)`
+##### `validate_numeric_value(V: NumericValue, FT: NumericFieldSpec)`
 
 1. Verify `V` contains a `NumericLiteral`. Let `n` = its numeric value and `d` = its datatype IRI.
 2. Verify `d = FT.datatype_iri`.
@@ -481,7 +481,7 @@ Dispatch on the kind of `FT`:
 
 ---
 
-##### `validate_date_value(V: DateValue, FT: DateFieldType)`
+##### `validate_date_value(V: DateValue, FT: DateFieldSpec)`
 
 1. If `FT.date_value_type = YearValueType`: verify `V` is a `YearValue` containing a `YearLiteral`.
 2. If `FT.date_value_type = YearMonthValueType`: verify `V` is a `YearMonthValue` containing a `YearMonthLiteral`.
@@ -489,7 +489,7 @@ Dispatch on the kind of `FT`:
 
 ---
 
-##### `validate_time_value(V: TimeValue, FT: TimeFieldType)`
+##### `validate_time_value(V: TimeValue, FT: TimeFieldSpec)`
 
 1. Verify `V` contains a `TimeLiteral`. Let `t` = its lexical form.
 2. If `FT.time_precision = HourMinutePrecision`: verify `t` contains only hour and minute components (form `HH:MM`; no seconds or fractional seconds present).
@@ -500,7 +500,7 @@ Dispatch on the kind of `FT`:
 
 ---
 
-##### `validate_datetime_value(V: DateTimeValue, FT: DateTimeFieldType)`
+##### `validate_datetime_value(V: DateTimeValue, FT: DateTimeFieldSpec)`
 
 1. Verify `V` contains a `DateTimeLiteral`. Let `dt` = its lexical form.
 2. If `FT.datetime_value_type = DateHourMinuteValueType`: verify the time component of `dt` contains only hour and minute (form `…THH:MM`; no seconds present).
@@ -510,7 +510,7 @@ Dispatch on the kind of `FT`:
 
 ---
 
-##### `validate_controlled_term_value(V: ControlledTermValue, FT: ControlledTermFieldType)`
+##### `validate_controlled_term_value(V: ControlledTermValue, FT: ControlledTermFieldSpec)`
 
 1. Verify `V.term_iri` is present.
 2. Warn if `V.label` is absent.
@@ -519,7 +519,7 @@ Note: validation of `V.term_iri` against `FT.controlled_term_sources` requires a
 
 ---
 
-##### `validate_choice_value(V: ChoiceValue, FT: ChoiceFieldType)`
+##### `validate_choice_value(V: ChoiceValue, FT: ChoiceFieldSpec)`
 
 1. Let `S` = `V.selection`.
 2. Verify there exists an option `O` in `FT.options` such that `S` matches `O` according to the following rules:
@@ -546,14 +546,14 @@ Note: validation of `V.term_iri` against `FT.controlled_term_sources` requires a
 
 ---
 
-##### `validate_external_authority_value(V: ExternalAuthorityValue, FT: ExternalAuthorityFieldType)`
+##### `validate_external_authority_value(V: ExternalAuthorityValue, FT: ExternalAuthorityFieldSpec)`
 
-1. If `FT` is `OrcidFieldType`: verify `V` contains an `OrcidIri` whose lexical form matches `https://orcid\.org/\d{4}-\d{4}-\d{4}-\d{3}[0-9X]`.
-2. If `FT` is `RorFieldType`: verify `V` contains a `RorIri` whose lexical form matches `https://ror\.org/0[a-hj-km-np-tv-z0-9]{6}[0-9]{2}`.
-3. If `FT` is `DoiFieldType`: verify `V` contains a `DoiIri` whose lexical form matches `https://doi\.org/10\.\d{4,9}/.+`.
-4. If `FT` is `PubMedIdFieldType`: verify `V` contains a `PubMedIri` whose lexical form matches `https://pubmed\.ncbi\.nlm\.nih\.gov/\d+`.
-5. If `FT` is `RridFieldType`: verify `V` contains an `RridIri` whose lexical form matches `https://identifiers\.org/RRID:[A-Z]+_\d+`.
-6. If `FT` is `NihGrantIdFieldType`: verify `V` contains a `NihGrantIri`. No pattern check is applied; see [Out of Scope](#out-of-scope).
+1. If `FT` is `OrcidFieldSpec`: verify `V` contains an `OrcidIri` whose lexical form matches `https://orcid\.org/\d{4}-\d{4}-\d{4}-\d{3}[0-9X]`.
+2. If `FT` is `RorFieldSpec`: verify `V` contains a `RorIri` whose lexical form matches `https://ror\.org/0[a-hj-km-np-tv-z0-9]{6}[0-9]{2}`.
+3. If `FT` is `DoiFieldSpec`: verify `V` contains a `DoiIri` whose lexical form matches `https://doi\.org/10\.\d{4,9}/.+`.
+4. If `FT` is `PubMedIdFieldSpec`: verify `V` contains a `PubMedIri` whose lexical form matches `https://pubmed\.ncbi\.nlm\.nih\.gov/\d+`.
+5. If `FT` is `RridFieldSpec`: verify `V` contains an `RridIri` whose lexical form matches `https://identifiers\.org/RRID:[A-Z]+_\d+`.
+6. If `FT` is `NihGrantIdFieldSpec`: verify `V` contains a `NihGrantIri`. No pattern check is applied; see [Out of Scope](#out-of-scope).
 
 ---
 

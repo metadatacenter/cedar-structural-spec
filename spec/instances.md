@@ -31,9 +31,9 @@ The key identifies the embedding site within the containing `Template`, which al
 
 `FieldValue` may contain multiple values when the corresponding `EmbeddedField` permits multiplicity.
 
-The permitted form of each contained value is determined by the `FieldType` of the referenced `Field`.
+The permitted form of each contained value is determined by the `FieldSpec` of the referenced `Field`.
 
-For `ChoiceFieldType`, the kind of `ChoiceValue` is determined by the concrete field type: a `LiteralSingleChoiceFieldType` or `LiteralMultipleChoiceFieldType` requires `LiteralChoiceValue`, while a `ControlledTermSingleChoiceFieldType` or `ControlledTermMultipleChoiceFieldType` requires `ControlledTermChoiceValue`. A conforming instance value must correspond to one of the declared options of the referenced field's choice field type.
+For `ChoiceFieldSpec`, the kind of `ChoiceValue` is determined by the concrete field spec: a `LiteralSingleChoiceFieldSpec` or `LiteralMultipleChoiceFieldSpec` requires `LiteralChoiceValue`, while a `ControlledTermSingleChoiceFieldSpec` or `ControlledTermMultipleChoiceFieldSpec` requires `ControlledTermChoiceValue`. A conforming instance value must correspond to one of the declared options of the referenced field's choice field spec.
 
 ## NestedTemplateInstance
 

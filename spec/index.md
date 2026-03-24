@@ -13,7 +13,7 @@ This specification defines:
 - the core metamodel
 - the abstract grammar
 - artifact metadata and provenance
-- the field type system
+- the field spec system
 - the presentation component model
 - the instance model
 - validation and well-formedness conditions
@@ -29,7 +29,7 @@ This specification does not define:
 
 - [notation.md](notation.md) defines the notation conventions used throughout the specification.
 - [metamodel.md](metamodel.md) defines the core artifacts and their relationships.
-- [grammar.md](grammar.md) gives the abstract EBNF-style grammar, including the `FieldType` system and related constraints.
+- [grammar.md](grammar.md) gives the abstract EBNF-style grammar, including the `FieldSpec` system and related constraints.
 - [presentation.md](presentation.md) defines `PresentationComponent`.
 - [instances.md](instances.md) defines `TemplateInstance` and `InstanceValue`.
 - [validation.md](validation.md) defines well-formedness and validation rules.
@@ -45,4 +45,4 @@ This specification does not define:
 ## Open Questions
 
 - Should instance structures eventually allow path-based keys in addition to `EmbeddedArtifactKey`?
-- Should option sets for some `FieldType` variants become reusable artifacts?
+- Should option sets for some `FieldSpec` variants become reusable artifacts?

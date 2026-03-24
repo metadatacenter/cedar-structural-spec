@@ -37,7 +37,7 @@ Instance terms:
 
 Typing terms:
 
-- `FieldType`
+- `FieldSpec`
 
 ## Literal Notation
 
