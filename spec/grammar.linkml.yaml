@@ -62,6 +62,7 @@ types:
   UnicodeString:
     uri: xsd:string
     base: str
+    description: A Unicode string value with no additional character-set restrictions.
 
   AsciiIdentifier:
     uri: xsd:string
@@ -74,6 +75,7 @@ types:
   NonNegativeInteger:
     uri: xsd:nonNegativeInteger
     base: int
+    description: A non-negative integer (≥ 0).
 
   RegexPattern:
     uri: xsd:string
@@ -101,6 +103,7 @@ enums:
         description: Absence does not cause conformance failure.
 
   VisibilityEnum:
+    description: Whether an embedded artifact is shown in rendered interfaces.
     permissible_values:
       Visible: {}
       Hidden: {}
@@ -127,11 +130,13 @@ enums:
       HourMinuteSecondFractionPrecision: {}
 
   TimezoneRequirementEnum:
+    description: Whether a time or date-time value must carry an explicit timezone offset.
     permissible_values:
       TimezoneRequired: {}
       TimezoneNotRequired: {}
 
   TimeFormatEnum:
+    description: Clock format for rendering a time field.
     permissible_values:
       TwelveHourTimeFormat: {}
       TwentyFourHourTimeFormat: {}
@@ -144,16 +149,19 @@ enums:
       YearMonthDayOrder: {}
 
   TextRenderingHintEnum:
+    description: Preferred rendering style for a text field input.
     permissible_values:
       SingleLineTextRenderingHint: {}
       MultiLineTextRenderingHint: {}
 
   SingleChoiceRenderingHintEnum:
+    description: Preferred rendering style for a single-selection choice field.
     permissible_values:
       RadioRenderingHint: {}
       SingleSelectDropdownRenderingHint: {}
 
   MultipleChoiceRenderingHintEnum:
+    description: Preferred rendering style for a multiple-selection choice field.
     permissible_values:
       CheckboxRenderingHint: {}
       MultiSelectDropdownRenderingHint: {}
@@ -284,15 +292,21 @@ slots:
   # --- field spec configuration ---
   min_length:
     range: NonNegativeInteger
+    description: Minimum number of Unicode characters permitted in a text value.
 
   max_length:
     range: NonNegativeInteger
+    description: Maximum number of Unicode characters permitted in a text value.
 
   validation_regex:
     range: RegexPattern
+    description: >-
+      A regular expression that the text value must match. Conforming values
+      must satisfy this pattern when present.
 
   text_rendering_hint:
     range: TextRenderingHintEnum
+    description: Preferred rendering style for the text input widget.
 
   numeric_datatype:
     range: Iri
@@ -301,6 +315,7 @@ slots:
 
   numeric_precision:
     range: NonNegativeInteger
+    description: Maximum number of decimal places permitted in a numeric value.
 
   numeric_rendering_hint:
     description: Currently only NumericInputRenderingHint is defined.
@@ -309,28 +324,40 @@ slots:
   date_value_type:
     range: DateValueTypeEnum
     required: true
+    description: >-
+      Permitted granularity for a date field — year only, year-month, or
+      full calendar date.
 
   date_component_order:
     range: DateComponentOrderEnum
+    description: Preferred display order of day, month, and year components.
 
   time_precision:
     range: TimePrecisionEnum
+    description: Finest permitted granularity for a time value (hours-minutes, seconds, or fractions).
 
   timezone_requirement:
     range: TimezoneRequirementEnum
+    description: Whether an explicit timezone offset is required on time or date-time values.
 
   time_format:
     range: TimeFormatEnum
+    description: Preferred clock format (12-hour or 24-hour) for rendering a time field.
 
   date_time_value_type:
     range: DateTimeValueTypeEnum
     required: true
+    description: >-
+      Finest permitted granularity for a date-time value — hours-minutes,
+      seconds, or fractional seconds.
 
   single_choice_rendering_hint:
     range: SingleChoiceRenderingHintEnum
+    description: Preferred rendering style for a single-selection choice widget.
 
   multiple_choice_rendering_hint:
     range: MultipleChoiceRenderingHintEnum
+    description: Preferred rendering style for a multiple-selection choice widget.
 
   literal_choice_options:
     range: LiteralChoiceOption
@@ -355,35 +382,45 @@ slots:
     multivalued: true
     required: true
     inlined: true
+    description: The ordered set of controlled term sources authorised for this field.
 
   # --- controlled term source fields ---
   ontology_iri:
     range: Iri
+    description: IRI that uniquely identifies the ontology.
 
   ontology_acronym:
     range: UnicodeString
+    description: Short acronym for the ontology (e.g. OBI, UBERON).
 
   ontology_name:
     range: UnicodeString
+    description: Full human-readable name of the ontology.
 
   root_term_iri:
     range: Iri
+    description: IRI of the ontology class at the root of a BranchSource.
 
   root_term_label:
     range: UnicodeString
+    description: Human-readable label of the root term for a BranchSource.
 
   max_traversal_depth:
     range: NonNegativeInteger
+    description: Maximum depth of the ontology hierarchy to traverse from the root term.
 
   value_set_identifier:
     range: UnicodeString
     required: true
+    description: Stable string identifier for the value set.
 
   value_set_name:
     range: UnicodeString
+    description: Human-readable name of the value set.
 
   value_set_iri:
     range: Iri
+    description: Resolvable IRI for the value set.
 
   term_iri:
     range: Iri
@@ -430,13 +467,16 @@ slots:
   link_iri:
     range: Iri
     required: true
+    description: IRI (URL) carried by a LinkValue.
 
   link_label:
     range: UnicodeString
+    description: Human-readable label accompanying the link IRI.
 
   attribute_name:
     range: UnicodeString
     required: true
+    description: Name of the named attribute in an AttributeValue pair.
 
   # --- instance fields ---
   template_reference:
@@ -450,6 +490,9 @@ slots:
     range: InstanceValue
     multivalued: true
     inlined: true
+    description: >-
+      Ordered collection of InstanceValue entries for a TemplateInstance
+      or NestedTemplateInstance.
 
   field_values:
     range: Value
@@ -464,25 +507,31 @@ slots:
   orcid_iri:
     range: Iri
     pattern: "^https://orcid\\.org/\\d{4}-\\d{4}-\\d{4}-\\d{3}[\\dX]$"
+    description: ORCID identifier IRI (https://orcid.org/…).
 
   ror_iri:
     range: Iri
     pattern: "^https://ror\\.org/0[a-z0-9]{8}$"
+    description: ROR (Research Organization Registry) identifier IRI (https://ror.org/…).
 
   doi_iri:
     range: Iri
     pattern: "^https://doi\\.org/10\\.\\d{4,}/.+"
+    description: DOI identifier IRI (https://doi.org/…).
 
   pub_med_iri:
     range: Iri
     pattern: "^https://pubmed\\.ncbi\\.nlm\\.nih\\.gov/\\d+$"
+    description: PubMed identifier IRI (https://pubmed.ncbi.nlm.nih.gov/…).
 
   rrid_iri:
     range: Iri
     pattern: "^https://identifiers\\.org/RRID:[A-Z]+_\\d+$"
+    description: RRID (Research Resource Identifier) IRI (https://identifiers.org/RRID:…).
 
   nih_grant_iri:
     range: Iri
+    description: NIH grant identifier IRI.
 
   # presentation component content
   html_content:
@@ -612,6 +661,7 @@ classes:
 
   TextField:
     is_a: Field
+    description: A Field that accepts free-text string values.
     attributes:
       field_spec:
         range: TextFieldSpec
@@ -621,6 +671,7 @@ classes:
 
   NumericField:
     is_a: Field
+    description: A Field that accepts numeric values with an explicit XML Schema datatype.
     attributes:
       field_spec:
         range: NumericFieldSpec
@@ -630,6 +681,7 @@ classes:
 
   DateField:
     is_a: Field
+    description: A Field that accepts date values at a specified precision (year, year-month, or full date).
     attributes:
       field_spec:
         range: DateFieldSpec
@@ -639,6 +691,7 @@ classes:
 
   TimeField:
     is_a: Field
+    description: A Field that accepts time-of-day values.
     attributes:
       field_spec:
         range: TimeFieldSpec
@@ -648,6 +701,7 @@ classes:
 
   DateTimeField:
     is_a: Field
+    description: A Field that accepts date-time values at a specified precision.
     attributes:
       field_spec:
         range: DateTimeFieldSpec
@@ -657,6 +711,7 @@ classes:
 
   ControlledTermField:
     is_a: Field
+    description: A Field whose values must be drawn from a specified controlled vocabulary.
     attributes:
       field_spec:
         range: ControlledTermFieldSpec
@@ -666,6 +721,7 @@ classes:
 
   SingleChoiceField:
     is_a: Field
+    description: A Field whose value must be exactly one option from a declared choice list.
     attributes:
       field_spec:
         range: SingleChoiceFieldSpec
@@ -675,6 +731,7 @@ classes:
 
   MultipleChoiceField:
     is_a: Field
+    description: A Field whose values are one or more options selected from a declared choice list.
     attributes:
       field_spec:
         range: MultipleChoiceFieldSpec
@@ -684,31 +741,39 @@ classes:
 
   LinkField:
     is_a: Field
-    description: A field whose value is a hyperlink or URL.
+    description: A Field whose value is a hyperlink or URL.
 
   EmailField:
     is_a: Field
+    description: A Field that accepts an email address value.
 
   PhoneNumberField:
     is_a: Field
+    description: A Field that accepts a telephone number value.
 
   OrcidField:
     is_a: Field
+    description: A Field that accepts an ORCID identifier value.
 
   RorField:
     is_a: Field
+    description: A Field that accepts a ROR (Research Organization Registry) identifier value.
 
   DoiField:
     is_a: Field
+    description: A Field that accepts a DOI (Digital Object Identifier) value.
 
   PubMedIdField:
     is_a: Field
+    description: A Field that accepts a PubMed identifier value.
 
   RridField:
     is_a: Field
+    description: A Field that accepts an RRID (Research Resource Identifier) value.
 
   NihGrantIdField:
     is_a: Field
+    description: A Field that accepts an NIH grant identifier value.
 
   AttributeValueField:
     is_a: Field
@@ -735,24 +800,29 @@ classes:
 
   RichTextComponent:
     is_a: PresentationComponent
+    description: A PresentationComponent that displays a fragment of HTML rich text.
     slots:
       - html_content
 
   ImageComponent:
     is_a: PresentationComponent
+    description: A PresentationComponent that displays an image at a specified IRI.
     slots:
       - image_source
 
   YoutubeVideoComponent:
     is_a: PresentationComponent
+    description: A PresentationComponent that embeds a YouTube video.
     slots:
       - youtube_video_source
 
   SectionBreakComponent:
     is_a: PresentationComponent
+    description: A PresentationComponent that inserts a visual section break between form areas.
 
   PageBreakComponent:
     is_a: PresentationComponent
+    description: A PresentationComponent that inserts a page break in print views of a form.
 
   # ----------------------------------------------------------------
   # Embedded artifacts
@@ -790,6 +860,7 @@ classes:
 
   EmbeddedTextField:
     is_a: EmbeddedField
+    description: An embedded reference to a TextField within a Template.
     attributes:
       field_reference:
         range: Iri
@@ -802,6 +873,7 @@ classes:
 
   EmbeddedNumericField:
     is_a: EmbeddedField
+    description: An embedded reference to a NumericField within a Template.
     attributes:
       field_reference:
         range: Iri
@@ -814,10 +886,12 @@ classes:
 
   EmbeddedDateField:
     is_a: EmbeddedField
+    description: An embedded reference to a DateField within a Template.
     attributes:
       field_reference:
         range: Iri
         required: true
+        description: IRI of the referenced DateField.
       default_value:
         range: DateValue
         inlined: true
@@ -825,10 +899,12 @@ classes:
 
   EmbeddedTimeField:
     is_a: EmbeddedField
+    description: An embedded reference to a TimeField within a Template.
     attributes:
       field_reference:
         range: Iri
         required: true
+        description: IRI of the referenced TimeField.
       default_value:
         range: TimeValue
         inlined: true
@@ -836,10 +912,12 @@ classes:
 
   EmbeddedDateTimeField:
     is_a: EmbeddedField
+    description: An embedded reference to a DateTimeField within a Template.
     attributes:
       field_reference:
         range: Iri
         required: true
+        description: IRI of the referenced DateTimeField.
       default_value:
         range: DateTimeValue
         inlined: true
@@ -847,10 +925,12 @@ classes:
 
   EmbeddedControlledTermField:
     is_a: EmbeddedField
+    description: An embedded reference to a ControlledTermField within a Template.
     attributes:
       field_reference:
         range: Iri
         required: true
+        description: IRI of the referenced ControlledTermField.
       default_value:
         range: ControlledTermValue
         inlined: true
@@ -858,10 +938,12 @@ classes:
 
   EmbeddedSingleChoiceField:
     is_a: EmbeddedField
+    description: An embedded reference to a SingleChoiceField within a Template.
     attributes:
       field_reference:
         range: Iri
         required: true
+        description: IRI of the referenced SingleChoiceField.
       default_value:
         range: ChoiceValue
         inlined: true
@@ -869,10 +951,12 @@ classes:
 
   EmbeddedMultipleChoiceField:
     is_a: EmbeddedField
+    description: An embedded reference to a MultipleChoiceField within a Template.
     attributes:
       field_reference:
         range: Iri
         required: true
+        description: IRI of the referenced MultipleChoiceField.
       default_values:
         range: ChoiceValue
         multivalued: true
@@ -881,10 +965,12 @@ classes:
 
   EmbeddedLinkField:
     is_a: EmbeddedField
+    description: An embedded reference to a LinkField within a Template.
     attributes:
       field_reference:
         range: Iri
         required: true
+        description: IRI of the referenced LinkField.
       default_value:
         range: LinkValue
         inlined: true
@@ -892,24 +978,30 @@ classes:
 
   EmbeddedEmailField:
     is_a: EmbeddedField
+    description: An embedded reference to an EmailField within a Template.
     attributes:
       field_reference:
         range: Iri
         required: true
+        description: IRI of the referenced EmailField.
 
   EmbeddedPhoneNumberField:
     is_a: EmbeddedField
+    description: An embedded reference to a PhoneNumberField within a Template.
     attributes:
       field_reference:
         range: Iri
         required: true
+        description: IRI of the referenced PhoneNumberField.
 
   EmbeddedOrcidField:
     is_a: EmbeddedField
+    description: An embedded reference to an OrcidField within a Template.
     attributes:
       field_reference:
         range: Iri
         required: true
+        description: IRI of the referenced OrcidField.
       default_value:
         range: OrcidValue
         inlined: true
@@ -917,10 +1009,12 @@ classes:
 
   EmbeddedRorField:
     is_a: EmbeddedField
+    description: An embedded reference to a RorField within a Template.
     attributes:
       field_reference:
         range: Iri
         required: true
+        description: IRI of the referenced RorField.
       default_value:
         range: RorValue
         inlined: true
@@ -928,10 +1022,12 @@ classes:
 
   EmbeddedDoiField:
     is_a: EmbeddedField
+    description: An embedded reference to a DoiField within a Template.
     attributes:
       field_reference:
         range: Iri
         required: true
+        description: IRI of the referenced DoiField.
       default_value:
         range: DoiValue
         inlined: true
@@ -939,10 +1035,12 @@ classes:
 
   EmbeddedPubMedIdField:
     is_a: EmbeddedField
+    description: An embedded reference to a PubMedIdField within a Template.
     attributes:
       field_reference:
         range: Iri
         required: true
+        description: IRI of the referenced PubMedIdField.
       default_value:
         range: PubMedIdValue
         inlined: true
@@ -950,10 +1048,12 @@ classes:
 
   EmbeddedRridField:
     is_a: EmbeddedField
+    description: An embedded reference to an RridField within a Template.
     attributes:
       field_reference:
         range: Iri
         required: true
+        description: IRI of the referenced RridField.
       default_value:
         range: RridValue
         inlined: true
@@ -961,10 +1061,12 @@ classes:
 
   EmbeddedNihGrantIdField:
     is_a: EmbeddedField
+    description: An embedded reference to an NihGrantIdField within a Template.
     attributes:
       field_reference:
         range: Iri
         required: true
+        description: IRI of the referenced NihGrantIdField.
       default_value:
         range: NihGrantIdValue
         inlined: true
@@ -972,10 +1074,12 @@ classes:
 
   EmbeddedAttributeValueField:
     is_a: EmbeddedField
+    description: An embedded reference to an AttributeValueField within a Template.
     attributes:
       field_reference:
         range: Iri
         required: true
+        description: IRI of the referenced AttributeValueField.
 
   EmbeddedTemplate:
     is_a: EmbeddedArtifact
@@ -988,6 +1092,9 @@ classes:
       embedding_property:
         range: EmbeddingProperty
         inlined: true
+        description: >-
+          The RDF property IRI that associates the nested template's values
+          with the metadata record in this template context.
 
   EmbeddedPresentationComponent:
     is_a: EmbeddedArtifact
@@ -1020,6 +1127,9 @@ classes:
 
   TextFieldSpec:
     is_a: FieldSpec
+    description: >-
+      Configuration for a TextField, specifying optional text constraints
+      (length bounds, regex) and a rendering hint.
     slots:
       - min_length
       - max_length
@@ -1033,6 +1143,9 @@ classes:
 
   NumericFieldSpec:
     is_a: FieldSpec
+    description: >-
+      Configuration for a NumericField, specifying the XML Schema datatype,
+      optional precision, unit, and value bounds.
     slots:
       - numeric_datatype
       - numeric_precision
@@ -1053,6 +1166,9 @@ classes:
 
   DateFieldSpec:
     is_a: FieldSpec
+    description: >-
+      Configuration for a DateField, specifying the permitted date precision
+      and an optional display-order rendering hint.
     slots:
       - date_value_type
     attributes:
@@ -1063,6 +1179,9 @@ classes:
 
   TimeFieldSpec:
     is_a: FieldSpec
+    description: >-
+      Configuration for a TimeField, specifying precision, timezone requirement,
+      and an optional clock-format rendering hint.
     slots:
       - time_precision
       - timezone_requirement
@@ -1074,6 +1193,9 @@ classes:
 
   DateTimeFieldSpec:
     is_a: FieldSpec
+    description: >-
+      Configuration for a DateTimeField, specifying the permitted datetime
+      precision, timezone requirement, and an optional rendering hint.
     slots:
       - date_time_value_type
       - timezone_requirement
@@ -1085,6 +1207,9 @@ classes:
 
   ControlledTermFieldSpec:
     is_a: FieldSpec
+    description: >-
+      Configuration for a ControlledTermField, specifying the authorised
+      controlled term sources from which values may be drawn.
     slots:
       - controlled_term_sources
 
@@ -1097,12 +1222,14 @@ classes:
 
   LiteralSingleChoiceFieldSpec:
     is_a: SingleChoiceFieldSpec
+    description: A single-selection choice field spec whose options are literal values.
     slots:
       - literal_choice_options
       - single_choice_rendering_hint
 
   ControlledTermSingleChoiceFieldSpec:
     is_a: SingleChoiceFieldSpec
+    description: A single-selection choice field spec whose options are controlled vocabulary terms.
     slots:
       - controlled_term_choice_options
       - single_choice_rendering_hint
@@ -1116,45 +1243,77 @@ classes:
 
   LiteralMultipleChoiceFieldSpec:
     is_a: MultipleChoiceFieldSpec
+    description: A multiple-selection choice field spec whose options are literal values.
     slots:
       - literal_choice_options
       - multiple_choice_rendering_hint
 
   ControlledTermMultipleChoiceFieldSpec:
     is_a: MultipleChoiceFieldSpec
+    description: A multiple-selection choice field spec whose options are controlled vocabulary terms.
     slots:
       - controlled_term_choice_options
       - multiple_choice_rendering_hint
 
   LinkFieldSpec:
     is_a: FieldSpec
+    description: >-
+      Configuration for a LinkField. Currently carries no additional
+      configuration beyond field identity.
 
   EmailFieldSpec:
     is_a: FieldSpec
+    description: >-
+      Configuration for an EmailField. Currently carries no additional
+      configuration beyond field identity.
 
   PhoneNumberFieldSpec:
     is_a: FieldSpec
+    description: >-
+      Configuration for a PhoneNumberField. Currently carries no additional
+      configuration beyond field identity.
 
   OrcidFieldSpec:
     is_a: FieldSpec
+    description: >-
+      Configuration for an OrcidField. Currently carries no additional
+      configuration beyond field identity.
 
   RorFieldSpec:
     is_a: FieldSpec
+    description: >-
+      Configuration for a RorField. Currently carries no additional
+      configuration beyond field identity.
 
   DoiFieldSpec:
     is_a: FieldSpec
+    description: >-
+      Configuration for a DoiField. Currently carries no additional
+      configuration beyond field identity.
 
   PubMedIdFieldSpec:
     is_a: FieldSpec
+    description: >-
+      Configuration for a PubMedIdField. Currently carries no additional
+      configuration beyond field identity.
 
   RridFieldSpec:
     is_a: FieldSpec
+    description: >-
+      Configuration for an RridField. Currently carries no additional
+      configuration beyond field identity.
 
   NihGrantIdFieldSpec:
     is_a: FieldSpec
+    description: >-
+      Configuration for an NihGrantIdField. Currently carries no additional
+      configuration beyond field identity.
 
   AttributeValueFieldSpec:
     is_a: FieldSpec
+    description: >-
+      Configuration for an AttributeValueField. Currently carries no additional
+      configuration beyond field identity.
 
   Unit:
     description: An identified measurement or quantity unit with an optional label.
@@ -1191,14 +1350,17 @@ classes:
         description: The controlled vocabulary term that this choice option represents.
 
   DateRenderingHint:
+    description: A rendering hint specifying the preferred display order of date components.
     slots:
       - date_component_order
 
   TimeRenderingHint:
+    description: A rendering hint specifying the preferred clock format for a time field.
     slots:
       - time_format
 
   DateTimeRenderingHint:
+    description: A rendering hint specifying the preferred clock format for a date-time field.
     slots:
       - time_format
 
@@ -1284,6 +1446,7 @@ classes:
 
   StringLiteral:
     is_a: Literal
+    description: A plain Unicode string literal without a language tag.
     attributes:
       lexical_form:
         range: UnicodeString
@@ -1331,18 +1494,23 @@ classes:
 
   YearLiteral:
     is_a: TemporalLiteral
+    description: A temporal literal representing a calendar year (ISO 8601 year form).
 
   YearMonthLiteral:
     is_a: TemporalLiteral
+    description: A temporal literal representing a calendar year-month (ISO 8601 year-month form).
 
   FullDateLiteral:
     is_a: TemporalLiteral
+    description: A temporal literal representing a full calendar date (ISO 8601 date form).
 
   TimeLiteral:
     is_a: TemporalLiteral
+    description: A temporal literal representing a time of day (ISO 8601 time form).
 
   DateTimeLiteral:
     is_a: TemporalLiteral
+    description: A temporal literal representing a combined date and time (ISO 8601 date-time form).
 
   # ----------------------------------------------------------------
   # Values
@@ -1371,6 +1539,7 @@ classes:
 
   NumericValue:
     is_a: Value
+    description: A value carrying a typed numeric literal.
     attributes:
       numeric_literal:
         range: NumericLiteral
@@ -1387,6 +1556,7 @@ classes:
 
   YearValue:
     is_a: DateValue
+    description: A date value refined to year precision.
     attributes:
       literal:
         range: YearLiteral
@@ -1396,6 +1566,7 @@ classes:
 
   YearMonthValue:
     is_a: DateValue
+    description: A date value refined to year-month precision.
     attributes:
       literal:
         range: YearMonthLiteral
@@ -1405,6 +1576,7 @@ classes:
 
   FullDateValue:
     is_a: DateValue
+    description: A date value refined to full calendar date precision.
     attributes:
       literal:
         range: FullDateLiteral
@@ -1414,6 +1586,7 @@ classes:
 
   TimeValue:
     is_a: Value
+    description: A value carrying a time-of-day literal.
     attributes:
       literal:
         range: TimeLiteral
@@ -1423,6 +1596,7 @@ classes:
 
   DateTimeValue:
     is_a: Value
+    description: A value carrying a combined date-time literal.
     attributes:
       literal:
         range: DateTimeLiteral
@@ -1471,12 +1645,14 @@ classes:
 
   LinkValue:
     is_a: Value
+    description: A value carrying a hyperlink IRI and optional human-readable label.
     slots:
       - link_iri
       - link_label
 
   EmailValue:
     is_a: Value
+    description: A value carrying an email address string.
     attributes:
       value:
         range: StringLiteral
@@ -1486,6 +1662,7 @@ classes:
 
   PhoneNumberValue:
     is_a: Value
+    description: A value carrying a telephone number string.
     attributes:
       value:
         range: StringLiteral
@@ -1504,31 +1681,37 @@ classes:
 
   OrcidValue:
     is_a: ExternalAuthorityValue
+    description: A value carrying an ORCID identifier IRI.
     slots:
       - orcid_iri
 
   RorValue:
     is_a: ExternalAuthorityValue
+    description: A value carrying a ROR (Research Organization Registry) identifier IRI.
     slots:
       - ror_iri
 
   DoiValue:
     is_a: ExternalAuthorityValue
+    description: A value carrying a DOI (Digital Object Identifier) IRI.
     slots:
       - doi_iri
 
   PubMedIdValue:
     is_a: ExternalAuthorityValue
+    description: A value carrying a PubMed identifier IRI.
     slots:
       - pub_med_iri
 
   RridValue:
     is_a: ExternalAuthorityValue
+    description: A value carrying an RRID (Research Resource Identifier) IRI.
     slots:
       - rrid_iri
 
   NihGrantIdValue:
     is_a: ExternalAuthorityValue
+    description: A value carrying an NIH grant identifier IRI.
     slots:
       - nih_grant_iri
 
