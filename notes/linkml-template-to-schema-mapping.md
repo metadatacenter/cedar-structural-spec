@@ -520,6 +520,7 @@ enums:
   TissueTypeOptions:
     # Generated from ControlledTermSingleChoiceFieldSpec on the referenced field;
     # meaning: carries the term_iri from each ControlledTermChoiceOption
+    description: Permitted tissue types from which a BioSample may be obtained.
     permissible_values:
       "blood":
         meaning: UBERON:0000178
