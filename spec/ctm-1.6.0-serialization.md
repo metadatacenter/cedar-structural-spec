@@ -1132,23 +1132,21 @@ Returns a JSON object with the following keys:
 
 ### `encode_single_choice_field_type(FT: SingleChoiceFieldType, E: EmbeddedField) → Object`
 
-Choice fields may be literal-valued or IRI-valued. Determine the value form by inspecting the options: if any option carries a `ControlledTermValue` or `Iri`, use IRI-form; otherwise use literal-form.
+`SingleChoiceFieldType` is either a `LiteralSingleChoiceFieldType` or a `ControlledTermSingleChoiceFieldType`. The kind of `FT` determines the value shape and the option encoding function: literal-form fields use `STRING_VALUE_SHAPE` and encode options with `encode_literal_choice_option`; controlled-term-form fields replace `"@value"` with `"@id"` in the value shape and encode options with `encode_controlled_term_choice_option`. Because the value kind is declared structurally on the field type itself, no inspection of individual options is needed.
 
-> **Caution:** The IRI vs. literal distinction is determined at encoding time by inspecting the option values, not by a type flag on the field itself. If a field's options are mixed (some literal, some IRI-valued), the behaviour is underspecified — apply IRI-form in that case to avoid data loss, but treat this as an invalid model state that should be rejected upstream.
-
-**Value shape:** `STRING_VALUE_SHAPE` (literal-form); for IRI-form replace `"@value"` with `"@id": { "type": "string", "format": "uri" }` | **Required:** `[]`
+**Value shape:** `STRING_VALUE_SHAPE` (literal-form); for controlled-term-form replace `"@value"` with `"@id": { "type": "string", "format": "uri" }` | **Required:** `[]`
 
 **`_valueConstraints` extras:**
 
 | Key | Value | Condition |
 |---|---|---|
 | `"multipleChoice"` | `false` | Always present |
-| `"literals"` | `[ encode_choice_option_literal(O) for each O in FT.options ]` | Literal-form |
-| `"literals"` | `[ encode_choice_option_iri(O) for each O in FT.options ]` | IRI-form |
+| `"literals"` | `[ encode_literal_choice_option(O) for each O in FT.options ]` | `LiteralSingleChoiceFieldType` |
+| `"literals"` | `[ encode_controlled_term_choice_option(O) for each O in FT.options ]` | `ControlledTermSingleChoiceFieldType` |
 
 **`_ui` extras:** `{ "inputType": encode_single_choice_rendering_hint(FT.single_choice_rendering_hint) }`
 
-**Calls:** [`encode_embedding_constraints`](#encode_embedding_constraintse-embeddedfield--object), [`encode_embedding_ui`](#encode_embedding_uie-embeddedfield--object), [`encode_single_choice_rendering_hint`](#encode_single_choice_rendering_hinthint-singlechoicerenderinghint-or-absent--string), [`encode_choice_option_literal`](#encode_choice_option_literalo-choiceoption--object), [`encode_choice_option_iri`](#encode_choice_option_irio-choiceoption--object)
+**Calls:** [`encode_embedding_constraints`](#encode_embedding_constraintse-embeddedfield--object), [`encode_embedding_ui`](#encode_embedding_uie-embeddedfield--object), [`encode_single_choice_rendering_hint`](#encode_single_choice_rendering_hinthint-singlechoicerenderinghint-or-absent--string), [`encode_literal_choice_option`](#encode_literal_choice_optiono-literalchoiceoption--object), [`encode_controlled_term_choice_option`](#encode_controlled_term_choice_optiono-controlledtermchoiceoption--object)
 
 ### `encode_single_choice_rendering_hint(hint: SingleChoiceRenderingHint or absent) → String`
 
@@ -1159,25 +1157,23 @@ Returns the `inputType` string for the hint kind:
 | `RadioRenderingHint` or absent | `"radio"` |
 | `SingleSelectDropdownRenderingHint` | `"list"` |
 
-### `encode_choice_option_literal(O: ChoiceOption) → Object`
+### `encode_literal_choice_option(O: LiteralChoiceOption) → Object`
 
-Returns a JSON object with the following keys:
+Encodes a single option from a `LiteralSingleChoiceFieldType` or `LiteralMultipleChoiceFieldType`. The option value is always a `Literal`; use its lexical form as the label string.
 
 | Key | Value | Condition |
 |---|---|---|
-| `"label"` | `O.choice_option_value` (lexical form as string) | Always present |
+| `"label"` | lexical form of `O.literal` | Always present |
 | `"selectedByDefault"` | `true` | Omit if `O.default_option` absent |
 
-`ChoiceOptionValue` may be a `Literal`, `ControlledTermValue`, or `Iri`. For literal choice options, use the lexical form of the `Literal`. For `ControlledTermValue` or `Iri` choice options, encode as IRI-form options using `encode_choice_option_iri`.
+### `encode_controlled_term_choice_option(O: ControlledTermChoiceOption) → Object`
 
-### `encode_choice_option_iri(O: ChoiceOption) → Object`
-
-Returns a JSON object with the following keys:
+Encodes a single option from a `ControlledTermSingleChoiceFieldType` or `ControlledTermMultipleChoiceFieldType`. The option value is always a `ControlledTermValue`; encode its IRI and label.
 
 | Key | Value | Condition |
 |---|---|---|
-| `"@id"` | `iri(O.choice_option_value.iri)`, or `iri(O.choice_option_value.term_iri.iri)` for `ControlledTermValue` | Always present |
-| `"rdfs:label"` | label of `O.choice_option_value` | Omit if no label |
+| `"@id"` | `iri(O.controlled_term_value.term_iri)` | Always present |
+| `"rdfs:label"` | `O.controlled_term_value.label.unicode_string` | Omit if `label` absent |
 | `"selectedByDefault"` | `true` | Omit if `O.default_option` absent |
 
 ---
@@ -1185,6 +1181,8 @@ Returns a JSON object with the following keys:
 ### `encode_multiple_choice_field_type(FT: MultipleChoiceFieldType, E: EmbeddedField) → Object`
 
 Multiple choice fields allow instances to carry zero or more selected options, so the value schema is wrapped in a JSON Schema array with `minItems: 0`. This field type does not follow the standard skeleton. The `multipleChoice: true` flag distinguishes this from single-choice fields.
+
+As with `encode_single_choice_field_type`, the kind of `FT` — `LiteralMultipleChoiceFieldType` or `ControlledTermMultipleChoiceFieldType` — determines the item value shape and the option encoding function directly. No inspection of individual options is needed.
 
 This field type does not follow the standard skeleton. It wraps the value schema in an array:
 
@@ -1203,19 +1201,19 @@ This field type does not follow the standard skeleton. It wraps the value schema
 }
 ```
 
-For IRI-form multiple choice, replace `"@value"` in `items.properties` with `"@id": { "type": "string", "format": "uri" }`.
+For `ControlledTermMultipleChoiceFieldType`, replace `"@value"` in `items.properties` with `"@id": { "type": "string", "format": "uri" }`.
 
 **`_valueConstraints` extras:**
 
 | Key | Value | Condition |
 |---|---|---|
 | `"multipleChoice"` | `true` | Always present |
-| `"literals"` | `[ encode_choice_option_literal(O) for each O in FT.options ]` | Literal-form |
-| `"literals"` | `[ encode_choice_option_iri(O) for each O in FT.options ]` | IRI-form |
+| `"literals"` | `[ encode_literal_choice_option(O) for each O in FT.options ]` | `LiteralMultipleChoiceFieldType` |
+| `"literals"` | `[ encode_controlled_term_choice_option(O) for each O in FT.options ]` | `ControlledTermMultipleChoiceFieldType` |
 
 **`_ui` extras:** `{ "inputType": encode_multiple_choice_rendering_hint(FT.multiple_choice_rendering_hint) }`
 
-**Calls:** [`encode_embedding_constraints`](#encode_embedding_constraintse-embeddedfield--object), [`encode_embedding_ui`](#encode_embedding_uie-embeddedfield--object), [`encode_multiple_choice_rendering_hint`](#encode_multiple_choice_rendering_hinthint-multiplechoicerenderinghint-or-absent--string), [`encode_choice_option_literal`](#encode_choice_option_literalo-choiceoption--object), [`encode_choice_option_iri`](#encode_choice_option_irio-choiceoption--object)
+**Calls:** [`encode_embedding_constraints`](#encode_embedding_constraintse-embeddedfield--object), [`encode_embedding_ui`](#encode_embedding_uie-embeddedfield--object), [`encode_multiple_choice_rendering_hint`](#encode_multiple_choice_rendering_hinthint-multiplechoicerenderinghint-or-absent--string), [`encode_literal_choice_option`](#encode_literal_choice_optiono-literalchoiceoption--object), [`encode_controlled_term_choice_option`](#encode_controlled_term_choice_optiono-controlledtermchoiceoption--object)
 
 ### `encode_multiple_choice_rendering_hint(hint: MultipleChoiceRenderingHint or absent) → String`
 
@@ -1444,13 +1442,12 @@ Returns a JSON object with the following keys:
 
 ### `encode_choice_value(V: ChoiceValue) → Object`
 
-Dispatches on the kind of `V.choice_selection`:
+Dispatches on the concrete kind of `V`:
 
-| `V.choice_selection` kind | Returns |
+| `V` kind | Returns |
 |---|---|
-| `Literal` (`StringLiteral` or `LangStringLiteral`) | `encode_text_value(as TextValue wrapping the literal)` |
-| `ControlledTermValue` | `encode_controlled_term_value(V.choice_selection)` |
-| `Iri` | `{ "@id": iri(V.choice_selection) }` |
+| `LiteralChoiceValue` | `encode_text_value(as TextValue wrapping V.literal)` |
+| `ControlledTermChoiceValue` | `encode_controlled_term_value(V.controlled_term_value)` |
 
 **Calls:** [`encode_text_value`](#encode_text_valuev-textvalue--object), [`encode_controlled_term_value`](#encode_controlled_term_valuev-controlledtermvalue--object)
 
@@ -1609,7 +1606,7 @@ Implementations SHOULD confirm that annotation IRI keys are valid within the CTM
 
 3. **`AlternativeLabel*` on `DescriptiveMetadata`** — No CTM 1.6.0 equivalent; omitted.
 
-4. **`DefaultOption` on `ChoiceOption`** — CTM 1.6.0 has no standardised `selectedByDefault` key in the `literals` array. `encode_choice_option_literal` includes `"selectedByDefault": true` as a custom extension when a default is set. Support in CTM 1.6.0 tooling is not guaranteed.
+4. **`DefaultOption` on `LiteralChoiceOption` and `ControlledTermChoiceOption`** — CTM 1.6.0 has no standardised `selectedByDefault` key in the `literals` array. `encode_literal_choice_option` and `encode_controlled_term_choice_option` include `"selectedByDefault": true` as a custom extension when a default is set. Support in CTM 1.6.0 tooling is not guaranteed.
 
 5. **Default values for link, email, phone number, and external authority field types** — CTM 1.6.0 `_valueConstraints.defaultValue` is primarily defined for text fields. Default value encoding for `LinkDefaultValue`, `EmailDefaultValue`, `PhoneNumberDefaultValue`, and external authority defaults is implementation-defined.
 

@@ -33,7 +33,7 @@ The key identifies the embedding site within the containing `Template`, which al
 
 The permitted form of each contained value is determined by the `FieldType` of the referenced `Field`.
 
-For `ChoiceFieldType`, a contained `ChoiceValue` may represent a literal choice token, an ontology-backed choice term, or an IRI-valued choice option. A conforming instance value for a choice field must correspond to one of the declared `ChoiceOption` values of the referenced field.
+For `ChoiceFieldType`, the kind of `ChoiceValue` is determined by the concrete field type: a `LiteralSingleChoiceFieldType` or `LiteralMultipleChoiceFieldType` requires `LiteralChoiceValue`, while a `ControlledTermSingleChoiceFieldType` or `ControlledTermMultipleChoiceFieldType` requires `ControlledTermChoiceValue`. A conforming instance value must correspond to one of the declared options of the referenced field's choice field type.
 
 ## NestedTemplateInstance
 

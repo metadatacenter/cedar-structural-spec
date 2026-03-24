@@ -124,18 +124,13 @@ For date-time values:
 
 For choice values:
 
-- `ChoiceValue` MUST contain `ChoiceSelection`
-- `ChoiceSelection` MUST be either a `Literal`, a `ControlledTermValue`, or an `Iri`
-- each `ChoiceOption` in a `ChoiceFieldType` MUST contain `ChoiceOptionValue`
-- `ChoiceOptionValue` MUST be either a `Literal`, a `ControlledTermValue`, or an `Iri`
-- if a `FieldValue` conforms to `SingleChoiceFieldType` or `MultipleChoiceFieldType`, each contained `ChoiceValue` MUST match one of the declared `ChoiceOption` values of the referenced field
+- A `FieldValue` for a `LiteralSingleChoiceFieldType` or `LiteralMultipleChoiceFieldType` MUST contain `LiteralChoiceValue` constructs
+- A `FieldValue` for a `ControlledTermSingleChoiceFieldType` or `ControlledTermMultipleChoiceFieldType` MUST contain `ControlledTermChoiceValue` constructs
+- each contained `ChoiceValue` MUST match one of the declared options of the referenced field's choice field type
 
-A `ChoiceValue` matches a `ChoiceOption` if and only if one of the following holds:
+A `LiteralChoiceValue` matches a `LiteralChoiceOption` if and only if the two `Literal` values are term-equal: their lexical forms and their datatype IRIs or language tags compare equal character by character.
 
-- both carry a `Literal` and they are term-equal: their lexical forms and their datatype IRIs or language tags compare equal character by character
-- both carry a `ControlledTermValue` and their `TermIri` values are equal
-- both carry an `Iri` and their IRI values are equal
-- one carries a `ControlledTermValue` and the other carries an `Iri`, and the `TermIri` of the `ControlledTermValue` equals the `Iri`
+A `ControlledTermChoiceValue` matches a `ControlledTermChoiceOption` if and only if the `TermIri` of the `ControlledTermValue` carried by the value equals the `TermIri` of the `ControlledTermValue` carried by the option.
 
 For controlled-term values:
 

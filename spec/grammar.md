@@ -1201,16 +1201,19 @@ ControlledTermValue ::= controlled_term_value(
 
 ### Choice Value
 
-A choice value carries a selection from the options declared by a `ChoiceFieldType`. The selection may take the form of a literal, a controlled term, or an IRI, matching one of the structural forms used to declare the corresponding `ChoiceOption`. `ChoiceSelection` and `ChoiceOptionValue` are structurally identical but kept distinct to make the role of each explicit: `ChoiceOptionValue` identifies a permissible option as declared in a `ChoiceFieldType`, while `ChoiceSelection` identifies the value chosen in an instance context. The correspondence between them is governed by the match semantics defined in the validation rules.
+A choice value carries a selection from the options declared by a `ChoiceFieldType`. The form of the selection is determined by the kind of `ChoiceFieldType` the field carries: a field with a `LiteralSingleChoiceFieldType` or `LiteralMultipleChoiceFieldType` produces a `LiteralChoiceValue`, while a field with a `ControlledTermSingleChoiceFieldType` or `ControlledTermMultipleChoiceFieldType` produces a `ControlledTermChoiceValue`. A conforming instance value must correspond to one of the declared options of the referenced field's choice field type.
 
 ```ebnf
-ChoiceValue ::= choice_value(
-                  ChoiceSelection
-                )
+ChoiceValue ::= LiteralChoiceValue
+              | ControlledTermChoiceValue
 
-ChoiceSelection ::= Literal
-                  | ControlledTermValue
-                  | Iri
+LiteralChoiceValue ::= literal_choice_value(
+                         Literal
+                       )
+
+ControlledTermChoiceValue ::= controlled_term_choice_value(
+                                ControlledTermValue
+                              )
 ```
 
 ### Link Value
@@ -1654,26 +1657,43 @@ ControlledTermFieldType ::= controlled_term_field_type(
 ChoiceFieldType ::= SingleChoiceFieldType
                   | MultipleChoiceFieldType
 
-SingleChoiceFieldType ::= single_choice_field_type(
-                            ChoiceOption+
-                            [SingleChoiceRenderingHint]
-                          )
+SingleChoiceFieldType ::= LiteralSingleChoiceFieldType
+                        | ControlledTermSingleChoiceFieldType
 
-MultipleChoiceFieldType ::= multiple_choice_field_type(
-                              ChoiceOption+
-                              [MultipleChoiceRenderingHint]
-                            )
+MultipleChoiceFieldType ::= LiteralMultipleChoiceFieldType
+                          | ControlledTermMultipleChoiceFieldType
 
-ChoiceOption ::= choice_option(
-                   ChoiceOptionValue
-                   [DefaultOption]
-                 )
+LiteralSingleChoiceFieldType ::= literal_single_choice_field_type(
+                                   LiteralChoiceOption+
+                                   [SingleChoiceRenderingHint]
+                                 )
+
+ControlledTermSingleChoiceFieldType ::= controlled_term_single_choice_field_type(
+                                          ControlledTermChoiceOption+
+                                          [SingleChoiceRenderingHint]
+                                        )
+
+LiteralMultipleChoiceFieldType ::= literal_multiple_choice_field_type(
+                                     LiteralChoiceOption+
+                                     [MultipleChoiceRenderingHint]
+                                   )
+
+ControlledTermMultipleChoiceFieldType ::= controlled_term_multiple_choice_field_type(
+                                            ControlledTermChoiceOption+
+                                            [MultipleChoiceRenderingHint]
+                                          )
+
+LiteralChoiceOption ::= literal_choice_option(
+                          Literal
+                          [DefaultOption]
+                        )
+
+ControlledTermChoiceOption ::= controlled_term_choice_option(
+                                 ControlledTermValue
+                                 [DefaultOption]
+                               )
 
 DefaultOption ::= default_option()
-
-ChoiceOptionValue ::= Literal
-                    | ControlledTermValue
-                    | Iri
 
 LinkFieldType ::= link_field_type()
 
@@ -1712,9 +1732,9 @@ The current placement of `Unit` on `NumericFieldType` is a pragmatic compromise.
 
 `NumericMinValue` and `NumericMaxValue` specify inclusive lower and upper bounds on the numeric values that a field accepts. Both are expressed as `NumericValue` constructs so that the datatype of the bound matches the datatype of the field values it constrains.
 
-`ChoiceOption` denotes one permissible option in a choice field. `DefaultOption`, when present, marks the option as pre-selected when a new instance is created. This is a field-level default baked into the option definition itself; an embedding-level `ChoiceDefaultValue` on the corresponding `EmbeddedField` takes precedence when both are present.
+`ChoiceFieldType` is refined along two independent dimensions: cardinality and value kind. The cardinality dimension distinguishes `SingleChoiceFieldType` — which permits exactly one selection — from `MultipleChoiceFieldType` — which permits one or more simultaneous selections. The value kind dimension distinguishes `LiteralSingleChoiceFieldType` and `LiteralMultipleChoiceFieldType`, whose options are plain string or typed literals, from `ControlledTermSingleChoiceFieldType` and `ControlledTermMultipleChoiceFieldType`, whose options are ontology-backed controlled terms carrying an IRI and a human-readable label. All options within a single choice field type must be of the same kind: a literal choice field type carries only `LiteralChoiceOption` entries, and a controlled term choice field type carries only `ControlledTermChoiceOption` entries. This uniformity means that the value kind of a choice field is declared structurally rather than inferred by inspecting individual options.
 
-`ChoiceOptionValue` allows a choice option to be specified by a literal, an ontology-backed controlled term, or an IRI.
+`LiteralChoiceOption` and `ControlledTermChoiceOption` each carry an optional `DefaultOption`. When `DefaultOption` is present, the option is pre-selected when a new instance is created. This is a field-level default baked into the option definition itself; an embedding-level `ChoiceDefaultValue` on the corresponding `EmbeddedField` takes precedence when both are present.
 
 `ControlledTermSource` is defined in [Controlled Term Sources](#controlled-term-sources).
 
@@ -2000,7 +2020,7 @@ Accordingly, `TextFieldType` is a single semantic field type whose single-line a
 
 A `TextFieldType` MAY additionally define a default text value, minimum length, maximum length, and validating regular expression.
 
-Similarly, `ChoiceFieldType` distinguishes `SingleChoiceFieldType` from `MultipleChoiceFieldType` semantically, while the rendering hint determines whether the UI uses radio buttons, checkboxes, or dropdown presentation. Typed rendering hints make incompatible combinations structurally invalid.
+Similarly, `ChoiceFieldType` distinguishes `SingleChoiceFieldType` from `MultipleChoiceFieldType` semantically, and further distinguishes literal-valued from controlled-term-valued options, while the rendering hint determines whether the UI uses radio buttons, checkboxes, or dropdown presentation. Typed rendering hints make incompatible combinations structurally invalid.
 
 Temporal semantics are also split structurally: `DateFieldType`, `TimeFieldType`, and `DateTimeFieldType` are distinct semantic field types, and each carries only the rendering hints and temporal options that are meaningful for that temporal category.
 
@@ -2088,8 +2108,10 @@ The table below gives the complete correspondence. The Field Family column ident
 | `TemporalField` | `TimeFieldType` | `TimeValue` |
 | `TemporalField` | `DateTimeFieldType` | `DateTimeValue` |
 | | `ControlledTermFieldType` | `ControlledTermValue` |
-| `ChoiceField` | `SingleChoiceFieldType` | `ChoiceValue` |
-| `ChoiceField` | `MultipleChoiceFieldType` | `ChoiceValue` |
+| `ChoiceField` | `LiteralSingleChoiceFieldType` | `LiteralChoiceValue` |
+| `ChoiceField` | `LiteralMultipleChoiceFieldType` | `LiteralChoiceValue` |
+| `ChoiceField` | `ControlledTermSingleChoiceFieldType` | `ControlledTermChoiceValue` |
+| `ChoiceField` | `ControlledTermMultipleChoiceFieldType` | `ControlledTermChoiceValue` |
 | | `LinkFieldType` | `LinkValue` |
 | `ContactField` | `EmailFieldType` | `EmailValue` |
 | `ContactField` | `PhoneNumberFieldType` | `PhoneNumberValue` |
@@ -2101,7 +2123,7 @@ The table below gives the complete correspondence. The Field Family column ident
 | `ExternalAuthorityField` | `NihGrantIdFieldType` | `NihGrantIdValue` |
 | | `AttributeValueFieldType` | `AttributeValue` |
 
-`SingleChoiceFieldType` and `MultipleChoiceFieldType` both map to `ChoiceValue`. The distinction between them is not visible in the value type itself but in the cardinality constraint: a `SingleChoiceFieldType` permits exactly one `ChoiceValue` per `FieldValue`, while a `MultipleChoiceFieldType` permits one or more. This constraint is enforced at validation rather than through distinct value types.
+The four concrete choice field types map to two value kinds. `LiteralSingleChoiceFieldType` and `LiteralMultipleChoiceFieldType` both require `LiteralChoiceValue` in instances; `ControlledTermSingleChoiceFieldType` and `ControlledTermMultipleChoiceFieldType` both require `ControlledTermChoiceValue`. The cardinality distinction — single versus multiple — is not visible in the value type itself but in the count of values permitted per `FieldValue`: a `SingleChoiceFieldType` permits exactly one `ChoiceValue`, while a `MultipleChoiceFieldType` permits one or more. This cardinality constraint is enforced at validation rather than through distinct value types.
 
 ## Instances
 
