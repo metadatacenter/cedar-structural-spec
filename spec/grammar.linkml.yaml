@@ -540,11 +540,14 @@ classes:
         range: DescriptiveMetadata
         required: true
         inlined: true
+        description: Human-readable name and description of the artifact.
       temporal_provenance:
         range: TemporalProvenance
         inlined: true
+        description: Creation and modification timestamps for the artifact.
       oslc_modified_by:
         range: Iri
+        description: IRI of the agent recorded in OSLC modification provenance.
 
   SchemaArtifactMetadata:
     is_a: ArtifactMetadata
@@ -554,6 +557,7 @@ classes:
         range: SchemaVersioning
         required: true
         inlined: true
+        description: Schema version, publication status, and artifact version string.
 
   # ----------------------------------------------------------------
   # Core artifact hierarchy
@@ -576,6 +580,9 @@ classes:
         range: SchemaArtifactMetadata
         required: true
         inlined: true
+        description: >-
+          Identity, descriptive, provenance, and versioning metadata for
+          this schema artifact.
 
   # ----------------------------------------------------------------
   # Template
@@ -610,6 +617,7 @@ classes:
         range: TextFieldSpec
         required: true
         inlined: true
+        description: The semantic configuration for this field, specifying value kind, constraints, and rendering hints.
 
   NumericField:
     is_a: Field
@@ -618,6 +626,7 @@ classes:
         range: NumericFieldSpec
         required: true
         inlined: true
+        description: The semantic configuration for this field, specifying value kind, constraints, and rendering hints.
 
   DateField:
     is_a: Field
@@ -626,6 +635,7 @@ classes:
         range: DateFieldSpec
         required: true
         inlined: true
+        description: The semantic configuration for this field, specifying value kind, constraints, and rendering hints.
 
   TimeField:
     is_a: Field
@@ -634,6 +644,7 @@ classes:
         range: TimeFieldSpec
         required: true
         inlined: true
+        description: The semantic configuration for this field, specifying value kind, constraints, and rendering hints.
 
   DateTimeField:
     is_a: Field
@@ -642,6 +653,7 @@ classes:
         range: DateTimeFieldSpec
         required: true
         inlined: true
+        description: The semantic configuration for this field, specifying value kind, constraints, and rendering hints.
 
   ControlledTermField:
     is_a: Field
@@ -650,6 +662,7 @@ classes:
         range: ControlledTermFieldSpec
         required: true
         inlined: true
+        description: The semantic configuration for this field, specifying value kind, constraints, and rendering hints.
 
   SingleChoiceField:
     is_a: Field
@@ -658,6 +671,7 @@ classes:
         range: SingleChoiceFieldSpec
         required: true
         inlined: true
+        description: The semantic configuration for this field, specifying value kind, constraints, and rendering hints.
 
   MultipleChoiceField:
     is_a: Field
@@ -666,6 +680,7 @@ classes:
         range: MultipleChoiceFieldSpec
         required: true
         inlined: true
+        description: The semantic configuration for this field, specifying value kind, constraints, and rendering hints.
 
   LinkField:
     is_a: Field
@@ -716,6 +731,7 @@ classes:
         range: ArtifactMetadata
         required: true
         inlined: true
+        description: Identity, descriptive, and provenance metadata for this artifact.
 
   RichTextComponent:
     is_a: PresentationComponent
@@ -782,6 +798,7 @@ classes:
       default_value:
         range: TextValue
         inlined: true
+        description: Pre-populated default text value for this embedding site.
 
   EmbeddedNumericField:
     is_a: EmbeddedField
@@ -793,6 +810,7 @@ classes:
       default_value:
         range: NumericValue
         inlined: true
+        description: Pre-populated default numeric value for this embedding site.
 
   EmbeddedDateField:
     is_a: EmbeddedField
@@ -803,6 +821,7 @@ classes:
       default_value:
         range: DateValue
         inlined: true
+        description: Pre-populated default date value for this embedding site.
 
   EmbeddedTimeField:
     is_a: EmbeddedField
@@ -813,6 +832,7 @@ classes:
       default_value:
         range: TimeValue
         inlined: true
+        description: Pre-populated default time value for this embedding site.
 
   EmbeddedDateTimeField:
     is_a: EmbeddedField
@@ -823,6 +843,7 @@ classes:
       default_value:
         range: DateTimeValue
         inlined: true
+        description: Pre-populated default date-time value for this embedding site.
 
   EmbeddedControlledTermField:
     is_a: EmbeddedField
@@ -833,6 +854,7 @@ classes:
       default_value:
         range: ControlledTermValue
         inlined: true
+        description: Pre-populated default controlled-term value for this embedding site.
 
   EmbeddedSingleChoiceField:
     is_a: EmbeddedField
@@ -843,6 +865,7 @@ classes:
       default_value:
         range: ChoiceValue
         inlined: true
+        description: Pre-populated default choice value for this embedding site.
 
   EmbeddedMultipleChoiceField:
     is_a: EmbeddedField
@@ -854,6 +877,7 @@ classes:
         range: ChoiceValue
         multivalued: true
         inlined: true
+        description: Pre-populated default choice values for this multiple-choice embedding site.
 
   EmbeddedLinkField:
     is_a: EmbeddedField
@@ -864,6 +888,7 @@ classes:
       default_value:
         range: LinkValue
         inlined: true
+        description: Pre-populated default link value for this embedding site.
 
   EmbeddedEmailField:
     is_a: EmbeddedField
@@ -888,6 +913,7 @@ classes:
       default_value:
         range: OrcidValue
         inlined: true
+        description: Pre-populated default ORCID value for this embedding site.
 
   EmbeddedRorField:
     is_a: EmbeddedField
@@ -898,6 +924,7 @@ classes:
       default_value:
         range: RorValue
         inlined: true
+        description: Pre-populated default ROR value for this embedding site.
 
   EmbeddedDoiField:
     is_a: EmbeddedField
@@ -908,6 +935,7 @@ classes:
       default_value:
         range: DoiValue
         inlined: true
+        description: Pre-populated default DOI value for this embedding site.
 
   EmbeddedPubMedIdField:
     is_a: EmbeddedField
@@ -918,6 +946,7 @@ classes:
       default_value:
         range: PubMedIdValue
         inlined: true
+        description: Pre-populated default PubMed ID value for this embedding site.
 
   EmbeddedRridField:
     is_a: EmbeddedField
@@ -928,6 +957,7 @@ classes:
       default_value:
         range: RridValue
         inlined: true
+        description: Pre-populated default RRID value for this embedding site.
 
   EmbeddedNihGrantIdField:
     is_a: EmbeddedField
@@ -938,6 +968,7 @@ classes:
       default_value:
         range: NihGrantIdValue
         inlined: true
+        description: Pre-populated default NIH grant ID value for this embedding site.
 
   EmbeddedAttributeValueField:
     is_a: EmbeddedField
@@ -998,6 +1029,7 @@ classes:
       default_value:
         range: TextValue
         inlined: true
+        description: Pre-populated default text value for this embedding site.
 
   NumericFieldSpec:
     is_a: FieldSpec
@@ -1009,12 +1041,15 @@ classes:
       unit:
         range: Unit
         inlined: true
+        description: Optional unit of measurement for numeric values entered into this field.
       min_value:
         range: NumericValue
         inlined: true
+        description: Minimum permitted numeric value, inclusive.
       max_value:
         range: NumericValue
         inlined: true
+        description: Maximum permitted numeric value, inclusive.
 
   DateFieldSpec:
     is_a: FieldSpec
@@ -1024,6 +1059,7 @@ classes:
       rendering_hint:
         range: DateRenderingHint
         inlined: true
+        description: Optional rendering hint specifying date component display order.
 
   TimeFieldSpec:
     is_a: FieldSpec
@@ -1034,6 +1070,7 @@ classes:
       rendering_hint:
         range: TimeRenderingHint
         inlined: true
+        description: Optional rendering hint specifying time format.
 
   DateTimeFieldSpec:
     is_a: FieldSpec
@@ -1044,6 +1081,7 @@ classes:
       rendering_hint:
         range: DateTimeRenderingHint
         inlined: true
+        description: Optional rendering hint specifying time format for date-time display.
 
   ControlledTermFieldSpec:
     is_a: FieldSpec
@@ -1140,6 +1178,7 @@ classes:
         range: Literal
         required: true
         inlined: true
+        description: The literal value of this choice option.
 
   ControlledTermChoiceOption:
     is_a: ChoiceOption
@@ -1149,6 +1188,7 @@ classes:
         range: ControlledTermValue
         required: true
         inlined: true
+        description: The controlled vocabulary term that this choice option represents.
 
   DateRenderingHint:
     slots:
@@ -1180,6 +1220,7 @@ classes:
         range: OntologyReference
         required: true
         inlined: true
+        description: The ontology used as the source of controlled terms.
 
   BranchSource:
     is_a: ControlledTermSource
@@ -1193,6 +1234,7 @@ classes:
         range: OntologyReference
         required: true
         inlined: true
+        description: The ontology used as the source of controlled terms.
 
   ClassSource:
     is_a: ControlledTermSource
@@ -1203,6 +1245,7 @@ classes:
         multivalued: true
         required: true
         inlined: true
+        description: The specific ontology classes that form this controlled term source.
 
   ValueSetSource:
     is_a: ControlledTermSource
@@ -1229,6 +1272,7 @@ classes:
         range: OntologyReference
         required: true
         inlined: true
+        description: The ontology used as the source of controlled terms.
 
   # ----------------------------------------------------------------
   # Literals
@@ -1244,6 +1288,7 @@ classes:
       lexical_form:
         range: UnicodeString
         required: true
+        description: The string content of this literal.
 
   LangStringLiteral:
     is_a: Literal
@@ -1252,9 +1297,11 @@ classes:
       lexical_form:
         range: UnicodeString
         required: true
+        description: The string content of this language-tagged literal.
       language_tag:
         range: string
         required: true
+        description: BCP 47 language tag identifying the language of this string.
 
   # TextLiteral ::= StringLiteral | LangStringLiteral
   # Handled via is_a hierarchy above.
@@ -1268,6 +1315,7 @@ classes:
       lexical_form:
         range: string
         required: true
+        description: The numeric lexical form as defined by the associated XML Schema datatype.
 
   TemporalLiteral:
     is_a: Literal
@@ -1279,6 +1327,7 @@ classes:
       lexical_form:
         range: string
         required: true
+        description: The ISO 8601 lexical form of this temporal literal.
 
   YearLiteral:
     is_a: TemporalLiteral
@@ -1312,11 +1361,13 @@ classes:
     attributes:
       text_literal:
         # TextLiteral ::= StringLiteral | LangStringLiteral
+        range: Literal
         any_of:
           - range: StringLiteral
           - range: LangStringLiteral
         required: true
         inlined: true
+        description: The text literal carried by this value, either a plain string or a language-tagged string.
 
   NumericValue:
     is_a: Value
@@ -1325,6 +1376,7 @@ classes:
         range: NumericLiteral
         required: true
         inlined: true
+        description: The typed numeric literal carried by this value.
 
   DateValue:
     is_a: Value
@@ -1340,6 +1392,7 @@ classes:
         range: YearLiteral
         required: true
         inlined: true
+        description: The year-precision temporal literal carried by this value.
 
   YearMonthValue:
     is_a: DateValue
@@ -1348,6 +1401,7 @@ classes:
         range: YearMonthLiteral
         required: true
         inlined: true
+        description: The year-month-precision temporal literal carried by this value.
 
   FullDateValue:
     is_a: DateValue
@@ -1356,6 +1410,7 @@ classes:
         range: FullDateLiteral
         required: true
         inlined: true
+        description: The full-date temporal literal carried by this value.
 
   TimeValue:
     is_a: Value
@@ -1364,6 +1419,7 @@ classes:
         range: TimeLiteral
         required: true
         inlined: true
+        description: The time literal carried by this value.
 
   DateTimeValue:
     is_a: Value
@@ -1372,6 +1428,7 @@ classes:
         range: DateTimeLiteral
         required: true
         inlined: true
+        description: The date-time literal carried by this value.
 
   ControlledTermValue:
     is_a: Value
@@ -1400,6 +1457,7 @@ classes:
         range: Literal
         required: true
         inlined: true
+        description: The literal that was selected from the choice options.
 
   ControlledTermChoiceValue:
     is_a: ChoiceValue
@@ -1409,6 +1467,7 @@ classes:
         range: ControlledTermValue
         required: true
         inlined: true
+        description: The controlled vocabulary term that was selected from the choice options.
 
   LinkValue:
     is_a: Value
@@ -1423,6 +1482,7 @@ classes:
         range: StringLiteral
         required: true
         inlined: true
+        description: The email address as a string literal.
 
   PhoneNumberValue:
     is_a: Value
@@ -1431,6 +1491,7 @@ classes:
         range: StringLiteral
         required: true
         inlined: true
+        description: The phone number as a string literal.
 
   ExternalAuthorityValue:
     is_a: Value
@@ -1484,6 +1545,7 @@ classes:
         range: Value          # recursive; generators may need special handling
         required: true
         inlined: true
+        description: The value of this named attribute, which may itself be any Value.
 
   # ----------------------------------------------------------------
   # Instances
@@ -1503,6 +1565,7 @@ classes:
         range: ArtifactMetadata
         required: true
         inlined: true
+        description: Identity, descriptive, and provenance metadata for this artifact.
 
   InstanceValue:
     abstract: true
