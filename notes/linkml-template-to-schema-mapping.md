@@ -212,6 +212,17 @@ attribute has no semantic IRI annotation in this template context.
 
 ---
 
+## Attribute description
+
+The `description:` of the generated attribute is taken from the `schema_description`
+of the referenced `Field` artifact. When `schema_description` is absent, no
+`description:` is emitted on the attribute.
+
+For `EmbeddedTemplate` attributes, the `description:` is taken from the
+`schema_description` of the referenced `Template`.
+
+---
+
 ## Label override
 
 When `LabelOverride` is present on an `EmbeddedArtifact`, its string value is
@@ -366,8 +377,11 @@ map_attribute(A, F):
   attr.multivalued= multivalued_for(A.cardinality, F.field_spec)
   attr.required   = (A.value_requirement == Required)
   attr.recommended= (A.value_requirement == Recommended)
-  attr.slot_uri   = A.property.property_iri  (if Property present)
-  attr.title      = A.label_override.value   (if LabelOverride present)
+  attr.slot_uri   = A.property.property_iri       (if Property present)
+  attr.title      = A.label_override.value        (if LabelOverride present)
+  attr.description= F.schema_artifact_metadata
+                     .descriptive_metadata
+                     .schema_description            (if present)
   + cardinality annotations from map_cardinality(A.cardinality)
 ```
 
@@ -528,32 +542,38 @@ classes:
         range: string
         required: true
         slot_uri: NCIT:C164388
+        description: A unique name or identifier for this BioSample.
         # EmbeddedTextField, Required, Property → slot_uri
 
       description:
         range: string
+        description: Free-text description of the BioSample.
         # EmbeddedTextField, Optional, no Property
 
       organism:
         range: ControlledTermValue
         required: true
         slot_uri: OBI:0100026
+        description: The organism from which the BioSample was derived.
         # EmbeddedControlledTermField, Required, Property → slot_uri
 
       tissue_type:
         range: TissueTypeOptions
         required: true
         slot_uri: UBERON:0000479
+        description: The type of tissue from which the BioSample was obtained.
         # EmbeddedSingleChoiceField; ControlledTermSingleChoiceFieldSpec → TissueTypeOptions enum with meaning:
 
       age_at_collection:
         range: decimal
         slot_uri: NCIT:C25150
+        description: Age of the donor at the time of sample collection, in years.
         # EmbeddedNumericField, Optional; numeric_datatype xsd:decimal → range: decimal
 
       collection_date:
         range: date
         slot_uri: OBI:0001619
+        description: Date on which the BioSample was collected.
         # EmbeddedDateField, Optional; date_value_type FullDateValueType → range: date
 
       treatment:
@@ -562,6 +582,7 @@ classes:
         minimum_cardinality: 0
         slot_uri: OBI:0000070
         inlined_as_list: true
+        description: Treatments applied to the BioSample or donor prior to or during collection.
         # EmbeddedTemplate; Cardinality(0, unbounded) → multivalued: true, minimum_cardinality: 0
 
   TreatmentForm:
@@ -571,9 +592,11 @@ classes:
       treatment_name:
         range: string
         required: true
+        description: Name or short label identifying the treatment.
 
       treatment_dose:
         range: decimal
+        description: Administered dose of the treatment.
         # no clash with any BioSampleSubmissionForm attribute — class-local namespace
 ```
 
