@@ -62,31 +62,37 @@ The class name is derived from `schema_name` by converting to `UpperCamelCase`
 and removing non-alphanumeric characters.
 
 Each `EmbeddedArtifact` in the template's `embedded_artifacts` list that is **not**
-an `EmbeddedPresentationComponent` generates a slot reference on this class.
-Presentation components are omitted entirely — they contribute no instance data.
+an `EmbeddedPresentationComponent` generates an inline `attributes:` entry on
+this class. Presentation components are omitted entirely — they contribute no
+instance data.
 
 ---
 
-## Slot name
+## Attribute name
 
-For every `EmbeddedField` or `EmbeddedTemplate`, the slot name is the
+For every `EmbeddedField` or `EmbeddedTemplate`, the attribute name is the
 `EmbeddedArtifactKey` value directly.
 
 ```
-embedded_artifact_key: study_title  →  slot name: study_title
+embedded_artifact_key: study_title  →  attribute name: study_title
 ```
 
 `EmbeddedArtifactKey` values are already valid LinkML identifiers (ASCII,
 starting with a letter, no spaces), so no transformation is needed.
 
+Attributes are defined inline on their class using `attributes:` rather than in
+a global `slots:` block. This avoids name clashes between attributes of the
+root class and attributes of nested classes generated from embedded templates —
+each class owns its own attribute namespace.
+
 ---
 
-## Slot range
+## Attribute range
 
-The slot range is determined by the `FieldSpec` carried by the referenced
+The attribute range is determined by the `FieldSpec` carried by the referenced
 `Field`. The field must be resolved via its IRI to read its `FieldSpec`.
 
-| `EmbeddedField` variant | `FieldSpec` carried by the referenced `Field` | Slot `range:` |
+| `EmbeddedField` variant | `FieldSpec` carried by the referenced `Field` | Attribute `range:` |
 |---|---|---|
 | `EmbeddedTextField` | `TextFieldSpec` | `string` (plain) or `TextValue` (if language tags required) |
 | `EmbeddedNumericField` | `NumericFieldSpec` | Derived from `numeric_datatype` (see below) |
@@ -113,9 +119,9 @@ The slot range is determined by the `FieldSpec` carried by the referenced
 ### Numeric range refinement
 
 The `NumericFieldSpec` carries a `numeric_datatype` IRI (an XML Schema
-datatype). The slot range is set to the closest LinkML built-in type:
+datatype). The attribute range is set to the closest LinkML built-in type:
 
-| `numeric_datatype` IRI | Slot `range:` |
+| `numeric_datatype` IRI | Attribute `range:` |
 |---|---|
 | `xsd:integer` | `integer` |
 | `xsd:long` | `integer` |
@@ -129,7 +135,7 @@ datatype). The slot range is set to the closest LinkML built-in type:
 The `DateFieldSpec` carries a `date_value_type` that expresses intended
 precision:
 
-| `date_value_type` | Slot `range:` | Notes |
+| `date_value_type` | Attribute `range:` | Notes |
 |---|---|---|
 | `FullDateValueType` | `date` | ISO 8601 full date; LinkML built-in |
 | `YearMonthValueType` | `string` | ISO 8601 year-month (YYYY-MM); no built-in type |
@@ -161,10 +167,11 @@ When `Cardinality` is **present**:
 | `cardinality(min_cardinality(n), max_cardinality(1))` | `multivalued: false`; `minimum_cardinality: n` (if n ≠ 1) |
 | `cardinality(min_cardinality(n), max_cardinality(m))` where m > 1 | `multivalued: true`; `minimum_cardinality: n`; `maximum_cardinality: m` |
 | `cardinality(min_cardinality(n), max_cardinality(unbounded_cardinality()))` | `multivalued: true`; `minimum_cardinality: n`; (no `maximum_cardinality`) |
-| `cardinality(min_cardinality(0), ...)` | As above; `minimum_cardinality: 0` makes the slot truly optional at the count level |
+| `cardinality(min_cardinality(0), ...)` | As above; `minimum_cardinality: 0` makes the attribute truly optional at the count level |
 
 Omit `minimum_cardinality: 1` when it equals the LinkML default (1 for
-required slots, 0 for non-required slots) to keep generated schemas concise.
+required attributes, 0 for non-required attributes) to keep generated schemas
+concise.
 
 `EmbeddedMultipleChoiceField` always implies `multivalued: true` regardless of
 any explicit `Cardinality`, because the field spec itself permits multiple
@@ -189,7 +196,8 @@ simultaneous selections.
 
 When an `EmbeddedField` or `EmbeddedTemplate` carries a `Property`
 (i.e. an `EmbeddingProperty` with a `property_iri`), that IRI is emitted as
-`slot_uri:` on the generated slot.
+`slot_uri:` on the generated attribute. (`slot_uri:` is the LinkML key for
+this annotation on both named slots and inline attributes.)
 
 ```
 Property(property_iri(<http://purl.obolibrary.org/obo/OBI_0100026>))
@@ -200,15 +208,15 @@ The prefix must be added to the schema's `prefixes:` block. If the IRI cannot
 be abbreviated using a known prefix, emit the full IRI as the `slot_uri:` value.
 
 When no `Property` is present on the embedding, no `slot_uri:` is emitted; the
-slot has no semantic IRI annotation in this template context.
+attribute has no semantic IRI annotation in this template context.
 
 ---
 
 ## Label override
 
 When `LabelOverride` is present on an `EmbeddedArtifact`, its string value is
-emitted as `title:` on the generated slot. When absent, the slot carries no
-`title:` (consumers fall back to the slot name).
+emitted as `title:` on the generated attribute. When absent, the attribute
+carries no `title:` (consumers fall back to the attribute name).
 
 ---
 
@@ -218,13 +226,16 @@ When a `SingleChoiceField` or `MultipleChoiceField` references a field whose
 `FieldSpec` is `LiteralSingleChoiceFieldSpec` or `LiteralMultipleChoiceFieldSpec`,
 the options are literal values that map cleanly to a LinkML `enum`.
 
+Enums are declared in the schema-level `enums:` block (not inside a class) and
+referenced by name from the attribute's `range:`.
+
 ### Enum name
 
-The enum name is derived from the slot name by converting to `UpperCamelCase`
+The enum name is derived from the attribute name by converting to `UpperCamelCase`
 and appending `Options`:
 
 ```
-slot name: study_type  →  enum name: StudyTypeOptions
+attribute name: study_type  →  enum name: StudyTypeOptions
 ```
 
 ### Enum values
@@ -251,9 +262,9 @@ declare options as `ControlledTermChoiceOption` values, each holding a
 `ControlledTermValue`. LinkML enums are string-keyed and cannot natively
 represent OBO/SKOS term objects, so no `enum` is generated. Instead:
 
-- The slot range is `ControlledTermValue` (imported from the metamodel schema).
+- The attribute range is `ControlledTermValue` (imported from the metamodel schema).
 - The permitted term IRIs are recorded as `todos:` or `comments:` annotations on
-  the slot for informational purposes.
+  the attribute for informational purposes.
 
 If SHACL output is required and the permitted term set is closed, the SHACL
 generator post-processor SHOULD add a `sh:in` constraint listing the permitted
@@ -269,14 +280,16 @@ applying this mapping to the referenced `Template`.
 ```
 EmbeddedTemplate with key study_arm referencing Template "Study Arm"
   → class StudyArmForm (generated by recursive application of this mapping)
-  → slot study_arm: range: StudyArmForm; multivalued: true (if cardinality allows)
+  → attribute study_arm on the parent class: range: StudyArmForm
 ```
 
 The nested class is placed in the same schema document (not a separate file)
 unless the nested template is shared across multiple parent templates, in which
 case a separate schema document and import is preferred.
 
-The nested class is **not** marked `tree_root: true`.
+The nested class is **not** marked `tree_root: true`. Its own embedded fields
+are defined as `attributes:` directly on it, keeping its attribute namespace
+independent of the parent class.
 
 ---
 
@@ -291,8 +304,12 @@ lowercase-with-hyphens schema identifier, and `to_class_name` converts it to
 
 The function is recursive: an `EmbeddedTemplate` triggers a nested call to
 `map_template` for the referenced template, and the resulting classes are merged
-into the same schema document. `map_slot` is a helper that assembles a single
-slot from an embedding site `A` and the resolved `Field` `F` it references.
+into the same schema document. `map_attribute` is a helper that assembles a
+single attribute definition from an embedding site `A` and the resolved `Field`
+`F` it references. Because all field definitions are placed as inline
+`attributes:` on their owning class rather than in a global `slots:` block,
+there is no risk of name clashes between attributes belonging to different
+classes.
 
 ```
 map_template(T) → LinkML schema S where:
@@ -305,39 +322,42 @@ map_template(T) → LinkML schema S where:
   S.imports      = [linkml:types, https://metadatacenter.org/cedar-model]
   S.prefixes     = collect_prefixes(T)
 
-  S.classes[root] = {
-    name:       to_class_name(T.schema_name),
-    tree_root:  true,
-    slots:      [key for each non-presentation EmbeddedArtifact in T]
+  C = new class {
+    name:      to_class_name(T.schema_name),
+    tree_root: true
   }
 
   for each EmbeddedArtifact A in T.embedded_artifacts:
     if A is EmbeddedPresentationComponent:
       skip
     else if A is EmbeddedTemplate:
-      S.slots[A.key]   = map_embedded_template_slot(A)
-      S.classes        += map_template(resolve(A.template_reference))  # recursive
+      nested_schema     = map_template(resolve(A.template_reference))  # recursive
+      S.classes        += nested_schema.classes
+      S.enums          += nested_schema.enums
+      C.attributes[A.key] = map_attribute(A, range: nested_schema.root_class_name)
     else:  # EmbeddedField
-      F                = resolve(A.field_reference)
-      S.slots[A.key]   = map_slot(A, F)
+      F = resolve(A.field_reference)
+      C.attributes[A.key] = map_attribute(A, F)
       if F.field_spec is LiteralSingleChoiceFieldSpec
       or F.field_spec is LiteralMultipleChoiceFieldSpec:
         S.enums[enum_name(A.key)] = map_enum(F.field_spec)
 
-map_slot(A, F):
-  slot.range      = range_for_spec(F.field_spec)   # see Slot range table
-  slot.multivalued= multivalued_for(A.cardinality, F.field_spec)
-  slot.required   = (A.value_requirement == Required)
-  slot.recommended= (A.value_requirement == Recommended)
-  slot.slot_uri   = A.property.property_iri  (if Property present)
-  slot.title      = A.label_override.value   (if LabelOverride present)
+  S.classes += C
+
+map_attribute(A, F):
+  attr.range      = range_for_spec(F.field_spec)   # see Attribute range table
+  attr.multivalued= multivalued_for(A.cardinality, F.field_spec)
+  attr.required   = (A.value_requirement == Required)
+  attr.recommended= (A.value_requirement == Recommended)
+  attr.slot_uri   = A.property.property_iri  (if Property present)
+  attr.title      = A.label_override.value   (if LabelOverride present)
   + cardinality annotations from map_cardinality(A.cardinality)
 ```
 
 The three helper functions referenced above (`range_for_spec`,
 `multivalued_for`, `map_cardinality`) are fully specified in the
-[Slot range](#slot-range), [Cardinality](#cardinality), and preceding sections.
-`map_enum` produces the `permissible_values` block from a
+[Attribute range](#attribute-range), [Cardinality](#cardinality), and preceding
+sections. `map_enum` produces the `permissible_values` block from a
 `LiteralSingleChoiceFieldSpec` or `LiteralMultipleChoiceFieldSpec` as described
 in [Enum generation for literal choice fields](#enum-generation-for-literal-choice-fields).
 
@@ -480,74 +500,58 @@ classes:
   BioSampleSubmissionForm:
     tree_root: true
     description: Captures core BioSample metadata for NCBI submission.
-    slots:
-      - sample_name
-      - description
-      - organism
-      - tissue_type
-      - age_at_collection
-      - collection_date
-      - treatment
+    attributes:
+      sample_name:
+        range: string
+        required: true
+        slot_uri: ncit:C164388
+        # EmbeddedTextField, Required, Property → slot_uri
+
+      description:
+        range: string
+        # EmbeddedTextField, Optional, no Property
+
+      organism:
+        range: ControlledTermValue
+        required: true
+        slot_uri: obi:0100026
+        # EmbeddedControlledTermField, Required, Property → slot_uri
+
+      tissue_type:
+        range: TissueTypeOptions
+        required: true
+        slot_uri: uberon:0000479
+        # EmbeddedSingleChoiceField; LiteralSingleChoiceFieldSpec → TissueTypeOptions enum
+
+      age_at_collection:
+        range: decimal
+        slot_uri: ncit:C25150
+        # EmbeddedNumericField, Optional; numeric_datatype xsd:decimal → range: decimal
+
+      collection_date:
+        range: date
+        slot_uri: obi:0001619
+        # EmbeddedDateField, Optional; date_value_type FullDateValueType → range: date
+
+      treatment:
+        range: TreatmentForm
+        multivalued: true
+        minimum_cardinality: 0
+        slot_uri: obi:0000070
+        inlined_as_list: true
+        # EmbeddedTemplate; Cardinality(0, unbounded) → multivalued: true, minimum_cardinality: 0
 
   TreatmentForm:
     # Generated by recursive application of the mapping to the nested template
     description: Data for a single treatment event.
-    slots:
-      - treatment_name
-      - treatment_dose
+    attributes:
+      treatment_name:
+        range: string
+        required: true
 
-# ── Slots ─────────────────────────────────────────────────────────────────────
-
-slots:
-
-  sample_name:
-    range: string
-    required: true
-    slot_uri: ncit:C164388
-    # EmbeddedTextField, Required, Property → slot_uri
-
-  description:
-    range: string
-    # EmbeddedTextField, Optional, no Property
-
-  organism:
-    range: ControlledTermValue
-    required: true
-    slot_uri: obi:0100026
-    # EmbeddedControlledTermField, Required, Property → slot_uri
-
-  tissue_type:
-    range: TissueTypeOptions
-    required: true
-    slot_uri: uberon:0000479
-    # EmbeddedSingleChoiceField → enum range; LiteralSingleChoiceFieldSpec → TissueTypeOptions
-
-  age_at_collection:
-    range: decimal
-    slot_uri: ncit:C25150
-    # EmbeddedNumericField, Optional; numeric_datatype xsd:decimal → range: decimal
-
-  collection_date:
-    range: date
-    slot_uri: obi:0001619
-    # EmbeddedDateField, Optional; date_value_type FullDateValueType → range: date
-
-  treatment:
-    range: TreatmentForm
-    multivalued: true
-    minimum_cardinality: 0
-    slot_uri: obi:0000070
-    inlined_as_list: true
-    # EmbeddedTemplate; Cardinality(0, unbounded) → multivalued: true, minimum_cardinality: 0
-
-  # ── Slots for the nested TreatmentForm class ──
-
-  treatment_name:
-    range: string
-    required: true
-
-  treatment_dose:
-    range: decimal
+      treatment_dose:
+        range: decimal
+        # no clash with any BioSampleSubmissionForm attribute — class-local namespace
 ```
 
 ---
