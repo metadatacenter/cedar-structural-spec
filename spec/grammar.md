@@ -197,11 +197,11 @@ Template ::= template(
              )
 
 Header ::= header(
-             UnicodeString
+             string
            )
 
 Footer ::= footer(
-             UnicodeString
+             string
            )
 ```
 
@@ -731,15 +731,15 @@ ArtifactMetadata ::= artifact_metadata(
 
 ```ebnf
 Name ::= name(
-           UnicodeString
+           string
          )
 
 Description ::= description(
-                  UnicodeString
+                  string
                 )
 
 Identifier ::= identifier(
-                 UnicodeString
+                 string
                )
 
 DescriptiveMetadata ::= descriptive_metadata(
@@ -751,7 +751,7 @@ DescriptiveMetadata ::= descriptive_metadata(
                         )
 ```
 
-`Name`, `Description`, and `Identifier` carry Unicode string values. See [`UnicodeString`](#primitive-string-types). `PreferredLabel` is defined in the [Controlled Term Value](#controlled-term-value) section; `AlternativeLabel` is defined in the [Label Override](#label-override) section.
+`Name`, `Description`, and `Identifier` carry arbitrary Unicode string values. `PreferredLabel` is defined in the [Controlled Term Value](#controlled-term-value) section; `AlternativeLabel` is defined in the [Label Override](#label-override) section.
 
 > **Note:** Confirm with the CEDAR team that `PreferredLabel` and `AlternativeLabel` belong on `DescriptiveMetadata` for all artifact kinds rather than on a field-specific metadata structure. The v2.0.0 conceptual document (§4.1) describes these in the context of fields specifically; it is worth verifying whether templates, presentation components, and instances should carry them too.
 
@@ -866,14 +866,13 @@ The following nonterminals are intentionally left abstract. They define the stri
 - `SemanticVersion` denotes a Semantic Versioning 2.0.0 lexical form and MUST conform to the Semantic Versioning 2.0.0 specification as defined at [semver.org](https://semver.org/).
 - `IriString` denotes the lexical form of an IRI.
 - `Bcp47Tag` denotes a well-formed BCP 47 language tag.
-- `UnicodeString` denotes an arbitrary Unicode string.
 - `Iso8601DateTimeLexicalForm` denotes an ISO 8601 date-time lexical form.
 - `AsciiIdentifier` denotes an identifier matching the pattern `[A-Za-z][A-Za-z0-9_-]*`: it begins with an ASCII letter followed by zero or more ASCII letters, digits, underscores, or hyphens.
 - `IntegerLexicalForm` denotes a base-10 integer lexical form.
 
 ### Core IRI and String Types
 
-This subsection defines the fundamental IRI, string, and numeric leaf types that appear throughout the grammar. `Iri` is the base construct for all IRI-valued positions. `DatatypeIri` and `TermIri` are specialised IRI forms used in literal typing and controlled-vocabulary references respectively. `LanguageTag` and `LexicalForm` support RDF literal construction. `IsoDateTimeStamp` carries ISO 8601 date-time values used in temporal provenance. `NonNegativeInteger` and `RegexPattern` support field-spec constraints.
+This subsection defines the fundamental IRI, string, and numeric leaf types that appear throughout the grammar. `Iri` is the base construct for all IRI-valued positions. `DatatypeIri` and `TermIri` are specialised IRI forms used in literal typing and controlled-vocabulary references respectively. `LanguageTag` and `LexicalForm` support RDF literal construction. `IsoDateTimeStamp` carries ISO 8601 date-time values used in temporal provenance. `NonNegativeInteger` supports field-spec constraints.
 
 ```ebnf
 Iri ::= iri(
@@ -893,7 +892,7 @@ LanguageTag ::= language_tag(
                 )
 
 LexicalForm ::= lexical_form(
-                  UnicodeString
+                  string
                 )
 
 IsoDateTimeStamp ::= iso_date_time_stamp(
@@ -903,13 +902,9 @@ IsoDateTimeStamp ::= iso_date_time_stamp(
 NonNegativeInteger ::= non_negative_integer(
                          IntegerLexicalForm
                        )
-
-RegexPattern ::= regex_pattern(
-                   UnicodeString
-                 )
 ```
 
-`Iri` denotes an Internationalized Resource Identifier.
+`Iri` denotes an Internationalized Resource Identifier. It corresponds to the `xsd:anyURI` datatype; implementations MAY represent it as a plain string provided it is a syntactically valid IRI.
 
 `DatatypeIri` denotes an `Iri` that identifies an RDF datatype.
 
@@ -922,8 +917,6 @@ RegexPattern ::= regex_pattern(
 `IsoDateTimeStamp` denotes an ISO 8601 date-time lexical form.
 
 `NonNegativeInteger` denotes an integer greater than or equal to zero.
-
-`RegexPattern` denotes a Unicode string interpreted as a regular-expression pattern.
 
 ### Numeric Datatype IRIs
 
@@ -1048,7 +1041,7 @@ NumericLiteral ::= numeric_literal(
 
 ### Temporal Literals
 
-A temporal literal is a typed literal that represents a date, a time of day, or a combined date-time value, carried as an RDF literal with an XML Schema temporal datatype IRI. Temporal literals are strongly typed at each precision level. `TemporalLiteral` is the abstract supertype; `DateLiteral`, `TimeLiteral`, and `DateTimeLiteral` correspond to the three temporal field specs. Within `DateLiteral`, the three alternatives preserve year-only, year-month, and full-date precision explicitly rather than collapsing them into a single form.
+A temporal literal is a typed literal that represents a date, a time of day, or a combined date-time value. Each production carries a `LexicalForm` and the fixed XSD datatype IRI for its precision level: `xsd:gYear`, `xsd:gYearMonth`, `xsd:date`, `xsd:time`, or `xsd:dateTime`. `TemporalLiteral` is the abstract supertype; `DateLiteral`, `TimeLiteral`, and `DateTimeLiteral` correspond to the three temporal field specs. Within `DateLiteral`, the three alternatives preserve year-only, year-month, and full-date precision explicitly rather than collapsing them into a single form.
 
 ```ebnf
 TemporalLiteral ::= DateLiteral
@@ -1180,15 +1173,15 @@ A controlled term value identifies a term drawn from an ontology, branch, class 
 
 ```ebnf
 Label ::= label(
-            UnicodeString
+            string
           )
 
 Notation ::= notation(
-               UnicodeString
+               string
              )
 
 PreferredLabel ::= preferred_label(
-                     UnicodeString
+                     string
                    )
 
 ControlledTermValue ::= controlled_term_value(
@@ -1227,7 +1220,7 @@ LinkValue ::= link_value(
               )
 
 LinkLabel ::= link_label(
-                UnicodeString
+                string
               )
 ```
 
@@ -1312,7 +1305,7 @@ An attribute value is a name-value pair used to represent arbitrary named proper
 
 ```ebnf
 AttributeName ::= attribute_name(
-                    UnicodeString
+                    string
                   )
 
 AttributeValue ::= attribute_value(
@@ -1556,7 +1549,7 @@ NihGrantIdDefaultValue ::= nih_grant_id_default_value(
 
 ```ebnf
 AlternativeLabel ::= alternative_label(
-                       UnicodeString
+                       string
                      )
 
 LabelOverride ::= label_override(
@@ -1578,7 +1571,7 @@ Property ::= property(
              )
 
 PropertyIri   ::= property_iri( Iri )
-PropertyLabel ::= property_label( UnicodeString )
+PropertyLabel ::= property_label( string )
 ```
 
 ## Field Specs
@@ -1631,7 +1624,7 @@ MaxLength ::= max_length(
               )
 
 ValidationRegex ::= validation_regex(
-                      RegexPattern
+                      string
                     )
 
 NumericPrecision ::= numeric_precision(
@@ -1933,11 +1926,11 @@ ValueSetSource ::= value_set_source(
 
 ```ebnf
 OntologyAcronym ::= ontology_acronym(
-                      UnicodeString
+                      string
                     )
 
 OntologyName ::= ontology_name(
-                   UnicodeString
+                   string
                  )
 
 OntologyIri ::= ontology_iri(
@@ -1949,7 +1942,7 @@ RootTermIri ::= root_term_iri(
                 )
 
 RootTermLabel ::= root_term_label(
-                    UnicodeString
+                    string
                   )
 
 MaxTraversalDepth ::= max_traversal_depth(
@@ -1957,11 +1950,11 @@ MaxTraversalDepth ::= max_traversal_depth(
                       )
 
 ValueSetIdentifier ::= value_set_identifier(
-                         UnicodeString
+                         string
                        )
 
 ValueSetName ::= value_set_name(
-                   UnicodeString
+                   string
                  )
 
 ValueSetIri ::= value_set_iri(
@@ -2072,7 +2065,7 @@ PageBreakComponent ::= page_break_component(
 
 ```ebnf
 HtmlContent ::= html_content(
-                  UnicodeString
+                  string
                 )
 ```
 
