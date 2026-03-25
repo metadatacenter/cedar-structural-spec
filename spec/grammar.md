@@ -969,22 +969,20 @@ NumericDatatypeIri ::= XsdIntegerDatatypeIri
 These productions define the XSD datatype IRIs used by temporal literal categories. Each temporal precision level has a dedicated abstract IRI type that resolves to a single XSD constructor. The corresponding XSD datatype IRI for each constructor is given in the table below.
 
 ```ebnf
-YearDatatypeIri      ::= XsdGYearDatatypeIri
-YearMonthDatatypeIri ::= XsdGYearMonthDatatypeIri
-DateDatatypeIri      ::= XsdDateDatatypeIri
-TimeDatatypeIri      ::= XsdTimeDatatypeIri
-DateTimeDatatypeIri  ::= XsdDateTimeDatatypeIri
+YearDatatypeIri     ::= XsdGYearDatatypeIri
+DateDatatypeIri     ::= XsdDateDatatypeIri
+TimeDatatypeIri     ::= XsdTimeDatatypeIri
+DateTimeDatatypeIri ::= XsdDateTimeDatatypeIri
 ```
 
 | Production | XSD Datatype IRI |
 |---|---|
 | `XsdGYearDatatypeIri` | `http://www.w3.org/2001/XMLSchema#gYear` |
-| `XsdGYearMonthDatatypeIri` | `http://www.w3.org/2001/XMLSchema#gYearMonth` |
 | `XsdDateDatatypeIri` | `http://www.w3.org/2001/XMLSchema#date` |
 | `XsdTimeDatatypeIri` | `http://www.w3.org/2001/XMLSchema#time` |
 | `XsdDateTimeDatatypeIri` | `http://www.w3.org/2001/XMLSchema#dateTime` |
 
-`YearDatatypeIri`, `YearMonthDatatypeIri`, `DateDatatypeIri`, `TimeDatatypeIri`, and `DateTimeDatatypeIri` denote the XML Schema datatype IRIs used by the corresponding temporal literal categories.
+`YearDatatypeIri`, `DateDatatypeIri`, `TimeDatatypeIri`, and `DateTimeDatatypeIri` denote the XML Schema datatype IRIs used by the corresponding temporal literal categories.
 
 ## Literals
 
@@ -1041,7 +1039,7 @@ NumericLiteral ::= numeric_literal(
 
 ### Temporal Literals
 
-A temporal literal is a typed literal that represents a date, a time of day, or a combined date-time value. Each production carries a `LexicalForm` and the fixed XSD datatype IRI for its precision level: `xsd:gYear`, `xsd:gYearMonth`, `xsd:date`, `xsd:time`, or `xsd:dateTime`. `TemporalLiteral` is the abstract supertype; `DateLiteral`, `TimeLiteral`, and `DateTimeLiteral` correspond to the three temporal field specs. Within `DateLiteral`, the three alternatives preserve year-only, year-month, and full-date precision explicitly rather than collapsing them into a single form.
+A temporal literal is a typed literal that represents a date, a time of day, or a combined date-time value. Each production carries a `LexicalForm` and the fixed XSD datatype IRI for its precision level: `xsd:gYear`, `xsd:date`, `xsd:time`, or `xsd:dateTime`. `TemporalLiteral` is the abstract supertype; `DateLiteral`, `TimeLiteral`, and `DateTimeLiteral` correspond to the three temporal field specs. Within `DateLiteral`, the two alternatives preserve year-only and full-date precision explicitly rather than collapsing them into a single form.
 
 ```ebnf
 TemporalLiteral ::= DateLiteral
@@ -1049,18 +1047,12 @@ TemporalLiteral ::= DateLiteral
                   | DateTimeLiteral
 
 DateLiteral ::= YearLiteral
-              | YearMonthLiteral
               | FullDateLiteral
 
 YearLiteral ::= year_literal(
                   LexicalForm
                   YearDatatypeIri
                 )
-
-YearMonthLiteral ::= year_month_literal(
-                       LexicalForm
-                       YearMonthDatatypeIri
-                     )
 
 FullDateLiteral ::= full_date_literal(
                       LexicalForm
@@ -1083,7 +1075,6 @@ Each temporal literal carries a datatype IRI from the corresponding temporal dat
 | Literal | Datatype IRI category | Used in |
 |---|---|---|
 | `YearLiteral` | `YearDatatypeIri` | `YearValue` |
-| `YearMonthLiteral` | `YearMonthDatatypeIri` | `YearMonthValue` |
 | `FullDateLiteral` | `DateDatatypeIri` | `FullDateValue` |
 | `TimeLiteral` | `TimeDatatypeIri` | `TimeValue` |
 | `DateTimeLiteral` | `DateTimeDatatypeIri` | `DateTimeValue` |
@@ -1139,20 +1130,15 @@ NumericValue ::= numeric_value(
 
 ### Temporal Values
 
-Temporal values represent date, time, and date-time data, corresponding directly to `DateFieldSpec`, `TimeFieldSpec`, and `DateTimeFieldSpec` respectively. `DateValue` is further refined into three precision variants — `YearValue`, `YearMonthValue`, and `FullDateValue` — to preserve the intended granularity explicitly rather than collapsing all date forms into a single type.
+Temporal values represent date, time, and date-time data, corresponding directly to `DateFieldSpec`, `TimeFieldSpec`, and `DateTimeFieldSpec` respectively. `DateValue` is further refined into two precision variants — `YearValue` and `FullDateValue` — to preserve the intended granularity explicitly rather than collapsing all date forms into a single type.
 
 ```ebnf
 DateValue ::= YearValue
-            | YearMonthValue
             | FullDateValue
 
 YearValue ::= year_value(
                 YearLiteral
               )
-
-YearMonthValue ::= year_month_value(
-                     YearMonthLiteral
-                   )
 
 FullDateValue ::= full_date_value(
                     FullDateLiteral
@@ -1742,12 +1728,9 @@ DateFieldSpec ::= date_field_spec(
                   )
 
 DateValueType ::= YearValueType
-                | YearMonthValueType
                 | FullDateValueType
 
 YearValueType ::= year_value_type()
-
-YearMonthValueType ::= year_month_value_type()
 
 FullDateValueType ::= full_date_value_type()
 ```

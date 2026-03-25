@@ -105,8 +105,6 @@ For date values:
 
 - `DateFieldSpec` with `YearValueType` MUST use `YearValue`, which MUST contain `YearLiteral`
 - `YearLiteral` uses `YearDatatypeIri`
-- `DateFieldSpec` with `YearMonthValueType` MUST use `YearMonthValue`, which MUST contain `YearMonthLiteral`
-- `YearMonthLiteral` uses `YearMonthDatatypeIri`
 - `DateFieldSpec` with `FullDateValueType` MUST use `FullDateValue`, which MUST contain `FullDateLiteral`
 - `FullDateLiteral` uses `DateDatatypeIri`
 
@@ -484,8 +482,7 @@ Dispatch on the kind of `FT`:
 ##### `validate_date_value(V: DateValue, FT: DateFieldSpec)`
 
 1. If `FT.date_value_type = YearValueType`: verify `V` is a `YearValue` containing a `YearLiteral`.
-2. If `FT.date_value_type = YearMonthValueType`: verify `V` is a `YearMonthValue` containing a `YearMonthLiteral`.
-3. If `FT.date_value_type = FullDateValueType`: verify `V` is a `FullDateValue` containing a `FullDateLiteral`.
+2. If `FT.date_value_type = FullDateValueType`: verify `V` is a `FullDateValue` containing a `FullDateLiteral`.
 
 ---
 
@@ -559,7 +556,7 @@ Note: validation of `V.term_iri` against `FT.controlled_term_sources` requires a
 
 ##### `validate_attribute_value(V: AttributeValue)`
 
-1. Verify `V.name` is present and contains a non-empty `UnicodeString`.
+1. Verify `V.name` is present and contains a non-empty `string`.
 2. Verify `V.value` is present and is a well-formed `Value`.
 3. If `V.value` is an `AttributeValue`: run `validate_attribute_value(V.value)`.
 

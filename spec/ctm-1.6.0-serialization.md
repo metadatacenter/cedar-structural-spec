@@ -130,7 +130,7 @@ encode_X(x: X) → JSON-kind
 
 **Accessor Notation**
 
-Dot notation is used on grammar constructs, e.g. `T.schema_artifact_metadata` or `E.embedded_artifact_key`. Where a grammar construct wraps a primitive string (e.g. `Name ::= name(UnicodeString)`), write `T.name.unicode_string` to reach the string value.
+Dot notation is used on grammar constructs, e.g. `T.schema_artifact_metadata` or `E.embedded_artifact_key`. Where a grammar construct wraps a primitive string (e.g. `Name ::= name(string)`), write `T.name.string` to reach the string value.
 
 **Helper Functions**
 
@@ -972,7 +972,6 @@ Returns the XSD datatype string for the `DateValueType` kind:
 | `DateValueType` kind | Returns |
 |---|---|
 | `YearValueType` | `"xsd:gYear"` |
-| `YearMonthValueType` | `"xsd:gYearMonth"` |
 | `FullDateValueType` | `"xsd:date"` |
 
 ### `encode_date_granularity(DVT: DateValueType) → String`
@@ -982,7 +981,6 @@ Returns the `temporalGranularity` string for the `DateValueType` kind:
 | `DateValueType` kind | Returns |
 |---|---|
 | `YearValueType` | `"year"` |
-| `YearMonthValueType` | `"month"` |
 | `FullDateValueType` | `"day"` |
 
 ### `encode_date_format(DF: DateComponentOrder) → String`
@@ -1401,9 +1399,8 @@ Returns `{ "@value": <literal>, "@type": <xsd-type> }` where the sources depend 
 
 | `DateValue` kind | `"@value"` source | `"@type"` |
 |---|---|---|
-| `YearValue` | `V.year_literal.lexical_form.unicode_string` | `"xsd:gYear"` |
-| `YearMonthValue` | `V.year_month_literal.lexical_form.unicode_string` | `"xsd:gYearMonth"` |
-| `FullDateValue` | `V.full_date_literal.lexical_form.unicode_string` | `"xsd:date"` |
+| `YearValue` | `V.year_literal.lexical_form.string` | `"xsd:gYear"` |
+| `FullDateValue` | `V.full_date_literal.lexical_form.string` | `"xsd:date"` |
 
 ---
 

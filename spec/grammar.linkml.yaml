@@ -75,11 +75,6 @@ types:
     base: str
     description: A calendar year in ISO 8601 / XSD gYear format (e.g. "2024").
 
-  YearMonth:
-    uri: xsd:gYearMonth
-    base: str
-    description: A calendar year-month in ISO 8601 / XSD gYearMonth format (e.g. "2024-06").
-
 
 # ──────────────────────────────────────────────────────────────────
 # Enumerations
@@ -107,10 +102,9 @@ enums:
       Hidden: {}
 
   DateValueTypeEnum:
-    description: Precision of a date field — year, year-month, or full date.
+    description: Precision of a date field — year or full date.
     permissible_values:
       YearValueType: {}
-      YearMonthValueType: {}
       FullDateValueType: {}
 
   DateTimeValueTypeEnum:
@@ -1325,15 +1319,6 @@ classes:
         range: Year
         required: true
         description: The calendar year carried by this value (xsd:gYear).
-
-  YearMonthValue:
-    is_a: DateValue
-    description: A date value refined to year-month precision.
-    attributes:
-      value:
-        range: YearMonth
-        required: true
-        description: The calendar year-month carried by this value (xsd:gYearMonth).
 
   FullDateValue:
     is_a: DateValue
