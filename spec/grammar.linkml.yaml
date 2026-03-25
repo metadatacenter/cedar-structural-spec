@@ -70,10 +70,6 @@ types:
     base: int
     description: A non-negative integer (≥ 0).
 
-  Year:
-    uri: xsd:gYear
-    base: str
-    description: A calendar year in ISO 8601 / XSD gYear format (e.g. "2024").
 
 
 # ──────────────────────────────────────────────────────────────────
@@ -102,9 +98,10 @@ enums:
       Hidden: {}
 
   DateValueTypeEnum:
-    description: Precision of a date field — year or full date.
+    description: Precision of a date field — year, year-month, or full date.
     permissible_values:
       YearValueType: {}
+      YearMonthValueType: {}
       FullDateValueType: {}
 
   DateTimeValueTypeEnum:
@@ -1313,12 +1310,21 @@ classes:
 
   YearValue:
     is_a: DateValue
-    description: A date value refined to year precision.
+    description: A date value refined to year precision, represented as a plain string matching YYYY (e.g. "2024").
     attributes:
       value:
-        range: Year
+        range: string
         required: true
-        description: The calendar year carried by this value (xsd:gYear).
+        description: The calendar year as a YYYY string (e.g. "2024").
+
+  YearMonthValue:
+    is_a: DateValue
+    description: A date value refined to year-month precision, represented as a plain string matching YYYY-MM (e.g. "2024-06").
+    attributes:
+      value:
+        range: string
+        required: true
+        description: The calendar year-month as a YYYY-MM string (e.g. "2024-06").
 
   FullDateValue:
     is_a: DateValue

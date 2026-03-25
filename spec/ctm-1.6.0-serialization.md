@@ -972,6 +972,7 @@ Returns the XSD datatype string for the `DateValueType` kind:
 | `DateValueType` kind | Returns |
 |---|---|
 | `YearValueType` | `"xsd:gYear"` |
+| `YearMonthValueType` | `"xsd:gYearMonth"` |
 | `FullDateValueType` | `"xsd:date"` |
 
 ### `encode_date_granularity(DVT: DateValueType) → String`
@@ -981,6 +982,7 @@ Returns the `temporalGranularity` string for the `DateValueType` kind:
 | `DateValueType` kind | Returns |
 |---|---|
 | `YearValueType` | `"year"` |
+| `YearMonthValueType` | `"month"` |
 | `FullDateValueType` | `"day"` |
 
 ### `encode_date_format(DF: DateComponentOrder) → String`
@@ -1399,7 +1401,8 @@ Returns `{ "@value": <literal>, "@type": <xsd-type> }` where the sources depend 
 
 | `DateValue` kind | `"@value"` source | `"@type"` |
 |---|---|---|
-| `YearValue` | `V.year_literal.lexical_form.string` | `"xsd:gYear"` |
+| `YearValue` | `V.value` | `"xsd:gYear"` |
+| `YearMonthValue` | `V.value` | `"xsd:gYearMonth"` |
 | `FullDateValue` | `V.full_date_literal.lexical_form.string` | `"xsd:date"` |
 
 ---

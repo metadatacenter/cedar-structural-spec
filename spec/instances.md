@@ -53,7 +53,7 @@ Textual instance values MAY include language tags.
 
 Numeric instance values are represented by typed literals that carry numeric datatype IRIs.
 
-Date, time, and date-time instance values are represented separately by `DateValue`, `TimeValue`, and `DateTimeValue`, each with its own strongly typed literal form. Within `DateValue`, `YearValue` and `FullDateValue` preserve the intended precision explicitly.
+Date, time, and date-time instance values are represented separately by `DateValue`, `TimeValue`, and `DateTimeValue`, each with its own strongly typed literal form. Within `DateValue`, `YearValue` and `YearMonthValue` carry plain strings matching `YYYY` and `YYYY-MM` respectively; `FullDateValue` carries a typed `xsd:date` literal.
 
 Controlled term instance values SHOULD preserve both a term Iri and a human-readable label. They MAY additionally preserve notation and preferred label information from the source terminology.
 

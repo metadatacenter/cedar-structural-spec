@@ -103,8 +103,8 @@ For numeric values:
 
 For date values:
 
-- `DateFieldSpec` with `YearValueType` MUST use `YearValue`, which MUST contain `YearLiteral`
-- `YearLiteral` uses `YearDatatypeIri`
+- `DateFieldSpec` with `YearValueType` MUST use `YearValue`, whose value MUST be a string matching the pattern `YYYY`
+- `DateFieldSpec` with `YearMonthValueType` MUST use `YearMonthValue`, whose value MUST be a string matching the pattern `YYYY-MM`
 - `DateFieldSpec` with `FullDateValueType` MUST use `FullDateValue`, which MUST contain `FullDateLiteral`
 - `FullDateLiteral` uses `DateDatatypeIri`
 
@@ -481,8 +481,9 @@ Dispatch on the kind of `FT`:
 
 ##### `validate_date_value(V: DateValue, FT: DateFieldSpec)`
 
-1. If `FT.date_value_type = YearValueType`: verify `V` is a `YearValue` containing a `YearLiteral`.
-2. If `FT.date_value_type = FullDateValueType`: verify `V` is a `FullDateValue` containing a `FullDateLiteral`.
+1. If `FT.date_value_type = YearValueType`: verify `V` is a `YearValue` whose value matches `[0-9]{4}`.
+2. If `FT.date_value_type = YearMonthValueType`: verify `V` is a `YearMonthValue` whose value matches `[0-9]{4}-(0[1-9]|1[0-2])`.
+3. If `FT.date_value_type = FullDateValueType`: verify `V` is a `FullDateValue` containing a `FullDateLiteral`.
 
 ---
 

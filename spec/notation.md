@@ -47,7 +47,7 @@ The grammar distinguishes `DatatypeIriLiteral` and `LangStringLiteral` explicitl
 
 `DatatypeIriLiteral` consists of lexical content together with a datatype IRI.
 
-`NumericLiteral`, `YearLiteral`, `FullDateLiteral`, `TimeLiteral`, and `DateTimeLiteral` use more specific datatype-Iri categories.
+`NumericLiteral`, `FullDateLiteral`, `TimeLiteral`, and `DateTimeLiteral` use more specific datatype-Iri categories.
 
 `LangStringLiteral` consists of lexical content together with a language tag.
 
