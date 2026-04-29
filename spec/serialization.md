@@ -206,7 +206,7 @@ Every artifact identifier is encoded as a plain JSON string carrying the IRI. Th
 "https://example.org/instances/i1"
 ```
 
-A `FieldId` (or `FieldReference`) appears only in two grammar positions: as `Field.id` and as `EmbeddedField.reference`. Both surrounding constructs carry their own `fieldKind` discriminant, which conveys the field family. The eighteen permitted `fieldKind` values are: `"text"`, `"numeric"`, `"date"`, `"time"`, `"date_time"`, `"controlled_term"`, `"single_choice"`, `"multiple_choice"`, `"link"`, `"email"`, `"phone_number"`, `"orcid"`, `"ror"`, `"doi"`, `"pub_med_id"`, `"rrid"`, `"nih_grant_id"`, or `"attribute_value"`. A conforming encoder MUST ensure that the IRI it places at a `FieldId` position belongs to a field of the family declared by the surrounding `fieldKind`.
+A `FieldId` (or `FieldReference`) appears only in two grammar positions: as `Field.id` and as `EmbeddedField.reference`. Both surrounding constructs carry their own `fieldKind` discriminant, which conveys the field family. The eighteen permitted `fieldKind` values are: `"Text"`, `"Numeric"`, `"Date"`, `"Time"`, `"DateTime"`, `"ControlledTerm"`, `"SingleChoice"`, `"MultipleChoice"`, `"Link"`, `"Email"`, `"PhoneNumber"`, `"Orcid"`, `"Ror"`, `"Doi"`, `"PubMedId"`, `"Rrid"`, `"NihGrantId"`, or `"AttributeValue"`. A conforming encoder MUST ensure that the IRI it places at a `FieldId` position belongs to a field of the family declared by the surrounding `fieldKind`.
 
 ### 6.2 Literals
 
@@ -423,7 +423,7 @@ These appear directly as the value of `valueRequirement` and `visibility` proper
 Each concrete `FieldSpec` is encoded as a tagged object whose `"kind"` matches the spec's constructor form. Optional configuration properties are omitted when absent. The encoding is purely structural; no field-spec-specific encoding rules apply beyond the general rules in §4.
 
 ```json
-{ "kind": "TextFieldSpec", "minLength": 1, "maxLength": 200, "validationRegex": "^[A-Z].*", "renderingHint": "single_line" }
+{ "kind": "TextFieldSpec", "minLength": 1, "maxLength": 200, "validationRegex": "^[A-Z].*", "renderingHint": "singleLine" }
 ```
 
 ```json
@@ -431,7 +431,7 @@ Each concrete `FieldSpec` is encoded as a tagged object whose `"kind"` matches t
 ```
 
 ```json
-{ "kind": "DateFieldSpec", "dateValueType": "full_date", "renderingHint": { "kind": "DateRenderingHint", "componentOrder": "day_month_year" } }
+{ "kind": "DateFieldSpec", "dateValueType": "fullDate", "renderingHint": { "kind": "DateRenderingHint", "componentOrder": "dayMonthYear" } }
 ```
 
 ```json
@@ -451,7 +451,7 @@ A `Field` artifact:
 ```json
 {
   "kind": "Field",
-  "fieldKind": "text",
+  "fieldKind": "Text",
   "id": <FieldId>,
   "metadata": <SchemaArtifactMetadata>,
   "fieldSpec": <FieldSpec>
@@ -465,7 +465,7 @@ An `EmbeddedField`:
 ```json
 {
   "kind": "EmbeddedField",
-  "fieldKind": "text",
+  "fieldKind": "Text",
   "key": <EmbeddedArtifactKey>,
   "reference": <FieldId>,
   "valueRequirement": "required",
@@ -656,7 +656,7 @@ Two conforming JSON documents that differ only in JSON object property order or 
   "embedded": [
     {
       "kind": "EmbeddedField",
-      "fieldKind": "text",
+      "fieldKind": "Text",
       "key": "title",
       "reference": "https://example.org/fields/title",
       "valueRequirement": "required",
