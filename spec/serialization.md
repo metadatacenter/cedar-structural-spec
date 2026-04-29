@@ -68,7 +68,7 @@ JSON examples appear in fenced code blocks marked `json`. Examples are illustrat
 
 A *tagged JSON object* is a JSON object that carries a `"kind"` property whose value is a JSON string identifying the abstract production it encodes.
 
-The value of `"kind"` MUST be the abstract constructor form name from [`grammar.md`](grammar.md), in `lower_snake_case`. For example, `"text_value"` for the `TextValue` production whose constructor form is `text_value(...)`.
+The value of `"kind"` MUST be the production name from [`grammar.md`](grammar.md), transcribed in `UpperCamelCase` exactly as the grammar names it. For example, `"TextValue"` for the `TextValue` production. The grammar's `lower_snake_case` constructor forms (e.g. `text_value(...)`) describe abstract composition and do not appear on the wire.
 
 Tagged objects MAY carry additional properties beyond `"kind"`, corresponding to the components of the abstract production. Those properties MUST appear with `lowerCamelCase` names that correspond directly to the components named in the production.
 
@@ -166,7 +166,7 @@ The following productions are encoded as flat JSON values:
 | `TemplateId`, `TemplateReference` | string | IRI string |
 | `PresentationComponentId`, `PresentationComponentReference` | string | IRI string |
 | `TemplateInstanceId` | string | IRI string |
-| `Iri` (in property positions where the surrounding context disambiguates) | string | The wrapping `{"kind":"iri",...}` form is used only where the value position permits ambiguity with non-IRI content; in artifact identifiers, property IRIs, datatype IRIs, etc., the IRI appears as a plain string |
+| `Iri` (in property positions where the surrounding context disambiguates) | string | The wrapping `{"kind":"Iri",...}` form is used only where the value position permits ambiguity with non-IRI content; in artifact identifiers, property IRIs, datatype IRIs, etc., the IRI appears as a plain string |
 
 The choice to flatten these productions reflects two facts: each carries a single payload of a JSON-primitive type, and at every site where they appear the surrounding production's property name (or the surrounding production's `kind` and `fieldKind` discriminants) disambiguates them from other strings or numbers.
 
@@ -211,31 +211,31 @@ A `FieldId` (or `FieldReference`) appears only in two grammar positions: as `Fie
 ### 6.2 Literals
 
 ```json
-{ "kind": "string_literal", "lexicalForm": "Hello" }
+{ "kind": "StringLiteral", "lexicalForm": "Hello" }
 ```
 
 ```json
-{ "kind": "lang_string_literal", "lexicalForm": "Bonjour", "languageTag": "fr" }
+{ "kind": "LangStringLiteral", "lexicalForm": "Bonjour", "languageTag": "fr" }
 ```
 
 ```json
-{ "kind": "datatype_iri_literal", "lexicalForm": "42", "datatypeIri": "http://www.w3.org/2001/XMLSchema#integer" }
+{ "kind": "DatatypeIriLiteral", "lexicalForm": "42", "datatypeIri": "http://www.w3.org/2001/XMLSchema#integer" }
 ```
 
 ```json
-{ "kind": "numeric_literal", "lexicalForm": "3.14", "datatypeIri": "http://www.w3.org/2001/XMLSchema#double" }
+{ "kind": "NumericLiteral", "lexicalForm": "3.14", "datatypeIri": "http://www.w3.org/2001/XMLSchema#double" }
 ```
 
 ```json
-{ "kind": "full_date_literal", "lexicalForm": "2024-06-15" }
+{ "kind": "FullDateLiteral", "lexicalForm": "2024-06-15" }
 ```
 
 ```json
-{ "kind": "time_literal", "lexicalForm": "10:30:00" }
+{ "kind": "TimeLiteral", "lexicalForm": "10:30:00" }
 ```
 
 ```json
-{ "kind": "date_time_literal", "lexicalForm": "2024-06-15T10:30:00" }
+{ "kind": "DateTimeLiteral", "lexicalForm": "2024-06-15T10:30:00" }
 ```
 
 The `datatypeIri` and `languageTag` properties carry plain strings (the IRI or BCP 47 tag respectively).
@@ -245,72 +245,72 @@ The `datatypeIri` and `languageTag` properties carry plain strings (the IRI or B
 Each `Value` family is encoded as a tagged object. Values that wrap a literal include the literal as a nested tagged object per §6.2.
 
 ```json
-{ "kind": "text_value", "literal": { "kind": "string_literal", "lexicalForm": "Jane Smith" } }
+{ "kind": "TextValue", "literal": { "kind": "StringLiteral", "lexicalForm": "Jane Smith" } }
 ```
 
 ```json
-{ "kind": "numeric_value", "literal": { "kind": "numeric_literal", "lexicalForm": "42", "datatypeIri": "http://www.w3.org/2001/XMLSchema#integer" } }
+{ "kind": "NumericValue", "literal": { "kind": "NumericLiteral", "lexicalForm": "42", "datatypeIri": "http://www.w3.org/2001/XMLSchema#integer" } }
 ```
 
 ```json
-{ "kind": "year_value", "value": "2024" }
+{ "kind": "YearValue", "value": "2024" }
 ```
 
 ```json
-{ "kind": "year_month_value", "value": "2024-06" }
+{ "kind": "YearMonthValue", "value": "2024-06" }
 ```
 
 ```json
-{ "kind": "full_date_value", "literal": { "kind": "full_date_literal", "lexicalForm": "2024-06-15" } }
+{ "kind": "FullDateValue", "literal": { "kind": "FullDateLiteral", "lexicalForm": "2024-06-15" } }
 ```
 
 `YearValue` and `YearMonthValue` carry plain string values rather than literals; this matches their grammar definitions.
 
 ```json
-{ "kind": "controlled_term_value", "termIri": "http://example.org/term/1", "label": "Term 1" }
+{ "kind": "ControlledTermValue", "termIri": "http://example.org/term/1", "label": "Term 1" }
 ```
 
 The optional `label` property is omitted when absent.
 
 ```json
-{ "kind": "literal_choice_value", "literal": { "kind": "lang_string_literal", "lexicalForm": "Professor", "languageTag": "en" } }
+{ "kind": "LiteralChoiceValue", "literal": { "kind": "LangStringLiteral", "lexicalForm": "Professor", "languageTag": "en" } }
 ```
 
 ```json
-{ "kind": "controlled_term_choice_value", "value": { "kind": "controlled_term_value", "termIri": "http://example.org/term/1" } }
+{ "kind": "ControlledTermChoiceValue", "value": { "kind": "ControlledTermValue", "termIri": "http://example.org/term/1" } }
 ```
 
 ```json
-{ "kind": "link_value", "iri": "https://example.org/page" }
+{ "kind": "LinkValue", "iri": "https://example.org/page" }
 ```
 
 The optional `label` property is omitted when absent.
 
 ```json
-{ "kind": "email_value", "literal": { "kind": "string_literal", "lexicalForm": "jane@example.org" } }
+{ "kind": "EmailValue", "literal": { "kind": "StringLiteral", "lexicalForm": "jane@example.org" } }
 ```
 
 ```json
-{ "kind": "phone_number_value", "literal": { "kind": "string_literal", "lexicalForm": "+1-415-555-0100" } }
+{ "kind": "PhoneNumberValue", "literal": { "kind": "StringLiteral", "lexicalForm": "+1-415-555-0100" } }
 ```
 
 External-authority values (`OrcidValue`, `RorValue`, `DoiValue`, `PubMedIdValue`, `RridValue`, `NihGrantIdValue`) follow a uniform shape:
 
 ```json
-{ "kind": "orcid_value", "iri": "https://orcid.org/0000-0002-1825-0097", "label": "Jane Smith" }
+{ "kind": "OrcidValue", "iri": "https://orcid.org/0000-0002-1825-0097", "label": "Jane Smith" }
 ```
 
 The optional `label` property is omitted when absent.
 
 ```json
-{ "kind": "attribute_value", "value": "raw attribute string" }
+{ "kind": "AttributeValue", "value": "raw attribute string" }
 ```
 
 ### 6.4 Metadata
 
 ```json
 {
-  "kind": "descriptive_metadata",
+  "kind": "DescriptiveMetadata",
   "name": "Full Name",
   "description": "Full legal name of the principal investigator.",
   "identifier": "https://example.org/identifiers/full-name",
@@ -323,7 +323,7 @@ The optional `label` property is omitted when absent.
 
 ```json
 {
-  "kind": "temporal_provenance",
+  "kind": "TemporalProvenance",
   "createdOn": "2024-01-01T00:00:00Z",
   "createdBy": "https://orcid.org/0000-0002-1825-0097",
   "modifiedOn": "2024-06-15T12:30:00Z",
@@ -333,7 +333,7 @@ The optional `label` property is omitted when absent.
 
 ```json
 {
-  "kind": "schema_versioning",
+  "kind": "SchemaVersioning",
   "version": "1.0.0",
   "status": "draft",
   "modelVersion": "2.0.0",
@@ -346,27 +346,27 @@ The optional `label` property is omitted when absent.
 
 ```json
 {
-  "kind": "annotation",
+  "kind": "Annotation",
   "name": "https://example.org/annotation-properties/notes",
-  "value": { "kind": "literal_annotation_value", "literal": { "kind": "string_literal", "lexicalForm": "..." } }
+  "value": { "kind": "LiteralAnnotationValue", "literal": { "kind": "StringLiteral", "lexicalForm": "..." } }
 }
 ```
 
 `AnnotationValue` is one of:
 
 ```json
-{ "kind": "literal_annotation_value", "literal": <Literal> }
+{ "kind": "LiteralAnnotationValue", "literal": <Literal> }
 ```
 
 ```json
-{ "kind": "iri_annotation_value", "iri": "https://example.org/some/iri" }
+{ "kind": "IriAnnotationValue", "iri": "https://example.org/some/iri" }
 ```
 
 Aggregate metadata constructs:
 
 ```json
 {
-  "kind": "artifact_metadata",
+  "kind": "ArtifactMetadata",
   "descriptive": <DescriptiveMetadata>,
   "provenance": <TemporalProvenance>,
   "annotations": [ <Annotation>* ]
@@ -375,7 +375,7 @@ Aggregate metadata constructs:
 
 ```json
 {
-  "kind": "schema_artifact_metadata",
+  "kind": "SchemaArtifactMetadata",
   "artifact": <ArtifactMetadata>,
   "versioning": <SchemaVersioning>
 }
@@ -390,21 +390,21 @@ Aggregate metadata constructs:
 ```
 
 ```json
-{ "kind": "cardinality", "min": 0, "max": 5 }
+{ "kind": "Cardinality", "min": 0, "max": 5 }
 ```
 
 ```json
-{ "kind": "cardinality", "min": 1 }
+{ "kind": "Cardinality", "min": 1 }
 ```
 
 `max` is omitted when absent. Per [`grammar.md`](grammar.md) §Cardinality, an absent `max` denotes that the cardinality is unbounded above.
 
 ```json
-{ "kind": "label_override", "label": "Custom Label", "altLabels": ["Alt 1", "Alt 2"] }
+{ "kind": "LabelOverride", "label": "Custom Label", "altLabels": ["Alt 1", "Alt 2"] }
 ```
 
 ```json
-{ "kind": "property", "propertyIri": "https://schema.org/name", "propertyLabel": "name" }
+{ "kind": "Property", "propertyIri": "https://schema.org/name", "propertyLabel": "name" }
 ```
 
 `propertyLabel` is omitted when absent.
@@ -423,23 +423,23 @@ These appear directly as the value of `valueRequirement` and `visibility` proper
 Each concrete `FieldSpec` is encoded as a tagged object whose `"kind"` matches the spec's constructor form. Optional configuration properties are omitted when absent. The encoding is purely structural; no field-spec-specific encoding rules apply beyond the general rules in §4.
 
 ```json
-{ "kind": "text_field_spec", "minLength": 1, "maxLength": 200, "validationRegex": "^[A-Z].*", "renderingHint": "single_line" }
+{ "kind": "TextFieldSpec", "minLength": 1, "maxLength": 200, "validationRegex": "^[A-Z].*", "renderingHint": "single_line" }
 ```
 
 ```json
-{ "kind": "numeric_field_spec", "datatype": "integer", "minimum": 0, "maximum": 100, "numericPrecision": 2, "unit": { "kind": "unit", "label": "kg", "unitIri": "http://qudt.org/vocab/unit/KILOGRAM" } }
+{ "kind": "NumericFieldSpec", "datatype": "integer", "minimum": 0, "maximum": 100, "numericPrecision": 2, "unit": { "kind": "Unit", "label": "kg", "unitIri": "http://qudt.org/vocab/unit/KILOGRAM" } }
 ```
 
 ```json
-{ "kind": "date_field_spec", "dateValueType": "full_date", "renderingHint": { "kind": "date_rendering_hint", "componentOrder": "day_month_year" } }
+{ "kind": "DateFieldSpec", "dateValueType": "full_date", "renderingHint": { "kind": "DateRenderingHint", "componentOrder": "day_month_year" } }
 ```
 
 ```json
-{ "kind": "literal_single_choice_field_spec", "options": [ {"kind":"literal_choice_option", "literal": {"kind":"lang_string_literal", "lexicalForm": "Yes", "languageTag": "en"}, "default": true} ] }
+{ "kind": "LiteralSingleChoiceFieldSpec", "options": [ {"kind":"LiteralChoiceOption", "literal": {"kind":"LangStringLiteral", "lexicalForm": "Yes", "languageTag": "en"}, "default": true} ] }
 ```
 
 ```json
-{ "kind": "controlled_term_field_spec", "sources": [ <ControlledTermSource>+ ], "displayHint": { "kind": "ontology_display_hint", "labelLanguage": "en" }, "maxTraversalDepth": 3 }
+{ "kind": "ControlledTermFieldSpec", "sources": [ <ControlledTermSource>+ ], "displayHint": { "kind": "OntologyDisplayHint", "labelLanguage": "en" }, "maxTraversalDepth": 3 }
 ```
 
 The `default` property on choice options is encoded as a JSON `true` when set; the property is omitted otherwise.
@@ -450,7 +450,7 @@ A `Field` artifact:
 
 ```json
 {
-  "kind": "field",
+  "kind": "Field",
   "fieldKind": "text",
   "id": <FieldId>,
   "metadata": <SchemaArtifactMetadata>,
@@ -464,7 +464,7 @@ An `EmbeddedField`:
 
 ```json
 {
-  "kind": "embedded_field",
+  "kind": "EmbeddedField",
   "fieldKind": "text",
   "key": <EmbeddedArtifactKey>,
   "reference": <FieldId>,
@@ -483,7 +483,7 @@ All properties except `kind`, `fieldKind`, `key`, and `reference` are optional a
 
 ```json
 {
-  "kind": "embedded_template",
+  "kind": "EmbeddedTemplate",
   "key": <EmbeddedArtifactKey>,
   "reference": <TemplateId>,
   "valueRequirement": "required",
@@ -496,7 +496,7 @@ All properties except `kind`, `fieldKind`, `key`, and `reference` are optional a
 
 ```json
 {
-  "kind": "embedded_presentation_component",
+  "kind": "EmbeddedPresentationComponent",
   "key": <EmbeddedArtifactKey>,
   "reference": <PresentationComponentId>,
   "visibility": "hidden",
@@ -509,11 +509,11 @@ All properties except `kind`, `fieldKind`, `key`, and `reference` are optional a
 Each concrete `DefaultValue` family is encoded as a tagged object wrapping a `Value`:
 
 ```json
-{ "kind": "text_default_value", "value": <TextValue> }
+{ "kind": "TextDefaultValue", "value": <TextValue> }
 ```
 
 ```json
-{ "kind": "choice_default_value", "values": [ <ChoiceValue>+ ] }
+{ "kind": "ChoiceDefaultValue", "values": [ <ChoiceValue>+ ] }
 ```
 
 `ChoiceDefaultValue` carries an array because the grammar specifies `ChoiceValue+`. All other default-value families wrap a single `Value`.
@@ -524,7 +524,7 @@ The encoding is uniform across all sixteen non-attribute-value default-value fam
 
 ```json
 {
-  "kind": "template",
+  "kind": "Template",
   "id": <TemplateId>,
   "metadata": <SchemaArtifactMetadata>,
   "header": "Template Header Text",
@@ -542,30 +542,30 @@ The `EmbeddedArtifactKey` values within `embedded` MUST be unique (per [`grammar
 ### 6.10 Presentation components
 
 ```json
-{ "kind": "rich_text_component", "id": <PresentationComponentId>, "metadata": <ArtifactMetadata>, "htmlContent": "<p>Hello</p>" }
+{ "kind": "RichTextComponent", "id": <PresentationComponentId>, "metadata": <ArtifactMetadata>, "htmlContent": "<p>Hello</p>" }
 ```
 
 ```json
-{ "kind": "image_component", "id": <PresentationComponentId>, "metadata": <ArtifactMetadata>, "imageSource": "https://example.org/image.png" }
+{ "kind": "ImageComponent", "id": <PresentationComponentId>, "metadata": <ArtifactMetadata>, "imageSource": "https://example.org/image.png" }
 ```
 
 ```json
-{ "kind": "youtube_video_component", "id": <PresentationComponentId>, "metadata": <ArtifactMetadata>, "youtubeVideoSource": "https://youtu.be/dQw4w9WgXcQ" }
+{ "kind": "YoutubeVideoComponent", "id": <PresentationComponentId>, "metadata": <ArtifactMetadata>, "youtubeVideoSource": "https://youtu.be/dQw4w9WgXcQ" }
 ```
 
 ```json
-{ "kind": "section_break_component", "id": <PresentationComponentId>, "metadata": <ArtifactMetadata> }
+{ "kind": "SectionBreakComponent", "id": <PresentationComponentId>, "metadata": <ArtifactMetadata> }
 ```
 
 ```json
-{ "kind": "page_break_component", "id": <PresentationComponentId>, "metadata": <ArtifactMetadata> }
+{ "kind": "PageBreakComponent", "id": <PresentationComponentId>, "metadata": <ArtifactMetadata> }
 ```
 
 ### 6.11 Instances
 
 ```json
 {
-  "kind": "template_instance",
+  "kind": "TemplateInstance",
   "id": <TemplateInstanceId>,
   "metadata": <ArtifactMetadata>,
   "templateReference": <TemplateId>,
@@ -577,7 +577,7 @@ The `EmbeddedArtifactKey` values within `embedded` MUST be unique (per [`grammar
 
 ```json
 {
-  "kind": "field_value",
+  "kind": "FieldValue",
   "key": <EmbeddedArtifactKey>,
   "values": [ <Value>+ ]
 }
@@ -587,7 +587,7 @@ The `EmbeddedArtifactKey` values within `embedded` MUST be unique (per [`grammar
 
 ```json
 {
-  "kind": "nested_template_instance",
+  "kind": "NestedTemplateInstance",
   "key": <EmbeddedArtifactKey>,
   "values": [ <InstanceValue>* ]
 }
@@ -619,15 +619,15 @@ Two conforming JSON documents that differ only in JSON object property order or 
 
 ```json
 {
-  "kind": "template",
+  "kind": "Template",
   "id": "https://example.org/templates/empty",
   "metadata": {
-    "kind": "schema_artifact_metadata",
+    "kind": "SchemaArtifactMetadata",
     "artifact": {
-      "kind": "artifact_metadata",
-      "descriptive": { "kind": "descriptive_metadata", "name": "Empty", "altLabels": [] },
+      "kind": "ArtifactMetadata",
+      "descriptive": { "kind": "DescriptiveMetadata", "name": "Empty", "altLabels": [] },
       "provenance": {
-        "kind": "temporal_provenance",
+        "kind": "TemporalProvenance",
         "createdOn": "2024-01-01T00:00:00Z",
         "createdBy": "https://example.org/u",
         "modifiedOn": "2024-01-01T00:00:00Z",
@@ -636,7 +636,7 @@ Two conforming JSON documents that differ only in JSON object property order or 
       "annotations": []
     },
     "versioning": {
-      "kind": "schema_versioning",
+      "kind": "SchemaVersioning",
       "version": "1.0.0",
       "status": "draft",
       "modelVersion": "2.0.0"
@@ -650,17 +650,17 @@ Two conforming JSON documents that differ only in JSON object property order or 
 
 ```json
 {
-  "kind": "template",
+  "kind": "Template",
   "id": "https://example.org/templates/note",
-  "metadata": { "kind": "schema_artifact_metadata", "artifact": "...", "versioning": "..." },
+  "metadata": { "kind": "SchemaArtifactMetadata", "artifact": "...", "versioning": "..." },
   "embedded": [
     {
-      "kind": "embedded_field",
+      "kind": "EmbeddedField",
       "fieldKind": "text",
       "key": "title",
       "reference": "https://example.org/fields/title",
       "valueRequirement": "required",
-      "property": { "kind": "property", "propertyIri": "https://schema.org/name" }
+      "property": { "kind": "Property", "propertyIri": "https://schema.org/name" }
     }
   ]
 }
@@ -670,16 +670,16 @@ Two conforming JSON documents that differ only in JSON object property order or 
 
 ```json
 {
-  "kind": "template_instance",
+  "kind": "TemplateInstance",
   "id": "https://example.org/instances/i1",
-  "metadata": { "kind": "artifact_metadata", "descriptive": "...", "provenance": "...", "annotations": [] },
+  "metadata": { "kind": "ArtifactMetadata", "descriptive": "...", "provenance": "...", "annotations": [] },
   "templateReference": "https://example.org/templates/note",
   "values": [
     {
-      "kind": "field_value",
+      "kind": "FieldValue",
       "key": "title",
       "values": [
-        { "kind": "text_value", "literal": { "kind": "string_literal", "lexicalForm": "First Note" } }
+        { "kind": "TextValue", "literal": { "kind": "StringLiteral", "lexicalForm": "First Note" } }
       ]
     }
   ]
