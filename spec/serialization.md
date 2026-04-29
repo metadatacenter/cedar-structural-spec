@@ -154,17 +154,21 @@ The following productions are encoded as flat JSON values:
 | `PreferredLabel` | string | Plain Unicode text |
 | `AlternativeLabel` | string | Plain Unicode text |
 | `Label` (in `LabelOverride`) | string | Plain Unicode text |
-| `PropertyIri` | string | IRI string; carries no information beyond the IRI |
+| `PropertyIri` | string | IRI string |
 | `PropertyLabel` | string | Plain Unicode text |
 | `MinCardinality` | number | Encoded as the `min` property of `Cardinality`; non-negative integer |
 | `MaxCardinality` | number or `{"kind":"unbounded_cardinality"}` | Encoded as the `max` property of `Cardinality` |
 | `NonNegativeInteger` | number | Non-negative integer |
-| `KeyIdentifier` (in `EmbeddedArtifactKey`) | string | ASCII identifier matching the pattern in §6.5 |
+| `EmbeddedArtifactKey` | string | ASCII identifier matching `[A-Za-z][A-Za-z0-9_-]*` (per grammar §Embedded Artifact Key); the inner `KeyIdentifier` wrapper does not appear in the wire form |
 | `Status` | string `"draft"` or `"published"` | The grammar's `Draft` and `Published` are encoded as their lowercase names |
-| `AnnotationName` | string | IRI string; carries no information beyond the IRI |
+| `AnnotationName` | string | IRI string |
+| `FieldId`, `FieldReference` | string | IRI string. The field family is conveyed by the `fieldKind` discriminant on the surrounding `Field` or `EmbeddedField`; it does not appear on the identifier itself |
+| `TemplateId`, `TemplateReference` | string | IRI string |
+| `PresentationComponentId`, `PresentationComponentReference` | string | IRI string |
+| `TemplateInstanceId` | string | IRI string |
 | `Iri` (in property positions where the surrounding context disambiguates) | string | The wrapping `{"kind":"iri",...}` form is used only where the value position permits ambiguity with non-IRI content; in artifact identifiers, property IRIs, datatype IRIs, etc., the IRI appears as a plain string |
 
-The choice to flatten these productions reflects two facts: each carries a single payload of a JSON-primitive type, and at every site where they appear the surrounding production's property name disambiguates them from other strings or numbers.
+The choice to flatten these productions reflects two facts: each carries a single payload of a JSON-primitive type, and at every site where they appear the surrounding production's property name (or the surrounding production's `kind` and `fieldKind` discriminants) disambiguates them from other strings or numbers.
 
 ### 5.2 Lexical-form preservation
 
@@ -184,25 +188,25 @@ This section defines the JSON encoding of each production category defined in [`
 
 ### 6.1 Identifiers
 
-Every artifact identifier is encoded as a tagged object whose `"kind"` matches the identifier's constructor form and whose `"iri"` property is a plain string. Field identifiers additionally carry a `"fieldKind"` discriminant identifying the field family.
+Every artifact identifier is encoded as a plain JSON string carrying the IRI. The kind of identifier is communicated by the surrounding context (the property name on the enclosing object, plus the `kind` and where applicable `fieldKind` discriminants of the enclosing artifact).
 
 ```json
-{ "kind": "field_id", "fieldKind": "text", "iri": "https://example.org/fields/title" }
+"https://example.org/fields/title"
 ```
 
 ```json
-{ "kind": "template_id", "iri": "https://example.org/templates/demo" }
+"https://example.org/templates/demo"
 ```
 
 ```json
-{ "kind": "presentation_component_id", "iri": "https://example.org/components/intro" }
+"https://example.org/components/intro"
 ```
 
 ```json
-{ "kind": "template_instance_id", "iri": "https://example.org/instances/i1" }
+"https://example.org/instances/i1"
 ```
 
-The `"fieldKind"` value MUST be one of: `"text"`, `"numeric"`, `"date"`, `"time"`, `"date_time"`, `"controlled_term"`, `"single_choice"`, `"multiple_choice"`, `"link"`, `"email"`, `"phone_number"`, `"orcid"`, `"ror"`, `"doi"`, `"pub_med_id"`, `"rrid"`, `"nih_grant_id"`, or `"attribute_value"`.
+A `FieldId` (or `FieldReference`) appears only in two grammar positions: as `Field.id` and as `EmbeddedField.reference`. Both surrounding constructs carry their own `fieldKind` discriminant, which conveys the field family. The eighteen permitted `fieldKind` values are: `"text"`, `"numeric"`, `"date"`, `"time"`, `"date_time"`, `"controlled_term"`, `"single_choice"`, `"multiple_choice"`, `"link"`, `"email"`, `"phone_number"`, `"orcid"`, `"ror"`, `"doi"`, `"pub_med_id"`, `"rrid"`, `"nih_grant_id"`, or `"attribute_value"`. A conforming encoder MUST ensure that the IRI it places at a `FieldId` position belongs to a field of the family declared by the surrounding `fieldKind`.
 
 ### 6.2 Literals
 
@@ -379,11 +383,11 @@ Aggregate metadata constructs:
 
 ### 6.5 Embedded artifact properties
 
-```json
-{ "kind": "embedded_artifact_key", "value": "full_name" }
-```
+`EmbeddedArtifactKey` is encoded as a plain JSON string. The string MUST match the ASCII identifier pattern `[A-Za-z][A-Za-z0-9_-]*` (per [`grammar.md`](grammar.md) §Embedded Artifact Key). The grammar's intermediate `KeyIdentifier` wrapper does not appear in the wire form.
 
-The `value` property MUST match the ASCII identifier pattern `[A-Za-z][A-Za-z0-9_-]*` (per [`grammar.md`](grammar.md) §Embedded Artifact Key).
+```json
+"full_name"
+```
 
 ```json
 { "kind": "cardinality", "min": 0, "max": 5 }
@@ -454,7 +458,7 @@ A `Field` artifact:
 }
 ```
 
-The `"fieldKind"` discriminant MUST match the `fieldKind` of the nested `id` and the family of the nested `fieldSpec`.
+The `"fieldKind"` discriminant MUST match the family of the nested `fieldSpec`. Conforming encoders MUST ensure that the IRI placed at `id` belongs to a field of the same family.
 
 An `EmbeddedField`:
 
@@ -616,7 +620,7 @@ Two conforming JSON documents that differ only in JSON object property order or 
 ```json
 {
   "kind": "template",
-  "id": { "kind": "template_id", "iri": "https://example.org/templates/empty" },
+  "id": "https://example.org/templates/empty",
   "metadata": {
     "kind": "schema_artifact_metadata",
     "artifact": {
@@ -647,14 +651,14 @@ Two conforming JSON documents that differ only in JSON object property order or 
 ```json
 {
   "kind": "template",
-  "id": { "kind": "template_id", "iri": "https://example.org/templates/note" },
+  "id": "https://example.org/templates/note",
   "metadata": { "kind": "schema_artifact_metadata", "artifact": "...", "versioning": "..." },
   "embedded": [
     {
       "kind": "embedded_field",
       "fieldKind": "text",
-      "key": { "kind": "embedded_artifact_key", "value": "title" },
-      "reference": { "kind": "field_id", "fieldKind": "text", "iri": "https://example.org/fields/title" },
+      "key": "title",
+      "reference": "https://example.org/fields/title",
       "valueRequirement": "required",
       "property": { "kind": "property", "propertyIri": "https://schema.org/name" }
     }
@@ -667,13 +671,13 @@ Two conforming JSON documents that differ only in JSON object property order or 
 ```json
 {
   "kind": "template_instance",
-  "id": { "kind": "template_instance_id", "iri": "https://example.org/instances/i1" },
+  "id": "https://example.org/instances/i1",
   "metadata": { "kind": "artifact_metadata", "descriptive": "...", "provenance": "...", "annotations": [] },
-  "templateReference": { "kind": "template_id", "iri": "https://example.org/templates/note" },
+  "templateReference": "https://example.org/templates/note",
   "values": [
     {
       "kind": "field_value",
-      "key": { "kind": "embedded_artifact_key", "value": "title" },
+      "key": "title",
       "values": [
         { "kind": "text_value", "literal": { "kind": "string_literal", "lexicalForm": "First Note" } }
       ]
