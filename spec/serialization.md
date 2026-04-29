@@ -157,7 +157,7 @@ The following productions are encoded as flat JSON values:
 | `PropertyIri` | string | IRI string |
 | `PropertyLabel` | string | Plain Unicode text |
 | `MinCardinality` | number | Encoded as the `min` property of `Cardinality`; non-negative integer |
-| `MaxCardinality` | number or `{"kind":"unbounded_cardinality"}` | Encoded as the `max` property of `Cardinality` |
+| `MaxCardinality` | number | Encoded as the `max` property of `Cardinality`. Unboundedness is expressed by omitting `max` rather than by a distinct value (per [`grammar.md`](grammar.md) §Cardinality) |
 | `NonNegativeInteger` | number | Non-negative integer |
 | `EmbeddedArtifactKey` | string | ASCII identifier matching `[A-Za-z][A-Za-z0-9_-]*` (per grammar §Embedded Artifact Key); the inner `KeyIdentifier` wrapper does not appear in the wire form |
 | `Status` | string `"draft"` or `"published"` | The grammar's `Draft` and `Published` are encoded as their lowercase names |
@@ -394,10 +394,10 @@ Aggregate metadata constructs:
 ```
 
 ```json
-{ "kind": "cardinality", "min": 1, "max": { "kind": "unbounded_cardinality" } }
+{ "kind": "cardinality", "min": 1 }
 ```
 
-`max` is omitted when absent.
+`max` is omitted when absent. Per [`grammar.md`](grammar.md) §Cardinality, an absent `max` denotes that the cardinality is unbounded above.
 
 ```json
 { "kind": "label_override", "label": "Custom Label", "altLabels": ["Alt 1", "Alt 2"] }

@@ -1410,14 +1410,11 @@ MinCardinality ::= min_cardinality(
                    )
 
 MaxCardinality ::= max_cardinality(
-                     CardinalityUpperBound
+                     NonNegativeInteger
                    )
-
-CardinalityUpperBound ::= NonNegativeInteger
-                        | UnboundedCardinality
-
-UnboundedCardinality ::= unbounded_cardinality()
 ```
+
+When `MaxCardinality` is absent from a present `Cardinality`, the cardinality is unbounded above: any number of occurrences greater than or equal to the specified `MinCardinality` is permitted. Unboundedness is therefore expressed by omission of `MaxCardinality` rather than by a distinct construct.
 
 When `Cardinality` is absent from an `EmbeddedArtifact`, the implied default is `min_cardinality(1)` with `max_cardinality(1)`: the embedded artifact MUST appear exactly once.
 
