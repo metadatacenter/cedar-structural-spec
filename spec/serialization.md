@@ -613,7 +613,7 @@ Each concrete `FieldSpec` is encoded as a tagged object whose `"kind"` matches t
 ```
 
 ```json
-{ "kind": "ControlledTermFieldSpec", "sources": [ <ControlledTermSource>+ ], "displayHint": { "labelLanguage": "en" }, "maxTraversalDepth": 3 }
+{ "kind": "ControlledTermFieldSpec", "sources": [ <ControlledTermSource>+ ] }
 ```
 
 The `default` property on choice options is encoded as a JSON `true` when set; the property is omitted otherwise.
@@ -676,22 +676,18 @@ A single option in a controlled-term-choice field spec. Appears in `ControlledTe
 
 ##### `OntologyDisplayHint`
 
-Display configuration for controlled-term values. Appears at `ControlledTermFieldSpec.displayHint` and on each `OntologyReference`. When the grammar's `OntologyDisplayHintContent` includes an `OntologyName`, that name is encoded as a `MultilingualString` per §6.3 (the grammar's `OntologyName` component is `MultilingualString`-typed); `OntologyAcronym`, when included, is a plain Unicode string (a technical short-form, not multilingual).
+Surfaces a human-readable acronym and/or name for an ontology to the rendering UI. Appears at `OntologyReference.displayHint`. Per the grammar's `OntologyDisplayHintContent ::= OntologyAcronym | OntologyName | OntologyAcronym OntologyName`, at least one of `acronym` or `name` MUST be present.
 
 ```json
-{ "labelLanguage": "en" }
+{ "acronym": "NCIT", "name": [{ "value": "NCI Thesaurus", "lang": "en" }] }
 ```
 
 | Property | Type | Required | Notes |
 |---|---|---|---|
-| `labelLanguage` | string | yes | BCP 47 language tag identifying the preferred label language. |
+| `acronym` | string | no | Plain Unicode short-form (e.g. `"NCIT"`). A technical label rather than human-display text and is therefore not multilingual. The grammar production is `OntologyAcronym`; the parent-prefix `Ontology` is dropped on the wire per the property-naming convention in §3. |
+| `name` | `MultilingualString` | no | Human-readable ontology name. Array of `LangString` entries per §6.3. The grammar production is `OntologyName`. |
 
-When other `OntologyDisplayHintContent` shapes are encoded (acronym, name, or acronym + name), the corresponding properties are:
-
-| Property | Type | Notes |
-|---|---|---|
-| `ontologyAcronym` | string | Plain Unicode short-form (e.g. `"NCIT"`); not multilingual. |
-| `ontologyName` | `MultilingualString` | Array of `LangString` entries per §6.3. |
+A conforming encoder MUST emit at least one of `acronym` and `name`; an `OntologyDisplayHint` with neither MUST be rejected.
 
 ##### `ControlledTermSource`
 
