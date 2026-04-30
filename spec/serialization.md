@@ -39,6 +39,7 @@ Out of scope:
 - YAML, msgpack, CBOR, or other non-JSON encodings.
 - Validation conformance ([`validation.md`](validation.md)).
 - Storage and transport concerns (file naming, MIME types, HTTP headers, etc.).
+- Per-language implementation concerns: decoder/encoder code structure, error-reporting conventions, partial-decoding strategies, in-memory data shapes, and similar realization decisions. These are addressed in language-specific binding documents (forthcoming).
 
 ## 2. Conformance Language
 
@@ -64,15 +65,15 @@ JSON examples appear in fenced code blocks marked `json`. Examples are illustrat
 
 ## 4. General Encoding Rules
 
-### 4.1 Tagged objects
+### 4.1 Tagged and untagged objects
 
-A *tagged JSON object* is a JSON object that carries a `"kind"` property whose value is a JSON string identifying the abstract production it encodes.
+JSON objects in the wire format are either *tagged* — carrying a `"kind"` property — or *untagged* — without `"kind"`. Whether an object is tagged is determined by the position it occupies in the document; see §4.5 for the rule.
 
-The value of `"kind"` MUST be the production name from [`grammar.md`](grammar.md), transcribed in `UpperCamelCase` exactly as the grammar names it. For example, `"TextValue"` for the `TextValue` production. The grammar's `lower_snake_case` constructor forms (e.g. `text_value(...)`) describe abstract composition and do not appear on the wire.
+When an object is tagged, the value of `"kind"` MUST be the production name from [`grammar.md`](grammar.md), transcribed in `UpperCamelCase` exactly as the grammar names it. For example, `"TextValue"` for the `TextValue` production. The grammar's `lower_snake_case` constructor forms (e.g. `text_value(...)`) describe abstract composition and do not appear on the wire.
 
-Tagged objects MAY carry additional properties beyond `"kind"`, corresponding to the components of the abstract production. Those properties MUST appear with `lowerCamelCase` names that correspond directly to the components named in the production.
+Both tagged and untagged objects carry properties corresponding to the components of the abstract production. Those properties MUST appear with `lowerCamelCase` names that correspond directly to the components named in the production.
 
-A conforming implementation MUST reject a tagged object that lacks `"kind"`, that has a `"kind"` value not matching any production known to the implementation, or whose other properties do not match the encoding rules for the named production.
+A conforming implementation MUST reject any object whose tagged-or-untagged status does not match the position it occupies (per §4.5), whose `"kind"` value (when tagged) does not match any production known to the implementation, or whose other properties do not match the encoding rules for the named production.
 
 ### 4.2 Property names
 
@@ -94,9 +95,15 @@ A grammar component marked `X+` (one or more) is encoded as a JSON array. The ar
 
 The order of elements in the JSON array MUST match the order of components in the abstract construct. A conforming implementation MUST preserve this order through encode and decode.
 
-### 4.5 Discriminated unions
+### 4.5 Discriminator placement
 
-Where the grammar admits a union of productions in a single component position (e.g. `EmbeddedArtifact ::= EmbeddedField | EmbeddedTemplate | EmbeddedPresentationComponent`), the JSON encoding MUST distinguish the alternatives by the `"kind"` discriminator on the encoded tagged object.
+A JSON object carries the `"kind"` property if and only if the grammar admits multiple alternative productions at the position the object occupies.
+
+**Polymorphic positions** — those at which the grammar admits a union of productions, e.g. `EmbeddedArtifact ::= EmbeddedField | EmbeddedTemplate | EmbeddedPresentationComponent` — MUST encode each alternative as a tagged JSON object carrying `"kind"` per §4.1. The document root is itself a polymorphic position (any artifact may appear there); a JSON document at the root therefore carries `"kind"`.
+
+**Singleton positions** — those at which the grammar admits exactly one production — MUST encode that production as an untagged JSON object whose properties correspond to the production's components. The enclosing object's property name, together with the grammar, fully determines the production at this position; a `"kind"` property MUST NOT appear.
+
+This rule applies recursively: an untagged object at a singleton position whose own components include further composite objects follows the same rule for each of those components.
 
 Implementations MUST NOT rely on JSON property ordering to discriminate alternatives.
 
@@ -223,19 +230,19 @@ A `FieldId` (or `FieldReference`) appears only in two grammar positions: as `Fie
 ```
 
 ```json
-{ "kind": "NumericLiteral", "lexicalForm": "3.14", "datatype": "http://www.w3.org/2001/XMLSchema#double" }
+{ "lexicalForm": "3.14", "datatype": "http://www.w3.org/2001/XMLSchema#double" }
 ```
 
 ```json
-{ "kind": "FullDateLiteral", "lexicalForm": "2024-06-15" }
+{ "lexicalForm": "2024-06-15" }
 ```
 
 ```json
-{ "kind": "TimeLiteral", "lexicalForm": "10:30:00" }
+{ "lexicalForm": "10:30:00" }
 ```
 
 ```json
-{ "kind": "DateTimeLiteral", "lexicalForm": "2024-06-15T10:30:00" }
+{ "lexicalForm": "2024-06-15T10:30:00" }
 ```
 
 The `datatype` and `lang` properties carry plain strings (the IRI or BCP 47 tag respectively).
@@ -249,7 +256,7 @@ Each `Value` family is encoded as a tagged object. Values that wrap a literal in
 ```
 
 ```json
-{ "kind": "NumericValue", "literal": { "kind": "NumericLiteral", "lexicalForm": "42", "datatype": "http://www.w3.org/2001/XMLSchema#integer" } }
+{ "kind": "NumericValue", "literal": { "lexicalForm": "42", "datatype": "http://www.w3.org/2001/XMLSchema#integer" } }
 ```
 
 ```json
@@ -261,7 +268,7 @@ Each `Value` family is encoded as a tagged object. Values that wrap a literal in
 ```
 
 ```json
-{ "kind": "FullDateValue", "literal": { "kind": "FullDateLiteral", "lexicalForm": "2024-06-15" } }
+{ "kind": "FullDateValue", "literal": { "lexicalForm": "2024-06-15" } }
 ```
 
 `YearValue` and `YearMonthValue` carry plain string values rather than literals; this matches their grammar definitions.
@@ -277,7 +284,7 @@ The optional `label` property is omitted when absent.
 ```
 
 ```json
-{ "kind": "ControlledTermChoiceValue", "value": { "kind": "ControlledTermValue", "term": "http://example.org/term/1" } }
+{ "kind": "ControlledTermChoiceValue", "value": { "term": "http://example.org/term/1" } }
 ```
 
 ```json
@@ -287,11 +294,11 @@ The optional `label` property is omitted when absent.
 The optional `label` property is omitted when absent.
 
 ```json
-{ "kind": "EmailValue", "literal": { "kind": "StringLiteral", "lexicalForm": "jane@example.org" } }
+{ "kind": "EmailValue", "literal": { "lexicalForm": "jane@example.org" } }
 ```
 
 ```json
-{ "kind": "PhoneNumberValue", "literal": { "kind": "StringLiteral", "lexicalForm": "+1-415-555-0100" } }
+{ "kind": "PhoneNumberValue", "literal": { "lexicalForm": "+1-415-555-0100" } }
 ```
 
 External-authority values (`OrcidValue`, `RorValue`, `DoiValue`, `PubMedIdValue`, `RridValue`, `NihGrantIdValue`) follow a uniform shape:
@@ -310,7 +317,6 @@ The optional `label` property is omitted when absent.
 
 ```json
 {
-  "kind": "DescriptiveMetadata",
   "name": "Full Name",
   "description": "Full legal name of the principal investigator.",
   "identifier": "https://example.org/identifiers/full-name",
@@ -323,7 +329,6 @@ The optional `label` property is omitted when absent.
 
 ```json
 {
-  "kind": "TemporalProvenance",
   "createdOn": "2024-01-01T00:00:00Z",
   "createdBy": "https://orcid.org/0000-0002-1825-0097",
   "modifiedOn": "2024-06-15T12:30:00Z",
@@ -333,7 +338,6 @@ The optional `label` property is omitted when absent.
 
 ```json
 {
-  "kind": "SchemaVersioning",
   "version": "1.0.0",
   "status": "draft",
   "modelVersion": "2.0.0",
@@ -346,7 +350,6 @@ The optional `label` property is omitted when absent.
 
 ```json
 {
-  "kind": "Annotation",
   "name": "https://example.org/annotation-properties/notes",
   "value": { "kind": "LiteralAnnotationValue", "literal": { "kind": "StringLiteral", "lexicalForm": "..." } }
 }
@@ -366,7 +369,6 @@ Aggregate metadata constructs:
 
 ```json
 {
-  "kind": "ArtifactMetadata",
   "descriptive": <DescriptiveMetadata>,
   "provenance": <TemporalProvenance>,
   "annotations": [ <Annotation>* ]
@@ -375,7 +377,6 @@ Aggregate metadata constructs:
 
 ```json
 {
-  "kind": "SchemaArtifactMetadata",
   "artifact": <ArtifactMetadata>,
   "versioning": <SchemaVersioning>
 }
@@ -390,21 +391,21 @@ Aggregate metadata constructs:
 ```
 
 ```json
-{ "kind": "Cardinality", "min": 0, "max": 5 }
+{ "min": 0, "max": 5 }
 ```
 
 ```json
-{ "kind": "Cardinality", "min": 1 }
+{ "min": 1 }
 ```
 
 `max` is omitted when absent. Per [`grammar.md`](grammar.md) §Cardinality, an absent `max` denotes that the cardinality is unbounded above.
 
 ```json
-{ "kind": "LabelOverride", "label": "Custom Label", "altLabels": ["Alt 1", "Alt 2"] }
+{ "label": "Custom Label", "altLabels": ["Alt 1", "Alt 2"] }
 ```
 
 ```json
-{ "kind": "Property", "propertyIri": "https://schema.org/name", "propertyLabel": "name" }
+{ "propertyIri": "https://schema.org/name", "propertyLabel": "name" }
 ```
 
 `propertyLabel` is omitted when absent.
@@ -427,19 +428,19 @@ Each concrete `FieldSpec` is encoded as a tagged object whose `"kind"` matches t
 ```
 
 ```json
-{ "kind": "NumericFieldSpec", "datatype": "integer", "minimum": 0, "maximum": 100, "numericPrecision": 2, "unit": { "kind": "Unit", "label": "kg", "unitIri": "http://qudt.org/vocab/unit/KILOGRAM" } }
+{ "kind": "NumericFieldSpec", "datatype": "integer", "minimum": 0, "maximum": 100, "numericPrecision": 2, "unit": { "label": "kg", "unitIri": "http://qudt.org/vocab/unit/KILOGRAM" } }
 ```
 
 ```json
-{ "kind": "DateFieldSpec", "dateValueType": "fullDate", "renderingHint": { "kind": "DateRenderingHint", "componentOrder": "dayMonthYear" } }
+{ "kind": "DateFieldSpec", "dateValueType": "fullDate", "renderingHint": { "componentOrder": "dayMonthYear" } }
 ```
 
 ```json
-{ "kind": "LiteralSingleChoiceFieldSpec", "options": [ {"kind":"LiteralChoiceOption", "literal": {"kind":"LangStringLiteral", "lexicalForm": "Yes", "lang": "en"}, "default": true} ] }
+{ "kind": "LiteralSingleChoiceFieldSpec", "options": [ {"literal": {"kind":"LangStringLiteral", "lexicalForm": "Yes", "lang": "en"}, "default": true} ] }
 ```
 
 ```json
-{ "kind": "ControlledTermFieldSpec", "sources": [ <ControlledTermSource>+ ], "displayHint": { "kind": "OntologyDisplayHint", "labelLanguage": "en" }, "maxTraversalDepth": 3 }
+{ "kind": "ControlledTermFieldSpec", "sources": [ <ControlledTermSource>+ ], "displayHint": { "labelLanguage": "en" }, "maxTraversalDepth": 3 }
 ```
 
 The `default` property on choice options is encoded as a JSON `true` when set; the property is omitted otherwise.
@@ -622,12 +623,9 @@ Two conforming JSON documents that differ only in JSON object property order or 
   "kind": "Template",
   "id": "https://example.org/templates/empty",
   "metadata": {
-    "kind": "SchemaArtifactMetadata",
     "artifact": {
-      "kind": "ArtifactMetadata",
-      "descriptive": { "kind": "DescriptiveMetadata", "name": "Empty", "altLabels": [] },
+      "descriptive": { "name": "Empty", "altLabels": [] },
       "provenance": {
-        "kind": "TemporalProvenance",
         "createdOn": "2024-01-01T00:00:00Z",
         "createdBy": "https://example.org/u",
         "modifiedOn": "2024-01-01T00:00:00Z",
@@ -636,7 +634,6 @@ Two conforming JSON documents that differ only in JSON object property order or 
       "annotations": []
     },
     "versioning": {
-      "kind": "SchemaVersioning",
       "version": "1.0.0",
       "status": "draft",
       "modelVersion": "2.0.0"
@@ -652,7 +649,7 @@ Two conforming JSON documents that differ only in JSON object property order or 
 {
   "kind": "Template",
   "id": "https://example.org/templates/note",
-  "metadata": { "kind": "SchemaArtifactMetadata", "artifact": "...", "versioning": "..." },
+  "metadata": { "artifact": "...", "versioning": "..." },
   "embedded": [
     {
       "kind": "EmbeddedField",
@@ -660,7 +657,7 @@ Two conforming JSON documents that differ only in JSON object property order or 
       "key": "title",
       "reference": "https://example.org/fields/title",
       "valueRequirement": "required",
-      "property": { "kind": "Property", "propertyIri": "https://schema.org/name" }
+      "property": { "propertyIri": "https://schema.org/name" }
     }
   ]
 }
@@ -672,7 +669,7 @@ Two conforming JSON documents that differ only in JSON object property order or 
 {
   "kind": "TemplateInstance",
   "id": "https://example.org/instances/i1",
-  "metadata": { "kind": "ArtifactMetadata", "descriptive": "...", "provenance": "...", "annotations": [] },
+  "metadata": { "descriptive": "...", "provenance": "...", "annotations": [] },
   "templateRef": "https://example.org/templates/note",
   "values": [
     {
