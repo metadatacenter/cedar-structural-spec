@@ -321,7 +321,7 @@ The grammar defines seven metadata productions: four leaves (`DescriptiveMetadat
 
 #### `DescriptiveMetadata`
 
-The human-oriented description of an artifact: name, optional longer description, optional identifier, optional preferred label, and a (possibly empty) array of alternative labels. Appears at `ArtifactMetadata.descriptive`.
+The human-oriented description of an artifact: name, optional longer description, optional identifier, optional preferred label, and a (possibly empty) array of alternative labels. Appears at `ArtifactMetadata.descriptiveMetadata`.
 
 ```json
 {
@@ -414,7 +414,7 @@ Aggregates the descriptive, provenance, and annotation metadata that every `Arti
 
 ```json
 {
-  "descriptive": <DescriptiveMetadata>,
+  "descriptiveMetadata": <DescriptiveMetadata>,
   "provenance": <TemporalProvenance>,
   "annotations": [ <Annotation>* ]
 }
@@ -482,13 +482,13 @@ Provides a template-specific label for an embedded artifact, optionally with alt
 Associates a semantic property IRI (and optionally a human-readable label) with an embedded data-bearing artifact. Appears at `EmbeddedField.property` and `EmbeddedTemplate.property`. Not present on `EmbeddedPresentationComponent` — a presentation component produces no instance value to bind to a property.
 
 ```json
-{ "propertyIri": "https://schema.org/name", "propertyLabel": "name" }
+{ "iri": "https://schema.org/name", "label": "name" }
 ```
 
 | Property | Type | Required | Notes |
 |---|---|---|---|
-| `propertyIri` | string | yes | IRI of the semantic property. The grammar's `PropertyIri` wrapper does not appear in the wire form. |
-| `propertyLabel` | string | no | Plain Unicode text. Omitted when absent. |
+| `iri` | string | yes | IRI of the semantic property. The grammar's `PropertyIri` wrapper does not appear in the wire form. |
+| `label` | string | no | Plain Unicode text. Omitted when absent. |
 
 #### `ValueRequirement` and `Visibility`
 
@@ -508,7 +508,7 @@ Each concrete `FieldSpec` is encoded as a tagged object whose `"kind"` matches t
 ```
 
 ```json
-{ "kind": "NumericFieldSpec", "datatype": "integer", "minimum": 0, "maximum": 100, "numericPrecision": 2, "unit": { "label": "kg", "unitIri": "http://qudt.org/vocab/unit/KILOGRAM" } }
+{ "kind": "NumericFieldSpec", "datatype": "integer", "minimum": 0, "maximum": 100, "numericPrecision": 2, "unit": { "label": "kg", "iri": "http://qudt.org/vocab/unit/KILOGRAM" } }
 ```
 
 ```json
@@ -534,13 +534,13 @@ Several productions appear nested inside field-spec encodings. Per §4.5 they ar
 Optional unit metadata for a numeric field. Appears at `NumericFieldSpec.unit`.
 
 ```json
-{ "label": "kg", "unitIri": "http://qudt.org/vocab/unit/KILOGRAM" }
+{ "label": "kg", "iri": "http://qudt.org/vocab/unit/KILOGRAM" }
 ```
 
 | Property | Type | Required | Notes |
 |---|---|---|---|
 | `label` | string | yes | Human-readable unit label (e.g. `"kg"`). |
-| `unitIri` | string | yes | IRI identifying the unit (e.g. a QUDT IRI). |
+| `iri` | string | yes | IRI identifying the unit (e.g. a QUDT IRI). |
 
 ##### `DateRenderingHint`, `TimeRenderingHint`, `DateTimeRenderingHint`
 
@@ -773,7 +773,7 @@ Two conforming JSON documents that differ only in JSON object property order or 
   "id": "https://example.org/templates/empty",
   "metadata": {
     "artifact": {
-      "descriptive": { "name": "Empty", "altLabels": [] },
+      "descriptiveMetadata": { "name": "Empty", "altLabels": [] },
       "provenance": {
         "createdOn": "2024-01-01T00:00:00Z",
         "createdBy": "https://example.org/u",
@@ -806,7 +806,7 @@ Two conforming JSON documents that differ only in JSON object property order or 
       "key": "title",
       "reference": "https://example.org/fields/title",
       "valueRequirement": "required",
-      "property": { "propertyIri": "https://schema.org/name" }
+      "property": { "iri": "https://schema.org/name" }
     }
   ]
 }
@@ -818,7 +818,7 @@ Two conforming JSON documents that differ only in JSON object property order or 
 {
   "kind": "TemplateInstance",
   "id": "https://example.org/instances/i1",
-  "metadata": { "descriptive": "...", "provenance": "...", "annotations": [] },
+  "metadata": { "descriptiveMetadata": "...", "provenance": "...", "annotations": [] },
   "templateRef": "https://example.org/templates/note",
   "values": [
     {
