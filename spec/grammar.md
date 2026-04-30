@@ -197,15 +197,15 @@ Template ::= template(
              )
 
 Header ::= header(
-             string
+             MultilingualString
            )
 
 Footer ::= footer(
-             string
+             MultilingualString
            )
 ```
 
-`Header` and `Footer` denote optional Unicode textual content displayed at the top and bottom of a rendered template respectively.
+`Header` and `Footer` denote optional human-readable textual content displayed at the top and bottom of a rendered template respectively. Each is a [`MultilingualString`](#multilingual-strings) carrying one or more language-tagged localizations of the same conceptual text.
 
 The following productions introduce the abstract field categories. `Field` remains an abstract category, while the intermediate categories group related concrete field artifacts for readability and shared semantics.
 
@@ -731,11 +731,11 @@ ArtifactMetadata ::= artifact_metadata(
 
 ```ebnf
 Name ::= name(
-           string
+           MultilingualString
          )
 
 Description ::= description(
-                  string
+                  MultilingualString
                 )
 
 Identifier ::= identifier(
@@ -751,7 +751,7 @@ DescriptiveMetadata ::= descriptive_metadata(
                         )
 ```
 
-`Name`, `Description`, and `Identifier` carry arbitrary Unicode string values. `PreferredLabel` is defined in the [Controlled Term Value](#controlled-term-value) section; `AlternativeLabel` is defined in the [Label Override](#label-override) section.
+`Name` and `Description` carry [`MultilingualString`](#multilingual-strings) values: human-readable text that may be presented in one or more natural languages. `Identifier` carries an arbitrary Unicode string value: it is a technical user-supplied key intended for integration with external systems and is not a human-display label, so it is not multilingual. `PreferredLabel` is defined in the [Controlled Term Value](#controlled-term-value) section; `AlternativeLabel` is defined in the [Label Override](#label-override) section.
 
 > **Note:** Confirm with the CEDAR team that `PreferredLabel` and `AlternativeLabel` belong on `DescriptiveMetadata` for all artifact kinds rather than on a field-specific metadata structure. The v2.0.0 conceptual document (§4.1) describes these in the context of fields specifically; it is worth verifying whether templates, presentation components, and instances should carry them too.
 
@@ -847,7 +847,7 @@ See [`Iri`](#core-iri-and-string-types) and [`Literal`](#base-literals).
 
 ## Scalar and Datatype Leaves
 
-The following productions define the primitive leaf types used throughout this grammar. They represent the atomic constructs from which all other productions are built: IRIs, typed string domains, lexical forms, numeric and temporal datatype IRIs, and textual metadata values.
+The following productions define the primitive leaf types used throughout this grammar. They represent the atomic constructs from which all other productions are built: IRIs, typed string domains, lexical forms, multilingual textual metadata, numeric and temporal datatype IRIs, and textual metadata values.
 
 ### Primitive String Types
 
@@ -907,6 +907,29 @@ NonNegativeInteger ::= non_negative_integer(
 `IsoDateTimeStamp` denotes an ISO 8601 date-time lexical form.
 
 `NonNegativeInteger` denotes an integer greater than or equal to zero.
+
+### Multilingual Strings
+
+`LangString` and `MultilingualString` are the constructs used at every grammar position that carries human-display text. They distinguish localizations of one conceptual string from technical Unicode-string keys (which remain plain `string`-valued; see [`Identifier`](#descriptive-metadata) and the controlled-term-source identifiers in [Controlled Term Sources](#controlled-term-sources)).
+
+```ebnf
+LangString ::= lang_string(
+                 string
+                 Bcp47Tag
+               )
+
+MultilingualString ::= multilingual_string(
+                         LangString+
+                       )
+```
+
+`LangString` pairs a textual value with a BCP 47 language tag identifying its natural language.
+
+`MultilingualString` denotes a non-empty set of `LangString` entries representing localizations of one conceptual string. The entries' language tags MUST be unique within a `MultilingualString` (case-folded comparison): the construct represents a set of localizations, not a list of phrasings within a single language.
+
+The `'und'` (undetermined) BCP 47 subtag MAY be used to denote a `LangString` whose natural language is unspecified. Implementations MAY use `'und'` as the default tag when constructing a `MultilingualString` from a bare string with no language information.
+
+`MultilingualString` is structurally distinct from `LangStringLiteral` (a member of the [`Literal`](#base-literals) union): a `LangStringLiteral` is a single language-tagged RDF-style literal value, whereas `MultilingualString` is an unweighted localization set carried at singleton schema-metadata positions such as `Template.header` or `DescriptiveMetadata.name`.
 
 ### Numeric Datatype IRIs
 
@@ -1143,7 +1166,7 @@ A controlled term value identifies a term drawn from an ontology, branch, class 
 
 ```ebnf
 Label ::= label(
-            string
+            MultilingualString
           )
 
 Notation ::= notation(
@@ -1151,7 +1174,7 @@ Notation ::= notation(
              )
 
 PreferredLabel ::= preferred_label(
-                     string
+                     MultilingualString
                    )
 
 ControlledTermValue ::= controlled_term_value(
@@ -1161,6 +1184,8 @@ ControlledTermValue ::= controlled_term_value(
                           [PreferredLabel]
                         )
 ```
+
+`Label` and `PreferredLabel` are [`MultilingualString`](#multilingual-strings) values: each carries one or more language-tagged localizations of the term's display label. `Notation` is a plain Unicode string: it is a technical symbolic code (typically a SKOS notation) rather than human-display text, and is therefore not multilingual.
 
 ### Choice Value
 
@@ -1193,6 +1218,8 @@ LinkLabel ::= link_label(
                 string
               )
 ```
+
+`LinkLabel` is a plain Unicode string and is intentionally not a [`MultilingualString`](#multilingual-strings): a hyperlink's display label is treated as a single piece of presentational text bound to its target IRI rather than a localization set.
 
 ### Contact Values
 
@@ -1516,7 +1543,7 @@ NihGrantIdDefaultValue ::= nih_grant_id_default_value(
 
 ```ebnf
 AlternativeLabel ::= alternative_label(
-                       string
+                       MultilingualString
                      )
 
 LabelOverride ::= label_override(
@@ -1524,6 +1551,8 @@ LabelOverride ::= label_override(
                     AlternativeLabel*
                   )
 ```
+
+`AlternativeLabel` is a [`MultilingualString`](#multilingual-strings): each entry is itself a localization set for one alternative phrasing of the artifact's display label.
 
 ### Properties
 
@@ -1538,8 +1567,10 @@ Property ::= property(
              )
 
 PropertyIri   ::= property_iri( Iri )
-PropertyLabel ::= property_label( string )
+PropertyLabel ::= property_label( MultilingualString )
 ```
+
+`PropertyLabel` is a [`MultilingualString`](#multilingual-strings) carrying one or more language-tagged localizations of the property's human-readable label.
 
 ## Field Specs
 
@@ -1897,7 +1928,7 @@ OntologyAcronym ::= ontology_acronym(
                     )
 
 OntologyName ::= ontology_name(
-                   string
+                   MultilingualString
                  )
 
 OntologyIri ::= ontology_iri(
@@ -1909,7 +1940,7 @@ RootTermIri ::= root_term_iri(
                 )
 
 RootTermLabel ::= root_term_label(
-                    string
+                    MultilingualString
                   )
 
 MaxTraversalDepth ::= max_traversal_depth(
@@ -1921,7 +1952,7 @@ ValueSetIdentifier ::= value_set_identifier(
                        )
 
 ValueSetName ::= value_set_name(
-                   string
+                   MultilingualString
                  )
 
 ValueSetIri ::= value_set_iri(
@@ -1931,7 +1962,7 @@ ValueSetIri ::= value_set_iri(
 
 `OntologyIri`, `RootTermIri`, and `ValueSetIri` denote IRIs used in controlled-term source specifications.
 
-`OntologyAcronym`, `OntologyName`, `RootTermLabel`, `ValueSetIdentifier`, and `ValueSetName` denote textual controlled-term source metadata.
+`OntologyName`, `RootTermLabel`, and `ValueSetName` are human-readable display names and carry [`MultilingualString`](#multilingual-strings) values: each may be presented in one or more natural languages. `OntologyAcronym` and `ValueSetIdentifier` are technical short-form identifiers (e.g. an ontology acronym like `"NCIT"`, a value-set key) and remain plain Unicode strings.
 
 `MaxTraversalDepth` denotes a non-negative traversal-depth limit for branch-based controlled-term sources.
 
