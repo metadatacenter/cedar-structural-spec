@@ -2,7 +2,7 @@
 
 This document defines a normative JSON wire format for the CEDAR Template Model. Conforming implementations in any host language MUST produce and consume documents that follow the encoding defined here, so that artifacts can be exchanged between implementations with no information loss.
 
-This document is companion to but not part of the abstract grammar. The abstract grammar in [`grammar.md`](grammar.md) defines what a CEDAR template *is*; this document defines how a CEDAR template *travels*.
+This document is companion to but not part of the abstract grammar. The abstract grammar in [`grammar.md`](grammar.md) defines what a CEDAR template *is*; [`wire-grammar.md`](wire-grammar.md) defines the JSON shape of every grammar production; this document defines the encoding rules and conventions that frame those shapes, plus illustrative examples.
 
 ## 1. Purpose and Scope
 
@@ -20,13 +20,15 @@ This document defines that common wire format using JSON ([RFC 8259](https://www
 
 [`grammar.md`](grammar.md) is the authoritative definition of the abstract Structural Model. This document defines an encoding *of* that model and does not extend or modify it. Where the grammar permits multiple equivalent abstract forms, this document selects exactly one wire form.
 
+[`wire-grammar.md`](wire-grammar.md) is the formal source of truth for the JSON shape of every grammar production. It mirrors `grammar.md` one-to-one and uses a compact JSON-shaped notation. Per-production property tables formerly in §6 of this document have moved there. The present document carries the encoding philosophy, JSON-specific rules, and worked examples.
+
 [`validation.md`](validation.md) defines the conformance rules a Structural Model artifact must satisfy. This document does not define validation; a JSON document MAY be wire-format-conformant yet fail Structural Model validation, and vice versa.
 
 [`ctm-1.6.0-serialization.md`](ctm-1.6.0-serialization.md) defines a one-directional, lossy mapping from the Structural Model to legacy CEDAR Template Model 1.6.0 JSON-LD format. This is a separate concern; the encoding defined in the present document is independent of CTM 1.6.0 and not interconvertible with it.
 
 #### Note on JSON-LD shape parallel
 
-The literal and IRI encodings defined in §6.2 and §6.5 are structurally similar to JSON-LD's term forms — `value`/`lang`/`datatype` parallels JSON-LD's `@value`/`@language`/`@type`, and `iri` parallels `@id`. This similarity is deliberate: the property-set shape JSON-LD landed on is genuinely well-suited to RDF-flavored data, and adopting that shape (without the `@` prefix) yields a clean, future-proof encoding for literal and resource values.
+The literal and IRI encodings defined below are structurally similar to JSON-LD's term forms — `value`/`lang`/`datatype` parallels JSON-LD's `@value`/`@language`/`@type`, and `iri` parallels `@id`. This similarity is deliberate: the property-set shape JSON-LD landed on is genuinely well-suited to RDF-flavored data, and adopting that shape (without the `@` prefix) yields a clean, future-proof encoding for literal and resource values.
 
 Conforming documents are nevertheless **not** JSON-LD. They carry no `@context`, are not interpretable as RDF graphs without external schema knowledge, and do not follow JSON-LD's compaction, expansion, or framing algorithms. RDF-graph interoperability for CEDAR artifacts, when needed, is the subject of a future separate document (`json-ld-mapping.md`, planned) that will define a JSON-LD encoding parallel to (and convertible to/from) the native form defined here, in the same way `ctm-1.6.0-serialization.md` defines the legacy mapping.
 
@@ -34,13 +36,14 @@ Conforming documents are nevertheless **not** JSON-LD. They carry no `@context`,
 
 In scope:
 
-- The JSON encoding of every production defined in [`grammar.md`](grammar.md), [`presentation.md`](presentation.md), and [`instances.md`](instances.md).
-- Discriminator conventions and property naming.
-- Encoding rules for sequences, optional components, and unions.
-- The wrapping principle that determines which productions are encoded as tagged JSON objects vs flat JSON values.
+- The JSON encoding rules (property naming, NFC normalisation, integer handling) that frame the shapes formally defined in [`wire-grammar.md`](wire-grammar.md).
+- Discriminator placement (the `kind` / `fieldKind` / property-set / position rules).
+- The wrapping principle that determines which productions are tagged JSON objects vs flat JSON values.
+- Worked end-to-end examples.
 
 Out of scope:
 
+- Per-production property tables. Those live normatively in [`wire-grammar.md`](wire-grammar.md).
 - JSON-LD, RDF, or other RDF-graph representations.
 - YAML, msgpack, CBOR, or other non-JSON encodings.
 - Validation conformance ([`validation.md`](validation.md)).
@@ -51,7 +54,7 @@ Out of scope:
 
 The words MUST, MUST NOT, SHOULD, SHOULD NOT, and MAY are used in the sense of [RFC 2119](https://www.rfc-editor.org/rfc/rfc2119) and [RFC 8174](https://www.rfc-editor.org/rfc/rfc8174).
 
-A *conforming JSON document* is a JSON value that satisfies every encoding rule in this document and corresponds to some abstract Structural Model construct as defined in [`grammar.md`](grammar.md).
+A *conforming JSON document* is a JSON value that satisfies every encoding rule in this document, matches the wire shape defined for some production in [`wire-grammar.md`](wire-grammar.md), and corresponds to some abstract Structural Model construct as defined in [`grammar.md`](grammar.md).
 
 A *conforming implementation* is software that, when given an abstract Structural Model construct, produces a conforming JSON document; and when given a conforming JSON document, decodes it to the corresponding abstract construct.
 
@@ -59,17 +62,21 @@ A *conforming implementation* is software that, when given an abstract Structura
 
 ### 3.1 Production references
 
-Production names from [`grammar.md`](grammar.md) appear in `UpperCamelCase`. Constructor forms appear in `lower_snake_case`. Concrete JSON property names appear in `lowerCamelCase`.
+Production names from [`grammar.md`](grammar.md) and [`wire-grammar.md`](wire-grammar.md) appear in `UpperCamelCase`. Constructor forms from `grammar.md` appear in `lower_snake_case`. Concrete JSON property names appear in `lowerCamelCase`.
 
 ### 3.2 JSON terminology
 
 The terms *object*, *array*, *string*, *number*, *boolean*, *null*, and *value* refer to JSON values per [RFC 8259](https://www.rfc-editor.org/rfc/rfc8259). The terms *property*, *member*, and *element* refer to the structural components of those values.
 
-### 3.3 Examples
+### 3.3 Property naming
 
-JSON examples appear in fenced code blocks marked `json`. Examples are illustrative only; the normative content is the prose preceding each example.
+Property names within tagged objects MUST be `lowerCamelCase` translations of the corresponding component names in the production. Where a component name in the grammar is itself an `UpperCamelCase` production name (e.g. `EmbeddedArtifactKey`), the JSON property uses the role-name from the production (e.g. `key`) rather than the production name itself. The canonical property name for any production component is the one given in its `wire-grammar.md` entry.
 
-Examples may use *placeholders* of the form `<ProductionName>` to denote the JSON encoding of a production at the surrounding position. A placeholder is resolved by replacing it with the encoding defined for that production elsewhere in §6. Whether the resolved encoding is tagged or untagged depends on the surrounding position per §4.5: a placeholder at a polymorphic position resolves to a tagged JSON object; a placeholder at a singleton position resolves to an untagged JSON object. The `*` and `+` suffixes (e.g. `<Annotation>*`, `<ChoiceValue>+`) denote sequences per §4.4 — zero-or-more and one-or-more respectively.
+### 3.4 Examples
+
+JSON examples appear in fenced code blocks marked `json`. Examples are illustrative only; the normative content is the corresponding `wire-grammar.md` entry.
+
+Examples may use *placeholders* of the form `<ProductionName>` to denote the JSON encoding of a production at the surrounding position. A placeholder is resolved by replacing it with the encoding defined for that production in [`wire-grammar.md`](wire-grammar.md). The `*` and `+` suffixes (e.g. `<Annotation>*`, `<ChoiceValue>+`) denote sequences per §4.4 — zero-or-more and one-or-more respectively.
 
 ## 4. General Encoding Rules
 
@@ -79,31 +86,25 @@ JSON objects in the wire format are either *tagged* — carrying a `"kind"` prop
 
 When an object is tagged, the value of `"kind"` MUST be the production name from [`grammar.md`](grammar.md), transcribed in `UpperCamelCase` exactly as the grammar names it. For example, `"TextValue"` for the `TextValue` production. The grammar's `lower_snake_case` constructor forms (e.g. `text_value(...)`) describe abstract composition and do not appear on the wire.
 
-Both tagged and untagged objects carry properties corresponding to the components of the abstract production. Those properties MUST appear with `lowerCamelCase` names that correspond directly to the components named in the production.
+For the eighteen `Field` and eighteen `EmbeddedField` family productions, two discriminators appear together: the outer `"kind"` (`"Field"` or `"EmbeddedField"`) and an inner `"fieldKind"` (`"Text"`, `"Numeric"`, …) that selects the family. See §4.5.
 
-A conforming implementation MUST reject any object whose tagged-or-untagged status does not match the position it occupies (per §4.5), whose `"kind"` value (when tagged) does not match any production known to the implementation, or whose other properties do not match the encoding rules for the named production.
+A conforming implementation MUST reject any object whose tagged-or-untagged status does not match the position it occupies (per §4.5), whose `"kind"` value (when tagged) does not match any production known to the implementation, or whose other properties do not match the wire-grammar entry for the named production.
 
-### 4.2 Property names
-
-Property names within tagged objects MUST be `lowerCamelCase` translations of the corresponding component names in the production. Where a component name in the grammar is itself an `UpperCamelCase` production name (e.g. `EmbeddedArtifactKey`), the JSON property uses the role-name from the production (e.g. `key`) rather than the production name itself.
-
-When in doubt, the canonical property name for a given production component is the one used in the per-production encoding tables in §6.
-
-### 4.3 Optional components
+### 4.2 Optional components
 
 A grammar component marked `[X]` (optional) MUST be omitted from its enclosing JSON object when not present. A conforming implementation MUST NOT emit `null` or an empty string in place of an absent optional component.
 
 A conforming implementation MUST treat the absence of an optional property as equivalent to that component not being present in the abstract construct.
 
-### 4.4 Sequence components
+### 4.3 Sequence components
 
 A grammar component marked `X*` (zero or more) is encoded as a JSON array. The array MAY be empty.
 
-A grammar component marked `X+` (one or more) is encoded as a JSON array. The array MUST contain at least one element.
+A grammar component marked `X+` (one or more) is encoded as a JSON array. The array MUST contain at least one element. In `wire-grammar.md` these are written `nonEmptyArray<X>`.
 
 The order of elements in the JSON array MUST match the order of components in the abstract construct. A conforming implementation MUST preserve this order through encode and decode.
 
-### 4.5 Discriminator placement
+### 4.4 Discriminator placement
 
 A JSON object's discriminator presence depends on the position it occupies in the document.
 
@@ -117,24 +118,29 @@ This rule applies recursively: an untagged object at a singleton position whose 
 
 A small set of polymorphic unions is discriminated **by the combination of property names present** rather than by an explicit `"kind"` value. This is permitted only when the union's alternatives have structurally distinct property sets that cannot collide. The unions encoded this way are:
 
-- `Literal` (`StringLiteral | LangStringLiteral | DatatypeIriLiteral`): discriminated by `value`, `lang`, and `datatype` presence per §6.2.
-- `AnnotationValue` (`Literal | Iri`): discriminated by `value` (Literal arm) vs `iri` only (Iri arm) per §6.5.
+- `Literal` (`StringLiteral | LangStringLiteral | DatatypeIriLiteral`): discriminated by `value`, `lang`, and `datatype` presence.
+- `TextLiteral` (`StringLiteral | LangStringLiteral`): discriminated by `lang` presence.
+- `AnnotationValue` (`Literal | Iri`): discriminated by `value` (literal arms) vs `iri` only (Iri arm).
 
 Future unions that would admit variants with overlapping property sets MUST use `"kind"` discrimination instead.
 
+#### Position-discriminated unions
+
+A few unions occupy fixed singleton positions where the surrounding property name fully determines the variant. For example, `RenderingHint` is determined by which `FieldSpec` family the parent is, and the four typed-literal subtypes (`NumericLiteral`, `FullDateLiteral`, `TimeLiteral`, `DateTimeLiteral`) are determined by their parent value's `kind`. These wire entries are flagged `// discriminator: position` in [`wire-grammar.md`](wire-grammar.md).
+
 Implementations MUST NOT rely on JSON property ordering to discriminate alternatives.
 
-### 4.6 String values
+### 4.5 String values
 
 Strings are JSON strings encoded in UTF-8. Lexical-form strings (e.g. the `value` property of a `StringLiteral`) MUST be transmitted in Unicode Normalization Form C (NFC). A conforming implementation SHOULD normalize on encode.
 
-### 4.7 Number values
+### 4.6 Number values
 
 Integer-valued grammar productions (e.g. `NonNegativeInteger`) are encoded as JSON numbers without a fractional part or exponent. Implementations MUST encode integer values that fit within JSON Number's safe integer range without loss; values outside that range MUST be encoded as strings (see §5.2 below for the cases this applies to).
 
 Decimal-valued grammar productions are encoded as JSON numbers in standard decimal notation per RFC 8259.
 
-### 4.8 Implementation freedom
+### 4.7 Implementation freedom
 
 A conforming implementation MAY add JSON properties beyond those defined here for non-normative purposes (annotations, hashes, signatures, etc.), provided those properties begin with `_` or `$` to avoid collision with future normative additions. Decoders MUST ignore such properties.
 
@@ -145,8 +151,8 @@ A conforming implementation MAY emit JSON object properties in any order; the wi
 The grammar uses constructor forms uniformly to define every production, including productions that consist of a single component of a primitive type. For example:
 
 ```ebnf
-Header ::= header( string )
-NonNegativeInteger ::= non_negative_integer( ... )
+Header ::= header( MultilingualString )
+NonNegativeInteger ::= non_negative_integer( IntegerLexicalForm )
 KeyIdentifier ::= key_identifier( AsciiIdentifier )
 ```
 
@@ -156,51 +162,23 @@ A literal translation would encode each such production as a tagged JSON object 
 
 A production carries information beyond its payload, and so MUST be encoded as a tagged object, when at least one of the following holds:
 
-- **(a) Composite structure.** The production has more than one named component (e.g. `Cardinality`, `Property`, `LabelOverride`, `Iri` paired with semantics, every artifact identifier).
+- **(a) Composite structure.** The production has more than one named component (e.g. `Cardinality`, `Property`, `LabelOverride`, every `Value` family).
 
-- **(b) Discriminated union membership.** The production participates in a union where alternatives must be distinguished at decode time (e.g. `Value`, every artifact's `kind`, the eighteen `Field` family variants). The discriminator is `"kind"` by default, with a small set of property-set-discriminated unions per §4.5.
+- **(b) Discriminated union membership.** The production participates in a union where alternatives must be distinguished at decode time (e.g. `Value`, every artifact's `kind`, the eighteen `Field` family variants). The discriminator is `"kind"` by default, with a small set of property-set-discriminated unions per §4.4.
 
 - **(c) Lexical-form preservation.** The production carries lexical content whose preservation requires more than a JSON primitive can express (e.g. `LangStringLiteral` carries a lexical form *and* a language tag; both must be present in the wire form).
 
 A production that satisfies none of these is encoded *flat*: the JSON value at the corresponding property position in the enclosing object is the JSON encoding of the production's single component, with no `"kind"` wrapper.
 
-### 5.1 Flat productions
+The full list of productions that collapse this way is given in §1.7 of [`wire-grammar.md`](wire-grammar.md). At a glance:
 
-The following productions are encoded as flat JSON values:
+- All `MultilingualString`-typed wrappers (`Header`, `Footer`, `Name`, `Description`, `PreferredLabel`, `AlternativeLabel`, `Label`, `PropertyLabel`, `OntologyName`, `RootTermLabel`, `ValueSetName`) flatten to a JSON array of `LangString` entries.
+- All single-`Iri` wrappers (artifact identifiers and references, `PropertyIri`, the typed external-authority IRIs, `OntologyIri`, etc.) flatten to a plain JSON string.
+- All single-`NonNegativeInteger` wrappers (`MinLength`, `MaxLength`, `MinCardinality`, `MaxCardinality`, `NumericPrecision`, `MaxTraversalDepth`) flatten to a plain JSON number.
+- Plain-`string` wrappers (`Identifier`, `Notation`, `LinkLabel`, `OntologyAcronym`, `ValueSetIdentifier`, `HtmlContent`) flatten to a plain JSON string.
+- Enum-style productions (`Status`, `ValueRequirement`, `Visibility`, `DateValueType`, `TimePrecision`, `DateTimeValueType`, `TimezoneRequirement`, `DateComponentOrder`, `TimeFormat`, `TextRenderingHint`, `SingleChoiceRenderingHint`, `MultipleChoiceRenderingHint`, `NumericRenderingHint`) flatten to a JSON string drawn from a fixed set.
 
-| Production | JSON encoding | Notes |
-|---|---|---|
-| `Header` | array of `LangString` | `MultilingualString`; encoded per §6.3 |
-| `Footer` | array of `LangString` | `MultilingualString`; encoded per §6.3 |
-| `Name` | array of `LangString` | `MultilingualString`; encoded per §6.3 |
-| `Description` | array of `LangString` | `MultilingualString`; encoded per §6.3 |
-| `Identifier` | string | Plain Unicode text; technical user-supplied key |
-| `PreferredLabel` | array of `LangString` | `MultilingualString`; encoded per §6.3 |
-| `AlternativeLabel` | array of `LangString` | `MultilingualString`; encoded per §6.3 |
-| `Label` (in `LabelOverride`, `Unit`, `ControlledTermValue`, `ControlledTermClass`, external-authority values) | array of `LangString` | `MultilingualString`; encoded per §6.3 |
-| `PropertyIri` | string | IRI string |
-| `PropertyLabel` | array of `LangString` | `MultilingualString`; encoded per §6.3 |
-| `LinkLabel` | string | Plain Unicode text; not multilingual |
-| `Notation` | string | Plain Unicode text; technical SKOS-style code |
-| `OntologyAcronym` | string | Plain Unicode text; technical short-form |
-| `OntologyName` | array of `LangString` | `MultilingualString`; encoded per §6.3 |
-| `RootTermLabel` | array of `LangString` | `MultilingualString`; encoded per §6.3 |
-| `ValueSetIdentifier` | string | Plain Unicode text; technical key |
-| `ValueSetName` | array of `LangString` | `MultilingualString`; encoded per §6.3 |
-| `MinCardinality` | number | Encoded as the `min` property of `Cardinality`; non-negative integer |
-| `MaxCardinality` | number | Encoded as the `max` property of `Cardinality`. Unboundedness is expressed by omitting `max` rather than by a distinct value (per [`grammar.md`](grammar.md) §Cardinality) |
-| `NonNegativeInteger` | number | Non-negative integer |
-| `EmbeddedArtifactKey` | string | ASCII identifier matching `[A-Za-z][A-Za-z0-9_-]*` (per grammar §Embedded Artifact Key); the inner `KeyIdentifier` wrapper does not appear in the wire form |
-| `Status` | string `"draft"` or `"published"` | The grammar's `Draft` and `Published` are encoded as their lowercase names |
-| `FieldId`, `FieldReference` | string | IRI string. The field family is conveyed by the `fieldKind` discriminant on the surrounding `Field` or `EmbeddedField`; it does not appear on the identifier itself |
-| `TemplateId`, `TemplateReference` | string | IRI string |
-| `PresentationComponentId`, `PresentationComponentReference` | string | IRI string |
-| `TemplateInstanceId` | string | IRI string |
-| `Iri` (at singleton positions) | string | At positions whose role is fully determined by the surrounding property name (artifact identifiers, property IRIs, datatype IRIs, etc.), the IRI is encoded as a plain JSON string. At polymorphic positions where the IRI is one alternative in a union (e.g. `AnnotationValue`), the IRI is encoded as the object `{"iri": "..."}` per the property-set-discrimination rule (§4.5, §6.5). |
-
-The choice to flatten these productions reflects two facts: each carries a single payload — a JSON primitive or, for `MultilingualString`-typed productions, a JSON array of property-set objects — and at every site where they appear the surrounding production's property name (or the surrounding production's `kind` and `fieldKind` discriminants) disambiguates them from other values at the same level. The `MultilingualString`-typed entries above flatten to the array wire form defined in §6.3 (the array itself, with no `kind` wrapper); they are listed here because the production is structurally trivial — the grammar's `name(MultilingualString)`-style wrapper does not appear on the wire.
-
-### 5.2 Lexical-form preservation
+### 5.1 Lexical-form preservation
 
 Two narrow cases require encoded values that exceed JSON-primitive expressiveness:
 
@@ -208,498 +186,160 @@ Two narrow cases require encoded values that exceed JSON-primitive expressivenes
 
 - **Leading-zero lexical forms.** Where the abstract grammar admits lexical forms whose leading zeros carry semantic information (none currently do), implementations MUST encode such values as strings. This does not apply to integer-valued productions, which carry mathematical values rather than lexical forms.
 
-### 5.3 Tagged productions
+## 6. Per-Production Encoding (Examples)
 
-Every production not listed in §5.1 is encoded as a tagged JSON object per §4.1.
-
-## 6. Per-Production Encoding
-
-This section defines the JSON encoding of each production category defined in [`grammar.md`](grammar.md). For brevity, families of structurally identical productions (e.g. the eighteen field families) are presented as templates with the family discriminant called out.
+Detailed wire shapes for every production are normatively specified in [`wire-grammar.md`](wire-grammar.md). This section gives illustrative JSON examples — one per family of related productions — and documents only those JSON-encoding-specific rules that aren't expressible in the wire-grammar notation.
 
 ### 6.1 Identifiers
 
-Every artifact identifier is encoded as a plain JSON string carrying the IRI. The kind of identifier is communicated by the surrounding context (the property name on the enclosing object, plus the `kind` and where applicable `fieldKind` discriminants of the enclosing artifact).
+Every artifact identifier is encoded as a plain JSON string carrying the IRI. The kind of identifier is communicated by the surrounding context (the property name on the enclosing object, plus the `kind` and where applicable `fieldKind` discriminators of the enclosing artifact).
 
 ```json
 "https://example.org/fields/title"
 ```
 
-```json
-"https://example.org/templates/demo"
-```
-
-```json
-"https://example.org/components/intro"
-```
-
-```json
-"https://example.org/instances/i1"
-```
-
-A `FieldId` (or `FieldReference`) appears only in two grammar positions: as `Field.id` and as `EmbeddedField.reference`. Both surrounding constructs carry their own `fieldKind` discriminant, which conveys the field family. The eighteen permitted `fieldKind` values are: `"Text"`, `"Numeric"`, `"Date"`, `"Time"`, `"DateTime"`, `"ControlledTerm"`, `"SingleChoice"`, `"MultipleChoice"`, `"Link"`, `"Email"`, `"PhoneNumber"`, `"Orcid"`, `"Ror"`, `"Doi"`, `"PubMedId"`, `"Rrid"`, `"NihGrantId"`, or `"AttributeValue"`. A conforming encoder MUST ensure that the IRI it places at a `FieldId` position belongs to a field of the family declared by the surrounding `fieldKind`.
+A `FieldId` (or `FieldReference`) appears only in two grammar positions: as `Field.id` and as `EmbeddedField.reference`. Both surrounding constructs carry their own `fieldKind` discriminator, which conveys the field family. The eighteen permitted `fieldKind` values are: `"Text"`, `"Numeric"`, `"Date"`, `"Time"`, `"DateTime"`, `"ControlledTerm"`, `"SingleChoice"`, `"MultipleChoice"`, `"Link"`, `"Email"`, `"PhoneNumber"`, `"Orcid"`, `"Ror"`, `"Doi"`, `"PubMedId"`, `"Rrid"`, `"NihGrantId"`, or `"AttributeValue"`. A conforming encoder MUST ensure that the IRI it places at a `FieldId` position belongs to a field of the family declared by the surrounding `fieldKind`.
 
 ### 6.2 Literals
 
-Literals are encoded as JSON objects whose **set of properties** identifies the literal variant. The wire form does not use a `"kind"` discriminator for literals; instead, the combination of properties present (`value`, `lang`, `datatype`) determines the literal type unambiguously.
-
-#### Literal variants
-
-| Properties present | Production | Example |
-|---|---|---|
-| `value` only | `StringLiteral` | `{ "value": "Hello" }` |
-| `value` + `lang` | `LangStringLiteral` | `{ "value": "Bonjour", "lang": "fr" }` |
-| `value` + `datatype` | `DatatypeIriLiteral` | `{ "value": "42", "datatype": "http://www.w3.org/2001/XMLSchema#integer" }` |
-
-| Property | Type | Notes |
-|---|---|---|
-| `value` | string | The literal's lexical form (encoding the grammar's `lexicalForm` component). |
-| `lang` | string | BCP 47 language tag. Present iff the literal is a `LangStringLiteral`. |
-| `datatype` | string | IRI of the datatype. Present iff the literal is a `DatatypeIriLiteral`. |
-
-`lang` and `datatype` MUST NOT both be present. (The grammar's `Literal` union does not admit a literal that is simultaneously language-tagged and externally datatyped; RDF 1.2's directional language-tagged strings, when supported, will introduce a separate property such as `dir` rather than co-occurring on a `datatype`-bearing literal.)
-
-#### Specialized literal subtypes (`NumericLiteral`, `FullDateLiteral`, `TimeLiteral`, `DateTimeLiteral`)
-
-These productions are subtypes of `DatatypeIriLiteral` whose datatype IRI is fixed by the literal's family. They appear only at singleton positions in the grammar (`NumericValue.literal`, `FullDateValue.literal`, etc.); per §4.5 the position determines the type, so the `datatype` property MAY be omitted and is reconstructed at decode time from the surrounding context.
+Literals are encoded as JSON objects whose **set of properties** identifies the literal variant. There is no `"kind"` discriminator for literals; the combination of properties present (`value`, `lang`, `datatype`) determines the literal type unambiguously.
 
 ```json
-{ "value": "42" }
+{ "value": "Hello" }
 ```
-
 ```json
-{ "value": "2024-06-15" }
+{ "value": "Bonjour", "lang": "fr" }
 ```
-
 ```json
-{ "value": "10:30:00" }
+{ "value": "42", "datatype": "http://www.w3.org/2001/XMLSchema#integer" }
 ```
 
-```json
-{ "value": "2024-06-15T10:30:00" }
-```
+`lang` and `datatype` MUST NOT both be present.
 
-A conforming encoder MAY include the canonical `datatype` IRI on these specialized literals for clarity; a conforming decoder MUST accept either form (`datatype` present or absent) and treat them as equivalent.
+The four specialized typed-literal subtypes (`NumericLiteral`, `FullDateLiteral`, `TimeLiteral`, `DateTimeLiteral`) appear only at singleton positions in the grammar; per §4.4 the position determines the type, so the `datatype` property MAY be omitted and is reconstructed at decode time from the surrounding context. A conforming encoder MAY include the canonical `datatype` IRI for clarity; a conforming decoder MUST accept either form.
 
 ### 6.3 Multilingual strings
 
-`MultilingualString` and `LangString` carry human-display text at every grammar position whose role is to present meaning to a human reader (template headers and footers, descriptive metadata names and descriptions, controlled-term labels, unit labels, etc.). Their wire form is structurally similar to `LangStringLiteral` (§6.2) but distinct: a `LangStringLiteral` is a single language-tagged literal value (one phrasing in one language), whereas a `MultilingualString` is a non-empty *array* of `LangString` entries representing the localizations of one conceptual string into one or more languages.
-
-#### Wire form
-
-A `MultilingualString` is encoded as a JSON array of untagged `LangString` objects. There is no `kind` discriminator: `MultilingualString` appears only at singleton positions, and `LangString` appears only as an entry of a `MultilingualString` array, so per §4.5 both are encoded untagged.
+A `MultilingualString` is encoded as a non-empty JSON array of untagged `LangString` objects. There is no `kind` discriminator: `MultilingualString` appears only at singleton positions, and `LangString` appears only as an entry of a `MultilingualString` array.
 
 ```json
 [{ "value": "Hello", "lang": "en" }, { "value": "Bonjour", "lang": "fr" }]
 ```
 
-A single-localization value is encoded as a single-element array:
+The BCP 47 `'und'` (undetermined) subtag MAY be used when the natural language is unspecified.
 
-```json
-[{ "value": "Hello", "lang": "en" }]
-```
-
-The BCP 47 `'und'` (undetermined) subtag MAY be used when the natural language is unspecified:
-
-```json
-[{ "value": "Hello", "lang": "und" }]
-```
-
-#### `LangString`
-
-| Property | Type | Required | Notes |
-|---|---|---|---|
-| `value` | string | yes | The localization's textual value. |
-| `lang` | string | yes | A well-formed BCP 47 language tag identifying the natural language of `value`. |
-
-`LangString` has exactly two properties at one fixed shape, and is therefore self-discriminating at the entry-array position. No `kind` property appears.
-
-#### Constraints on `MultilingualString`
-
-A conforming encoder MUST emit an array containing at least one entry; an empty array is invalid. A conforming decoder MUST reject an empty array at any `MultilingualString` position.
-
-The `lang` values of the entries within one `MultilingualString` MUST be unique under case-folded comparison: a `MultilingualString` represents a set of localizations of a single conceptual string, not multiple phrasings within the same language. A conforming encoder MUST verify uniqueness before producing the JSON; a conforming decoder MUST reject input that violates this constraint.
-
-Each `lang` value MUST be a well-formed BCP 47 language tag. A conforming decoder MUST reject input whose `lang` value is not a syntactically valid BCP 47 tag.
-
-The order of entries in the array is the encoded grammar order of the `LangString+` sequence and MUST be preserved on round-trip per §4.4. Implementations MAY treat the array as semantically unordered (i.e. as a set) for application purposes, but MUST NOT reorder it on the wire.
-
-#### Relationship to `LangStringLiteral`
-
-`MultilingualString` and `LangStringLiteral` (§6.2) share the `{value, lang}` entry shape but are structurally distinct constructs:
-
-- A `LangStringLiteral` is a *single* language-tagged literal value occupying a `Literal`-typed position (e.g. inside a `TextValue`'s `literal`, a `LiteralChoiceOption`'s `literal`, or an `AnnotationValue`). Its wire form is one JSON object: `{ "value": "Bonjour", "lang": "fr" }`.
-- A `MultilingualString` is an *array* of one or more such pairs occupying a singleton schema-metadata position (e.g. `Template.header`, `DescriptiveMetadata.name`). Its wire form is always a JSON array: `[{ "value": "Bonjour", "lang": "fr" }]`.
-
-Encoders MUST NOT collapse a single-entry `MultilingualString` into a bare `LangStringLiteral` object, and decoders MUST NOT promote a `LangStringLiteral` object into a `MultilingualString` array.
+`MultilingualString` and `LangStringLiteral` (§6.2) share the `{value, lang}` entry shape but are structurally distinct: a `LangStringLiteral` is a *single* language-tagged literal (one JSON object), whereas a `MultilingualString` is an *array* of one or more such pairs. Encoders MUST NOT collapse a single-entry `MultilingualString` into a bare `LangStringLiteral` object, and decoders MUST NOT promote a `LangStringLiteral` object into a `MultilingualString` array.
 
 ### 6.4 Values
 
-Each `Value` family is encoded as a tagged object. Values that wrap a literal include the literal as a nested tagged object per §6.2.
+Each `Value` family is encoded as a tagged object. The full set of variants is given in [`wire-grammar.md`](wire-grammar.md) §4.
 
 ```json
 { "kind": "TextValue", "literal": { "value": "Jane Smith" } }
 ```
-
 ```json
 { "kind": "NumericValue", "literal": { "value": "42", "datatype": "http://www.w3.org/2001/XMLSchema#integer" } }
 ```
-
 ```json
 { "kind": "YearValue", "value": "2024" }
 ```
-
-```json
-{ "kind": "YearMonthValue", "value": "2024-06" }
-```
-
 ```json
 { "kind": "FullDateValue", "literal": { "value": "2024-06-15" } }
 ```
-
-`YearValue` and `YearMonthValue` carry plain string values rather than literals; this matches their grammar definitions.
-
 ```json
 { "kind": "ControlledTermValue", "term": "http://example.org/term/1", "label": [{ "value": "Term 1", "lang": "en" }] }
 ```
-
-The optional `label` and `preferredLabel` properties are encoded as `MultilingualString` arrays per §6.3 and are omitted when absent. The optional `notation` property (when present) is a plain Unicode string carrying a SKOS-style symbolic code, not a `MultilingualString`.
-
 ```json
 { "kind": "LiteralChoiceValue", "literal": { "value": "Professor", "lang": "en" } }
 ```
-
-```json
-{ "kind": "ControlledTermChoiceValue", "value": { "term": "http://example.org/term/1" } }
-```
-
 ```json
 { "kind": "LinkValue", "iri": "https://example.org/page" }
 ```
-
-The optional `label` property carries a `LinkLabel`, which is a plain Unicode string (not a `MultilingualString`); it is omitted when absent.
-
-```json
-{ "kind": "EmailValue", "literal": { "value": "jane@example.org" } }
-```
-
-```json
-{ "kind": "PhoneNumberValue", "literal": { "value": "+1-415-555-0100" } }
-```
-
-External-authority values (`OrcidValue`, `RorValue`, `DoiValue`, `PubMedIdValue`, `RridValue`, `NihGrantIdValue`) follow a uniform shape:
-
 ```json
 { "kind": "OrcidValue", "iri": "https://orcid.org/0000-0002-1825-0097", "label": [{ "value": "Jane Smith", "lang": "en" }] }
 ```
-
-The optional `label` property is encoded as a `MultilingualString` per §6.3 and is omitted when absent.
-
 ```json
-{ "kind": "AttributeValue", "value": "raw attribute string" }
+{ "kind": "AttributeValue", "name": "color", "value": { "kind": "TextValue", "literal": { "value": "blue" } } }
 ```
 
-### 6.5 Metadata
+### 6.5 Metadata and annotations
 
-The grammar defines six metadata productions: four leaves (`DescriptiveMetadata`, `TemporalProvenance`, `SchemaVersioning`, `Annotation`), one polymorphic value (`AnnotationValue`), and two aggregates (`ArtifactMetadata`, `SchemaArtifactMetadata`). Every metadata production except `AnnotationValue` appears at a single, fixed grammar position; per §4.5 those are encoded as untagged JSON objects, with the production identified by the property name on the enclosing object. `AnnotationValue` is a property-set-discriminated polymorphic union (`Literal | Iri`) — see §4.5 and the dedicated subsection below.
-
-#### `DescriptiveMetadata`
-
-The human-oriented description of an artifact: name, optional longer description, optional identifier, optional preferred label, and a (possibly empty) array of alternative labels. Appears at `ArtifactMetadata.descriptiveMetadata`.
+`DescriptiveMetadata`, `TemporalProvenance`, `SchemaVersioning`, `ArtifactMetadata`, and `SchemaArtifactMetadata` each appear at a fixed singleton position and are encoded as untagged JSON objects.
 
 ```json
 {
-  "name": [{ "value": "Full Name", "lang": "en" }],
-  "description": [{ "value": "Full legal name of the principal investigator.", "lang": "en" }],
-  "identifier": "https://example.org/identifiers/full-name",
-  "preferredLabel": [{ "value": "Name", "lang": "en" }],
-  "altLabels": [
-    [{ "value": "Full Name", "lang": "en" }],
-    [{ "value": "Legal Name", "lang": "en" }]
+  "descriptiveMetadata": {
+    "name": [{ "value": "Full Name", "lang": "en" }],
+    "description": [{ "value": "Full legal name.", "lang": "en" }],
+    "preferredLabel": [{ "value": "Name", "lang": "en" }],
+    "altLabels": []
+  },
+  "provenance": {
+    "createdOn": "2024-01-01T00:00:00Z",
+    "createdBy": "https://orcid.org/0000-0002-1825-0097",
+    "modifiedOn": "2024-06-15T12:30:00Z",
+    "modifiedBy": "https://orcid.org/0000-0002-1825-0097"
+  },
+  "annotations": [
+    {
+      "property": "https://example.org/annotation-properties/notes",
+      "body": { "value": "An institutional note." }
+    }
   ]
 }
 ```
 
-| Property | Type | Required | Notes |
-|---|---|---|---|
-| `name` | `MultilingualString` | yes | Array of `LangString` entries per §6.3. |
-| `description` | `MultilingualString` | no | Array of `LangString` entries per §6.3. Omitted when absent. |
-| `identifier` | string | no | Plain Unicode text or IRI; technical user-supplied key, not multilingual. Omitted when absent. |
-| `preferredLabel` | `MultilingualString` | no | Array of `LangString` entries per §6.3. Omitted when absent. |
-| `altLabels` | `MultilingualString[]` | yes | Array (possibly empty) encoding the grammar's `AlternativeLabel*` sequence. Each entry is itself a `MultilingualString` (an array of `LangString` entries per §6.3). |
-
-#### `TemporalProvenance`
-
-Who created and last modified the artifact, and when. Appears at `ArtifactMetadata.provenance`.
+`AnnotationValue` is a property-set-discriminated polymorphic union (`Literal | Iri`). The literal arms carry `value` (and optionally `lang` or `datatype`); the IRI arm carries `iri` only:
 
 ```json
-{
-  "createdOn": "2024-01-01T00:00:00Z",
-  "createdBy": "https://orcid.org/0000-0002-1825-0097",
-  "modifiedOn": "2024-06-15T12:30:00Z",
-  "modifiedBy": "https://orcid.org/0000-0002-1825-0097"
-}
+{ "iri": "https://example.org/related-resource" }
 ```
 
-All four properties are required. Timestamps are ISO-8601 (`xsd:dateTime`) lexical strings; `createdBy` and `modifiedBy` carry agent IRI strings.
-
-#### `SchemaVersioning`
-
-Version metadata for a `SchemaArtifact` (a `Field` or a `Template`). Appears at `SchemaArtifactMetadata.versioning`.
-
-```json
-{
-  "version": "1.0.0",
-  "status": "draft",
-  "modelVersion": "2.0.0",
-  "previousVersion": "https://example.org/templates/demo/v0.9.0",
-  "derivedFrom": "https://example.org/templates/source/v1.0.0"
-}
-```
-
-| Property | Type | Required | Notes |
-|---|---|---|---|
-| `version` | string | yes | Semantic version of the artifact (e.g. `"1.0.0"`). |
-| `status` | string | yes | `"draft"` or `"published"` per the grammar's `Status` production. |
-| `modelVersion` | string | yes | Semantic version of the CEDAR Structural Model the artifact was authored against. |
-| `previousVersion` | string | no | IRI of the immediate predecessor in a version chain. Omitted when absent. |
-| `derivedFrom` | string | no | IRI of a source artifact this one was copied or adapted from. Omitted when absent. |
-
-#### `Annotation`
-
-A pairing of an annotation property IRI with an annotation value. Appears in the uniform array `ArtifactMetadata.annotations[]`; per §4.5 each entry is therefore encoded as an untagged object.
-
-```json
-{
-  "property": "https://example.org/annotation-properties/notes",
-  "body": { "value": "An institutional note." }
-}
-```
-
-| Property | Type | Required | Notes |
-|---|---|---|---|
-| `property` | string | yes | IRI of the annotation property (the predicate under which the annotation is asserted). |
-| `body` | `AnnotationValue` | yes | One of the four shapes defined in `AnnotationValue` immediately below. The wire-form property name is `body` — encoding the grammar's `AnnotationValue` component — chosen to avoid the visual collision a `value`/`value` nesting would create with the literal's `value` property. The naming follows the W3C Web Annotations convention. |
-
-#### `AnnotationValue`
-
-`AnnotationValue ::= Literal | Iri`. A property-set-discriminated polymorphic union per §4.5: each of the four possible shapes (three literal variants plus the IRI form) is identified by which properties are present on the encoded object. There is no `"kind"` discriminator.
-
-| Properties present | Decoded as | Example |
-|---|---|---|
-| `value` only | `StringLiteral` | `{ "value": "An institutional note." }` |
-| `value` + `lang` | `LangStringLiteral` | `{ "value": "Une note institutionnelle.", "lang": "fr" }` |
-| `value` + `datatype` | `DatatypeIriLiteral` | `{ "value": "42", "datatype": "http://www.w3.org/2001/XMLSchema#integer" }` |
-| `iri` only | `Iri` | `{ "iri": "https://example.org/related-resource" }` |
-
-A conforming encoder MUST emit exactly one of these four shapes. A conforming decoder MUST reject any other property combination at this position (e.g., an object with both `value` and `iri`, or with neither).
-
-The literal variants are exactly those defined for the `Literal` union in §6.2; the IRI form is the wire-format encoding of `Iri` at this polymorphic position (per the §5.1 row for `Iri`). RDF 1.2 directional language-tagged strings, when supported, will introduce an additional property (e.g. `dir`) on the language-tagged variant; the property-set discrimination scheme accommodates that without restructuring.
-
-#### `ArtifactMetadata`
-
-Aggregates the descriptive, provenance, and annotation metadata that every `Artifact` carries. Appears at `TemplateInstance.metadata`, at the `metadata` slot of every concrete `PresentationComponent` variant, and (nested) inside `SchemaArtifactMetadata.artifact`.
-
-```json
-{
-  "descriptiveMetadata": <DescriptiveMetadata>,
-  "provenance": <TemporalProvenance>,
-  "annotations": [ <Annotation>* ]
-}
-```
-
-All three properties are required. `annotations` MAY be empty.
-
-#### `SchemaArtifactMetadata`
-
-Extends `ArtifactMetadata` with schema-version metadata; carried by every `SchemaArtifact`. Appears at `Field.metadata` and `Template.metadata`.
-
-```json
-{
-  "artifact": <ArtifactMetadata>,
-  "versioning": <SchemaVersioning>
-}
-```
-
-Both properties are required.
+The wire-form property name on `Annotation` is `body` (for the grammar's `AnnotationValue` component) — chosen to avoid the visual collision that a `value`/`value` nesting would create with the literal's `value` property. The naming follows the W3C Web Annotations convention.
 
 ### 6.6 Embedded artifact properties
 
-This section covers the embedding-context productions: `EmbeddedArtifactKey`, `Cardinality`, `LabelOverride`, `Property`, plus the two enum-style productions `ValueRequirement` and `Visibility`. With the exception of `EmbeddedArtifactKey` and the two enums (all encoded flat per §5.1), each production appears at fixed singleton positions on `EmbeddedField`, `EmbeddedTemplate`, and `EmbeddedPresentationComponent`, and is therefore encoded as an untagged JSON object per §4.5.
-
-#### `EmbeddedArtifactKey`
-
-Encoded as a plain JSON string matching the ASCII identifier pattern `[A-Za-z][A-Za-z0-9_-]*` (per [`grammar.md`](grammar.md) §Embedded Artifact Key). The grammar's intermediate `KeyIdentifier` wrapper does not appear in the wire form.
-
-```json
-"full_name"
-```
-
-#### `Cardinality`
-
-Bounds the permitted number of values for an embedded artifact in its embedding context. Appears at `EmbeddedField.cardinality` and `EmbeddedTemplate.cardinality`.
+`Cardinality`, `Property`, `LabelOverride`, and `Unit` are untagged JSON objects (singleton positions). `EmbeddedArtifactKey` flattens to a plain JSON string. `ValueRequirement` and `Visibility` flatten to JSON enum strings.
 
 ```json
 { "min": 0, "max": 5 }
 ```
-
-```json
-{ "min": 1 }
-```
-
-| Property | Type | Required | Notes |
-|---|---|---|---|
-| `min` | number | yes | Non-negative integer; the lower bound. |
-| `max` | number | no | Non-negative integer ≥ `min`; the upper bound. Omitted when the cardinality is unbounded above (per [`grammar.md`](grammar.md) §Cardinality). |
-
-#### `LabelOverride`
-
-Provides a template-specific label for an embedded artifact, optionally with alternative labels. Appears at `EmbeddedField.labelOverride`, `EmbeddedTemplate.labelOverride`, and `EmbeddedPresentationComponent.labelOverride`.
-
-```json
-{
-  "label": [{ "value": "Custom Label", "lang": "en" }],
-  "altLabels": [
-    [{ "value": "Alt 1", "lang": "en" }],
-    [{ "value": "Alt 2", "lang": "en" }]
-  ]
-}
-```
-
-| Property | Type | Required | Notes |
-|---|---|---|---|
-| `label` | `MultilingualString` | yes | Array of `LangString` entries per §6.3. |
-| `altLabels` | `MultilingualString[]` | yes | Array (possibly empty) encoding the grammar's `AlternativeLabel*` sequence. Each entry is itself a `MultilingualString`. |
-
-#### `Property`
-
-Associates a semantic property IRI (and optionally a human-readable label) with an embedded data-bearing artifact. Appears at `EmbeddedField.property` and `EmbeddedTemplate.property`. Not present on `EmbeddedPresentationComponent` — a presentation component produces no instance value to bind to a property.
-
 ```json
 { "iri": "https://schema.org/name", "label": [{ "value": "name", "lang": "en" }] }
 ```
-
-| Property | Type | Required | Notes |
-|---|---|---|---|
-| `iri` | string | yes | IRI of the semantic property. The grammar's `PropertyIri` wrapper does not appear in the wire form. |
-| `label` | `MultilingualString` | no | Array of `LangString` entries per §6.3. Omitted when absent. |
-
-#### `ValueRequirement` and `Visibility`
-
-Flat enumeration strings per §5.1; they appear directly as the value of `valueRequirement` and `visibility` properties on `EmbeddedField`, `EmbeddedTemplate`, and (for `Visibility`) `EmbeddedPresentationComponent`.
-
-| Production | Encoded values |
-|---|---|
-| `ValueRequirement` | `"required"`, `"recommended"`, `"optional"` |
-| `Visibility` | `"visible"`, `"hidden"` |
+```json
+{ "label": [{ "value": "Custom Label", "lang": "en" }], "altLabels": [] }
+```
+```json
+"required"
+```
 
 ### 6.7 Field specs
 
-Each concrete `FieldSpec` is encoded as a tagged object whose `"kind"` matches the spec's constructor form. Optional configuration properties are omitted when absent. The encoding is purely structural; no field-spec-specific encoding rules apply beyond the general rules in §4.
+Each concrete `FieldSpec` is encoded as a tagged object whose `"kind"` matches the spec's grammar production name. Optional configuration properties are omitted when absent.
 
 ```json
-{ "kind": "TextFieldSpec", "minLength": 1, "maxLength": 200, "validationRegex": "^[A-Z].*", "renderingHint": "singleLine" }
+{ "kind": "TextFieldSpec", "minLength": 1, "maxLength": 200, "renderingHint": "singleLine" }
 ```
-
 ```json
-{ "kind": "NumericFieldSpec", "datatype": "integer", "minimum": 0, "maximum": 100, "numericPrecision": 2, "unit": { "label": [{ "value": "kg", "lang": "en" }], "iri": "http://qudt.org/vocab/unit/KILOGRAM" } }
+{ "kind": "NumericFieldSpec", "datatype": "integer", "minValue": { "kind": "NumericValue", "literal": { "value": "0" } } }
 ```
-
 ```json
 { "kind": "DateFieldSpec", "dateValueType": "fullDate", "renderingHint": { "componentOrder": "dayMonthYear" } }
 ```
-
 ```json
-{ "kind": "LiteralSingleChoiceFieldSpec", "options": [ {"literal": { "value": "Yes", "lang": "en"}, "default": true} ] }
+{ "kind": "LiteralSingleChoiceFieldSpec", "options": [{ "literal": { "value": "Yes", "lang": "en" }, "default": true }] }
+```
+```json
+{ "kind": "ControlledTermFieldSpec", "sources": [
+  { "kind": "OntologySource", "ontology": { "iri": "http://purl.obolibrary.org/obo/ncit.owl",
+    "displayHint": { "acronym": "NCIT", "name": [{ "value": "NCI Thesaurus", "lang": "en" }] } } }
+] }
 ```
 
-```json
-{ "kind": "ControlledTermFieldSpec", "sources": [ <ControlledTermSource>+ ] }
-```
+The `default` property on choice options is encoded as JSON `true` when set; the property is omitted otherwise. An `OntologyDisplayHint` MUST carry at least one of `acronym` or `name` (a constraint enforced by `wire-grammar.md`).
 
-The `default` property on choice options is encoded as a JSON `true` when set; the property is omitted otherwise.
-
-#### Sub-productions used inside field specs
-
-Several productions appear nested inside field-spec encodings. Per §4.5 they are encoded as untagged JSON objects; this subsection identifies each by name and documents its component properties.
-
-##### `Unit`
-
-Optional unit metadata for a numeric field. Appears at `NumericFieldSpec.unit`.
-
-```json
-{
-  "label": [{ "value": "kg", "lang": "en" }],
-  "iri": "http://qudt.org/vocab/unit/KILOGRAM"
-}
-```
-
-| Property | Type | Required | Notes |
-|---|---|---|---|
-| `label` | `MultilingualString` | no | Human-readable unit label (e.g. `"kg"`); array of `LangString` entries per §6.3. Omitted when absent (per the grammar's `[Label]` component on `Unit`). |
-| `iri` | string | yes | IRI identifying the unit (e.g. a QUDT IRI). |
-
-##### `DateRenderingHint`, `TimeRenderingHint`, `DateTimeRenderingHint`
-
-Object-form rendering hints for the three temporal field-spec families. Appear at the `renderingHint` property of `DateFieldSpec`, `TimeFieldSpec`, and `DateTimeFieldSpec` respectively. Other field-spec families use a flat string for `renderingHint` (e.g. `"singleLine"` for `TextRenderingHint`); only the temporal hints have an object encoding.
-
-```json
-{ "componentOrder": "dayMonthYear" }
-```
-
-The `componentOrder` value is one of the `DateComponentOrder` enum strings (`"dayMonthYear"`, `"monthDayYear"`, `"yearMonthDay"`). `TimeRenderingHint` and `DateTimeRenderingHint` carry the analogous configuration properties defined in [`grammar.md`](grammar.md) §Temporal Field Specs.
-
-##### `LiteralChoiceOption`
-
-A single option in a literal-choice field spec. Appears in the uniform array `LiteralSingleChoiceFieldSpec.options[]` and `LiteralMultipleChoiceFieldSpec.options[]`.
-
-```json
-{ "literal": { "value": "Yes", "lang": "en" }, "default": true }
-```
-
-| Property | Type | Required | Notes |
-|---|---|---|---|
-| `literal` | tagged `Literal` | yes | The option's literal value. The position is polymorphic (`Literal` is a union); the inner literal is therefore tagged per §4.5 (see §6.2). |
-| `default` | `true` | no | When present, MUST be JSON `true`. Omitted when the option is not the default. |
-
-##### `ControlledTermChoiceOption`
-
-A single option in a controlled-term-choice field spec. Appears in `ControlledTermSingleChoiceFieldSpec.options[]` and `ControlledTermMultipleChoiceFieldSpec.options[]`.
-
-```json
-{ "value": { "term": "http://example.org/term/1", "label": [{ "value": "Term 1", "lang": "en" }] }, "default": true }
-```
-
-| Property | Type | Required | Notes |
-|---|---|---|---|
-| `value` | untagged `ControlledTermValue` | yes | The option's controlled-term value. Singleton position; encoded untagged. |
-| `default` | `true` | no | As for `LiteralChoiceOption`. |
-
-##### `OntologyDisplayHint`
-
-Surfaces a human-readable acronym and/or name for an ontology to the rendering UI. Appears at `OntologyReference.displayHint`. Per the grammar's `OntologyDisplayHintContent ::= OntologyAcronym | OntologyName | OntologyAcronym OntologyName`, at least one of `acronym` or `name` MUST be present.
-
-```json
-{ "acronym": "NCIT", "name": [{ "value": "NCI Thesaurus", "lang": "en" }] }
-```
-
-| Property | Type | Required | Notes |
-|---|---|---|---|
-| `acronym` | string | no | Plain Unicode short-form (e.g. `"NCIT"`). A technical label rather than human-display text and is therefore not multilingual. The grammar production is `OntologyAcronym`; the parent-prefix `Ontology` is dropped on the wire per the property-naming convention in §3. |
-| `name` | `MultilingualString` | no | Human-readable ontology name. Array of `LangString` entries per §6.3. The grammar production is `OntologyName`. |
-
-A conforming encoder MUST emit at least one of `acronym` and `name`; an `OntologyDisplayHint` with neither MUST be rejected.
-
-##### `ControlledTermSource`
-
-The grammar admits four alternatives at `ControlledTermFieldSpec.sources[]` entries (`OntologyReference`, `BranchSource`, `ClassSource`, `ValueSetSource`); this is a polymorphic position and each entry is therefore encoded as a tagged JSON object per §4.5. The component properties of each variant are defined in [`grammar.md`](grammar.md) §Controlled Term Sources.
-
-The following components within these alternatives are encoded as `MultilingualString` per §6.3:
-
-- `BranchSource.rootTermLabel` (the `RootTermLabel` of the branch's root term);
-- `ClassSource` entries' `label` (each `ControlledTermClass` carries a `Label`, which is `MultilingualString`-typed);
-- `ValueSetSource.name` (the `ValueSetName`, when present).
-
-The corresponding technical-key components remain plain Unicode strings: `OntologyAcronym` (within `OntologyDisplayHint`) and `ValueSetIdentifier` (within `ValueSetSource`).
+The flat-string rendering hints (`TextRenderingHint`, `SingleChoiceRenderingHint`, `MultipleChoiceRenderingHint`, `NumericRenderingHint`) appear directly as JSON enum strings; the temporal rendering hints (`DateRenderingHint`, `TimeRenderingHint`, `DateTimeRenderingHint`) are JSON objects.
 
 ### 6.8 Field artifacts and embedded artifacts
 
@@ -709,9 +349,9 @@ A `Field` artifact:
 {
   "kind": "Field",
   "fieldKind": "Text",
-  "id": <FieldId>,
-  "metadata": <SchemaArtifactMetadata>,
-  "fieldSpec": <FieldSpec>
+  "id": "<FieldId>",
+  "metadata": "<SchemaArtifactMetadata>",
+  "fieldSpec": "<FieldSpec>"
 }
 ```
 
@@ -723,41 +363,31 @@ An `EmbeddedField`:
 {
   "kind": "EmbeddedField",
   "fieldKind": "Text",
-  "key": <EmbeddedArtifactKey>,
-  "reference": <FieldId>,
+  "key": "<EmbeddedArtifactKey>",
+  "reference": "<FieldId>",
   "valueRequirement": "required",
-  "cardinality": <Cardinality>,
-  "visibility": "visible",
-  "defaultValue": <DefaultValue>,
-  "labelOverride": <LabelOverride>,
-  "property": <Property>
+  "cardinality": { "min": 1, "max": 1 },
+  "property": { "iri": "https://schema.org/name" }
 }
 ```
 
-All properties except `kind`, `fieldKind`, `key`, and `reference` are optional and MUST be omitted when absent.
-
-`EmbeddedField` for `fieldKind: "attribute_value"` MUST NOT carry a `defaultValue` property (per [`grammar.md`](grammar.md) §Embedded Artifacts).
+`EmbeddedField` for `fieldKind: "AttributeValue"` MUST NOT carry a `defaultValue` property.
 
 ```json
 {
   "kind": "EmbeddedTemplate",
-  "key": <EmbeddedArtifactKey>,
-  "reference": <TemplateId>,
-  "valueRequirement": "required",
-  "cardinality": <Cardinality>,
-  "visibility": "visible",
-  "labelOverride": <LabelOverride>,
-  "property": <Property>
+  "key": "<EmbeddedArtifactKey>",
+  "reference": "<TemplateId>",
+  "cardinality": { "min": 0 }
 }
 ```
 
 ```json
 {
   "kind": "EmbeddedPresentationComponent",
-  "key": <EmbeddedArtifactKey>,
-  "reference": <PresentationComponentId>,
-  "visibility": "hidden",
-  "labelOverride": <LabelOverride>
+  "key": "<EmbeddedArtifactKey>",
+  "reference": "<PresentationComponentId>",
+  "visibility": "visible"
 }
 ```
 
@@ -766,56 +396,40 @@ All properties except `kind`, `fieldKind`, `key`, and `reference` are optional a
 Each concrete `DefaultValue` family is encoded as a tagged object wrapping a `Value`:
 
 ```json
-{ "kind": "TextDefaultValue", "value": <TextValue> }
+{ "kind": "TextDefaultValue", "value": { "kind": "TextValue", "literal": { "value": "Hello" } } }
 ```
-
 ```json
-{ "kind": "ChoiceDefaultValue", "values": [ <ChoiceValue>+ ] }
+{ "kind": "ChoiceDefaultValue", "values": [
+  { "kind": "LiteralChoiceValue", "literal": { "value": "Yes", "lang": "en" } }
+] }
 ```
 
-`ChoiceDefaultValue` carries an array because the grammar specifies `ChoiceValue+`. All other default-value families wrap a single `Value`.
-
-The encoding is uniform across all sixteen non-attribute-value default-value families.
+`ChoiceDefaultValue` carries an array because the grammar specifies `ChoiceValue+`; all other default-value families wrap a single `Value`.
 
 ### 6.10 Templates
 
 ```json
 {
   "kind": "Template",
-  "id": <TemplateId>,
-  "metadata": <SchemaArtifactMetadata>,
+  "id": "<TemplateId>",
+  "metadata": "<SchemaArtifactMetadata>",
   "header": [{ "value": "Template Header Text", "lang": "en" }],
-  "footer": [{ "value": "Template Footer Text", "lang": "en" }],
-  "embedded": [ <EmbeddedArtifact>* ]
+  "embedded": ["<EmbeddedArtifact>*"]
 }
 ```
 
-`header` and `footer` are encoded as `MultilingualString` arrays per §6.3 and are omitted when absent.
-
-The `embedded` array MUST preserve order (per [`grammar.md`](grammar.md) §Embedded Artifacts).
-
-The `EmbeddedArtifactKey` values within `embedded` MUST be unique (per [`grammar.md`](grammar.md) §Embedded Artifact Key); a conforming encoder MUST verify uniqueness before producing the JSON, and a conforming decoder MUST reject input that violates this constraint.
+The `embedded` array MUST preserve order. The `EmbeddedArtifactKey` values within `embedded` MUST be unique; a conforming encoder MUST verify uniqueness before producing the JSON, and a conforming decoder MUST reject input that violates this constraint.
 
 ### 6.11 Presentation components
 
 ```json
-{ "kind": "RichTextComponent", "id": <PresentationComponentId>, "metadata": <ArtifactMetadata>, "html": "<p>Hello</p>" }
+{ "kind": "RichTextComponent", "id": "<PresentationComponentId>", "metadata": "<ArtifactMetadata>", "html": "<p>Hello</p>" }
 ```
-
 ```json
-{ "kind": "ImageComponent", "id": <PresentationComponentId>, "metadata": <ArtifactMetadata>, "image": "https://example.org/image.png" }
+{ "kind": "ImageComponent", "id": "<PresentationComponentId>", "metadata": "<ArtifactMetadata>", "image": "https://example.org/image.png" }
 ```
-
 ```json
-{ "kind": "YoutubeVideoComponent", "id": <PresentationComponentId>, "metadata": <ArtifactMetadata>, "video": "https://youtu.be/dQw4w9WgXcQ" }
-```
-
-```json
-{ "kind": "SectionBreakComponent", "id": <PresentationComponentId>, "metadata": <ArtifactMetadata> }
-```
-
-```json
-{ "kind": "PageBreakComponent", "id": <PresentationComponentId>, "metadata": <ArtifactMetadata> }
+{ "kind": "SectionBreakComponent", "id": "<PresentationComponentId>", "metadata": "<ArtifactMetadata>" }
 ```
 
 ### 6.12 Instances
@@ -823,34 +437,24 @@ The `EmbeddedArtifactKey` values within `embedded` MUST be unique (per [`grammar
 ```json
 {
   "kind": "TemplateInstance",
-  "id": <TemplateInstanceId>,
-  "metadata": <ArtifactMetadata>,
-  "templateRef": <TemplateId>,
-  "values": [ <InstanceValue>* ]
+  "id": "<TemplateInstanceId>",
+  "metadata": "<ArtifactMetadata>",
+  "templateRef": "<TemplateId>",
+  "values": ["<InstanceValue>*"]
 }
 ```
 
-`TemplateInstance.metadata` MUST be `ArtifactMetadata` (not `SchemaArtifactMetadata`); instances do not carry schema versioning.
+`TemplateInstance.metadata` is `ArtifactMetadata` (not `SchemaArtifactMetadata`); instances do not carry schema versioning.
 
 ```json
-{
-  "kind": "FieldValue",
-  "key": <EmbeddedArtifactKey>,
-  "values": [ <Value>+ ]
-}
+{ "kind": "FieldValue", "key": "<EmbeddedArtifactKey>", "values": ["<Value>+"] }
 ```
 
-`FieldValue.values` MUST be a non-empty array (per [`grammar.md`](grammar.md) §Instances; absence of a value is represented by omitting the `FieldValue` entirely).
+`FieldValue.values` MUST be a non-empty array; absence of a value is represented by omitting the `FieldValue` entirely.
 
 ```json
-{
-  "kind": "NestedTemplateInstance",
-  "key": <EmbeddedArtifactKey>,
-  "values": [ <InstanceValue>* ]
-}
+{ "kind": "NestedTemplateInstance", "key": "<EmbeddedArtifactKey>", "values": ["<InstanceValue>*"] }
 ```
-
-`InstanceValue.values` for a `NestedTemplateInstance` MAY be empty.
 
 The `values` array of a `TemplateInstance` MUST satisfy the structural invariants defined in [`grammar.md`](grammar.md) §Instances: a given `EmbeddedArtifactKey` appears as the `key` of at most one `FieldValue`; a given `EmbeddedArtifactKey` does not appear as the `key` of both a `FieldValue` and a `NestedTemplateInstance`; multiple `NestedTemplateInstance` entries sharing a `key` are permitted.
 
@@ -866,7 +470,7 @@ A conforming encode-decode round-trip MAY NOT preserve:
 
 - JSON object property order within a single tagged object.
 - Whitespace between JSON tokens.
-- Implementation-specific properties beginning with `_` or `$` per §4.8 (these are explicitly outside the conformance contract).
+- Implementation-specific properties beginning with `_` or `$` per §4.7 (these are explicitly outside the conformance contract).
 
 Two conforming JSON documents that differ only in JSON object property order or non-significant whitespace MUST decode to the same abstract construct.
 
@@ -948,7 +552,7 @@ The `name` property below is a `MultilingualString` (§6.3): an array of `{value
 
 The property names `kind` and `fieldKind` are reserved by this specification at all object-level positions. Implementations MUST NOT reuse these names for non-normative purposes.
 
-The property name prefixes `_` and `$` are reserved for implementation-specific extensions per §4.8.
+The property name prefixes `_` and `$` are reserved for implementation-specific extensions per §4.7.
 
 All other property names are scoped to their containing tagged object's production and have no global meaning.
 
