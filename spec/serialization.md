@@ -215,15 +215,15 @@ A `FieldId` (or `FieldReference`) appears only in two grammar positions: as `Fie
 ```
 
 ```json
-{ "kind": "LangStringLiteral", "lexicalForm": "Bonjour", "languageTag": "fr" }
+{ "kind": "LangStringLiteral", "lexicalForm": "Bonjour", "lang": "fr" }
 ```
 
 ```json
-{ "kind": "DatatypeIriLiteral", "lexicalForm": "42", "datatypeIri": "http://www.w3.org/2001/XMLSchema#integer" }
+{ "kind": "DatatypeIriLiteral", "lexicalForm": "42", "datatype": "http://www.w3.org/2001/XMLSchema#integer" }
 ```
 
 ```json
-{ "kind": "NumericLiteral", "lexicalForm": "3.14", "datatypeIri": "http://www.w3.org/2001/XMLSchema#double" }
+{ "kind": "NumericLiteral", "lexicalForm": "3.14", "datatype": "http://www.w3.org/2001/XMLSchema#double" }
 ```
 
 ```json
@@ -238,7 +238,7 @@ A `FieldId` (or `FieldReference`) appears only in two grammar positions: as `Fie
 { "kind": "DateTimeLiteral", "lexicalForm": "2024-06-15T10:30:00" }
 ```
 
-The `datatypeIri` and `languageTag` properties carry plain strings (the IRI or BCP 47 tag respectively).
+The `datatype` and `lang` properties carry plain strings (the IRI or BCP 47 tag respectively).
 
 ### 6.3 Values
 
@@ -249,7 +249,7 @@ Each `Value` family is encoded as a tagged object. Values that wrap a literal in
 ```
 
 ```json
-{ "kind": "NumericValue", "literal": { "kind": "NumericLiteral", "lexicalForm": "42", "datatypeIri": "http://www.w3.org/2001/XMLSchema#integer" } }
+{ "kind": "NumericValue", "literal": { "kind": "NumericLiteral", "lexicalForm": "42", "datatype": "http://www.w3.org/2001/XMLSchema#integer" } }
 ```
 
 ```json
@@ -267,17 +267,17 @@ Each `Value` family is encoded as a tagged object. Values that wrap a literal in
 `YearValue` and `YearMonthValue` carry plain string values rather than literals; this matches their grammar definitions.
 
 ```json
-{ "kind": "ControlledTermValue", "termIri": "http://example.org/term/1", "label": "Term 1" }
+{ "kind": "ControlledTermValue", "term": "http://example.org/term/1", "label": "Term 1" }
 ```
 
 The optional `label` property is omitted when absent.
 
 ```json
-{ "kind": "LiteralChoiceValue", "literal": { "kind": "LangStringLiteral", "lexicalForm": "Professor", "languageTag": "en" } }
+{ "kind": "LiteralChoiceValue", "literal": { "kind": "LangStringLiteral", "lexicalForm": "Professor", "lang": "en" } }
 ```
 
 ```json
-{ "kind": "ControlledTermChoiceValue", "value": { "kind": "ControlledTermValue", "termIri": "http://example.org/term/1" } }
+{ "kind": "ControlledTermChoiceValue", "value": { "kind": "ControlledTermValue", "term": "http://example.org/term/1" } }
 ```
 
 ```json
@@ -435,7 +435,7 @@ Each concrete `FieldSpec` is encoded as a tagged object whose `"kind"` matches t
 ```
 
 ```json
-{ "kind": "LiteralSingleChoiceFieldSpec", "options": [ {"kind":"LiteralChoiceOption", "literal": {"kind":"LangStringLiteral", "lexicalForm": "Yes", "languageTag": "en"}, "default": true} ] }
+{ "kind": "LiteralSingleChoiceFieldSpec", "options": [ {"kind":"LiteralChoiceOption", "literal": {"kind":"LangStringLiteral", "lexicalForm": "Yes", "lang": "en"}, "default": true} ] }
 ```
 
 ```json
@@ -542,15 +542,15 @@ The `EmbeddedArtifactKey` values within `embedded` MUST be unique (per [`grammar
 ### 6.10 Presentation components
 
 ```json
-{ "kind": "RichTextComponent", "id": <PresentationComponentId>, "metadata": <ArtifactMetadata>, "htmlContent": "<p>Hello</p>" }
+{ "kind": "RichTextComponent", "id": <PresentationComponentId>, "metadata": <ArtifactMetadata>, "html": "<p>Hello</p>" }
 ```
 
 ```json
-{ "kind": "ImageComponent", "id": <PresentationComponentId>, "metadata": <ArtifactMetadata>, "imageSource": "https://example.org/image.png" }
+{ "kind": "ImageComponent", "id": <PresentationComponentId>, "metadata": <ArtifactMetadata>, "image": "https://example.org/image.png" }
 ```
 
 ```json
-{ "kind": "YoutubeVideoComponent", "id": <PresentationComponentId>, "metadata": <ArtifactMetadata>, "youtubeVideoSource": "https://youtu.be/dQw4w9WgXcQ" }
+{ "kind": "YoutubeVideoComponent", "id": <PresentationComponentId>, "metadata": <ArtifactMetadata>, "video": "https://youtu.be/dQw4w9WgXcQ" }
 ```
 
 ```json
@@ -568,7 +568,7 @@ The `EmbeddedArtifactKey` values within `embedded` MUST be unique (per [`grammar
   "kind": "TemplateInstance",
   "id": <TemplateInstanceId>,
   "metadata": <ArtifactMetadata>,
-  "templateReference": <TemplateId>,
+  "templateRef": <TemplateId>,
   "values": [ <InstanceValue>* ]
 }
 ```
@@ -673,7 +673,7 @@ Two conforming JSON documents that differ only in JSON object property order or 
   "kind": "TemplateInstance",
   "id": "https://example.org/instances/i1",
   "metadata": { "kind": "ArtifactMetadata", "descriptive": "...", "provenance": "...", "annotations": [] },
-  "templateReference": "https://example.org/templates/note",
+  "templateRef": "https://example.org/templates/note",
   "values": [
     {
       "kind": "FieldValue",
