@@ -841,17 +841,11 @@ AnnotationName ::= annotation_name(
                      Iri
                    )
 
-AnnotationValue ::= LiteralAnnotationValue
-                  | IriAnnotationValue
-
-LiteralAnnotationValue ::= literal_annotation_value(
-                             Literal
-                           )
-
-IriAnnotationValue ::= iri_annotation_value(
-                         Iri
-                       )
+AnnotationValue ::= Literal
+                  | Iri
 ```
+
+`AnnotationValue` is a direct union of `Literal` and `Iri`. The two variants represent the only forms an annotation value may take in this model: a literal carrying lexical content (with optional language tag or datatype IRI), or an IRI denoting a resource.
 
 See [`Iri`](#core-iri-and-string-types) and [`Literal`](#base-literals).
 

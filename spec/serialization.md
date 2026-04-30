@@ -24,6 +24,12 @@ This document defines that common wire format using JSON ([RFC 8259](https://www
 
 [`ctm-1.6.0-serialization.md`](ctm-1.6.0-serialization.md) defines a one-directional, lossy mapping from the Structural Model to legacy CEDAR Template Model 1.6.0 JSON-LD format. This is a separate concern; the encoding defined in the present document is independent of CTM 1.6.0 and not interconvertible with it.
 
+#### Note on JSON-LD shape parallel
+
+The literal and IRI encodings defined in §6.2 and §6.4 are structurally similar to JSON-LD's term forms — `value`/`lang`/`datatype` parallels JSON-LD's `@value`/`@language`/`@type`, and `iri` parallels `@id`. This similarity is deliberate: the property-set shape JSON-LD landed on is genuinely well-suited to RDF-flavored data, and adopting that shape (without the `@` prefix) yields a clean, future-proof encoding for literal and resource values.
+
+Conforming documents are nevertheless **not** JSON-LD. They carry no `@context`, are not interpretable as RDF graphs without external schema knowledge, and do not follow JSON-LD's compaction, expansion, or framing algorithms. RDF-graph interoperability for CEDAR artifacts, when needed, is the subject of a future separate document (`json-ld-mapping.md`, planned) that will define a JSON-LD encoding parallel to (and convertible to/from) the native form defined here, in the same way `ctm-1.6.0-serialization.md` defines the legacy mapping.
+
 ### 1.3 Scope
 
 In scope:
@@ -99,19 +105,28 @@ The order of elements in the JSON array MUST match the order of components in th
 
 ### 4.5 Discriminator placement
 
-A JSON object carries the `"kind"` property if and only if the grammar admits multiple alternative productions at the position the object occupies.
+A JSON object's discriminator presence depends on the position it occupies in the document.
 
-**Polymorphic positions** — those at which the grammar admits a union of productions, e.g. `EmbeddedArtifact ::= EmbeddedField | EmbeddedTemplate | EmbeddedPresentationComponent` — MUST encode each alternative as a tagged JSON object carrying `"kind"` per §4.1. The document root is itself a polymorphic position (any artifact may appear there); a JSON document at the root therefore carries `"kind"`.
+**Polymorphic positions** — those at which the grammar admits a union of productions, e.g. `EmbeddedArtifact ::= EmbeddedField | EmbeddedTemplate | EmbeddedPresentationComponent` — MUST encode each alternative as a tagged JSON object carrying `"kind"` per §4.1, except for the property-set-discriminated unions noted below. The document root is itself a polymorphic position (any artifact may appear there); a JSON document at the root therefore carries `"kind"`.
 
 **Singleton positions** — those at which the grammar admits exactly one production — MUST encode that production as an untagged JSON object whose properties correspond to the production's components. The enclosing object's property name, together with the grammar, fully determines the production at this position; a `"kind"` property MUST NOT appear.
 
 This rule applies recursively: an untagged object at a singleton position whose own components include further composite objects follows the same rule for each of those components.
 
+#### Property-set-discriminated unions
+
+A small set of polymorphic unions is discriminated **by the combination of property names present** rather than by an explicit `"kind"` value. This is permitted only when the union's alternatives have structurally distinct property sets that cannot collide. The unions encoded this way are:
+
+- `Literal` (`StringLiteral | LangStringLiteral | DatatypeIriLiteral`): discriminated by `value`, `lang`, and `datatype` presence per §6.2.
+- `AnnotationValue` (`Literal | Iri`): discriminated by `value` (Literal arm) vs `iri` only (Iri arm) per §6.4.
+
+Future unions that would admit variants with overlapping property sets MUST use `"kind"` discrimination instead.
+
 Implementations MUST NOT rely on JSON property ordering to discriminate alternatives.
 
 ### 4.6 String values
 
-Strings are JSON strings encoded in UTF-8. Lexical-form strings (e.g. the `lexicalForm` of a `StringLiteral`) MUST be transmitted in Unicode Normalization Form C (NFC). A conforming implementation SHOULD normalize on encode.
+Strings are JSON strings encoded in UTF-8. Lexical-form strings (e.g. the `value` property of a `StringLiteral`) MUST be transmitted in Unicode Normalization Form C (NFC). A conforming implementation SHOULD normalize on encode.
 
 ### 4.7 Number values
 
@@ -143,7 +158,7 @@ A production carries information beyond its payload, and so MUST be encoded as a
 
 - **(a) Composite structure.** The production has more than one named component (e.g. `Cardinality`, `Property`, `LabelOverride`, `Iri` paired with semantics, every artifact identifier).
 
-- **(b) Discriminated union membership.** The production participates in a union where alternatives must be distinguished at decode time (e.g. `Literal`, `Value`, every artifact's `kind`, the eighteen `Field` family variants).
+- **(b) Discriminated union membership.** The production participates in a union where alternatives must be distinguished at decode time (e.g. `Value`, every artifact's `kind`, the eighteen `Field` family variants). The discriminator is `"kind"` by default, with a small set of property-set-discriminated unions per §4.5.
 
 - **(c) Lexical-form preservation.** The production carries lexical content whose preservation requires more than a JSON primitive can express (e.g. `LangStringLiteral` carries a lexical form *and* a language tag; both must be present in the wire form).
 
@@ -175,7 +190,7 @@ The following productions are encoded as flat JSON values:
 | `TemplateId`, `TemplateReference` | string | IRI string |
 | `PresentationComponentId`, `PresentationComponentReference` | string | IRI string |
 | `TemplateInstanceId` | string | IRI string |
-| `Iri` (in property positions where the surrounding context disambiguates) | string | The wrapping `{"kind":"Iri",...}` form is used only where the value position permits ambiguity with non-IRI content; in artifact identifiers, property IRIs, datatype IRIs, etc., the IRI appears as a plain string |
+| `Iri` (at singleton positions) | string | At positions whose role is fully determined by the surrounding property name (artifact identifiers, property IRIs, datatype IRIs, etc.), the IRI is encoded as a plain JSON string. At polymorphic positions where the IRI is one alternative in a union (e.g. `AnnotationValue`), the IRI is encoded as the object `{"iri": "..."}` per the property-set-discrimination rule (§4.5, §6.4). |
 
 The choice to flatten these productions reflects two facts: each carries a single payload of a JSON-primitive type, and at every site where they appear the surrounding production's property name (or the surrounding production's `kind` and `fieldKind` discriminants) disambiguates them from other strings or numbers.
 
@@ -219,46 +234,56 @@ A `FieldId` (or `FieldReference`) appears only in two grammar positions: as `Fie
 
 ### 6.2 Literals
 
+Literals are encoded as JSON objects whose **set of properties** identifies the literal variant. The wire form does not use a `"kind"` discriminator for literals; instead, the combination of properties present (`value`, `lang`, `datatype`) determines the literal type unambiguously.
+
+#### Literal variants
+
+| Properties present | Production | Example |
+|---|---|---|
+| `value` only | `StringLiteral` | `{ "value": "Hello" }` |
+| `value` + `lang` | `LangStringLiteral` | `{ "value": "Bonjour", "lang": "fr" }` |
+| `value` + `datatype` | `DatatypeIriLiteral` | `{ "value": "42", "datatype": "http://www.w3.org/2001/XMLSchema#integer" }` |
+
+| Property | Type | Notes |
+|---|---|---|
+| `value` | string | The literal's lexical form (encoding the grammar's `lexicalForm` component). |
+| `lang` | string | BCP 47 language tag. Present iff the literal is a `LangStringLiteral`. |
+| `datatype` | string | IRI of the datatype. Present iff the literal is a `DatatypeIriLiteral`. |
+
+`lang` and `datatype` MUST NOT both be present. (The grammar's `Literal` union does not admit a literal that is simultaneously language-tagged and externally datatyped; RDF 1.2's directional language-tagged strings, when supported, will introduce a separate property such as `dir` rather than co-occurring on a `datatype`-bearing literal.)
+
+#### Specialized literal subtypes (`NumericLiteral`, `FullDateLiteral`, `TimeLiteral`, `DateTimeLiteral`)
+
+These productions are subtypes of `DatatypeIriLiteral` whose datatype IRI is fixed by the literal's family. They appear only at singleton positions in the grammar (`NumericValue.literal`, `FullDateValue.literal`, etc.); per §4.5 the position determines the type, so the `datatype` property MAY be omitted and is reconstructed at decode time from the surrounding context.
+
 ```json
-{ "kind": "StringLiteral", "lexicalForm": "Hello" }
+{ "value": "42" }
 ```
 
 ```json
-{ "kind": "LangStringLiteral", "lexicalForm": "Bonjour", "lang": "fr" }
+{ "value": "2024-06-15" }
 ```
 
 ```json
-{ "kind": "DatatypeIriLiteral", "lexicalForm": "42", "datatype": "http://www.w3.org/2001/XMLSchema#integer" }
+{ "value": "10:30:00" }
 ```
 
 ```json
-{ "lexicalForm": "3.14", "datatype": "http://www.w3.org/2001/XMLSchema#double" }
+{ "value": "2024-06-15T10:30:00" }
 ```
 
-```json
-{ "lexicalForm": "2024-06-15" }
-```
-
-```json
-{ "lexicalForm": "10:30:00" }
-```
-
-```json
-{ "lexicalForm": "2024-06-15T10:30:00" }
-```
-
-The `datatype` and `lang` properties carry plain strings (the IRI or BCP 47 tag respectively).
+A conforming encoder MAY include the canonical `datatype` IRI on these specialized literals for clarity; a conforming decoder MUST accept either form (`datatype` present or absent) and treat them as equivalent.
 
 ### 6.3 Values
 
 Each `Value` family is encoded as a tagged object. Values that wrap a literal include the literal as a nested tagged object per §6.2.
 
 ```json
-{ "kind": "TextValue", "literal": { "kind": "StringLiteral", "lexicalForm": "Jane Smith" } }
+{ "kind": "TextValue", "literal": { "value": "Jane Smith" } }
 ```
 
 ```json
-{ "kind": "NumericValue", "literal": { "lexicalForm": "42", "datatype": "http://www.w3.org/2001/XMLSchema#integer" } }
+{ "kind": "NumericValue", "literal": { "value": "42", "datatype": "http://www.w3.org/2001/XMLSchema#integer" } }
 ```
 
 ```json
@@ -270,7 +295,7 @@ Each `Value` family is encoded as a tagged object. Values that wrap a literal in
 ```
 
 ```json
-{ "kind": "FullDateValue", "literal": { "lexicalForm": "2024-06-15" } }
+{ "kind": "FullDateValue", "literal": { "value": "2024-06-15" } }
 ```
 
 `YearValue` and `YearMonthValue` carry plain string values rather than literals; this matches their grammar definitions.
@@ -282,7 +307,7 @@ Each `Value` family is encoded as a tagged object. Values that wrap a literal in
 The optional `label` property is omitted when absent.
 
 ```json
-{ "kind": "LiteralChoiceValue", "literal": { "kind": "LangStringLiteral", "lexicalForm": "Professor", "lang": "en" } }
+{ "kind": "LiteralChoiceValue", "literal": { "value": "Professor", "lang": "en" } }
 ```
 
 ```json
@@ -296,11 +321,11 @@ The optional `label` property is omitted when absent.
 The optional `label` property is omitted when absent.
 
 ```json
-{ "kind": "EmailValue", "literal": { "lexicalForm": "jane@example.org" } }
+{ "kind": "EmailValue", "literal": { "value": "jane@example.org" } }
 ```
 
 ```json
-{ "kind": "PhoneNumberValue", "literal": { "lexicalForm": "+1-415-555-0100" } }
+{ "kind": "PhoneNumberValue", "literal": { "value": "+1-415-555-0100" } }
 ```
 
 External-authority values (`OrcidValue`, `RorValue`, `DoiValue`, `PubMedIdValue`, `RridValue`, `NihGrantIdValue`) follow a uniform shape:
@@ -317,7 +342,7 @@ The optional `label` property is omitted when absent.
 
 ### 6.4 Metadata
 
-The grammar defines seven metadata productions: four leaves (`DescriptiveMetadata`, `TemporalProvenance`, `SchemaVersioning`, `Annotation`), one polymorphic value (`AnnotationValue`), and two aggregates (`ArtifactMetadata`, `SchemaArtifactMetadata`). Every metadata production except `AnnotationValue` appears at a single, fixed grammar position; per §4.5 those are encoded as untagged JSON objects, with the production identified by the property name on the enclosing object. `AnnotationValue` is polymorphic and encoded tagged.
+The grammar defines six metadata productions: four leaves (`DescriptiveMetadata`, `TemporalProvenance`, `SchemaVersioning`, `Annotation`), one polymorphic value (`AnnotationValue`), and two aggregates (`ArtifactMetadata`, `SchemaArtifactMetadata`). Every metadata production except `AnnotationValue` appears at a single, fixed grammar position; per §4.5 those are encoded as untagged JSON objects, with the production identified by the property name on the enclosing object. `AnnotationValue` is a property-set-discriminated polymorphic union (`Literal | Iri`) — see §4.5 and the dedicated subsection below.
 
 #### `DescriptiveMetadata`
 
@@ -385,28 +410,29 @@ A pairing of an annotation property (identified by an IRI) with an annotation va
 ```json
 {
   "name": "https://example.org/annotation-properties/notes",
-  "value": { "kind": "LiteralAnnotationValue", "literal": { "kind": "StringLiteral", "lexicalForm": "..." } }
+  "value": { "value": "An institutional note." }
 }
 ```
 
 | Property | Type | Required | Notes |
 |---|---|---|---|
 | `name` | string | yes | IRI of the annotation property. |
-| `value` | tagged `AnnotationValue` | yes | See `AnnotationValue` immediately below. |
+| `value` | `AnnotationValue` | yes | One of the four shapes defined in `AnnotationValue` immediately below. |
 
 #### `AnnotationValue`
 
-The grammar admits two alternatives at the `Annotation.value` position: `LiteralAnnotationValue` and `IriAnnotationValue`. This is a polymorphic position, so the value is encoded as a tagged JSON object per §4.5.
+`AnnotationValue ::= Literal | Iri`. A property-set-discriminated polymorphic union per §4.5: each of the four possible shapes (three literal variants plus the IRI form) is identified by which properties are present on the encoded object. There is no `"kind"` discriminator.
 
-```json
-{ "kind": "LiteralAnnotationValue", "literal": <Literal> }
-```
+| Properties present | Decoded as | Example |
+|---|---|---|
+| `value` only | `StringLiteral` | `{ "value": "An institutional note." }` |
+| `value` + `lang` | `LangStringLiteral` | `{ "value": "Une note institutionnelle.", "lang": "fr" }` |
+| `value` + `datatype` | `DatatypeIriLiteral` | `{ "value": "42", "datatype": "http://www.w3.org/2001/XMLSchema#integer" }` |
+| `iri` only | `Iri` | `{ "iri": "https://example.org/related-resource" }` |
 
-```json
-{ "kind": "IriAnnotationValue", "iri": "https://example.org/some/iri" }
-```
+A conforming encoder MUST emit exactly one of these four shapes. A conforming decoder MUST reject any other property combination at this position (e.g., an object with both `value` and `iri`, or with neither).
 
-The `<Literal>` placeholder resolves to one of the literal forms in §6.2; that position itself is polymorphic (`Literal` is a union), so the inner literal carries its own `kind`.
+The literal variants are exactly those defined for the `Literal` union in §6.2; the IRI form is the wire-format encoding of `Iri` at this polymorphic position (per the §5.1 row for `Iri`). RDF 1.2 directional language-tagged strings, when supported, will introduce an additional property (e.g. `dir`) on the language-tagged variant; the property-set discrimination scheme accommodates that without restructuring.
 
 #### `ArtifactMetadata`
 
@@ -516,7 +542,7 @@ Each concrete `FieldSpec` is encoded as a tagged object whose `"kind"` matches t
 ```
 
 ```json
-{ "kind": "LiteralSingleChoiceFieldSpec", "options": [ {"literal": {"kind":"LangStringLiteral", "lexicalForm": "Yes", "lang": "en"}, "default": true} ] }
+{ "kind": "LiteralSingleChoiceFieldSpec", "options": [ {"literal": { "value": "Yes", "lang": "en"}, "default": true} ] }
 ```
 
 ```json
@@ -557,7 +583,7 @@ The `componentOrder` value is one of the `DateComponentOrder` enum strings (`"da
 A single option in a literal-choice field spec. Appears in the uniform array `LiteralSingleChoiceFieldSpec.options[]` and `LiteralMultipleChoiceFieldSpec.options[]`.
 
 ```json
-{ "literal": { "kind": "LangStringLiteral", "lexicalForm": "Yes", "lang": "en" }, "default": true }
+{ "literal": { "value": "Yes", "lang": "en" }, "default": true }
 ```
 
 | Property | Type | Required | Notes |
@@ -825,7 +851,7 @@ Two conforming JSON documents that differ only in JSON object property order or 
       "kind": "FieldValue",
       "key": "title",
       "values": [
-        { "kind": "TextValue", "literal": { "kind": "StringLiteral", "lexicalForm": "First Note" } }
+        { "kind": "TextValue", "literal": { "value": "First Note" } }
       ]
     }
   ]
