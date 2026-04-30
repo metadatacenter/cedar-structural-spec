@@ -63,6 +63,8 @@ The terms *object*, *array*, *string*, *number*, *boolean*, *null*, and *value* 
 
 JSON examples appear in fenced code blocks marked `json`. Examples are illustrative only; the normative content is the prose preceding each example.
 
+Examples may use *placeholders* of the form `<ProductionName>` to denote the JSON encoding of a production at the surrounding position. A placeholder is resolved by replacing it with the encoding defined for that production elsewhere in §6. Whether the resolved encoding is tagged or untagged depends on the surrounding position per §4.5: a placeholder at a polymorphic position resolves to a tagged JSON object; a placeholder at a singleton position resolves to an untagged JSON object. The `*` and `+` suffixes (e.g. `<Annotation>*`, `<ChoiceValue>+`) denote sequences per §4.4 — zero-or-more and one-or-more respectively.
+
 ## 4. General Encoding Rules
 
 ### 4.1 Tagged and untagged objects
@@ -315,6 +317,12 @@ The optional `label` property is omitted when absent.
 
 ### 6.4 Metadata
 
+The grammar defines seven metadata productions: four leaves (`DescriptiveMetadata`, `TemporalProvenance`, `SchemaVersioning`, `Annotation`), one polymorphic value (`AnnotationValue`), and two aggregates (`ArtifactMetadata`, `SchemaArtifactMetadata`). Every metadata production except `AnnotationValue` appears at a single, fixed grammar position; per §4.5 those are encoded as untagged JSON objects, with the production identified by the property name on the enclosing object. `AnnotationValue` is polymorphic and encoded tagged.
+
+#### `DescriptiveMetadata`
+
+The human-oriented description of an artifact: name, optional longer description, optional identifier, optional preferred label, and a (possibly empty) array of alternative labels. Appears at `ArtifactMetadata.descriptive`.
+
 ```json
 {
   "name": "Full Name",
@@ -325,7 +333,17 @@ The optional `label` property is omitted when absent.
 }
 ```
 
-`description`, `identifier`, and `preferredLabel` are omitted when absent. `altLabels` (encoding the grammar's `AlternativeLabel*` sequence) MUST be present as an array (possibly empty).
+| Property | Type | Required | Notes |
+|---|---|---|---|
+| `name` | string | yes | Plain Unicode text. |
+| `description` | string | no | Plain Unicode text. Omitted when absent. |
+| `identifier` | string | no | Plain Unicode text or IRI. Omitted when absent. |
+| `preferredLabel` | string | no | Plain Unicode text. Omitted when absent. |
+| `altLabels` | string[] | yes | Array (possibly empty) encoding the grammar's `AlternativeLabel*` sequence. |
+
+#### `TemporalProvenance`
+
+Who created and last modified the artifact, and when. Appears at `ArtifactMetadata.provenance`.
 
 ```json
 {
@@ -335,6 +353,12 @@ The optional `label` property is omitted when absent.
   "modifiedBy": "https://orcid.org/0000-0002-1825-0097"
 }
 ```
+
+All four properties are required. Timestamps are ISO-8601 (`xsd:dateTime`) lexical strings; `createdBy` and `modifiedBy` carry agent IRI strings.
+
+#### `SchemaVersioning`
+
+Version metadata for a `SchemaArtifact` (a `Field` or a `Template`). Appears at `SchemaArtifactMetadata.versioning`.
 
 ```json
 {
@@ -346,7 +370,17 @@ The optional `label` property is omitted when absent.
 }
 ```
 
-`previousVersion` and `derivedFrom` are omitted when absent. `version` and `modelVersion` carry semver strings; `status` is a flat enumeration string per §5.1.
+| Property | Type | Required | Notes |
+|---|---|---|---|
+| `version` | string | yes | Semantic version of the artifact (e.g. `"1.0.0"`). |
+| `status` | string | yes | `"draft"` or `"published"` per the grammar's `Status` production. |
+| `modelVersion` | string | yes | Semantic version of the CEDAR Structural Model the artifact was authored against. |
+| `previousVersion` | string | no | IRI of the immediate predecessor in a version chain. Omitted when absent. |
+| `derivedFrom` | string | no | IRI of a source artifact this one was copied or adapted from. Omitted when absent. |
+
+#### `Annotation`
+
+A pairing of an annotation property (identified by an IRI) with an annotation value. Appears in the uniform array `ArtifactMetadata.annotations[]`; per §4.5 each entry is therefore encoded as an untagged object. The grammar's `AnnotationName` wrapper does not appear in the wire form (per §5.1); the IRI is carried directly on `name`.
 
 ```json
 {
@@ -355,7 +389,14 @@ The optional `label` property is omitted when absent.
 }
 ```
 
-`AnnotationValue` is one of:
+| Property | Type | Required | Notes |
+|---|---|---|---|
+| `name` | string | yes | IRI of the annotation property. |
+| `value` | tagged `AnnotationValue` | yes | See `AnnotationValue` immediately below. |
+
+#### `AnnotationValue`
+
+The grammar admits two alternatives at the `Annotation.value` position: `LiteralAnnotationValue` and `IriAnnotationValue`. This is a polymorphic position, so the value is encoded as a tagged JSON object per §4.5.
 
 ```json
 { "kind": "LiteralAnnotationValue", "literal": <Literal> }
@@ -365,7 +406,11 @@ The optional `label` property is omitted when absent.
 { "kind": "IriAnnotationValue", "iri": "https://example.org/some/iri" }
 ```
 
-Aggregate metadata constructs:
+The `<Literal>` placeholder resolves to one of the literal forms in §6.2; that position itself is polymorphic (`Literal` is a union), so the inner literal carries its own `kind`.
+
+#### `ArtifactMetadata`
+
+Aggregates the descriptive, provenance, and annotation metadata that every `Artifact` carries. Appears at `TemplateInstance.metadata`, at the `metadata` slot of every concrete `PresentationComponent` variant, and (nested) inside `SchemaArtifactMetadata.artifact`.
 
 ```json
 {
@@ -375,6 +420,12 @@ Aggregate metadata constructs:
 }
 ```
 
+All three properties are required. `annotations` MAY be empty.
+
+#### `SchemaArtifactMetadata`
+
+Extends `ArtifactMetadata` with schema-version metadata; carried by every `SchemaArtifact`. Appears at `Field.metadata` and `Template.metadata`.
+
 ```json
 {
   "artifact": <ArtifactMetadata>,
@@ -382,13 +433,23 @@ Aggregate metadata constructs:
 }
 ```
 
+Both properties are required.
+
 ### 6.5 Embedded artifact properties
 
-`EmbeddedArtifactKey` is encoded as a plain JSON string. The string MUST match the ASCII identifier pattern `[A-Za-z][A-Za-z0-9_-]*` (per [`grammar.md`](grammar.md) §Embedded Artifact Key). The grammar's intermediate `KeyIdentifier` wrapper does not appear in the wire form.
+This section covers the embedding-context productions: `EmbeddedArtifactKey`, `Cardinality`, `LabelOverride`, `Property`, plus the two enum-style productions `ValueRequirement` and `Visibility`. With the exception of `EmbeddedArtifactKey` and the two enums (all encoded flat per §5.1), each production appears at fixed singleton positions on `EmbeddedField`, `EmbeddedTemplate`, and `EmbeddedPresentationComponent`, and is therefore encoded as an untagged JSON object per §4.5.
+
+#### `EmbeddedArtifactKey`
+
+Encoded as a plain JSON string matching the ASCII identifier pattern `[A-Za-z][A-Za-z0-9_-]*` (per [`grammar.md`](grammar.md) §Embedded Artifact Key). The grammar's intermediate `KeyIdentifier` wrapper does not appear in the wire form.
 
 ```json
 "full_name"
 ```
+
+#### `Cardinality`
+
+Bounds the permitted number of values for an embedded artifact in its embedding context. Appears at `EmbeddedField.cardinality` and `EmbeddedTemplate.cardinality`.
 
 ```json
 { "min": 0, "max": 5 }
@@ -398,26 +459,45 @@ Aggregate metadata constructs:
 { "min": 1 }
 ```
 
-`max` is omitted when absent. Per [`grammar.md`](grammar.md) §Cardinality, an absent `max` denotes that the cardinality is unbounded above.
+| Property | Type | Required | Notes |
+|---|---|---|---|
+| `min` | number | yes | Non-negative integer; the lower bound. |
+| `max` | number | no | Non-negative integer ≥ `min`; the upper bound. Omitted when the cardinality is unbounded above (per [`grammar.md`](grammar.md) §Cardinality). |
+
+#### `LabelOverride`
+
+Provides a template-specific label for an embedded artifact, optionally with alternative labels. Appears at `EmbeddedField.labelOverride`, `EmbeddedTemplate.labelOverride`, and `EmbeddedPresentationComponent.labelOverride`.
 
 ```json
 { "label": "Custom Label", "altLabels": ["Alt 1", "Alt 2"] }
 ```
 
+| Property | Type | Required | Notes |
+|---|---|---|---|
+| `label` | string | yes | The override label. |
+| `altLabels` | string[] | yes | Array (possibly empty) encoding the grammar's `AlternativeLabel*` sequence. |
+
+#### `Property`
+
+Associates a semantic property IRI (and optionally a human-readable label) with an embedded data-bearing artifact. Appears at `EmbeddedField.property` and `EmbeddedTemplate.property`. Not present on `EmbeddedPresentationComponent` — a presentation component produces no instance value to bind to a property.
+
 ```json
 { "propertyIri": "https://schema.org/name", "propertyLabel": "name" }
 ```
 
-`propertyLabel` is omitted when absent.
+| Property | Type | Required | Notes |
+|---|---|---|---|
+| `propertyIri` | string | yes | IRI of the semantic property. The grammar's `PropertyIri` wrapper does not appear in the wire form. |
+| `propertyLabel` | string | no | Plain Unicode text. Omitted when absent. |
 
-`ValueRequirement` and `Visibility` are flat enumeration strings:
+#### `ValueRequirement` and `Visibility`
+
+Flat enumeration strings per §5.1; they appear directly as the value of `valueRequirement` and `visibility` properties on `EmbeddedField`, `EmbeddedTemplate`, and (for `Visibility`) `EmbeddedPresentationComponent`.
 
 | Production | Encoded values |
 |---|---|
 | `ValueRequirement` | `"required"`, `"recommended"`, `"optional"` |
 | `Visibility` | `"visible"`, `"hidden"` |
-
-These appear directly as the value of `valueRequirement` and `visibility` properties on `EmbeddedField` and `EmbeddedTemplate` encodings (§6.7).
 
 ### 6.6 Field specs
 
@@ -444,6 +524,75 @@ Each concrete `FieldSpec` is encoded as a tagged object whose `"kind"` matches t
 ```
 
 The `default` property on choice options is encoded as a JSON `true` when set; the property is omitted otherwise.
+
+#### Sub-productions used inside field specs
+
+Several productions appear nested inside field-spec encodings. Per §4.5 they are encoded as untagged JSON objects; this subsection identifies each by name and documents its component properties.
+
+##### `Unit`
+
+Optional unit metadata for a numeric field. Appears at `NumericFieldSpec.unit`.
+
+```json
+{ "label": "kg", "unitIri": "http://qudt.org/vocab/unit/KILOGRAM" }
+```
+
+| Property | Type | Required | Notes |
+|---|---|---|---|
+| `label` | string | yes | Human-readable unit label (e.g. `"kg"`). |
+| `unitIri` | string | yes | IRI identifying the unit (e.g. a QUDT IRI). |
+
+##### `DateRenderingHint`, `TimeRenderingHint`, `DateTimeRenderingHint`
+
+Object-form rendering hints for the three temporal field-spec families. Appear at the `renderingHint` property of `DateFieldSpec`, `TimeFieldSpec`, and `DateTimeFieldSpec` respectively. Other field-spec families use a flat string for `renderingHint` (e.g. `"singleLine"` for `TextRenderingHint`); only the temporal hints have an object encoding.
+
+```json
+{ "componentOrder": "dayMonthYear" }
+```
+
+The `componentOrder` value is one of the `DateComponentOrder` enum strings (`"dayMonthYear"`, `"monthDayYear"`, `"yearMonthDay"`). `TimeRenderingHint` and `DateTimeRenderingHint` carry the analogous configuration properties defined in [`grammar.md`](grammar.md) §Temporal Field Specs.
+
+##### `LiteralChoiceOption`
+
+A single option in a literal-choice field spec. Appears in the uniform array `LiteralSingleChoiceFieldSpec.options[]` and `LiteralMultipleChoiceFieldSpec.options[]`.
+
+```json
+{ "literal": { "kind": "LangStringLiteral", "lexicalForm": "Yes", "lang": "en" }, "default": true }
+```
+
+| Property | Type | Required | Notes |
+|---|---|---|---|
+| `literal` | tagged `Literal` | yes | The option's literal value. The position is polymorphic (`Literal` is a union); the inner literal is therefore tagged per §4.5 (see §6.2). |
+| `default` | `true` | no | When present, MUST be JSON `true`. Omitted when the option is not the default. |
+
+##### `ControlledTermChoiceOption`
+
+A single option in a controlled-term-choice field spec. Appears in `ControlledTermSingleChoiceFieldSpec.options[]` and `ControlledTermMultipleChoiceFieldSpec.options[]`.
+
+```json
+{ "value": { "term": "http://example.org/term/1", "label": "Term 1" }, "default": true }
+```
+
+| Property | Type | Required | Notes |
+|---|---|---|---|
+| `value` | untagged `ControlledTermValue` | yes | The option's controlled-term value. Singleton position; encoded untagged. |
+| `default` | `true` | no | As for `LiteralChoiceOption`. |
+
+##### `OntologyDisplayHint`
+
+Display configuration for controlled-term values. Appears at `ControlledTermFieldSpec.displayHint`.
+
+```json
+{ "labelLanguage": "en" }
+```
+
+| Property | Type | Required | Notes |
+|---|---|---|---|
+| `labelLanguage` | string | yes | BCP 47 language tag identifying the preferred label language. |
+
+##### `ControlledTermSource`
+
+The grammar admits four alternatives at `ControlledTermFieldSpec.sources[]` entries (`OntologyReference`, `BranchSource`, `ClassSource`, `ValueSetSource`); this is a polymorphic position and each entry is therefore encoded as a tagged JSON object per §4.5. The component properties of each variant are defined in [`grammar.md`](grammar.md) §Controlled Term Sources.
 
 ### 6.7 Field artifacts and embedded artifacts
 
