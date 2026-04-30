@@ -829,17 +829,13 @@ DerivedFrom ::= derived_from(
 
 ### Annotations
 
-`Annotation` provides an extensible metadata mechanism for additional named metadata values that are not captured by the core descriptive, provenance, or versioning structures. `AnnotationName` identifies the annotated metadata property. `AnnotationValue` provides the associated metadata value. Annotation values may be either literals or IRIs. This supports linking to external resources such as DOIs and grant identifiers, as well as storing institutional metadata.
+`Annotation` provides an extensible metadata mechanism for additional named metadata values that are not captured by the core descriptive, provenance, or versioning structures. The first `Iri` identifies the annotation property — the predicate IRI under which the annotation is asserted. The `AnnotationValue` is the associated metadata value: either a literal or an IRI. This supports linking to external resources such as DOIs and grant identifiers, as well as storing institutional metadata.
 
 ```ebnf
 Annotation ::= annotation(
-                 AnnotationName
+                 Iri
                  AnnotationValue
                )
-
-AnnotationName ::= annotation_name(
-                     Iri
-                   )
 
 AnnotationValue ::= Literal
                   | Iri

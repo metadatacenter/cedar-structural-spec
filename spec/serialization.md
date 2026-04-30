@@ -185,7 +185,6 @@ The following productions are encoded as flat JSON values:
 | `NonNegativeInteger` | number | Non-negative integer |
 | `EmbeddedArtifactKey` | string | ASCII identifier matching `[A-Za-z][A-Za-z0-9_-]*` (per grammar §Embedded Artifact Key); the inner `KeyIdentifier` wrapper does not appear in the wire form |
 | `Status` | string `"draft"` or `"published"` | The grammar's `Draft` and `Published` are encoded as their lowercase names |
-| `AnnotationName` | string | IRI string |
 | `FieldId`, `FieldReference` | string | IRI string. The field family is conveyed by the `fieldKind` discriminant on the surrounding `Field` or `EmbeddedField`; it does not appear on the identifier itself |
 | `TemplateId`, `TemplateReference` | string | IRI string |
 | `PresentationComponentId`, `PresentationComponentReference` | string | IRI string |
@@ -405,18 +404,18 @@ Version metadata for a `SchemaArtifact` (a `Field` or a `Template`). Appears at 
 
 #### `Annotation`
 
-A pairing of an annotation property (identified by an IRI) with an annotation value. Appears in the uniform array `ArtifactMetadata.annotations[]`; per §4.5 each entry is therefore encoded as an untagged object. The grammar's `AnnotationName` wrapper does not appear in the wire form (per §5.1); the IRI is carried directly on `name`.
+A pairing of an annotation property IRI with an annotation value. Appears in the uniform array `ArtifactMetadata.annotations[]`; per §4.5 each entry is therefore encoded as an untagged object.
 
 ```json
 {
-  "name": "https://example.org/annotation-properties/notes",
+  "property": "https://example.org/annotation-properties/notes",
   "value": { "value": "An institutional note." }
 }
 ```
 
 | Property | Type | Required | Notes |
 |---|---|---|---|
-| `name` | string | yes | IRI of the annotation property. |
+| `property` | string | yes | IRI of the annotation property (the predicate under which the annotation is asserted). |
 | `value` | `AnnotationValue` | yes | One of the four shapes defined in `AnnotationValue` immediately below. |
 
 #### `AnnotationValue`
