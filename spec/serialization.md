@@ -409,14 +409,14 @@ A pairing of an annotation property IRI with an annotation value. Appears in the
 ```json
 {
   "property": "https://example.org/annotation-properties/notes",
-  "value": { "value": "An institutional note." }
+  "body": { "value": "An institutional note." }
 }
 ```
 
 | Property | Type | Required | Notes |
 |---|---|---|---|
 | `property` | string | yes | IRI of the annotation property (the predicate under which the annotation is asserted). |
-| `value` | `AnnotationValue` | yes | One of the four shapes defined in `AnnotationValue` immediately below. |
+| `body` | `AnnotationValue` | yes | One of the four shapes defined in `AnnotationValue` immediately below. The wire-form property name is `body` — encoding the grammar's `AnnotationValue` component — chosen to avoid the visual collision a `value`/`value` nesting would create with the literal's `value` property. The naming follows the W3C Web Annotations convention. |
 
 #### `AnnotationValue`
 
