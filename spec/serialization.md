@@ -37,7 +37,7 @@ Conforming documents are nevertheless **not** JSON-LD. They carry no `@context`,
 In scope:
 
 - The JSON encoding rules (property naming, NFC normalisation, integer handling) that frame the shapes formally defined in [`wire-grammar.md`](wire-grammar.md).
-- Discriminator placement (the `kind` / `fieldKind` / property-set / position rules).
+- Discriminator placement (the `kind` / property-set / position rules).
 - The wrapping principle that determines which productions are tagged JSON objects vs flat JSON values.
 - Worked end-to-end examples.
 
@@ -85,8 +85,6 @@ Examples may use *placeholders* of the form `<ProductionName>` to denote the JSO
 JSON objects in the wire format are either *tagged* — carrying a `"kind"` property — or *untagged* — without `"kind"`. Whether an object is tagged is determined by the position it occupies in the document; see §4.5 for the rule.
 
 When an object is tagged, the value of `"kind"` MUST be the production name from [`grammar.md`](grammar.md), transcribed in `UpperCamelCase` exactly as the grammar names it. For example, `"TextValue"` for the `TextValue` production. The grammar's `lower_snake_case` constructor forms (e.g. `text_value(...)`) describe abstract composition and do not appear on the wire.
-
-For the eighteen `Field` and eighteen `EmbeddedField` family productions, two discriminators appear together: the outer `"kind"` (`"Field"` or `"EmbeddedField"`) and an inner `"fieldKind"` (`"Text"`, `"Numeric"`, …) that selects the family. See §4.5.
 
 A conforming implementation MUST reject any object whose tagged-or-untagged status does not match the position it occupies (per §4.5), whose `"kind"` value (when tagged) does not match any production known to the implementation, or whose other properties do not match the wire-grammar entry for the named production.
 
@@ -202,13 +200,13 @@ Detailed wire shapes for every production are normatively specified in [`wire-gr
 
 ### 6.1 Identifiers
 
-Every artifact identifier is encoded as a plain JSON string carrying the IRI. The kind of identifier is communicated by the surrounding context (the property name on the enclosing object, plus the `kind` and where applicable `fieldKind` discriminators of the enclosing artifact).
+Every artifact identifier is encoded as a plain JSON string carrying the IRI. The kind of identifier is communicated by the surrounding context (the property name on the enclosing object, plus the `kind` discriminator of the enclosing artifact).
 
 ```json
 "https://example.org/fields/title"
 ```
 
-A `FieldId` (or `FieldReference`) appears only in two grammar positions: as `Field.id` and as `EmbeddedField.reference`. Both surrounding constructs carry their own `fieldKind` discriminator, which conveys the field family. The eighteen permitted `fieldKind` values are: `"Text"`, `"Numeric"`, `"Date"`, `"Time"`, `"DateTime"`, `"ControlledTerm"`, `"SingleChoice"`, `"MultipleChoice"`, `"Link"`, `"Email"`, `"PhoneNumber"`, `"Orcid"`, `"Ror"`, `"Doi"`, `"PubMedId"`, `"Rrid"`, `"NihGrantId"`, or `"AttributeValue"`. A conforming encoder MUST ensure that the IRI it places at a `FieldId` position belongs to a field of the family declared by the surrounding `fieldKind`.
+A `FieldId` (or `FieldReference`) appears only in two grammar positions: as `Field.id` and as `EmbeddedField.reference`. Both surrounding constructs carry a `kind` discriminator that conveys the field family. The eighteen permitted family-bearing `kind` values for `Field` variants are: `"TextField"`, `"NumericField"`, `"DateField"`, `"TimeField"`, `"DateTimeField"`, `"ControlledTermField"`, `"SingleChoiceField"`, `"MultipleChoiceField"`, `"LinkField"`, `"EmailField"`, `"PhoneNumberField"`, `"OrcidField"`, `"RorField"`, `"DoiField"`, `"PubMedIdField"`, `"RridField"`, `"NihGrantIdField"`, or `"AttributeValueField"`. The corresponding `EmbeddedField` variants prefix `Embedded` (e.g. `"EmbeddedTextField"`). A conforming encoder MUST ensure that the IRI it places at a `FieldId` position belongs to a field of the family declared by the surrounding `kind`.
 
 ### 6.2 Literals
 
@@ -353,26 +351,24 @@ The flat-string rendering hints (`TextRenderingHint`, `SingleChoiceRenderingHint
 
 ### 6.8 Field artifacts and embedded artifacts
 
-A `Field` artifact:
+A `Field` artifact (shown for the text family; the other seventeen families substitute `"NumericField"`, `"DateField"`, etc. for `kind`):
 
 ```json
 {
-  "kind": "Field",
-  "fieldKind": "Text",
+  "kind": "TextField",
   "id": "<FieldId>",
   "metadata": "<SchemaArtifactMetadata>",
   "fieldSpec": "<FieldSpec>"
 }
 ```
 
-The `"fieldKind"` discriminant MUST match the family of the nested `fieldSpec`. Conforming encoders MUST ensure that the IRI placed at `id` belongs to a field of the same family.
+The `kind` value MUST match the family of the nested `fieldSpec`. Conforming encoders MUST ensure that the IRI placed at `id` belongs to a field of the same family.
 
-An `EmbeddedField`:
+An `EmbeddedField` (shown for the text family; substitute `"EmbeddedNumericField"`, `"EmbeddedDateField"`, etc. for the other seventeen families):
 
 ```json
 {
-  "kind": "EmbeddedField",
-  "fieldKind": "Text",
+  "kind": "EmbeddedTextField",
   "key": "<EmbeddedArtifactKey>",
   "reference": "<FieldId>",
   "valueRequirement": "required",
@@ -381,7 +377,7 @@ An `EmbeddedField`:
 }
 ```
 
-`EmbeddedField` for `fieldKind: "AttributeValue"` MUST NOT carry a `defaultValue` property.
+An `EmbeddedAttributeValueField` MUST NOT carry a `defaultValue` property.
 
 ```json
 {
@@ -527,8 +523,7 @@ The `name` property below is a `MultilingualString` (§6.3): an array of `{value
   "metadata": { "artifact": "...", "versioning": "..." },
   "embedded": [
     {
-      "kind": "EmbeddedField",
-      "fieldKind": "Text",
+      "kind": "EmbeddedTextField",
       "key": "title",
       "reference": "https://example.org/fields/title",
       "valueRequirement": "required",
@@ -560,7 +555,7 @@ The `name` property below is a `MultilingualString` (§6.3): an array of `{value
 
 ## 9. Reserved Property Names
 
-The property names `kind` and `fieldKind` are reserved by this specification at all object-level positions. Implementations MUST NOT reuse these names for non-normative purposes.
+The property name `kind` is reserved by this specification at all object-level positions. Implementations MUST NOT reuse this name for non-normative purposes.
 
 The property name prefixes `_` and `$` are reserved for implementation-specific extensions per §4.7.
 

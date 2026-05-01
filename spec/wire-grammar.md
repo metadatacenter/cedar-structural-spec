@@ -33,7 +33,7 @@ shape that encodes the corresponding abstract production.
 | Form                              | Meaning                                                |
 |---|---|
 | `string`, `number`, `boolean`, `null` | The corresponding JSON primitive.                |
-| `"literal"`                       | A string-literal type — the JSON value MUST equal the literal. Used for `kind` and `fieldKind` discriminators. |
+| `"literal"`                       | A string-literal type — the JSON value MUST equal the literal. Used for `kind` discriminators. |
 | `ProductionName`                  | Reference to another wire production.                  |
 | `array<T>`                        | A JSON array; each element is `T`.                     |
 | `nonEmptyArray<T>`                | An array of `T` with at least one element.             |
@@ -115,16 +115,7 @@ synthetic discriminators MUST be stripped at encode and reconstructed
 at decode if the binding chooses to expose them; they MUST NOT appear
 on the wire. (See [`bindings.md`](bindings.md) §2.1 for examples.)
 
-### 1.6 The shared `kind` + `fieldKind` rule
-
-Each of the eighteen `Field` family productions (`TextField`,
-`NumericField`, …) shares a single outer discriminator `kind: "Field"`,
-and is distinguished within that family by an inner discriminator
-`fieldKind: "Text"`, `fieldKind: "Numeric"`, etc. The same applies to
-the eighteen `EmbeddedField` family productions, which share
-`kind: "EmbeddedField"` and use `fieldKind` to distinguish family.
-
-### 1.7 Collapsed wrappers
+### 1.6 Collapsed wrappers
 
 The grammar's branded singleton wrappers — `NonNegativeInteger`,
 `KeyIdentifier`, `LexicalForm`, `Iri`, `DatatypeIri`, `TermIri`,
@@ -521,7 +512,7 @@ PresentationComponentId ::: Iri
 TemplateInstanceId ::: Iri
 ```
 
-The eighteen field families are determined by the `fieldKind`
+The eighteen field families are determined by the `kind`
 discriminator on the enclosing `Field` or `EmbeddedField`, not by the
 identifier shape.
 
@@ -643,7 +634,7 @@ KeyIdentifier ::: string
 ### 7.2 References
 
 Each reference encodes as a plain Iri; the family is determined by the
-enclosing `EmbeddedField`'s `fieldKind` discriminator.
+enclosing `EmbeddedField`'s `kind` discriminator.
 
 ```
 FieldReference ::: string
@@ -1166,162 +1157,143 @@ Field ::: TextField | NumericField | DateField | TimeField | DateTimeField
         | LinkField | EmailField | PhoneNumberField
         | OrcidField | RorField | DoiField | PubMedIdField
         | RridField | NihGrantIdField | AttributeValueField
-  // discriminator: kind, then fieldKind
-  // every member shares "kind": "Field" and is distinguished by fieldKind
+  // discriminator: kind
 
 TemporalField ::: DateField | TimeField | DateTimeField
-  // discriminator: fieldKind (within "kind": "Field")
+  // discriminator: kind
   // a documented intermediate category; the wire form is just the variant
 
 ChoiceField ::: SingleChoiceField | MultipleChoiceField
-  // discriminator: fieldKind (within "kind": "Field")
+  // discriminator: kind
 
 ContactField ::: EmailField | PhoneNumberField
-  // discriminator: fieldKind (within "kind": "Field")
+  // discriminator: kind
 
 ExternalAuthorityField ::: OrcidField | RorField | DoiField
                          | PubMedIdField | RridField | NihGrantIdField
-  // discriminator: fieldKind (within "kind": "Field")
+  // discriminator: kind
 
 TextField ::: object {
-  "kind": "Field"
-  "fieldKind": "Text"
+  "kind": "TextField"
   id: string
   metadata: SchemaArtifactMetadata
   fieldSpec: TextFieldSpec
 }
 
 NumericField ::: object {
-  "kind": "Field"
-  "fieldKind": "Numeric"
+  "kind": "NumericField"
   id: string
   metadata: SchemaArtifactMetadata
   fieldSpec: NumericFieldSpec
 }
 
 DateField ::: object {
-  "kind": "Field"
-  "fieldKind": "Date"
+  "kind": "DateField"
   id: string
   metadata: SchemaArtifactMetadata
   fieldSpec: DateFieldSpec
 }
 
 TimeField ::: object {
-  "kind": "Field"
-  "fieldKind": "Time"
+  "kind": "TimeField"
   id: string
   metadata: SchemaArtifactMetadata
   fieldSpec: TimeFieldSpec
 }
 
 DateTimeField ::: object {
-  "kind": "Field"
-  "fieldKind": "DateTime"
+  "kind": "DateTimeField"
   id: string
   metadata: SchemaArtifactMetadata
   fieldSpec: DateTimeFieldSpec
 }
 
 ControlledTermField ::: object {
-  "kind": "Field"
-  "fieldKind": "ControlledTerm"
+  "kind": "ControlledTermField"
   id: string
   metadata: SchemaArtifactMetadata
   fieldSpec: ControlledTermFieldSpec
 }
 
 SingleChoiceField ::: object {
-  "kind": "Field"
-  "fieldKind": "SingleChoice"
+  "kind": "SingleChoiceField"
   id: string
   metadata: SchemaArtifactMetadata
   fieldSpec: SingleChoiceFieldSpec
 }
 
 MultipleChoiceField ::: object {
-  "kind": "Field"
-  "fieldKind": "MultipleChoice"
+  "kind": "MultipleChoiceField"
   id: string
   metadata: SchemaArtifactMetadata
   fieldSpec: MultipleChoiceFieldSpec
 }
 
 LinkField ::: object {
-  "kind": "Field"
-  "fieldKind": "Link"
+  "kind": "LinkField"
   id: string
   metadata: SchemaArtifactMetadata
   fieldSpec: LinkFieldSpec
 }
 
 EmailField ::: object {
-  "kind": "Field"
-  "fieldKind": "Email"
+  "kind": "EmailField"
   id: string
   metadata: SchemaArtifactMetadata
   fieldSpec: EmailFieldSpec
 }
 
 PhoneNumberField ::: object {
-  "kind": "Field"
-  "fieldKind": "PhoneNumber"
+  "kind": "PhoneNumberField"
   id: string
   metadata: SchemaArtifactMetadata
   fieldSpec: PhoneNumberFieldSpec
 }
 
 OrcidField ::: object {
-  "kind": "Field"
-  "fieldKind": "Orcid"
+  "kind": "OrcidField"
   id: string
   metadata: SchemaArtifactMetadata
   fieldSpec: OrcidFieldSpec
 }
 
 RorField ::: object {
-  "kind": "Field"
-  "fieldKind": "Ror"
+  "kind": "RorField"
   id: string
   metadata: SchemaArtifactMetadata
   fieldSpec: RorFieldSpec
 }
 
 DoiField ::: object {
-  "kind": "Field"
-  "fieldKind": "Doi"
+  "kind": "DoiField"
   id: string
   metadata: SchemaArtifactMetadata
   fieldSpec: DoiFieldSpec
 }
 
 PubMedIdField ::: object {
-  "kind": "Field"
-  "fieldKind": "PubMedId"
+  "kind": "PubMedIdField"
   id: string
   metadata: SchemaArtifactMetadata
   fieldSpec: PubMedIdFieldSpec
 }
 
 RridField ::: object {
-  "kind": "Field"
-  "fieldKind": "Rrid"
+  "kind": "RridField"
   id: string
   metadata: SchemaArtifactMetadata
   fieldSpec: RridFieldSpec
 }
 
 NihGrantIdField ::: object {
-  "kind": "Field"
-  "fieldKind": "NihGrantId"
+  "kind": "NihGrantIdField"
   id: string
   metadata: SchemaArtifactMetadata
   fieldSpec: NihGrantIdFieldSpec
 }
 
 AttributeValueField ::: object {
-  "kind": "Field"
-  "fieldKind": "AttributeValue"
+  "kind": "AttributeValueField"
   id: string
   metadata: SchemaArtifactMetadata
   fieldSpec: AttributeValueFieldSpec
@@ -1347,11 +1319,10 @@ EmbeddedField ::: EmbeddedTextField | EmbeddedNumericField
                 | EmbeddedPubMedIdField | EmbeddedRridField
                 | EmbeddedNihGrantIdField
                 | EmbeddedAttributeValueField
-  // discriminator: kind ("EmbeddedField"), then fieldKind
+  // discriminator: kind
 
 EmbeddedTextField ::: object {
-  "kind": "EmbeddedField"
-  "fieldKind": "Text"
+  "kind": "EmbeddedTextField"
   key: string
   reference: string
   valueRequirement?: ValueRequirement
@@ -1363,8 +1334,7 @@ EmbeddedTextField ::: object {
 }
 
 EmbeddedNumericField ::: object {
-  "kind": "EmbeddedField"
-  "fieldKind": "Numeric"
+  "kind": "EmbeddedNumericField"
   key: string
   reference: string
   valueRequirement?: ValueRequirement
@@ -1376,8 +1346,7 @@ EmbeddedNumericField ::: object {
 }
 
 EmbeddedDateField ::: object {
-  "kind": "EmbeddedField"
-  "fieldKind": "Date"
+  "kind": "EmbeddedDateField"
   key: string
   reference: string
   valueRequirement?: ValueRequirement
@@ -1389,8 +1358,7 @@ EmbeddedDateField ::: object {
 }
 
 EmbeddedTimeField ::: object {
-  "kind": "EmbeddedField"
-  "fieldKind": "Time"
+  "kind": "EmbeddedTimeField"
   key: string
   reference: string
   valueRequirement?: ValueRequirement
@@ -1402,8 +1370,7 @@ EmbeddedTimeField ::: object {
 }
 
 EmbeddedDateTimeField ::: object {
-  "kind": "EmbeddedField"
-  "fieldKind": "DateTime"
+  "kind": "EmbeddedDateTimeField"
   key: string
   reference: string
   valueRequirement?: ValueRequirement
@@ -1415,8 +1382,7 @@ EmbeddedDateTimeField ::: object {
 }
 
 EmbeddedControlledTermField ::: object {
-  "kind": "EmbeddedField"
-  "fieldKind": "ControlledTerm"
+  "kind": "EmbeddedControlledTermField"
   key: string
   reference: string
   valueRequirement?: ValueRequirement
@@ -1428,8 +1394,7 @@ EmbeddedControlledTermField ::: object {
 }
 
 EmbeddedSingleChoiceField ::: object {
-  "kind": "EmbeddedField"
-  "fieldKind": "SingleChoice"
+  "kind": "EmbeddedSingleChoiceField"
   key: string
   reference: string
   valueRequirement?: ValueRequirement
@@ -1441,8 +1406,7 @@ EmbeddedSingleChoiceField ::: object {
 }
 
 EmbeddedMultipleChoiceField ::: object {
-  "kind": "EmbeddedField"
-  "fieldKind": "MultipleChoice"
+  "kind": "EmbeddedMultipleChoiceField"
   key: string
   reference: string
   valueRequirement?: ValueRequirement
@@ -1454,8 +1418,7 @@ EmbeddedMultipleChoiceField ::: object {
 }
 
 EmbeddedLinkField ::: object {
-  "kind": "EmbeddedField"
-  "fieldKind": "Link"
+  "kind": "EmbeddedLinkField"
   key: string
   reference: string
   valueRequirement?: ValueRequirement
@@ -1467,8 +1430,7 @@ EmbeddedLinkField ::: object {
 }
 
 EmbeddedEmailField ::: object {
-  "kind": "EmbeddedField"
-  "fieldKind": "Email"
+  "kind": "EmbeddedEmailField"
   key: string
   reference: string
   valueRequirement?: ValueRequirement
@@ -1480,8 +1442,7 @@ EmbeddedEmailField ::: object {
 }
 
 EmbeddedPhoneNumberField ::: object {
-  "kind": "EmbeddedField"
-  "fieldKind": "PhoneNumber"
+  "kind": "EmbeddedPhoneNumberField"
   key: string
   reference: string
   valueRequirement?: ValueRequirement
@@ -1493,8 +1454,7 @@ EmbeddedPhoneNumberField ::: object {
 }
 
 EmbeddedOrcidField ::: object {
-  "kind": "EmbeddedField"
-  "fieldKind": "Orcid"
+  "kind": "EmbeddedOrcidField"
   key: string
   reference: string
   valueRequirement?: ValueRequirement
@@ -1506,8 +1466,7 @@ EmbeddedOrcidField ::: object {
 }
 
 EmbeddedRorField ::: object {
-  "kind": "EmbeddedField"
-  "fieldKind": "Ror"
+  "kind": "EmbeddedRorField"
   key: string
   reference: string
   valueRequirement?: ValueRequirement
@@ -1519,8 +1478,7 @@ EmbeddedRorField ::: object {
 }
 
 EmbeddedDoiField ::: object {
-  "kind": "EmbeddedField"
-  "fieldKind": "Doi"
+  "kind": "EmbeddedDoiField"
   key: string
   reference: string
   valueRequirement?: ValueRequirement
@@ -1532,8 +1490,7 @@ EmbeddedDoiField ::: object {
 }
 
 EmbeddedPubMedIdField ::: object {
-  "kind": "EmbeddedField"
-  "fieldKind": "PubMedId"
+  "kind": "EmbeddedPubMedIdField"
   key: string
   reference: string
   valueRequirement?: ValueRequirement
@@ -1545,8 +1502,7 @@ EmbeddedPubMedIdField ::: object {
 }
 
 EmbeddedRridField ::: object {
-  "kind": "EmbeddedField"
-  "fieldKind": "Rrid"
+  "kind": "EmbeddedRridField"
   key: string
   reference: string
   valueRequirement?: ValueRequirement
@@ -1558,8 +1514,7 @@ EmbeddedRridField ::: object {
 }
 
 EmbeddedNihGrantIdField ::: object {
-  "kind": "EmbeddedField"
-  "fieldKind": "NihGrantId"
+  "kind": "EmbeddedNihGrantIdField"
   key: string
   reference: string
   valueRequirement?: ValueRequirement
@@ -1571,8 +1526,7 @@ EmbeddedNihGrantIdField ::: object {
 }
 
 EmbeddedAttributeValueField ::: object {
-  "kind": "EmbeddedField"
-  "fieldKind": "AttributeValue"
+  "kind": "EmbeddedAttributeValueField"
   key: string
   reference: string
   valueRequirement?: ValueRequirement

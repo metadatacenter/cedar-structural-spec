@@ -141,12 +141,6 @@ property. Examples: `Value`, `FieldSpec`, `EmbeddedArtifact`,
 `SchemaArtifact`, `Artifact`, `DefaultValue`, `ChoiceValue`,
 `ExternalAuthorityValue`, `DateValue`.
 
-The `Field` and `EmbeddedField` families share the *outer*
-discriminator `"kind": "Field"` (or `"EmbeddedField"`) and use an
-*inner* discriminator `"fieldKind"` to distinguish the eighteen
-families ([`wire-grammar.md`](wire-grammar.md) §1.6). Bindings handle
-this by treating `(kind, fieldKind)` as a composite tag.
-
 **TypeScript idiom.** A discriminated (tagged) union of interfaces, all
 sharing a `kind: "..."` field as their literal-typed discriminant.
 Construction goes through per-variant factory functions; type-narrowing
@@ -185,12 +179,6 @@ public record TextValue(TextLiteral literal) implements Value { }
 @JsonTypeName("NumericValue")
 public record NumericValue(NumericLiteral literal) implements Value { }
 ```
-
-For the `Field` / `EmbeddedField` families, layer a second
-`@JsonTypeInfo(... property = "fieldKind")` on a sealed
-intermediate interface beneath the outer `kind` discriminator, or
-implement a custom `TypeIdResolver` that consumes both properties at
-once.
 
 **Python idiom.** A discriminated `Union` annotated with
 `pydantic.Discriminator("kind")`. Each variant carries a `kind:
@@ -401,8 +389,8 @@ export type Iri = string & { readonly __brand: 'Iri' };
 export function iri(value: string): Iri { /* validate */ return value as Iri; }
 ```
 
-cedar-ts's `FieldId` family uses the structural-wrapper form with an
-inner `fieldKind` discriminant so the eighteen families remain
+cedar-ts's `FieldId` family uses the structural-wrapper form with a
+per-family `kind` discriminant so the eighteen families remain
 distinguishable in the type system.
 
 **Java idiom.** A dedicated value record:
@@ -446,7 +434,7 @@ constructor.
 
 **Worked example: `Iri` and `FieldId`.** `Iri` wire form: `"https://example.org/x"`.
 `FieldId` wire form: also `"https://example.org/x"` — the family is
-recovered from the surrounding `fieldKind`. Bindings reconstruct the
+recovered from the surrounding `kind`. Bindings reconstruct the
 typed form by combining the JSON string with the static type at the
 use site.
 
@@ -670,9 +658,9 @@ declare constraints not expressible in the type expression: BCP 47
 well-formedness, ASCII-id patterns, uniqueness across collection
 positions (e.g. `EmbeddedArtifact` keys within a `Template`),
 at-least-one-of (e.g. `OntologyDisplayHint` requires at least one of
-`acronym` or `name`), value-relationships (e.g.
-`fieldKind` MUST match the family of the nested `fieldSpec`), and
-similar.
+`acronym` or `name`), value-relationships (e.g. the IRI placed at a
+field's `id` MUST belong to a field of the same family as the enclosing
+`kind`), and similar.
 
 Bindings SHOULD validate at construction time and throw a
 binding-specific exception type. A constructed instance is then always
