@@ -43,13 +43,13 @@ Typing terms:
 
 `Literal` denotes an RDF literal in the grammar.
 
-The grammar distinguishes `DatatypeIriLiteral` and `LangStringLiteral` explicitly.
+The grammar distinguishes `TypedLiteral` and `LangTaggedLiteral` explicitly.
 
-`DatatypeIriLiteral` consists of lexical content together with a datatype IRI.
+`TypedLiteral` consists of lexical content together with a datatype IRI.
 
 `NumericLiteral`, `FullDateLiteral`, `TimeLiteral`, and `DateTimeLiteral` use more specific datatype-Iri categories.
 
-`LangStringLiteral` consists of lexical content together with a language tag.
+`LangTaggedLiteral` consists of lexical content together with a language tag.
 
 The normative structure and semantics of literals are defined in the `Literals` section of [grammar.md](grammar.md).
 

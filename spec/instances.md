@@ -49,7 +49,7 @@ A conforming instance MUST use `EmbeddedArtifactKey` values that identify embedd
 
 Textual instance values MAY include language tags.
 
-`TextValue` is represented by `TextLiteral`, which may be either `StringLiteral` or `LangStringLiteral`.
+`TextValue` is represented by `TextLiteral`, which may be either `SimpleLiteral` or `LangTaggedLiteral`.
 
 Numeric instance values are represented by typed literals that carry numeric datatype IRIs.
 

@@ -344,7 +344,7 @@ Both fields are single-valued ([`is_multi`](#2-conventions) = false), so `encode
   "pav:lastUpdatedOn":  "2024-03-10T09:30:00Z",
   "oslc:modifiedBy":    "https://orcid.example.org/0000-0001-2345-6789",
 
-  // encode_field_value → encode_text_value (StringLiteral, no language tag)
+  // encode_field_value → encode_text_value (SimpleLiteral, no language tag)
   "title": { "@value": "Mouse Sample 42" },
 
   // encode_field_value → encode_numeric_value
@@ -1377,8 +1377,8 @@ Returns a JSON object whose keys depend on the `TextLiteral` kind:
 
 | `TextLiteral` kind | `"@value"` source | `"@language"` |
 |---|---|---|
-| `StringLiteral` | `V.text_literal.lexical_form.unicode_string` | Omit |
-| `LangStringLiteral` | `V.text_literal.lexical_form.unicode_string` | `V.text_literal.language_tag.bcp_47_tag` |
+| `SimpleLiteral` | `V.text_literal.lexical_form.unicode_string` | Omit |
+| `LangTaggedLiteral` | `V.text_literal.lexical_form.unicode_string` | `V.text_literal.language_tag.bcp_47_tag` |
 
 ---
 
@@ -1469,7 +1469,7 @@ Returns a JSON object with the following keys:
 Email instance values are plain string objects with a single `@value` key. No type annotation is included.
 
 ```javascript
-{ "@value": V.string_literal.lexical_form.unicode_string }
+{ "@value": V.simple_literal.lexical_form.unicode_string }
 ```
 
 ---
@@ -1479,7 +1479,7 @@ Email instance values are plain string objects with a single `@value` key. No ty
 Phone number instance values are plain string objects with a single `@value` key. No type annotation is included.
 
 ```javascript
-{ "@value": V.string_literal.lexical_form.unicode_string }
+{ "@value": V.simple_literal.lexical_form.unicode_string }
 ```
 
 ---
@@ -1616,6 +1616,6 @@ Implementations SHOULD confirm that annotation IRI keys are valid within the CTM
 
 8. **`Unit` as IRI** — CTM 1.6.0 `unitOfMeasure` is a plain string. The IRI string value is used directly; any human-readable label associated with `Unit` is omitted.
 
-9. **`LangStringLiteral` in text values** — CTM 1.6.0 does not model language-tagged strings explicitly. The `@language` key is included in the encoded value object as a JSON-LD extension; support in CTM 1.6.0 tooling is not guaranteed.
+9. **`LangTaggedLiteral` in text values** — CTM 1.6.0 does not model language-tagged strings explicitly. The `@language` key is included in the encoded value object as a JSON-LD extension; support in CTM 1.6.0 tooling is not guaranteed.
 
 10. **External authority `inputType` values** — The `inputType` string values for ORCID, ROR, DOI, PubMed, RRID, and NIH Grant fields are not standardised in the published CTM 1.6.0 specification and SHOULD be confirmed against the deployed implementation.

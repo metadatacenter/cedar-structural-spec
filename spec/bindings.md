@@ -240,15 +240,15 @@ this style for unions where that disjointness can be proven.
 
 **TypeScript idiom.** A structural union; type guards inspect property
 presence. cedar-ts adds a synthetic `kind` discriminator to the
-*in-memory* representation (e.g. `StringLiteral.kind = "StringLiteral"`)
+*in-memory* representation (e.g. `SimpleLiteral.kind = "SimpleLiteral"`)
 purely for ergonomic narrowing — that synthetic discriminator is
 stripped at encode time and is not part of the wire shape.
 
 ```typescript
-export interface StringLiteral { readonly kind: 'StringLiteral'; readonly lexicalForm: string; }
-export interface LangStringLiteral { readonly kind: 'LangStringLiteral'; readonly lexicalForm: string; readonly lang: LanguageTag; }
-export interface DatatypeIriLiteral { readonly kind: 'DatatypeIriLiteral'; readonly lexicalForm: string; readonly datatype: Iri; }
-export type Literal = DatatypeIriLiteral | LangStringLiteral;
+export interface SimpleLiteral { readonly kind: 'SimpleLiteral'; readonly lexicalForm: string; }
+export interface LangTaggedLiteral { readonly kind: 'LangTaggedLiteral'; readonly lexicalForm: string; readonly lang: LanguageTag; }
+export interface TypedLiteral { readonly kind: 'TypedLiteral'; readonly lexicalForm: string; readonly datatype: Iri; }
+export type Literal = TypedLiteral | LangTaggedLiteral;
 // Decode: pick variant by property-set; encode: emit value/lang/datatype only.
 ```
 
@@ -265,14 +265,14 @@ shorter Jackson configuration.
 
 ```java
 @JsonDeserialize(using = LiteralDeserializer.class)
-public sealed interface Literal permits StringLiteral, LangStringLiteral, DatatypeIriLiteral { }
+public sealed interface Literal permits SimpleLiteral, LangTaggedLiteral, TypedLiteral { }
 
-public record StringLiteral(String value) implements Literal { }
-public record LangStringLiteral(String value, String lang) implements Literal { }
-public record DatatypeIriLiteral(String value, String datatype) implements Literal { }
+public record SimpleLiteral(String value) implements Literal { }
+public record LangTaggedLiteral(String value, String lang) implements Literal { }
+public record TypedLiteral(String value, String datatype) implements Literal { }
 
-// LiteralDeserializer: read JsonNode; if has(lang) -> LangStringLiteral;
-// else if has(datatype) -> DatatypeIriLiteral; else StringLiteral.
+// LiteralDeserializer: read JsonNode; if has(lang) -> LangTaggedLiteral;
+// else if has(datatype) -> TypedLiteral; else SimpleLiteral.
 ```
 
 **Python idiom.** Pydantic v2 with a callable `Discriminator` that
@@ -284,16 +284,16 @@ the keys present and returns a string like `"string"`, `"lang"`, or
 from typing import Annotated, Literal as Lit, Union
 from pydantic import BaseModel, ConfigDict, Discriminator, Tag
 
-class StringLiteral(BaseModel):
+class SimpleLiteral(BaseModel):
     model_config = ConfigDict(frozen=True)
     value: str
 
-class LangStringLiteral(BaseModel):
+class LangTaggedLiteral(BaseModel):
     model_config = ConfigDict(frozen=True)
     value: str
     lang: str
 
-class DatatypeIriLiteral(BaseModel):
+class TypedLiteral(BaseModel):
     model_config = ConfigDict(frozen=True)
     value: str
     datatype: str
@@ -307,9 +307,9 @@ def _literal_disc(v: object) -> str:
 
 Literal = Annotated[
     Union[
-        Annotated[StringLiteral, Tag("string")],
-        Annotated[LangStringLiteral, Tag("lang")],
-        Annotated[DatatypeIriLiteral, Tag("datatype")],
+        Annotated[SimpleLiteral, Tag("string")],
+        Annotated[LangTaggedLiteral, Tag("lang")],
+        Annotated[TypedLiteral, Tag("datatype")],
     ],
     Discriminator(_literal_disc),
 ]
@@ -321,12 +321,12 @@ when the discriminator depends on context.
 **Validation guidance.** Decoders MUST reject objects whose property
 set matches no variant (e.g., `{"value": "x", "lang": "en", "datatype":
 "…"}` carries both `lang` and `datatype` and is invalid; cf.
-[`wire-grammar.md`](wire-grammar.md) §3 `DatatypeIriLiteral`
+[`wire-grammar.md`](wire-grammar.md) §3 `TypedLiteral`
 constraint). Encoders MUST omit the optional discriminating properties
 when not applicable.
 
-**Worked example: `Literal` (`StringLiteral | LangStringLiteral |
-DatatypeIriLiteral`).** Wire shapes: `{"value":"x"}`,
+**Worked example: `Literal` (`SimpleLiteral | LangTaggedLiteral |
+TypedLiteral`).** Wire shapes: `{"value":"x"}`,
 `{"value":"x","lang":"en"}`, `{"value":"x","datatype":"…"}`. Each
 binding decodes by inspecting property presence and reconstructs the
 correct in-memory variant.
@@ -455,7 +455,7 @@ use site.
 **What it is.** A wire production `MultilingualString :::
 nonEmptyArray<LangString>` with the inline constraint that lang tags
 MUST be unique within the array (case-folded, [`wire-grammar.md`](wire-grammar.md)
-§2.2). Distinct from `LangStringLiteral` (which is a single
+§2.2). Distinct from `LangTaggedLiteral` (which is a single
 `{value, lang}` literal); a `MultilingualString` is an *array* of one
 or more `{value, lang}` localizations of the *same* conceptual string.
 

@@ -1228,7 +1228,7 @@ classes:
     abstract: true
     description: An abstract base for all typed literal forms.
 
-  StringLiteral:
+  SimpleLiteral:
     is_a: Literal
     description: A plain Unicode string literal without a language tag.
     attributes:
@@ -1237,7 +1237,7 @@ classes:
         required: true
         description: The string content of this literal.
 
-  LangStringLiteral:
+  LangTaggedLiteral:
     is_a: Literal
     description: A string literal paired with a BCP 47 language tag.
     attributes:
@@ -1250,7 +1250,7 @@ classes:
         required: true
         description: BCP 47 language tag identifying the language of this string.
 
-  # TextLiteral ::= StringLiteral | LangStringLiteral
+  # TextLiteral ::= SimpleLiteral | LangTaggedLiteral
   # Handled via is_a hierarchy above.
 
   NumericLiteral:
@@ -1282,11 +1282,11 @@ classes:
       A text value carrying either a plain string or a language-tagged string.
     attributes:
       text_literal:
-        # TextLiteral ::= StringLiteral | LangStringLiteral
+        # TextLiteral ::= SimpleLiteral | LangTaggedLiteral
         range: Literal
         any_of:
-          - range: StringLiteral
-          - range: LangStringLiteral
+          - range: SimpleLiteral
+          - range: LangTaggedLiteral
         required: true
         inlined: true
         description: The text literal carried by this value, either a plain string or a language-tagged string.
@@ -1418,7 +1418,7 @@ classes:
     description: A value carrying an email address string.
     attributes:
       value:
-        range: StringLiteral
+        range: SimpleLiteral
         required: true
         inlined: true
         description: The email address as a string literal.
@@ -1428,7 +1428,7 @@ classes:
     description: A value carrying a telephone number string.
     attributes:
       value:
-        range: StringLiteral
+        range: SimpleLiteral
         required: true
         inlined: true
         description: The phone number as a string literal.

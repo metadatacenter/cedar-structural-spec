@@ -120,8 +120,8 @@ This rule applies recursively: an untagged object at a singleton position whose 
 
 A small set of polymorphic unions is discriminated **by the combination of property names present** rather than by an explicit `"kind"` value. This is permitted only when the union's alternatives have structurally distinct property sets that cannot collide. The unions encoded this way are:
 
-- `Literal` (`StringLiteral | LangStringLiteral | DatatypeIriLiteral`): discriminated by `value`, `lang`, and `datatype` presence.
-- `TextLiteral` (`StringLiteral | LangStringLiteral`): discriminated by `lang` presence.
+- `Literal` (`SimpleLiteral | LangTaggedLiteral | TypedLiteral`): discriminated by `value`, `lang`, and `datatype` presence.
+- `TextLiteral` (`SimpleLiteral | LangTaggedLiteral`): discriminated by `lang` presence.
 - `AnnotationValue` (`Literal | Iri`): discriminated by `value` (literal arms) vs `iri` only (Iri arm).
 
 Future unions that would admit variants with overlapping property sets MUST use `"kind"` discrimination instead.
@@ -130,7 +130,7 @@ A conforming decoder at a property-set-discriminated position MUST resolve the v
 
 1. The encoded object's set of property names MUST equal the property set of exactly one variant — every required property of that variant present, no property absent that the variant requires, and no property present that the variant does not list (required or optional).
 2. If the encoded object's property set matches no variant exactly, the decoder MUST reject the document.
-3. If the encoded object's property set matches more than one variant — for example, a `Literal` position carrying `{"value":"x","lang":"en","datatype":"…"}` (which simultaneously fits no single variant cleanly because `lang` and `datatype` MUST NOT both be present, and the same combination cannot match `LangStringLiteral` and `DatatypeIriLiteral` together) — the decoder MUST reject the document.
+3. If the encoded object's property set matches more than one variant — for example, a `Literal` position carrying `{"value":"x","lang":"en","datatype":"…"}` (which simultaneously fits no single variant cleanly because `lang` and `datatype` MUST NOT both be present, and the same combination cannot match `LangTaggedLiteral` and `TypedLiteral` together) — the decoder MUST reject the document.
 
 Conforming encoders, by construction, never emit objects matching either the no-match or multi-match conditions, because every abstract construct corresponds to exactly one variant.
 
@@ -142,7 +142,7 @@ Implementations MUST NOT rely on JSON property ordering to discriminate alternat
 
 ### 4.5 String values
 
-Strings are JSON strings encoded in UTF-8. Lexical-form strings (e.g. the `value` property of a `StringLiteral`) MUST be transmitted in Unicode Normalization Form C (NFC). A conforming implementation SHOULD normalize on encode.
+Strings are JSON strings encoded in UTF-8. Lexical-form strings (e.g. the `value` property of a `SimpleLiteral`) MUST be transmitted in Unicode Normalization Form C (NFC). A conforming implementation SHOULD normalize on encode.
 
 ### 4.6 Number values
 
@@ -176,7 +176,7 @@ A production carries information beyond its payload, and so MUST be encoded as a
 
 - **(b) Discriminated union membership.** The production participates in a union where alternatives must be distinguished at decode time (e.g. `Value`, every artifact's `kind`, the eighteen `Field` family variants). The discriminator is `"kind"` by default, with a small set of property-set-discriminated unions per §4.4.
 
-- **(c) Lexical-form preservation.** The production carries lexical content whose preservation requires more than a JSON primitive can express (e.g. `LangStringLiteral` carries a lexical form *and* a language tag; both must be present in the wire form).
+- **(c) Lexical-form preservation.** The production carries lexical content whose preservation requires more than a JSON primitive can express (e.g. `LangTaggedLiteral` carries a lexical form *and* a language tag; both must be present in the wire form).
 
 A production that satisfies none of these is encoded *flat*: the JSON value at the corresponding property position in the enclosing object is the JSON encoding of the production's single component, with no `"kind"` wrapper.
 
@@ -238,7 +238,7 @@ A `MultilingualString` is encoded as a non-empty JSON array of untagged `LangStr
 
 The BCP 47 `'und'` (undetermined) subtag MAY be used when the natural language is unspecified.
 
-`MultilingualString` and `LangStringLiteral` (§6.2) share the `{value, lang}` entry shape but are structurally distinct: a `LangStringLiteral` is a *single* language-tagged literal (one JSON object), whereas a `MultilingualString` is an *array* of one or more such pairs. Encoders MUST NOT collapse a single-entry `MultilingualString` into a bare `LangStringLiteral` object, and decoders MUST NOT promote a `LangStringLiteral` object into a `MultilingualString` array.
+`MultilingualString` and `LangTaggedLiteral` (§6.2) share the `{value, lang}` entry shape but are structurally distinct: a `LangTaggedLiteral` is a *single* language-tagged literal (one JSON object), whereas a `MultilingualString` is an *array* of one or more such pairs. Encoders MUST NOT collapse a single-entry `MultilingualString` into a bare `LangTaggedLiteral` object, and decoders MUST NOT promote a `LangTaggedLiteral` object into a `MultilingualString` array.
 
 ### 6.4 Values
 

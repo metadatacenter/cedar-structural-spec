@@ -136,8 +136,8 @@ For controlled-term values:
 
 For contact values:
 
-- `EmailValue` MUST contain a `StringLiteral`
-- `PhoneNumberValue` MUST contain a `StringLiteral`
+- `EmailValue` MUST contain a `SimpleLiteral`
+- `PhoneNumberValue` MUST contain a `SimpleLiteral`
 
 For external authority values:
 
@@ -151,10 +151,10 @@ For external authority values:
 
 For literals generally:
 
-- `DatatypeIriLiteral` lexical forms SHOULD be in Unicode Normalization Form C
-- `LangStringLiteral` lexical forms SHOULD be in Unicode Normalization Form C
-- `StringLiteral` MUST denote an RDF literal with datatype IRI `http://www.w3.org/2001/XMLSchema#string`
-- `LangStringLiteral` language tags MUST be non-empty and well-formed according to BCP 47
+- `TypedLiteral` lexical forms SHOULD be in Unicode Normalization Form C
+- `LangTaggedLiteral` lexical forms SHOULD be in Unicode Normalization Form C
+- `SimpleLiteral` MUST denote an RDF literal with datatype IRI `http://www.w3.org/2001/XMLSchema#string`
+- `LangTaggedLiteral` language tags MUST be non-empty and well-formed according to BCP 47
 
 For typed defaults:
 
@@ -539,8 +539,8 @@ Note: validation of `V.term_iri` against `FT.controlled_term_sources` requires a
 
 ##### `validate_contact_value(V: ContactValue)`
 
-1. If `V` is an `EmailValue`: verify `V` contains a `StringLiteral`.
-2. If `V` is a `PhoneNumberValue`: verify `V` contains a `StringLiteral`.
+1. If `V` is an `EmailValue`: verify `V` contains a `SimpleLiteral`.
+2. If `V` is a `PhoneNumberValue`: verify `V` contains a `SimpleLiteral`.
 
 ---
 

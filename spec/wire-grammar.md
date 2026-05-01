@@ -234,27 +234,27 @@ DateTimeDatatypeIri ::: "dateTime"
 ## 3. Literals
 
 ```
-Literal ::: StringLiteral | LangStringLiteral | DatatypeIriLiteral
+Literal ::: SimpleLiteral | LangTaggedLiteral | TypedLiteral
   // discriminator: property-set
 
-StringLiteral ::: object {
+SimpleLiteral ::: object {
   value: string
 }
 
-LangStringLiteral ::: object {
+LangTaggedLiteral ::: object {
   value: string
   lang: string
 }
   // lang MUST be a well-formed BCP 47 tag
 
-DatatypeIriLiteral ::: object {
+TypedLiteral ::: object {
   value: string
   datatype: string
 }
   // datatype is an Iri identifying the literal's RDF datatype
   // value and datatype MUST NOT both carry a lang property
 
-TextLiteral ::: StringLiteral | LangStringLiteral
+TextLiteral ::: SimpleLiteral | LangTaggedLiteral
   // discriminator: property-set
 ```
 
@@ -414,12 +414,12 @@ LinkLabel ::: string
 ```
 EmailValue ::: object {
   "kind": "EmailValue"
-  literal: StringLiteral
+  literal: SimpleLiteral
 }
 
 PhoneNumberValue ::: object {
   "kind": "PhoneNumberValue"
-  literal: StringLiteral
+  literal: SimpleLiteral
 }
 ```
 
@@ -616,12 +616,12 @@ Annotation ::: object {
   // property is the annotation-property Iri (the grammar's bare Iri
   // collapses to a string at this singleton position)
 
-AnnotationValue ::: StringLiteral | LangStringLiteral | DatatypeIriLiteral
+AnnotationValue ::: SimpleLiteral | LangTaggedLiteral | TypedLiteral
                   | object { iri: string }
   // discriminator: property-set
-  // value-only          ⇒ StringLiteral
-  // value + lang        ⇒ LangStringLiteral
-  // value + datatype    ⇒ DatatypeIriLiteral
+  // value-only          ⇒ SimpleLiteral
+  // value + lang        ⇒ LangTaggedLiteral
+  // value + datatype    ⇒ TypedLiteral
   // iri only            ⇒ Iri (wrapped at this polymorphic position)
 ```
 

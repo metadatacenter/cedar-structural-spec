@@ -929,7 +929,7 @@ MultilingualString ::= multilingual_string(
 
 The `'und'` (undetermined) BCP 47 subtag MAY be used to denote a `LangString` whose natural language is unspecified. Implementations MAY use `'und'` as the default tag when constructing a `MultilingualString` from a bare string with no language information.
 
-`MultilingualString` is structurally distinct from `LangStringLiteral` (a member of the [`Literal`](#base-literals) union): a `LangStringLiteral` is a single language-tagged RDF-style literal value, whereas `MultilingualString` is an unweighted localization set carried at singleton schema-metadata positions such as `Template.header` or `DescriptiveMetadata.name`.
+`MultilingualString` is structurally distinct from `LangTaggedLiteral` (a member of the [`Literal`](#base-literals) union): a `LangTaggedLiteral` is a single language-tagged RDF-style literal value, whereas `MultilingualString` is an unweighted localization set carried at singleton schema-metadata positions such as `Template.header` or `DescriptiveMetadata.name`.
 
 ### Numeric Datatype IRIs
 
@@ -1004,36 +1004,36 @@ Literals are the atomic data values used throughout the instance model. This spe
 The base literal types define the two concrete RDF literal forms together with their string specialisations. These are used in text-valued, general-purpose, and controlled-term positions throughout the model.
 
 ```ebnf
-Literal ::= DatatypeIriLiteral
-          | LangStringLiteral
+Literal ::= TypedLiteral
+          | LangTaggedLiteral
 
-DatatypeIriLiteral ::= datatype_iri_literal(
-                         LexicalForm
-                         DatatypeIri
-                       )
+TypedLiteral ::= typed_literal(
+                   LexicalForm
+                   DatatypeIri
+                 )
 
-LangStringLiteral ::= lang_string_literal(
+LangTaggedLiteral ::= lang_tagged_literal(
                         LexicalForm
                         LanguageTag
                       )
 
-StringLiteral ::= string_literal(
+SimpleLiteral ::= simple_literal(
                     LexicalForm
                   )
 
-TextLiteral ::= StringLiteral
-              | LangStringLiteral
+TextLiteral ::= SimpleLiteral
+              | LangTaggedLiteral
 ```
 
 `Literal` is the base category for all RDF literals in this specification.
 
-`DatatypeIriLiteral` consists of a lexical form and a datatype IRI.
+`TypedLiteral` consists of a lexical form and a datatype IRI.
 
-`LangStringLiteral` consists of a lexical form and a language tag. Its implicit datatype IRI is `http://www.w3.org/1999/02/22-rdf-syntax-ns#langString`. Its language tag MUST be non-empty and well-formed according to BCP 47.
+`LangTaggedLiteral` consists of a lexical form and a language tag. Its implicit datatype IRI is `http://www.w3.org/1999/02/22-rdf-syntax-ns#langString`. Its language tag MUST be non-empty and well-formed according to BCP 47.
 
-`StringLiteral` is a `DatatypeIriLiteral` whose datatype IRI is `http://www.w3.org/2001/XMLSchema#string`.
+`SimpleLiteral` is a `TypedLiteral` whose datatype IRI is `http://www.w3.org/2001/XMLSchema#string`.
 
-`TextLiteral` is the union of `StringLiteral` and `LangStringLiteral`. It is the class of literals permitted in `TextValue`, admitting both plain strings and language-tagged strings.
+`TextLiteral` is the union of `SimpleLiteral` and `LangTaggedLiteral`. It is the class of literals permitted in `TextValue`, admitting both plain strings and language-tagged strings.
 
 Concrete syntaxes MAY use simpler surface forms that omit an explicit datatype IRI for string literals or language-tagged strings. Such forms are syntactic sugar and do not change the abstract structure defined by this specification.
 
@@ -1083,7 +1083,7 @@ Each temporal literal carries a datatype IRI from the corresponding temporal dat
 
 ### Literal Value Semantics
 
-The value associated with a `DatatypeIriLiteral` depends on whether its datatype IRI is recognised and whether its lexical form is in the lexical space of that datatype:
+The value associated with a `TypedLiteral` depends on whether its datatype IRI is recognised and whether its lexical form is in the lexical space of that datatype:
 
 | Condition | Result |
 |---|---|
@@ -1091,7 +1091,7 @@ The value associated with a `DatatypeIriLiteral` depends on whether its datatype
 | Datatype IRI recognised; lexical form outside lexical space | Ill-typed literal: no valid literal value is determined |
 | Datatype IRI not recognised | Literal value is not defined by this specification |
 
-For a `LangStringLiteral`, the literal value is the pair consisting of lexical form and language tag, in that order.
+For a `LangTaggedLiteral`, the literal value is the pair consisting of lexical form and language tag, in that order.
 
 An ill-typed literal is not syntactically ill-formed, but it does not determine a valid literal value and produces a semantic inconsistency. Implementations MUST accept ill-typed literals and MAY produce warnings when encountering them.
 
@@ -1223,15 +1223,15 @@ LinkLabel ::= link_label(
 
 ### Contact Values
 
-Contact values represent human contact identifiers. `EmailValue` carries an email address as a plain string literal and `PhoneNumberValue` carries a telephone number as a plain string literal. Both use `StringLiteral` rather than a more specialised literal form; format validation is left to implementations.
+Contact values represent human contact identifiers. `EmailValue` carries an email address as a plain string literal and `PhoneNumberValue` carries a telephone number as a plain string literal. Both use `SimpleLiteral` rather than a more specialised literal form; format validation is left to implementations.
 
 ```ebnf
 EmailValue ::= email_value(
-                 StringLiteral
+                 SimpleLiteral
                )
 
 PhoneNumberValue ::= phone_number_value(
-                       StringLiteral
+                       SimpleLiteral
                      )
 ```
 
