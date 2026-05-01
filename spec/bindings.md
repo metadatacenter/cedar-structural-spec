@@ -753,20 +753,26 @@ helper if equality is meaningful at call sites.
 | Java       | `UpperCamelCase`    | `lowerCamelCase`                 | `SCREAMING_SNAKE_CASE`    |
 | Python     | `UpperCamelCase`    | `snake_case`                     | `SCREAMING_SNAKE_CASE`    |
 
-**Reserved-word collisions (Java).** Several grammar property names
-collide with Java reserved words (`class` for `ControlledTermClass`'s
-component name in some draft refactorings; `default` for
-`LiteralChoiceOption.default`; `package` if it ever appeared). Two
-escape rules are recommended:
+**Reserved-word collisions (Java).** As of the current model the only
+grammar property name that collides with a Java reserved word is
+`default`, used on `LiteralChoiceOption` and `ControlledTermChoiceOption`
+to mark the default option. (Verified by cross-referencing every
+property name in [`wire-grammar.md`](wire-grammar.md) against the
+full Java reserved-word list.)
 
-1. Rename the Java field to a non-reserved synonym
-   (`isDefault` for `default`, `clazz` for `class`) and use
-   `@JsonProperty("default")` to map back to the wire name. This is
-   the more common convention.
-2. Use a leading underscore (`_default`, `_class`) and again use
-   `@JsonProperty` to map back. Less common but legal.
+Two escape rules are recommended for `default`; either is acceptable
+but the field MUST round-trip through `@JsonProperty("default")`:
 
-The mapping is one-directional; the wire name remains canonical.
+1. Rename the Java field to a non-reserved synonym (`isDefault`) and
+   use `@JsonProperty("default")` to map back to the wire name. This
+   is the more common convention and reads well in `record`
+   accessors.
+2. Use a leading underscore (`_default`) and again use
+   `@JsonProperty("default")`. Less common but legal.
+
+The mapping is one-directional; the wire name (`default`) remains
+canonical. A future grammar property whose name collides with a Java
+reserved word follows the same pattern.
 
 **Property naming (Python).** Pydantic models can use `Field(alias=
 'lowerCamelName')` together with `model_config = ConfigDict(

@@ -96,6 +96,8 @@ A grammar component marked `[X]` (optional) MUST be omitted from its enclosing J
 
 A conforming implementation MUST treat the absence of an optional property as equivalent to that component not being present in the abstract construct.
 
+On decode, a conforming implementation MUST reject any document in which an optional property is present with the JSON value `null`. The two conforming wire forms for an absent optional are: the property is omitted entirely, or the enclosing object is itself absent. Treating `null` as equivalent to absent is non-conforming because it admits two distinct wire forms for the same abstract state, breaking round-trip equality.
+
 ### 4.3 Sequence components
 
 A grammar component marked `X*` (zero or more) is encoded as a JSON array. The array MAY be empty.
@@ -123,6 +125,14 @@ A small set of polymorphic unions is discriminated **by the combination of prope
 - `AnnotationValue` (`Literal | Iri`): discriminated by `value` (literal arms) vs `iri` only (Iri arm).
 
 Future unions that would admit variants with overlapping property sets MUST use `"kind"` discrimination instead.
+
+A conforming decoder at a property-set-discriminated position MUST resolve the variant by exact match on the property set:
+
+1. The encoded object's set of property names MUST equal the property set of exactly one variant — every required property of that variant present, no property absent that the variant requires, and no property present that the variant does not list (required or optional).
+2. If the encoded object's property set matches no variant exactly, the decoder MUST reject the document.
+3. If the encoded object's property set matches more than one variant — for example, a `Literal` position carrying `{"value":"x","lang":"en","datatype":"…"}` (which simultaneously fits no single variant cleanly because `lang` and `datatype` MUST NOT both be present, and the same combination cannot match `LangStringLiteral` and `DatatypeIriLiteral` together) — the decoder MUST reject the document.
+
+Conforming encoders, by construction, never emit objects matching either the no-match or multi-match conditions, because every abstract construct corresponds to exactly one variant.
 
 #### Position-discriminated unions
 

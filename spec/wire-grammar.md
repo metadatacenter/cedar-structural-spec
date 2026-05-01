@@ -106,6 +106,15 @@ such as `Cardinality`, `Property`, `LabelOverride`, `DescriptiveMetadata`,
 `ControlledTermChoiceOption`, and the temporal `RenderingHint`
 variants.
 
+The polymorphic-only rule constrains the **wire form**, not the
+**in-memory form** of any host-language binding. Bindings MAY carry
+synthetic `kind` (or any other) discriminator fields on their
+in-memory representations of singleton-position productions for
+runtime introspection, type-guard ergonomics, or debugging. Such
+synthetic discriminators MUST be stripped at encode and reconstructed
+at decode if the binding chooses to expose them; they MUST NOT appear
+on the wire. (See [`bindings.md`](bindings.md) §2.1 for examples.)
+
 ### 1.6 The shared `kind` + `fieldKind` rule
 
 Each of the eighteen `Field` family productions (`TextField`,
@@ -151,9 +160,12 @@ each site that uses them.
 
 ```
 Iri ::: string
-  // a syntactically valid IRI per RFC 3987; at polymorphic positions
-  // (e.g. AnnotationValue) the IRI is wrapped as `object { iri: string }`
-  // — see §6 for that wrapper
+  // a syntactically valid IRI per RFC 3987. At every position in the
+  // model where the grammar uses Iri the wire form is a JSON string,
+  // EXCEPT in `AnnotationValue` (the only polymorphic position
+  // admitting a bare Iri). At that one position the IRI is wrapped
+  // as `object { iri: string }` so the property-set discriminator
+  // distinguishes it from the literal arms — see §6 for that wrapper.
 
 DatatypeIri ::: Iri
   // a documented role; encodes as Iri
