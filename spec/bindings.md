@@ -215,6 +215,21 @@ idioms decode that JSON to a value whose static type is `Value` and
 whose runtime narrowing predicate (`value.kind === 'TextValue'` /
 `instanceof TextValue` / `isinstance(v, TextValue)`) returns true.
 
+**Java note: nested sealed interfaces and Jackson dispatch tables.**
+Where a sealed union permits another sealed union as a member (for
+example, `EmbeddedArtifact permits EmbeddedField,
+EmbeddedPresentationComponent`, with `EmbeddedField` itself sealed
+over the 18 family records), prefer a **flat dispatch table** at
+the outer interface — enumerate all leaf concrete records directly
+in the outer's `@JsonSubTypes`, not the intermediate sealed
+interface. Nested-`@JsonTypeInfo` delegation through an intermediate
+sealed interface is fragile in Jackson 2.x: the resolver re-enters
+the deserializer chain at the inner interface, which can fight with
+`@JsonTypeName` on the leaves and produce spurious failures. The
+wire form already requires `kind` to be one of the leaf names
+(never an intermediate-group name), so a flat dispatch table is
+correct by construction.
+
 ### 2.3 Property-set discriminated union
 
 **What it is.** A wire production written as `T ::: A | B | …` with
