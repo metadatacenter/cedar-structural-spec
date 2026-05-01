@@ -997,15 +997,28 @@ DateTimeDatatypeIri ::= XsdDateTimeDatatypeIri
 
 ## Literals
 
-Literals are the atomic data values used throughout the instance model. This specification follows the RDF literal model: every literal consists of a lexical form paired with either a datatype IRI or a language tag. Typed subclasses narrow the permitted datatype IRI to support strongly typed numeric and temporal values. The lexical form of any literal SHOULD be in Unicode Normalization Form C.
+Literals are the atomic data values used throughout the instance model. This specification follows the RDF 1.1 literal model ([RDF Concepts §3.3](https://www.w3.org/TR/rdf11-concepts/#section-Graph-Literal)).
+
+### Every literal has a datatype
+
+In RDF 1.1, *every* literal has a datatype IRI. There is no such thing as a literal without a datatype. The three productions in this section differ only in how that datatype IRI is determined:
+
+- For `TypedLiteral` the datatype IRI is carried explicitly as a component of the literal.
+- For `LangTaggedLiteral` the datatype IRI is fixed by the literal's category — every language-tagged literal has datatype `http://www.w3.org/1999/02/22-rdf-syntax-ns#langString` (`rdf:langString`). The lang tag is an additional component that ONLY appears when this datatype is in effect.
+- For `SimpleLiteral` the datatype IRI is fixed by the literal's category — every simple literal has datatype `http://www.w3.org/2001/XMLSchema#string` (`xsd:string`). Simple literals are an abbreviation: a `SimpleLiteral` carrying lexical form `"foo"` denotes the same RDF literal as a `TypedLiteral` carrying lexical form `"foo"` and datatype `xsd:string`. The grammar keeps `SimpleLiteral` as a distinct production for ergonomics — most literals in real templates are plain strings, and requiring an explicit `xsd:string` IRI on each would be heavy.
+
+`SimpleLiteral` and `LangTaggedLiteral` are NOT subtypes of `TypedLiteral` in this grammar; they are sibling productions. The relationship is at the *RDF datatype level* (every literal in RDF 1.1 has a datatype IRI), not at the abstract-syntax level. A binding implementation MAY choose to internally represent a `SimpleLiteral` as a `TypedLiteral` with `datatype = xsd:string` — the two are RDF-term-equal — but the wire form preserves the distinction so that authorial intent (was the literal written as a simple literal or as an explicit typed literal?) round-trips faithfully.
+
+The lexical form of any literal SHOULD be in Unicode Normalization Form C.
 
 ### Base Literals
 
-The base literal types define the two concrete RDF literal forms together with their string specialisations. These are used in text-valued, general-purpose, and controlled-term positions throughout the model.
+The base literal types define the two concrete RDF literal forms together with their string specialisation.
 
 ```ebnf
-Literal ::= TypedLiteral
+Literal ::= SimpleLiteral
           | LangTaggedLiteral
+          | TypedLiteral
 
 TypedLiteral ::= typed_literal(
                    LexicalForm
@@ -1025,15 +1038,15 @@ TextLiteral ::= SimpleLiteral
               | LangTaggedLiteral
 ```
 
-`Literal` is the base category for all RDF literals in this specification.
+`Literal` is the base category for all literals in this specification. It admits all three productions defined here: `SimpleLiteral` (implicit `xsd:string`), `LangTaggedLiteral` (implicit `rdf:langString`), and `TypedLiteral` (explicit datatype). At any `Literal` position, a plain string MAY be expressed either as a `SimpleLiteral` (the natural, abbreviated form) or as a `TypedLiteral` with datatype `xsd:string` (the fully-explicit form). Both abstract forms denote the same RDF literal; the abstract syntax preserves the distinction so that authorial intent round-trips through encode/decode.
 
-`TypedLiteral` consists of a lexical form and a datatype IRI.
+`TypedLiteral` consists of a lexical form and an explicit datatype IRI.
 
-`LangTaggedLiteral` consists of a lexical form and a language tag. Its implicit datatype IRI is `http://www.w3.org/1999/02/22-rdf-syntax-ns#langString`. Its language tag MUST be non-empty and well-formed according to BCP 47.
+`LangTaggedLiteral` consists of a lexical form and a language tag. Its datatype IRI is implicitly `http://www.w3.org/1999/02/22-rdf-syntax-ns#langString` (`rdf:langString`); a `LangTaggedLiteral` carries no `DatatypeIri` component because the language tag itself fixes the datatype. The language tag MUST be non-empty and well-formed according to BCP 47.
 
-`SimpleLiteral` is a `TypedLiteral` whose datatype IRI is `http://www.w3.org/2001/XMLSchema#string`.
+`SimpleLiteral` consists of a lexical form alone. Its datatype IRI is implicitly `http://www.w3.org/2001/XMLSchema#string` (`xsd:string`).
 
-`TextLiteral` is the union of `SimpleLiteral` and `LangTaggedLiteral`. It is the class of literals permitted in `TextValue`, admitting both plain strings and language-tagged strings.
+`TextLiteral` is the union of `SimpleLiteral` and `LangTaggedLiteral`. It is the class of literals permitted in `TextValue`, admitting both plain strings and language-tagged strings — but not arbitrarily-typed literals. The two members of `TextLiteral` are exactly the literals whose datatypes are the two RDF-defined string datatypes: `xsd:string` (plain) and `rdf:langString` (language-tagged).
 
 Concrete syntaxes MAY use simpler surface forms that omit an explicit datatype IRI for string literals or language-tagged strings. Such forms are syntactic sugar and do not change the abstract structure defined by this specification.
 
