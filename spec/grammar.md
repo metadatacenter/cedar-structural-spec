@@ -127,7 +127,7 @@ classDiagram
     [ValueRequirement]
     [Cardinality]
     [Visibility]
-    [DefaultValue]
+    [defaultValue]
     [LabelOverride]
     [Property]
   }
@@ -411,7 +411,7 @@ EmbeddedField ::= EmbeddedTextField
                 | EmbeddedAttributeValueField
 ```
 
-Every concrete `EmbeddedField` variant follows the same structural pattern. Each carries: an `EmbeddedArtifactKey` uniquely identifying the embedding site within the containing `Template`; a typed field reference identifying the reusable `Field` being embedded; an optional `ValueRequirement` specifying whether a value is required, recommended, or optional; an optional `Cardinality` bounding the permitted number of values; an optional `Visibility` controlling whether the field is shown in rendered interfaces; an optional typed `DefaultValue` providing an embedding-specific default; an optional `LabelOverride` allowing the template to override the field's label in this context; and an optional `Property` associating a semantic property IRI with the embedding site. The only variation across concrete `EmbeddedField` variants is the typed field reference and the typed default value, both of which match the value family of the referenced field.
+Every concrete `EmbeddedField` variant follows the same structural pattern. Each carries: an `EmbeddedArtifactKey` uniquely identifying the embedding site within the containing `Template`; a typed field reference identifying the reusable `Field` being embedded; an optional `ValueRequirement` specifying whether a value is required, recommended, or optional; an optional `Cardinality` bounding the permitted number of values; an optional `Visibility` controlling whether the field is shown in rendered interfaces; an optional `defaultValue` providing an embedding-specific default whose type is the family-specific underlying value or literal type (e.g. `TextLiteral` for `EmbeddedTextField`, `DateValue` for `EmbeddedDateField`); an optional `LabelOverride` allowing the template to override the field's label in this context; and an optional `Property` associating a semantic property IRI with the embedding site. The only variation across concrete `EmbeddedField` variants is the typed field reference and the typed default value, both of which match the value family of the referenced field.
 
 ```ebnf
 EmbeddedTextField ::= embedded_text_field(
@@ -420,7 +420,7 @@ EmbeddedTextField ::= embedded_text_field(
                         [ValueRequirement]
                         [Cardinality]
                         [Visibility]
-                        [TextDefaultValue]
+                        [TextLiteral]
                         [LabelOverride]
                         [Property]
                       )
@@ -431,7 +431,7 @@ EmbeddedNumericField ::= embedded_numeric_field(
                            [ValueRequirement]
                            [Cardinality]
                            [Visibility]
-                           [NumericDefaultValue]
+                           [NumericLiteral]
                            [LabelOverride]
                            [Property]
                          )
@@ -442,7 +442,7 @@ EmbeddedDateField ::= embedded_date_field(
                         [ValueRequirement]
                         [Cardinality]
                         [Visibility]
-                        [DateDefaultValue]
+                        [DateValue]
                         [LabelOverride]
                         [Property]
                       )
@@ -453,7 +453,7 @@ EmbeddedTimeField ::= embedded_time_field(
                         [ValueRequirement]
                         [Cardinality]
                         [Visibility]
-                        [TimeDefaultValue]
+                        [TimeLiteral]
                         [LabelOverride]
                         [Property]
                       )
@@ -464,7 +464,7 @@ EmbeddedDateTimeField ::= embedded_date_time_field(
                             [ValueRequirement]
                             [Cardinality]
                             [Visibility]
-                            [DateTimeDefaultValue]
+                            [DateTimeLiteral]
                             [LabelOverride]
                             [Property]
                           )
@@ -475,7 +475,7 @@ EmbeddedControlledTermField ::= embedded_controlled_term_field(
                                   [ValueRequirement]
                                   [Cardinality]
                                   [Visibility]
-                                  [ControlledTermDefaultValue]
+                                  [ControlledTermValue]
                                   [LabelOverride]
                                   [Property]
                                 )
@@ -486,7 +486,7 @@ EmbeddedSingleChoiceField ::= embedded_single_choice_field(
                                  [ValueRequirement]
                                  [Cardinality]
                                  [Visibility]
-                                 [ChoiceDefaultValue]
+                                 [ChoiceValue]
                                  [LabelOverride]
                                  [Property]
                                )
@@ -497,7 +497,7 @@ EmbeddedMultipleChoiceField ::= embedded_multiple_choice_field(
                                    [ValueRequirement]
                                    [Cardinality]
                                    [Visibility]
-                                   [ChoiceDefaultValue]
+                                   [ChoiceValue]
                                    [LabelOverride]
                                    [Property]
                                  )
@@ -508,7 +508,7 @@ EmbeddedLinkField ::= embedded_link_field(
                         [ValueRequirement]
                         [Cardinality]
                         [Visibility]
-                        [LinkDefaultValue]
+                        [LinkValue]
                         [LabelOverride]
                         [Property]
                       )
@@ -519,7 +519,7 @@ EmbeddedEmailField ::= embedded_email_field(
                          [ValueRequirement]
                          [Cardinality]
                          [Visibility]
-                         [EmailDefaultValue]
+                         [SimpleLiteral]
                          [LabelOverride]
                          [Property]
                        )
@@ -530,7 +530,7 @@ EmbeddedPhoneNumberField ::= embedded_phone_number_field(
                                [ValueRequirement]
                                [Cardinality]
                                [Visibility]
-                               [PhoneNumberDefaultValue]
+                               [SimpleLiteral]
                                [LabelOverride]
                                [Property]
                              )
@@ -541,7 +541,7 @@ EmbeddedOrcidField ::= embedded_orcid_field(
                          [ValueRequirement]
                          [Cardinality]
                          [Visibility]
-                         [OrcidDefaultValue]
+                         [OrcidValue]
                          [LabelOverride]
                          [Property]
                        )
@@ -552,7 +552,7 @@ EmbeddedRorField ::= embedded_ror_field(
                        [ValueRequirement]
                        [Cardinality]
                        [Visibility]
-                       [RorDefaultValue]
+                       [RorValue]
                        [LabelOverride]
                        [Property]
                      )
@@ -563,7 +563,7 @@ EmbeddedDoiField ::= embedded_doi_field(
                        [ValueRequirement]
                        [Cardinality]
                        [Visibility]
-                       [DoiDefaultValue]
+                       [DoiValue]
                        [LabelOverride]
                        [Property]
                      )
@@ -574,7 +574,7 @@ EmbeddedPubMedIdField ::= embedded_pub_med_id_field(
                             [ValueRequirement]
                             [Cardinality]
                             [Visibility]
-                            [PubMedIdDefaultValue]
+                            [PubMedIdValue]
                             [LabelOverride]
                             [Property]
                           )
@@ -585,7 +585,7 @@ EmbeddedRridField ::= embedded_rrid_field(
                         [ValueRequirement]
                         [Cardinality]
                         [Visibility]
-                        [RridDefaultValue]
+                        [RridValue]
                         [LabelOverride]
                         [Property]
                       )
@@ -596,7 +596,7 @@ EmbeddedNihGrantIdField ::= embedded_nih_grant_id_field(
                                [ValueRequirement]
                                [Cardinality]
                                [Visibility]
-                               [NihGrantIdDefaultValue]
+                               [NihGrantIdValue]
                                [LabelOverride]
                                [Property]
                              )
@@ -1463,92 +1463,30 @@ When `Visibility` is absent from an `EmbeddedArtifact`, the default is `Visible`
 
 ### Defaults
 
-A `DefaultValue` specifies the value to be pre-populated for an embedded artifact when no explicit value has been supplied by the user. Each concrete `DefaultValue` variant wraps the `Value` type of its corresponding field family, ensuring that a default is always structurally compatible with the values the field accepts. The concrete variants are grouped by field family, mirroring the groupings in the Values and Concrete Field Artifacts sections.
+The optional `defaultValue` component of an `EmbeddedField` specifies the value to be pre-populated for that embedding when no explicit value has been supplied by the user. The `defaultValue` slot is typed family-by-family with the underlying value or literal type that the embedded field accepts: thin-wrapper families (text, numeric, time, date-time, email, phone) use the literal type directly; richer families with structure beyond a single literal (date, controlled term, choice, link, and the six external-authority families) use their `Value` type. The per-family typing is given by the table below and appears directly in each `EmbeddedXxxField` production above. Because each `defaultValue` slot is a singleton position (the family is already fixed by the enclosing `EmbeddedXxxField`), no further wrapper or kind-tag is needed at the slot.
 
-`TextDefaultValue` occupies a special position: it may appear both on `TextFieldSpec` as a reusable field-level default, and on `EmbeddedTextField` as an embedding-specific override. All other default value types appear only at the embedding level. When both a field-level and an embedding-specific text default are present, the embedding-specific one takes precedence as it is more specific to the template context.
+| Embedded field | `defaultValue` type |
+|---|---|
+| `EmbeddedTextField` | `TextLiteral` (= `SimpleLiteral \| LangTaggedLiteral`) |
+| `EmbeddedNumericField` | `NumericLiteral` |
+| `EmbeddedDateField` | `DateValue` (polymorphic: `YearValue \| YearMonthValue \| FullDateValue`) |
+| `EmbeddedTimeField` | `TimeLiteral` |
+| `EmbeddedDateTimeField` | `DateTimeLiteral` |
+| `EmbeddedControlledTermField` | `ControlledTermValue` |
+| `EmbeddedSingleChoiceField` | `ChoiceValue` (polymorphic: `LiteralChoiceValue \| ControlledTermChoiceValue`) |
+| `EmbeddedMultipleChoiceField` | `ChoiceValue` |
+| `EmbeddedLinkField` | `LinkValue` |
+| `EmbeddedEmailField` | `SimpleLiteral` |
+| `EmbeddedPhoneNumberField` | `SimpleLiteral` |
+| `EmbeddedOrcidField` | `OrcidValue` |
+| `EmbeddedRorField` | `RorValue` |
+| `EmbeddedDoiField` | `DoiValue` |
+| `EmbeddedPubMedIdField` | `PubMedIdValue` |
+| `EmbeddedRridField` | `RridValue` |
+| `EmbeddedNihGrantIdField` | `NihGrantIdValue` |
+| `EmbeddedAttributeValueField` | (no default) |
 
-```ebnf
-DefaultValue ::= TextDefaultValue
-               | NumericDefaultValue
-               | DateDefaultValue
-               | TimeDefaultValue
-               | DateTimeDefaultValue
-               | ControlledTermDefaultValue
-               | ChoiceDefaultValue
-               | LinkDefaultValue
-               | EmailDefaultValue
-               | PhoneNumberDefaultValue
-               | OrcidDefaultValue
-               | RorDefaultValue
-               | DoiDefaultValue
-               | PubMedIdDefaultValue
-               | RridDefaultValue
-               | NihGrantIdDefaultValue
-
-TextDefaultValue ::= text_default_value(
-                       TextValue
-                     )
-
-NumericDefaultValue ::= numeric_default_value(
-                          NumericValue
-                        )
-
-DateDefaultValue ::= date_default_value(
-                       DateValue
-                     )
-
-TimeDefaultValue ::= time_default_value(
-                       TimeValue
-                     )
-
-DateTimeDefaultValue ::= date_time_default_value(
-                           DateTimeValue
-                         )
-
-ControlledTermDefaultValue ::= controlled_term_default_value(
-                                 ControlledTermValue
-                               )
-
-ChoiceDefaultValue ::= choice_default_value(
-                         ChoiceValue+
-                       )
-
-LinkDefaultValue ::= link_default_value(
-                       LinkValue
-                     )
-
-EmailDefaultValue ::= email_default_value(
-                        EmailValue
-                      )
-
-PhoneNumberDefaultValue ::= phone_number_default_value(
-                              PhoneNumberValue
-                            )
-
-OrcidDefaultValue ::= orcid_default_value(
-                        OrcidValue
-                      )
-
-RorDefaultValue ::= ror_default_value(
-                      RorValue
-                    )
-
-DoiDefaultValue ::= doi_default_value(
-                      DoiValue
-                    )
-
-PubMedIdDefaultValue ::= pub_med_id_default_value(
-                           PubMedIdValue
-                         )
-
-RridDefaultValue ::= rrid_default_value(
-                       RridValue
-                     )
-
-NihGrantIdDefaultValue ::= nih_grant_id_default_value(
-                             NihGrantIdValue
-                           )
-```
+`TextFieldSpec` also carries an optional reusable field-level text default (a `TextLiteral` — see Field Specs). When both a field-level and an embedding-specific text default are present, the embedding-specific one takes precedence as it is more specific to the template context. All other default-value families appear only at the embedding level.
 
 ### Label Override
 
@@ -1605,7 +1543,7 @@ FieldSpec ::= TextFieldSpec
             | AttributeValueFieldSpec
 
 TextFieldSpec ::= text_field_spec(
-                    [TextDefaultValue]
+                    [TextLiteral]
                     [MinLength]
                     [MaxLength]
                     [ValidationRegex]
@@ -1738,7 +1676,7 @@ The current placement of `Unit` on `NumericFieldSpec` is a pragmatic compromise.
 
 `ChoiceFieldSpec` is refined along two independent dimensions: cardinality and value kind. The cardinality dimension distinguishes `SingleChoiceFieldSpec` — which permits exactly one selection — from `MultipleChoiceFieldSpec` — which permits one or more simultaneous selections. The value kind dimension distinguishes `LiteralSingleChoiceFieldSpec` and `LiteralMultipleChoiceFieldSpec`, whose options are plain string or typed literals, from `ControlledTermSingleChoiceFieldSpec` and `ControlledTermMultipleChoiceFieldSpec`, whose options are ontology-backed controlled terms carrying an IRI and a human-readable label. All options within a single choice field spec must be of the same kind: a literal choice field spec carries only `LiteralChoiceOption` entries, and a controlled term choice field spec carries only `ControlledTermChoiceOption` entries. This uniformity means that the value kind of a choice field is declared structurally rather than inferred by inspecting individual options.
 
-`LiteralChoiceOption` and `ControlledTermChoiceOption` each carry an optional `DefaultOption`. When `DefaultOption` is present, the option is pre-selected when a new instance is created. This is a field-level default baked into the option definition itself; an embedding-level `ChoiceDefaultValue` on the corresponding `EmbeddedField` takes precedence when both are present.
+`LiteralChoiceOption` and `ControlledTermChoiceOption` each carry an optional `DefaultOption`. When `DefaultOption` is present, the option is pre-selected when a new instance is created. This is a field-level default baked into the option definition itself; an embedding-level `defaultValue` (a `ChoiceValue`) on the corresponding `EmbeddedField` takes precedence when both are present.
 
 `ControlledTermSource` is defined in [Controlled Term Sources](#controlled-term-sources).
 

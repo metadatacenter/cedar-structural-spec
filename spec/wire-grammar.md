@@ -106,6 +106,16 @@ such as `Cardinality`, `Property`, `LabelOverride`, `DescriptiveMetadata`,
 `ControlledTermChoiceOption`, and the temporal `RenderingHint`
 variants.
 
+The rule also applies at the `EmbeddedXxxField.defaultValue` slot: when
+that slot is typed as a kind-tagged `Value` production
+(`ControlledTermValue`, `LinkValue`, or one of the six external-authority
+value types: `OrcidValue`, `RorValue`, `DoiValue`, `PubMedIdValue`,
+`RridValue`, `NihGrantIdValue`), the family is fixed by the enclosing
+`EmbeddedXxxField.kind`, so the inner `kind` property is dropped on the
+wire and reconstructed at decode time. Where the `defaultValue` slot is
+a polymorphic union (`DateValue`, `ChoiceValue`), the inner `kind` is
+retained as it is required to discriminate the union arms.
+
 The polymorphic-only rule constrains the **wire form**, not the
 **in-memory form** of any host-language binding. Bindings MAY carry
 synthetic `kind` (or any other) discriminator fields on their
@@ -694,96 +704,46 @@ Visibility ::: "visible" | "hidden"
 
 ### 7.6 Defaults
 
-```
-DefaultValue ::: TextDefaultValue | NumericDefaultValue
-              | DateDefaultValue | TimeDefaultValue | DateTimeDefaultValue
-              | ControlledTermDefaultValue | ChoiceDefaultValue
-              | LinkDefaultValue | EmailDefaultValue | PhoneNumberDefaultValue
-              | OrcidDefaultValue | RorDefaultValue | DoiDefaultValue
-              | PubMedIdDefaultValue | RridDefaultValue | NihGrantIdDefaultValue
-  // discriminator: kind
+The optional `defaultValue` slot on each `EmbeddedXxxField` is typed
+family-by-family with the family's underlying value or literal type
+(see `grammar.md` §Defaults for the full table). There is no
+`DefaultValue` union and no per-family `XxxDefaultValue` wrapper on the
+wire: the `defaultValue` JSON encodes directly as the corresponding
+family-specific type.
 
-TextDefaultValue ::: object {
-  "kind": "TextDefaultValue"
-  value: TextValue
-}
+For the kind-tagged Value types that appear at a `defaultValue` slot
+(`ControlledTermValue`, `LinkValue`, the six external-authority value
+types), the `defaultValue` slot is a singleton position: per the
+polymorphic-only kind rule (§1.5), these productions encode at this
+position **without** a `kind` property. The polymorphic `DateValue` and
+`ChoiceValue` unions retain their `kind` discriminators at this
+position because a kind tag is required to discriminate the union
+arms.
 
-NumericDefaultValue ::: object {
-  "kind": "NumericDefaultValue"
-  value: NumericValue
-}
+The wire form per family is therefore:
 
-DateDefaultValue ::: object {
-  "kind": "DateDefaultValue"
-  value: DateValue
-}
+| Embedded field | `defaultValue` wire form |
+|---|---|
+| `EmbeddedTextField` | `TextLiteral` (property-set discriminated `SimpleLiteral \| LangTaggedLiteral`) |
+| `EmbeddedNumericField` | `NumericLiteral` (`{ value, datatype? }`) |
+| `EmbeddedDateField` | `DateValue` (kind retained: `YearValue \| YearMonthValue \| FullDateValue`) |
+| `EmbeddedTimeField` | `TimeLiteral` (`{ value, datatype? }`) |
+| `EmbeddedDateTimeField` | `DateTimeLiteral` (`{ value, datatype? }`) |
+| `EmbeddedControlledTermField` | `ControlledTermValue` (kind dropped at singleton) |
+| `EmbeddedSingleChoiceField` | `ChoiceValue` (kind retained) |
+| `EmbeddedMultipleChoiceField` | `ChoiceValue` (kind retained) |
+| `EmbeddedLinkField` | `LinkValue` (kind dropped at singleton) |
+| `EmbeddedEmailField` | `SimpleLiteral` (`{ value }`) |
+| `EmbeddedPhoneNumberField` | `SimpleLiteral` (`{ value }`) |
+| `EmbeddedOrcidField` | `OrcidValue` (kind dropped at singleton) |
+| `EmbeddedRorField` | `RorValue` (kind dropped at singleton) |
+| `EmbeddedDoiField` | `DoiValue` (kind dropped at singleton) |
+| `EmbeddedPubMedIdField` | `PubMedIdValue` (kind dropped at singleton) |
+| `EmbeddedRridField` | `RridValue` (kind dropped at singleton) |
+| `EmbeddedNihGrantIdField` | `NihGrantIdValue` (kind dropped at singleton) |
 
-TimeDefaultValue ::: object {
-  "kind": "TimeDefaultValue"
-  value: TimeValue
-}
-
-DateTimeDefaultValue ::: object {
-  "kind": "DateTimeDefaultValue"
-  value: DateTimeValue
-}
-
-ControlledTermDefaultValue ::: object {
-  "kind": "ControlledTermDefaultValue"
-  value: ControlledTermValue
-}
-
-ChoiceDefaultValue ::: object {
-  "kind": "ChoiceDefaultValue"
-  values: nonEmptyArray<ChoiceValue>
-}
-  // values is non-empty per grammar's ChoiceValue+
-
-LinkDefaultValue ::: object {
-  "kind": "LinkDefaultValue"
-  value: LinkValue
-}
-
-EmailDefaultValue ::: object {
-  "kind": "EmailDefaultValue"
-  value: EmailValue
-}
-
-PhoneNumberDefaultValue ::: object {
-  "kind": "PhoneNumberDefaultValue"
-  value: PhoneNumberValue
-}
-
-OrcidDefaultValue ::: object {
-  "kind": "OrcidDefaultValue"
-  value: OrcidValue
-}
-
-RorDefaultValue ::: object {
-  "kind": "RorDefaultValue"
-  value: RorValue
-}
-
-DoiDefaultValue ::: object {
-  "kind": "DoiDefaultValue"
-  value: DoiValue
-}
-
-PubMedIdDefaultValue ::: object {
-  "kind": "PubMedIdDefaultValue"
-  value: PubMedIdValue
-}
-
-RridDefaultValue ::: object {
-  "kind": "RridDefaultValue"
-  value: RridValue
-}
-
-NihGrantIdDefaultValue ::: object {
-  "kind": "NihGrantIdDefaultValue"
-  value: NihGrantIdValue
-}
-```
+`TextFieldSpec.defaultValue` is also a singleton position and encodes
+as a `TextLiteral` directly (property-set discriminated, no `kind`).
 
 ### 7.7 Label override
 
@@ -824,7 +784,7 @@ FieldSpec ::: TextFieldSpec | NumericFieldSpec | TemporalFieldSpec
 
 TextFieldSpec ::: object {
   "kind": "TextFieldSpec"
-  defaultValue?: TextDefaultValue
+  defaultValue?: TextLiteral
   minLength?: number
   maxLength?: number
   validationRegex?: string
@@ -1328,7 +1288,7 @@ EmbeddedTextField ::: object {
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
-  defaultValue?: TextDefaultValue
+  defaultValue?: TextLiteral
   labelOverride?: LabelOverride
   property?: Property
 }
@@ -1340,7 +1300,7 @@ EmbeddedNumericField ::: object {
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
-  defaultValue?: NumericDefaultValue
+  defaultValue?: NumericLiteral
   labelOverride?: LabelOverride
   property?: Property
 }
@@ -1352,7 +1312,7 @@ EmbeddedDateField ::: object {
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
-  defaultValue?: DateDefaultValue
+  defaultValue?: DateValue
   labelOverride?: LabelOverride
   property?: Property
 }
@@ -1364,7 +1324,7 @@ EmbeddedTimeField ::: object {
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
-  defaultValue?: TimeDefaultValue
+  defaultValue?: TimeLiteral
   labelOverride?: LabelOverride
   property?: Property
 }
@@ -1376,7 +1336,7 @@ EmbeddedDateTimeField ::: object {
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
-  defaultValue?: DateTimeDefaultValue
+  defaultValue?: DateTimeLiteral
   labelOverride?: LabelOverride
   property?: Property
 }
@@ -1388,10 +1348,12 @@ EmbeddedControlledTermField ::: object {
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
-  defaultValue?: ControlledTermDefaultValue
+  defaultValue?: ControlledTermValue
   labelOverride?: LabelOverride
   property?: Property
 }
+  // defaultValue is at a singleton position; its kind property is omitted
+  // on the wire (per the polymorphic-only kind rule, §1.5)
 
 EmbeddedSingleChoiceField ::: object {
   "kind": "EmbeddedSingleChoiceField"
@@ -1400,10 +1362,12 @@ EmbeddedSingleChoiceField ::: object {
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
-  defaultValue?: ChoiceDefaultValue
+  defaultValue?: ChoiceValue
   labelOverride?: LabelOverride
   property?: Property
 }
+  // defaultValue is the polymorphic ChoiceValue; the kind discriminator
+  // is retained on the wire to discriminate the union arms
 
 EmbeddedMultipleChoiceField ::: object {
   "kind": "EmbeddedMultipleChoiceField"
@@ -1412,10 +1376,12 @@ EmbeddedMultipleChoiceField ::: object {
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
-  defaultValue?: ChoiceDefaultValue
+  defaultValue?: ChoiceValue
   labelOverride?: LabelOverride
   property?: Property
 }
+  // defaultValue is the polymorphic ChoiceValue; the kind discriminator
+  // is retained on the wire to discriminate the union arms
 
 EmbeddedLinkField ::: object {
   "kind": "EmbeddedLinkField"
@@ -1424,10 +1390,12 @@ EmbeddedLinkField ::: object {
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
-  defaultValue?: LinkDefaultValue
+  defaultValue?: LinkValue
   labelOverride?: LabelOverride
   property?: Property
 }
+  // defaultValue is at a singleton position; its kind property is omitted
+  // on the wire (per the polymorphic-only kind rule, §1.5)
 
 EmbeddedEmailField ::: object {
   "kind": "EmbeddedEmailField"
@@ -1436,7 +1404,7 @@ EmbeddedEmailField ::: object {
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
-  defaultValue?: EmailDefaultValue
+  defaultValue?: SimpleLiteral
   labelOverride?: LabelOverride
   property?: Property
 }
@@ -1448,7 +1416,7 @@ EmbeddedPhoneNumberField ::: object {
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
-  defaultValue?: PhoneNumberDefaultValue
+  defaultValue?: SimpleLiteral
   labelOverride?: LabelOverride
   property?: Property
 }
@@ -1460,10 +1428,12 @@ EmbeddedOrcidField ::: object {
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
-  defaultValue?: OrcidDefaultValue
+  defaultValue?: OrcidValue
   labelOverride?: LabelOverride
   property?: Property
 }
+  // defaultValue is at a singleton position; its kind property is omitted
+  // on the wire (per the polymorphic-only kind rule, §1.5)
 
 EmbeddedRorField ::: object {
   "kind": "EmbeddedRorField"
@@ -1472,10 +1442,12 @@ EmbeddedRorField ::: object {
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
-  defaultValue?: RorDefaultValue
+  defaultValue?: RorValue
   labelOverride?: LabelOverride
   property?: Property
 }
+  // defaultValue is at a singleton position; its kind property is omitted
+  // on the wire (per the polymorphic-only kind rule, §1.5)
 
 EmbeddedDoiField ::: object {
   "kind": "EmbeddedDoiField"
@@ -1484,10 +1456,12 @@ EmbeddedDoiField ::: object {
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
-  defaultValue?: DoiDefaultValue
+  defaultValue?: DoiValue
   labelOverride?: LabelOverride
   property?: Property
 }
+  // defaultValue is at a singleton position; its kind property is omitted
+  // on the wire (per the polymorphic-only kind rule, §1.5)
 
 EmbeddedPubMedIdField ::: object {
   "kind": "EmbeddedPubMedIdField"
@@ -1496,10 +1470,12 @@ EmbeddedPubMedIdField ::: object {
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
-  defaultValue?: PubMedIdDefaultValue
+  defaultValue?: PubMedIdValue
   labelOverride?: LabelOverride
   property?: Property
 }
+  // defaultValue is at a singleton position; its kind property is omitted
+  // on the wire (per the polymorphic-only kind rule, §1.5)
 
 EmbeddedRridField ::: object {
   "kind": "EmbeddedRridField"
@@ -1508,10 +1484,12 @@ EmbeddedRridField ::: object {
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
-  defaultValue?: RridDefaultValue
+  defaultValue?: RridValue
   labelOverride?: LabelOverride
   property?: Property
 }
+  // defaultValue is at a singleton position; its kind property is omitted
+  // on the wire (per the polymorphic-only kind rule, §1.5)
 
 EmbeddedNihGrantIdField ::: object {
   "kind": "EmbeddedNihGrantIdField"
@@ -1520,10 +1498,12 @@ EmbeddedNihGrantIdField ::: object {
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
-  defaultValue?: NihGrantIdDefaultValue
+  defaultValue?: NihGrantIdValue
   labelOverride?: LabelOverride
   property?: Property
 }
+  // defaultValue is at a singleton position; its kind property is omitted
+  // on the wire (per the polymorphic-only kind rule, §1.5)
 
 EmbeddedAttributeValueField ::: object {
   "kind": "EmbeddedAttributeValueField"

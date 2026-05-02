@@ -399,18 +399,62 @@ An `EmbeddedAttributeValueField` MUST NOT carry a `defaultValue` property.
 
 ### 6.9 Default values
 
-Each concrete `DefaultValue` family is encoded as a tagged object wrapping a `Value`:
+The optional `defaultValue` slot on each `EmbeddedXxxField` is encoded directly as the family-specific underlying type (see [`wire-grammar.md`](wire-grammar.md) §7.6 for the full table). There is no `DefaultValue` wrapper on the wire: a default value flattens to its `Value` or `Literal` shape in place. For thin-wrapper families (text, numeric, time, date-time, email, phone) the `defaultValue` is the literal type directly. For the kind-tagged `Value` families that occupy a `defaultValue` slot at a singleton position (`ControlledTermValue`, `LinkValue`, `OrcidValue`, `RorValue`, `DoiValue`, `PubMedIdValue`, `RridValue`, `NihGrantIdValue`), the `kind` property is omitted on the wire per [`wire-grammar.md`](wire-grammar.md) §1.5. For polymorphic union families (`DateValue`, `ChoiceValue`), the `kind` discriminator is retained.
+
+Examples by family:
 
 ```json
-{ "kind": "TextDefaultValue", "value": { "kind": "TextValue", "literal": { "value": "Hello" } } }
-```
-```json
-{ "kind": "ChoiceDefaultValue", "values": [
-  { "kind": "LiteralChoiceValue", "literal": { "value": "Yes", "lang": "en" } }
-] }
+// EmbeddedTextField.defaultValue — TextLiteral (property-set discriminated)
+"defaultValue": { "value": "Stanford University" }
+"defaultValue": { "value": "Bonjour", "lang": "fr" }
+
+// EmbeddedNumericField.defaultValue — NumericLiteral
+"defaultValue": { "value": "42", "datatype": "http://www.w3.org/2001/XMLSchema#integer" }
+
+// EmbeddedDateField.defaultValue — DateValue (polymorphic, kind retained)
+"defaultValue": { "kind": "FullDateValue", "literal": { "value": "2024-06-15" } }
+"defaultValue": { "kind": "YearValue", "value": "2024" }
+
+// EmbeddedTimeField.defaultValue — TimeLiteral
+"defaultValue": { "value": "10:30:00", "datatype": "http://www.w3.org/2001/XMLSchema#time" }
+
+// EmbeddedDateTimeField.defaultValue — DateTimeLiteral
+"defaultValue": { "value": "2024-06-15T10:30:00", "datatype": "http://www.w3.org/2001/XMLSchema#dateTime" }
+
+// EmbeddedControlledTermField.defaultValue — ControlledTermValue (kind dropped at singleton)
+"defaultValue": {
+  "term": "http://purl.obolibrary.org/obo/UBERON_0000955",
+  "label": [{ "value": "brain", "lang": "en" }]
+}
+
+// EmbeddedSingleChoiceField.defaultValue / EmbeddedMultipleChoiceField.defaultValue — ChoiceValue (polymorphic, kind retained)
+"defaultValue": { "kind": "LiteralChoiceValue", "literal": { "value": "Yes", "lang": "en" } }
+"defaultValue": { "kind": "ControlledTermChoiceValue", "value": {
+  "term": "http://example.org/term", "label": [{ "value": "Term", "lang": "en" }]
+}}
+
+// EmbeddedLinkField.defaultValue — LinkValue (kind dropped at singleton)
+"defaultValue": { "iri": "https://example.org", "label": "Example" }
+
+// EmbeddedEmailField.defaultValue — SimpleLiteral
+"defaultValue": { "value": "jane@example.org" }
+
+// EmbeddedPhoneNumberField.defaultValue — SimpleLiteral
+"defaultValue": { "value": "+1-650-555-0123" }
+
+// EmbeddedOrcidField.defaultValue — OrcidValue (kind dropped at singleton)
+"defaultValue": {
+  "iri": "https://orcid.org/0000-0002-1825-0097",
+  "label": [{ "value": "Josiah Carberry", "lang": "en" }]
+}
+
+// EmbeddedRorField.defaultValue / EmbeddedDoiField.defaultValue / EmbeddedPubMedIdField.defaultValue
+// EmbeddedRridField.defaultValue / EmbeddedNihGrantIdField.defaultValue — analogous; kind dropped at singleton
 ```
 
-`ChoiceDefaultValue` carries an array because the grammar specifies `ChoiceValue+`; all other default-value families wrap a single `Value`.
+`TextFieldSpec.defaultValue` is also a singleton position and encodes as a `TextLiteral` directly.
+
+Multiple-choice embeddings carry a single `ChoiceValue` at `defaultValue`; supplying multiple defaults for a multiple-choice field is not modelled.
 
 ### 6.10 Templates
 

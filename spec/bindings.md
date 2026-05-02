@@ -138,7 +138,7 @@ comment at all (in which case `kind` is the default per
 production whose shape includes a `"kind": "MemberName"` literal
 property. Examples: `Value`, `FieldSpec`, `EmbeddedArtifact`,
 `ControlledTermSource`, `PresentationComponent`, `InstanceValue`,
-`SchemaArtifact`, `Artifact`, `DefaultValue`, `ChoiceValue`,
+`SchemaArtifact`, `Artifact`, `ChoiceValue`,
 `ExternalAuthorityValue`, `DateValue`.
 
 **TypeScript idiom.** A discriminated (tagged) union of interfaces, all
@@ -818,7 +818,6 @@ High-level structure (the `src/` tree mirrors the grammar layering):
   `PresentationComponentId`, `TemplateInstanceId`).
 - `metadata/` — `DescriptiveMetadata`, `TemporalProvenance`,
   `SchemaVersioning`, `Annotation`.
-- `defaults.ts` — `DefaultValue` family.
 - `field-specs/` — `FieldSpec` family.
 - `fields.ts` — `Field` family.
 - `embedded/` — `EmbeddedField`, `EmbeddedTemplate`,
