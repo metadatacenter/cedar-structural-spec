@@ -587,7 +587,7 @@ into the outer object: every property of `ArtifactMetadata` appears
 directly alongside `versioning`. There is no `metadata.artifact`
 intermediate.
 
-### 6.3 Lifecycle metadata
+### 6.2 Lifecycle metadata
 
 ```
 CreatedOn ::: string
@@ -605,7 +605,7 @@ LifecycleMetadata ::: object {
   // createdBy and modifiedBy carry agent Iri values
 ```
 
-### 6.4 Schema versioning
+### 6.3 Schema versioning
 
 ```
 SchemaVersioning ::: object {
@@ -629,7 +629,7 @@ DraftStatus ::: "draft"
 PublishedStatus ::: "published"
 ```
 
-### 6.5 Annotations
+### 6.4 Annotations
 
 ```
 Annotation ::: object {
