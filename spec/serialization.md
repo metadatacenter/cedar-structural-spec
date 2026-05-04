@@ -465,11 +465,11 @@ Multiple-choice embeddings carry a single `ChoiceValue` at `defaultValue`; suppl
   "modelVersion": "<SemanticVersion>",
   "metadata": "<SchemaArtifactMetadata>",
   "header": [{ "value": "Template Header Text", "lang": "en" }],
-  "embedded": ["<EmbeddedArtifact>*"]
+  "members": ["<EmbeddedArtifact>*"]
 }
 ```
 
-The `embedded` array MUST preserve order. The `EmbeddedArtifactKey` values within `embedded` MUST be unique; a conforming encoder MUST verify uniqueness before producing the JSON, and a conforming decoder MUST reject input that violates this constraint.
+The `members` array MUST preserve order. The `EmbeddedArtifactKey` values within `members` MUST be unique; a conforming encoder MUST verify uniqueness before producing the JSON, and a conforming decoder MUST reject input that violates this constraint.
 
 ### 6.11 Presentation components
 
@@ -550,7 +550,7 @@ The `name` property below is a `MultilingualString` (§6.3): an array of `{value
       "status": "draft"
     }
   },
-  "embedded": []
+  "members": []
 }
 ```
 
@@ -562,7 +562,7 @@ The `name` property below is a `MultilingualString` (§6.3): an array of `{value
   "id": "https://example.org/templates/note",
   "modelVersion": "2.0.0",
   "metadata": { "name": "...", "lifecycle": "...", "versioning": "..." },
-  "embedded": [
+  "members": [
     {
       "kind": "EmbeddedTextField",
       "key": "title",

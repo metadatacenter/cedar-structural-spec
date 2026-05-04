@@ -697,7 +697,7 @@ export class CedarConstructionError extends Error {
 validation (deferring checks until access) is discouraged: the model
 is value-typed; an invalid value should never exist in the runtime
 heap. Where validation depends on a wider context (e.g., embedded-key
-uniqueness depends on the whole `Template.embedded` array), perform
+uniqueness depends on the whole `Template.members` array), perform
 the check in the enclosing constructor.
 
 ### 2.11 Idempotent / widening constructors
@@ -734,7 +734,7 @@ artifact is a value; mutability is a hazard.
 - TypeScript: `readonly` on every interface property; `Object.freeze()`
   on constructed instances and on any nested arrays. cedar-ts freezes
   invariant-bearing arrays (`MultilingualString`,
-  `Template.embedded`).
+  `Template.members`).
 - Java: `record` types are immutable by language design; for non-record
   classes use `final` fields, no setters, and defensive copies on
   collections (`List.copyOf`, `Set.copyOf`, `Map.copyOf`).

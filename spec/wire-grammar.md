@@ -1674,12 +1674,12 @@ Template ::: object {
   metadata: SchemaArtifactMetadata
   header?: MultilingualString
   footer?: MultilingualString
-  embedded: array<EmbeddedArtifact>
+  members: array<EmbeddedArtifact>
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
   // EmbeddedArtifact keys (each member's `key` property) MUST be unique
-  // within `embedded` (per grammar.md §Embedded Artifact Key)
-  // the order of `embedded` MUST be preserved
+  // within `members` (per grammar.md §Embedded Artifact Key)
+  // the order of `members` MUST be preserved
 
 Header ::: MultilingualString
 Footer ::: MultilingualString
