@@ -99,7 +99,7 @@ of a discriminated union encoded with `discriminator: kind`. At
 singleton positions (where the enclosing property name fixes the
 production unambiguously), the production is encoded as a plain
 `object { … }` with no `kind` property. This applies to productions
-such as `Cardinality`, `Property`, `LabelOverride`, `DescriptiveMetadata`,
+such as `Cardinality`, `Property`, `LabelOverride`,
 `SchemaArtifactMetadata`, `ArtifactMetadata`, `TemporalProvenance`,
 `SchemaVersioning`, `Annotation`, `Unit`, `OntologyReference`,
 `OntologyDisplayHint`, `ControlledTermClass`, `LiteralChoiceOption`,
@@ -532,20 +532,11 @@ identifier shape.
 
 ### 6.1 Aggregate structure
 
-```
-SchemaArtifactMetadata ::: object {
-  artifact: ArtifactMetadata
-  versioning: SchemaVersioning
-}
-
-ArtifactMetadata ::: object {
-  descriptiveMetadata: DescriptiveMetadata
-  provenance: TemporalProvenance
-  annotations: array<Annotation>
-}
-```
-
-### 6.2 Descriptive metadata
+`ArtifactMetadata` is flat on the wire: its descriptive properties
+(`name`, `description`, `identifier`, `preferredLabel`, `altLabels`),
+its `provenance` slot, and its `annotations` slot are all direct
+members of the same object — there is no `descriptiveMetadata`
+wrapper.
 
 ```
 Name ::: MultilingualString
@@ -553,18 +544,48 @@ Description ::: MultilingualString
 Identifier ::: string
 AlternativeLabel ::: MultilingualString
 
-DescriptiveMetadata ::: object {
+ArtifactMetadata ::: object {
   name: MultilingualString
   description?: MultilingualString
   identifier?: string
   preferredLabel?: MultilingualString
-  altLabels: array<MultilingualString>
+  altLabels?: array<MultilingualString>
+  provenance: TemporalProvenance
+  annotations?: array<Annotation>
 }
-  // altLabels MAY be empty
+  // altLabels SHOULD be omitted from the wire when empty; it round-trips
+  // as an empty array in memory
+  // annotations SHOULD be omitted from the wire when empty; it round-trips
+  // as an empty array in memory
   // the grammar's PreferredLabel and AlternativeLabel productions are
   // collapsed to MultilingualString; their semantic role is conveyed by
   // the property name (preferredLabel, altLabels) on this object
 ```
+
+`SchemaArtifactMetadata` is the wire form used by reusable schema
+artifacts. It is the flat union of `ArtifactMetadata`'s properties
+plus a `versioning` slot — there is no inner `artifact` wrapper.
+
+```
+SchemaArtifactMetadata ::: object {
+  name: MultilingualString
+  description?: MultilingualString
+  identifier?: string
+  preferredLabel?: MultilingualString
+  altLabels?: array<MultilingualString>
+  provenance: TemporalProvenance
+  annotations?: array<Annotation>
+  versioning: SchemaVersioning
+}
+  // altLabels and annotations SHOULD be omitted from the wire when empty
+```
+
+The abstract grammar models `SchemaArtifactMetadata` as the
+composition `schema_artifact_metadata(ArtifactMetadata,
+SchemaVersioning)`. The wire form unwraps the inner `ArtifactMetadata`
+into the outer object: every property of `ArtifactMetadata` appears
+directly alongside `versioning`. There is no `metadata.artifact`
+intermediate.
 
 ### 6.3 Temporal provenance
 

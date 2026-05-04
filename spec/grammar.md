@@ -738,7 +738,7 @@ Artifact metadata defines descriptive information, provenance, versioning, and a
 
 ### Aggregate Structure
 
-This subsection identifies how the metadata categories are grouped at the artifact level. `ArtifactMetadata` carries the metadata common to all artifacts other than identity, while `SchemaArtifactMetadata` adds versioning information for reusable schema artifacts.
+This subsection identifies how the metadata categories are grouped at the artifact level. `ArtifactMetadata` carries the metadata common to all artifacts other than identity — descriptive properties, temporal provenance, and annotations — directly as members. `SchemaArtifactMetadata` adds versioning information for reusable schema artifacts.
 
 ```ebnf
 SchemaArtifactMetadata ::= schema_artifact_metadata(
@@ -747,7 +747,11 @@ SchemaArtifactMetadata ::= schema_artifact_metadata(
                            )
 
 ArtifactMetadata ::= artifact_metadata(
-                       DescriptiveMetadata
+                       Name
+                       [Description]
+                       [Identifier]
+                       [PreferredLabel]
+                       AlternativeLabel*
                        TemporalProvenance
                        Annotation*
                      )
@@ -755,7 +759,7 @@ ArtifactMetadata ::= artifact_metadata(
 
 ### Descriptive Metadata
 
-`DescriptiveMetadata` identifies the human-oriented descriptive properties of an artifact. These properties support naming, explanatory text, and external or local identifiers used for cataloging. `Name` is the required user-supplied name of the artifact. `Description`, when present, is extended textual description explaining the artifact's purpose and content. `Identifier`, when present, is a user-specified external identifier intended for integration with institutional or external systems. `PreferredLabel`, when present, is the primary display label shown to end users — for fields, this is the question text presented in a rendered form. `AlternativeLabel`, when present, provides additional display labels for the artifact.
+The descriptive metadata of an artifact comprises a set of human-oriented properties carried directly by `ArtifactMetadata`. These properties support naming, explanatory text, and external or local identifiers used for cataloging. `Name` is the required user-supplied name of the artifact. `Description`, when present, is extended textual description explaining the artifact's purpose and content. `Identifier`, when present, is a user-specified external identifier intended for integration with institutional or external systems. `PreferredLabel`, when present, is the primary display label shown to end users — for fields, this is the question text presented in a rendered form. `AlternativeLabel`, when present, provides additional display labels for the artifact.
 
 ```ebnf
 Name ::= name(
@@ -769,19 +773,11 @@ Description ::= description(
 Identifier ::= identifier(
                  string
                )
-
-DescriptiveMetadata ::= descriptive_metadata(
-                          Name
-                          [Description]
-                          [Identifier]
-                          [PreferredLabel]
-                          AlternativeLabel*
-                        )
 ```
 
 `Name` and `Description` carry [`MultilingualString`](#multilingual-strings) values: human-readable text that may be presented in one or more natural languages. `Identifier` carries an arbitrary Unicode string value: it is a technical user-supplied key intended for integration with external systems and is not a human-display label, so it is not multilingual. `PreferredLabel` is defined in the [Controlled Term Value](#controlled-term-value) section; `AlternativeLabel` is defined in the [Label Override](#label-override) section.
 
-> **Note:** Confirm with the CEDAR team that `PreferredLabel` and `AlternativeLabel` belong on `DescriptiveMetadata` for all artifact kinds rather than on a field-specific metadata structure. The v2.0.0 conceptual document (§4.1) describes these in the context of fields specifically; it is worth verifying whether templates, presentation components, and instances should carry them too.
+> **Note:** Confirm with the CEDAR team that `PreferredLabel` and `AlternativeLabel` belong on `ArtifactMetadata` for all artifact kinds rather than on a field-specific metadata structure. The v2.0.0 conceptual document (§4.1) describes these in the context of fields specifically; it is worth verifying whether templates, presentation components, and instances should carry them too.
 
 ### Temporal Provenance
 
@@ -956,7 +952,7 @@ MultilingualString ::= multilingual_string(
 
 The `'und'` (undetermined) BCP 47 subtag MAY be used to denote a `LangString` whose natural language is unspecified. Implementations MAY use `'und'` as the default tag when constructing a `MultilingualString` from a bare string with no language information.
 
-`MultilingualString` is structurally distinct from `LangTaggedLiteral` (a member of the [`Literal`](#base-literals) union): a `LangTaggedLiteral` is a single language-tagged RDF-style literal value, whereas `MultilingualString` is an unweighted localization set carried at singleton schema-metadata positions such as `Template.header` or `DescriptiveMetadata.name`.
+`MultilingualString` is structurally distinct from `LangTaggedLiteral` (a member of the [`Literal`](#base-literals) union): a `LangTaggedLiteral` is a single language-tagged RDF-style literal value, whereas `MultilingualString` is an unweighted localization set carried at singleton schema-metadata positions such as `Template.header` or `ArtifactMetadata.name`.
 
 ### Numeric Datatype IRIs
 

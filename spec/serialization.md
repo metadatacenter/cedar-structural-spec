@@ -272,16 +272,13 @@ Each `Value` family is encoded as a tagged object. The full set of variants is g
 
 ### 6.5 Metadata and annotations
 
-`DescriptiveMetadata`, `TemporalProvenance`, `SchemaVersioning`, `ArtifactMetadata`, and `SchemaArtifactMetadata` each appear at a fixed singleton position and are encoded as untagged JSON objects.
+`TemporalProvenance`, `SchemaVersioning`, `ArtifactMetadata`, and `SchemaArtifactMetadata` each appear at a fixed singleton position and are encoded as untagged JSON objects. The descriptive properties of an artifact (`name`, `description`, `identifier`, `preferredLabel`, `altLabels`) sit directly on `ArtifactMetadata` rather than under a `descriptiveMetadata` wrapper.
 
 ```json
 {
-  "descriptiveMetadata": {
-    "name": [{ "value": "Full Name", "lang": "en" }],
-    "description": [{ "value": "Full legal name.", "lang": "en" }],
-    "preferredLabel": [{ "value": "Name", "lang": "en" }],
-    "altLabels": []
-  },
+  "name": [{ "value": "Full Name", "lang": "en" }],
+  "description": [{ "value": "Full legal name.", "lang": "en" }],
+  "preferredLabel": [{ "value": "Name", "lang": "en" }],
   "provenance": {
     "createdOn": "2024-01-01T00:00:00Z",
     "createdBy": "https://orcid.org/0000-0002-1825-0097",
@@ -542,17 +539,13 @@ The `name` property below is a `MultilingualString` (§6.3): an array of `{value
   "modelVersion": "2.0.0",
   "metadata": {
     "artifact": {
-      "descriptiveMetadata": {
-        "name": [{ "value": "Empty", "lang": "en" }],
-        "altLabels": []
-      },
+      "name": [{ "value": "Empty", "lang": "en" }],
       "provenance": {
         "createdOn": "2024-01-01T00:00:00Z",
         "createdBy": "https://example.org/u",
         "modifiedOn": "2024-01-01T00:00:00Z",
         "modifiedBy": "https://example.org/u"
-      },
-      "annotations": []
+      }
     },
     "versioning": {
       "version": "1.0.0",
@@ -590,7 +583,7 @@ The `name` property below is a `MultilingualString` (§6.3): an array of `{value
   "kind": "TemplateInstance",
   "id": "https://example.org/instances/i1",
   "modelVersion": "2.0.0",
-  "metadata": { "descriptiveMetadata": "...", "provenance": "...", "annotations": [] },
+  "metadata": { "name": "...", "provenance": "...", "annotations": [] },
   "templateRef": "https://example.org/templates/note",
   "values": [
     {
