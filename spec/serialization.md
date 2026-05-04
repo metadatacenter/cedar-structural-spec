@@ -206,7 +206,7 @@ Every artifact identifier is encoded as a plain JSON string carrying the IRI. Th
 "https://example.org/fields/title"
 ```
 
-A `FieldId` (or `FieldReference`) appears only in two grammar positions: as `Field.id` and as `EmbeddedField.reference`. Both surrounding constructs carry a `kind` discriminator that conveys the field family. The eighteen permitted family-bearing `kind` values for `Field` variants are: `"TextField"`, `"NumericField"`, `"DateField"`, `"TimeField"`, `"DateTimeField"`, `"ControlledTermField"`, `"SingleChoiceField"`, `"MultipleChoiceField"`, `"LinkField"`, `"EmailField"`, `"PhoneNumberField"`, `"OrcidField"`, `"RorField"`, `"DoiField"`, `"PubMedIdField"`, `"RridField"`, `"NihGrantIdField"`, or `"AttributeValueField"`. The corresponding `EmbeddedField` variants prefix `Embedded` (e.g. `"EmbeddedTextField"`). A conforming encoder MUST ensure that the IRI it places at a `FieldId` position belongs to a field of the family declared by the surrounding `kind`.
+A `FieldId` (or `FieldReference`) appears only in two grammar positions: as `Field.id` and as `EmbeddedField.artifactRef`. Both surrounding constructs carry a `kind` discriminator that conveys the field family. The eighteen permitted family-bearing `kind` values for `Field` variants are: `"TextField"`, `"NumericField"`, `"DateField"`, `"TimeField"`, `"DateTimeField"`, `"ControlledTermField"`, `"SingleChoiceField"`, `"MultipleChoiceField"`, `"LinkField"`, `"EmailField"`, `"PhoneNumberField"`, `"OrcidField"`, `"RorField"`, `"DoiField"`, `"PubMedIdField"`, `"RridField"`, `"NihGrantIdField"`, or `"AttributeValueField"`. The corresponding `EmbeddedField` variants prefix `Embedded` (e.g. `"EmbeddedTextField"`). A conforming encoder MUST ensure that the IRI it places at a `FieldId` position belongs to a field of the family declared by the surrounding `kind`.
 
 ### 6.2 Literals
 
@@ -370,7 +370,7 @@ An `EmbeddedField` (shown for the text family; substitute `"EmbeddedNumericField
 {
   "kind": "EmbeddedTextField",
   "key": "<EmbeddedArtifactKey>",
-  "reference": "<FieldId>",
+  "artifactRef": "<FieldId>",
   "valueRequirement": "required",
   "cardinality": { "min": 1, "max": 1 },
   "property": { "iri": "https://schema.org/name" }
@@ -383,7 +383,7 @@ An `EmbeddedAttributeValueField` MUST NOT carry a `defaultValue` property.
 {
   "kind": "EmbeddedTemplate",
   "key": "<EmbeddedArtifactKey>",
-  "reference": "<TemplateId>",
+  "artifactRef": "<TemplateId>",
   "cardinality": { "min": 0 }
 }
 ```
@@ -392,7 +392,7 @@ An `EmbeddedAttributeValueField` MUST NOT carry a `defaultValue` property.
 {
   "kind": "EmbeddedPresentationComponent",
   "key": "<EmbeddedArtifactKey>",
-  "reference": "<PresentationComponentId>",
+  "artifactRef": "<PresentationComponentId>",
   "visibility": "visible"
 }
 ```
@@ -566,7 +566,7 @@ The `name` property below is a `MultilingualString` (§6.3): an array of `{value
     {
       "kind": "EmbeddedTextField",
       "key": "title",
-      "reference": "https://example.org/fields/title",
+      "artifactRef": "https://example.org/fields/title",
       "valueRequirement": "required",
       "property": { "iri": "https://schema.org/name" }
     }

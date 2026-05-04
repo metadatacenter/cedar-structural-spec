@@ -1342,7 +1342,7 @@ EmbeddedField ::: EmbeddedTextField | EmbeddedNumericField
 EmbeddedTextField ::: object {
   "kind": "EmbeddedTextField"
   key: string
-  reference: string
+  artifactRef: string
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
@@ -1354,7 +1354,7 @@ EmbeddedTextField ::: object {
 EmbeddedNumericField ::: object {
   "kind": "EmbeddedNumericField"
   key: string
-  reference: string
+  artifactRef: string
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
@@ -1366,7 +1366,7 @@ EmbeddedNumericField ::: object {
 EmbeddedDateField ::: object {
   "kind": "EmbeddedDateField"
   key: string
-  reference: string
+  artifactRef: string
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
@@ -1378,7 +1378,7 @@ EmbeddedDateField ::: object {
 EmbeddedTimeField ::: object {
   "kind": "EmbeddedTimeField"
   key: string
-  reference: string
+  artifactRef: string
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
@@ -1390,7 +1390,7 @@ EmbeddedTimeField ::: object {
 EmbeddedDateTimeField ::: object {
   "kind": "EmbeddedDateTimeField"
   key: string
-  reference: string
+  artifactRef: string
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
@@ -1402,7 +1402,7 @@ EmbeddedDateTimeField ::: object {
 EmbeddedControlledTermField ::: object {
   "kind": "EmbeddedControlledTermField"
   key: string
-  reference: string
+  artifactRef: string
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
@@ -1416,7 +1416,7 @@ EmbeddedControlledTermField ::: object {
 EmbeddedSingleChoiceField ::: object {
   "kind": "EmbeddedSingleChoiceField"
   key: string
-  reference: string
+  artifactRef: string
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
@@ -1430,7 +1430,7 @@ EmbeddedSingleChoiceField ::: object {
 EmbeddedMultipleChoiceField ::: object {
   "kind": "EmbeddedMultipleChoiceField"
   key: string
-  reference: string
+  artifactRef: string
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
@@ -1444,7 +1444,7 @@ EmbeddedMultipleChoiceField ::: object {
 EmbeddedLinkField ::: object {
   "kind": "EmbeddedLinkField"
   key: string
-  reference: string
+  artifactRef: string
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
@@ -1458,7 +1458,7 @@ EmbeddedLinkField ::: object {
 EmbeddedEmailField ::: object {
   "kind": "EmbeddedEmailField"
   key: string
-  reference: string
+  artifactRef: string
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
@@ -1470,7 +1470,7 @@ EmbeddedEmailField ::: object {
 EmbeddedPhoneNumberField ::: object {
   "kind": "EmbeddedPhoneNumberField"
   key: string
-  reference: string
+  artifactRef: string
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
@@ -1482,7 +1482,7 @@ EmbeddedPhoneNumberField ::: object {
 EmbeddedOrcidField ::: object {
   "kind": "EmbeddedOrcidField"
   key: string
-  reference: string
+  artifactRef: string
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
@@ -1496,7 +1496,7 @@ EmbeddedOrcidField ::: object {
 EmbeddedRorField ::: object {
   "kind": "EmbeddedRorField"
   key: string
-  reference: string
+  artifactRef: string
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
@@ -1510,7 +1510,7 @@ EmbeddedRorField ::: object {
 EmbeddedDoiField ::: object {
   "kind": "EmbeddedDoiField"
   key: string
-  reference: string
+  artifactRef: string
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
@@ -1524,7 +1524,7 @@ EmbeddedDoiField ::: object {
 EmbeddedPubMedIdField ::: object {
   "kind": "EmbeddedPubMedIdField"
   key: string
-  reference: string
+  artifactRef: string
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
@@ -1538,7 +1538,7 @@ EmbeddedPubMedIdField ::: object {
 EmbeddedRridField ::: object {
   "kind": "EmbeddedRridField"
   key: string
-  reference: string
+  artifactRef: string
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
@@ -1552,7 +1552,7 @@ EmbeddedRridField ::: object {
 EmbeddedNihGrantIdField ::: object {
   "kind": "EmbeddedNihGrantIdField"
   key: string
-  reference: string
+  artifactRef: string
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
@@ -1566,7 +1566,7 @@ EmbeddedNihGrantIdField ::: object {
 EmbeddedAttributeValueField ::: object {
   "kind": "EmbeddedAttributeValueField"
   key: string
-  reference: string
+  artifactRef: string
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
@@ -1578,7 +1578,7 @@ EmbeddedAttributeValueField ::: object {
 EmbeddedTemplate ::: object {
   "kind": "EmbeddedTemplate"
   key: string
-  reference: string
+  artifactRef: string
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
@@ -1589,7 +1589,7 @@ EmbeddedTemplate ::: object {
 EmbeddedPresentationComponent ::: object {
   "kind": "EmbeddedPresentationComponent"
   key: string
-  reference: string
+  artifactRef: string
   visibility?: Visibility
   labelOverride?: LabelOverride
 }
