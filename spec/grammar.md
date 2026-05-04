@@ -52,7 +52,7 @@ A conceptual overview of the model — describing the principal categories, thei
 - [Artifact Metadata](#artifact-metadata)
   - [Aggregate Structure](#aggregate-structure)
   - [Descriptive Metadata](#descriptive-metadata)
-  - [Temporal Provenance](#temporal-provenance)
+  - [Lifecycle Metadata](#lifecycle-metadata)
   - [Schema Versioning](#schema-versioning)
   - [Annotations](#annotations)
 - [Scalar and Datatype Leaves](#scalar-and-datatype-leaves)
@@ -250,7 +250,7 @@ ExternalAuthorityField ::= OrcidField
 
 ### Concrete Field Artifacts
 
-Each concrete `Field` variant carries exactly four components: a typed artifact identifier that permanently identifies the reusable field; a `ModelVersion` identifying the version of the CEDAR structural model the artifact conforms to; `SchemaArtifactMetadata` providing the descriptive, provenance, versioning, and annotation metadata common to all schema artifacts; and a typed `FieldSpec` that specifies the value semantics and configuration for that field category. The identifier and `FieldSpec` are specific to each concrete variant; `ModelVersion` and `SchemaArtifactMetadata` are uniform across all fields. The groupings below mirror the abstract `Field` hierarchy defined in Core Structure.
+Each concrete `Field` variant carries exactly four components: a typed artifact identifier that permanently identifies the reusable field; a `ModelVersion` identifying the version of the CEDAR structural model the artifact conforms to; `SchemaArtifactMetadata` providing the descriptive, lifecycle, versioning, and annotation metadata common to all schema artifacts; and a typed `FieldSpec` that specifies the value semantics and configuration for that field category. The identifier and `FieldSpec` are specific to each concrete variant; `ModelVersion` and `SchemaArtifactMetadata` are uniform across all fields. The groupings below mirror the abstract `Field` hierarchy defined in Core Structure.
 
 `TextField` and `NumericField` are the two simple scalar field specs. Each carries the most basic value semantics — free text and typed numeric values respectively.
 
@@ -663,7 +663,7 @@ EmbeddedPresentationComponent ::= embedded_presentation_component(
 
 ## Artifact Identity
 
-Artifact identity defines the typed identifiers by which artifacts and artifact references are denoted in the model. These identity constructs are distinct from descriptive metadata, provenance, versioning, and annotations.
+Artifact identity defines the typed identifiers by which artifacts and artifact references are denoted in the model. These identity constructs are distinct from descriptive metadata, lifecycle metadata, versioning, and annotations.
 
 Each field kind has its own typed identifier rather than sharing a single generic `FieldId`. This provides strong typing: a `TextFieldReference` can only refer to a `TextFieldId`, a `DateFieldReference` can only refer to a `DateFieldId`, and so on, making it structurally impossible to embed a field of the wrong type. `TemplateId`, `PresentationComponentId`, and `TemplateInstanceId` follow the same pattern for the same reason.
 
@@ -734,11 +734,11 @@ All artifact identifier productions are IRI-valued. See [`Iri`](#core-iri-and-st
 
 ## Artifact Metadata
 
-Artifact metadata defines descriptive information, provenance, versioning, and annotations. `ArtifactMetadata` provides the common metadata carried by all artifacts other than identity. `SchemaArtifactMetadata` extends that common structure with schema-versioning information used by reusable schema artifacts.
+Artifact metadata defines descriptive information, lifecycle information, versioning, and annotations. `ArtifactMetadata` provides the common metadata carried by all artifacts other than identity. `SchemaArtifactMetadata` extends that common structure with schema-versioning information used by reusable schema artifacts.
 
 ### Aggregate Structure
 
-This subsection identifies how the metadata categories are grouped at the artifact level. `ArtifactMetadata` carries the metadata common to all artifacts other than identity — descriptive properties, temporal provenance, and annotations — directly as members. `SchemaArtifactMetadata` adds versioning information for reusable schema artifacts.
+This subsection identifies how the metadata categories are grouped at the artifact level. `ArtifactMetadata` carries the metadata common to all artifacts other than identity — descriptive properties, lifecycle metadata, and annotations — directly as members. `SchemaArtifactMetadata` adds versioning information for reusable schema artifacts.
 
 ```ebnf
 SchemaArtifactMetadata ::= schema_artifact_metadata(
@@ -752,7 +752,7 @@ ArtifactMetadata ::= artifact_metadata(
                        [Identifier]
                        [PreferredLabel]
                        AlternativeLabel*
-                       TemporalProvenance
+                       LifecycleMetadata
                        Annotation*
                      )
 ```
@@ -779,17 +779,17 @@ Identifier ::= identifier(
 
 > **Note:** Confirm with the CEDAR team that `PreferredLabel` and `AlternativeLabel` belong on `ArtifactMetadata` for all artifact kinds rather than on a field-specific metadata structure. The v2.0.0 conceptual document (§4.1) describes these in the context of fields specifically; it is worth verifying whether templates, presentation components, and instances should carry them too.
 
-### Temporal Provenance
+### Lifecycle Metadata
 
-`TemporalProvenance` identifies when an artifact was created and modified, and which agents were responsible for those actions.
+`LifecycleMetadata` identifies when an artifact was created and modified, and which agents were responsible for those actions.
 
 ```ebnf
-TemporalProvenance ::= temporal_provenance(
-                         CreatedOn
-                         CreatedBy
-                         ModifiedOn
-                         ModifiedBy
-                       )
+LifecycleMetadata ::= lifecycle_metadata(
+                        CreatedOn
+                        CreatedBy
+                        ModifiedOn
+                        ModifiedBy
+                      )
 
 CreatedOn ::= IsoDateTimeStamp
 
@@ -852,7 +852,7 @@ DerivedFrom ::= derived_from(
 
 ### Annotations
 
-`Annotation` provides an extensible metadata mechanism for additional named metadata values that are not captured by the core descriptive, provenance, or versioning structures. The first `Iri` identifies the annotation property — the predicate IRI under which the annotation is asserted. The `AnnotationValue` is the associated metadata value: either a literal or an IRI. This supports linking to external resources such as DOIs and grant identifiers, as well as storing institutional metadata.
+`Annotation` provides an extensible metadata mechanism for additional named metadata values that are not captured by the core descriptive, lifecycle, or versioning structures. The first `Iri` identifies the annotation property — the predicate IRI under which the annotation is asserted. The `AnnotationValue` is the associated metadata value: either a literal or an IRI. This supports linking to external resources such as DOIs and grant identifiers, as well as storing institutional metadata.
 
 ```ebnf
 Annotation ::= annotation(
@@ -885,7 +885,7 @@ The following nonterminals are intentionally left abstract. They define the stri
 
 ### Core IRI and String Types
 
-This subsection defines the fundamental IRI, string, and numeric leaf types that appear throughout the grammar. `Iri` is the base construct for all IRI-valued positions. `DatatypeIri` and `TermIri` are specialised IRI forms used in literal typing and controlled-vocabulary references respectively. `LanguageTag` and `LexicalForm` support RDF literal construction. `IsoDateTimeStamp` carries ISO 8601 date-time values used in temporal provenance. `NonNegativeInteger` supports field-spec constraints.
+This subsection defines the fundamental IRI, string, and numeric leaf types that appear throughout the grammar. `Iri` is the base construct for all IRI-valued positions. `DatatypeIri` and `TermIri` are specialised IRI forms used in literal typing and controlled-vocabulary references respectively. `LanguageTag` and `LexicalForm` support RDF literal construction. `IsoDateTimeStamp` carries ISO 8601 date-time values used in lifecycle metadata. `NonNegativeInteger` supports field-spec constraints.
 
 ```ebnf
 Iri ::= iri(
@@ -1550,7 +1550,7 @@ PropertyLabel ::= property_label( MultilingualString )
 
 A `FieldSpec` is the semantic configuration block carried by a concrete `Field` artifact. It specifies what kind of value the field accepts, any constraints on that value, and any compatible rendering hints for presentation. Each concrete `Field` variant carries exactly one `FieldSpec` that matches its kind: a `TextField` carries a `TextFieldSpec`, a `DateField` carries a `DateFieldSpec`, and so on. The correspondence between each `FieldSpec` and its permitted `Value` form is given in the [Field Spec And Value Correspondence](#field-spec-and-value-correspondence) section.
 
-One might ask why `FieldSpec` exists as a separate construct rather than folding its content directly into the concrete `Field` artifact. The answer is separation of concerns: the concrete field artifact — `TextField`, `DateField`, and so on — answers the question "what kind of reusable field is this?" and carries the artifact's identity, descriptive metadata, provenance, and versioning. The `FieldSpec` answers the separate question "what are the value rules and rendering-compatible properties for this kind of field?" Keeping these concerns distinct means that artifact identity and lifecycle metadata remain uniform across all field kinds, while value semantics and field-specific configuration vary per family through `FieldSpec`. It also preserves a clean, uniform pattern: every concrete field artifact carries exactly one identifier, one `SchemaArtifactMetadata`, and one `FieldSpec`.
+One might ask why `FieldSpec` exists as a separate construct rather than folding its content directly into the concrete `Field` artifact. The answer is separation of concerns: the concrete field artifact — `TextField`, `DateField`, and so on — answers the question "what kind of reusable field is this?" and carries the artifact's identity, descriptive metadata, lifecycle metadata, and versioning. The `FieldSpec` answers the separate question "what are the value rules and rendering-compatible properties for this kind of field?" Keeping these concerns distinct means that artifact identity and lifecycle metadata remain uniform across all field kinds, while value semantics and field-specific configuration vary per family through `FieldSpec`. It also preserves a clean, uniform pattern: every concrete field artifact carries exactly one identifier, one `SchemaArtifactMetadata`, and one `FieldSpec`.
 
 `FieldSpec` productions are grouped here by field family, mirroring the abstract `Field` hierarchy in the Kernel Grammar. Temporal field specs, which carry additional precision and rendering configuration, are detailed in the [Temporal Field Specs](#temporal-field-specs) subsection. Controlled term source declarations, which specify the ontological authorities from which controlled-term values may be drawn, are covered in the [Controlled Term Sources](#controlled-term-sources) subsection. Rendering hints for all field families are defined in the [Rendering Hints](#rendering-hints) subsection, with the exception of temporal rendering hints which are defined alongside their field specs.
 
@@ -1995,7 +1995,7 @@ The current rendering vocabulary is explicit but deliberately small: numeric fie
 
 A `PresentationComponent` is a reusable artifact that contributes presentation or instructional structure to a rendered template without introducing data-bearing content. It is distinct from `SchemaArtifact`: where `Template` and `Field` define the structure and semantics of instance data, `PresentationComponent` exists purely to guide, organise, or annotate the rendered form — for example by embedding rich text instructions, illustrative images, video content, or structural breaks between sections.
 
-`PresentationComponent` carries its own identity, metadata, and provenance as an `Artifact`, making it independently reusable across multiple templates. It appears within a template only through `EmbeddedPresentationComponent`, which contributes no `InstanceValue` and is therefore invisible to the instance model. A conforming `TemplateInstance` MUST NOT contain an `InstanceValue` for an `EmbeddedPresentationComponent`.
+`PresentationComponent` carries its own identity, metadata, and lifecycle information as an `Artifact`, making it independently reusable across multiple templates. It appears within a template only through `EmbeddedPresentationComponent`, which contributes no `InstanceValue` and is therefore invisible to the instance model. A conforming `TemplateInstance` MUST NOT contain an `InstanceValue` for an `EmbeddedPresentationComponent`.
 
 The following concrete variants are defined:
 
@@ -2099,7 +2099,7 @@ The four concrete choice field specs map to two value kinds. `LiteralSingleChoic
 
 A `TemplateInstance` is an `Artifact` that records data conforming to a specific `Template`. Instance productions are defined here separately from schema and presentation productions so that the schema model and the instance model can be read independently.
 
-Because `TemplateInstance` is a full `Artifact`, it carries `ArtifactMetadata` — a `TemplateInstanceId`, descriptive metadata, and temporal provenance. This means instances are independently identifiable, catalogable artifacts in their own right rather than anonymous data records. They can be referenced, versioned, and tracked just as templates and fields can.
+Because `TemplateInstance` is a full `Artifact`, it carries `ArtifactMetadata` — a `TemplateInstanceId`, descriptive metadata, and lifecycle metadata. This means instances are independently identifiable, catalogable artifacts in their own right rather than anonymous data records. They can be referenced, versioned, and tracked just as templates and fields can.
 
 A `TemplateInstance` contains zero or more `InstanceValue` constructs, each keyed by an `EmbeddedArtifactKey` identifying the corresponding embedded artifact in the referenced template. There are two forms: `FieldValue`, which carries one or more typed values for an `EmbeddedField`, and `NestedTemplateInstance`, which carries a nested collection of `InstanceValue` constructs for an `EmbeddedTemplate`. `EmbeddedPresentationComponent` constructs produce no `InstanceValue` and are absent from the instance model entirely.
 

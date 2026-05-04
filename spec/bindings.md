@@ -66,7 +66,7 @@ singleton positions: the surrounding property name fixes the production
 unambiguously, so no discriminator is carried on the wire (per the
 polymorphic-only `kind` rule, [`wire-grammar.md`](wire-grammar.md)
 §1.5). Examples: `Cardinality`, `Property`, `LabelOverride`,
-`TemporalProvenance`, `SchemaVersioning`,
+`LifecycleMetadata`, `SchemaVersioning`,
 `Annotation`, `Unit`, `OntologyReference`, `OntologyDisplayHint`,
 `ControlledTermClass`, `LiteralChoiceOption`, `ControlledTermChoiceOption`.
 
@@ -829,7 +829,7 @@ High-level structure (the `src/` tree mirrors the grammar layering):
 - `values/` — the `Value` family.
 - `identity.ts` — artifact identifiers (`FieldId`, `TemplateId`,
   `PresentationComponentId`, `TemplateInstanceId`).
-- `metadata/` — `TemporalProvenance`, `SchemaVersioning`, `Annotation`.
+- `metadata/` — `LifecycleMetadata`, `SchemaVersioning`, `Annotation`.
 - `field-specs/` — `FieldSpec` family.
 - `fields.ts` — `Field` family.
 - `embedded/` — `EmbeddedField`, `EmbeddedTemplate`,

@@ -12,7 +12,7 @@ This specification defines:
 
 - the core metamodel
 - the abstract grammar
-- artifact metadata and provenance
+- artifact metadata and lifecycle
 - the field spec system
 - the presentation component model
 - the instance model

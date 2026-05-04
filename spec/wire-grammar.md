@@ -100,7 +100,7 @@ singleton positions (where the enclosing property name fixes the
 production unambiguously), the production is encoded as a plain
 `object { … }` with no `kind` property. This applies to productions
 such as `Cardinality`, `Property`, `LabelOverride`,
-`SchemaArtifactMetadata`, `ArtifactMetadata`, `TemporalProvenance`,
+`SchemaArtifactMetadata`, `ArtifactMetadata`, `LifecycleMetadata`,
 `SchemaVersioning`, `Annotation`, `Unit`, `OntologyReference`,
 `OntologyDisplayHint`, `ControlledTermClass`, `LiteralChoiceOption`,
 `ControlledTermChoiceOption`, and the temporal `RenderingHint`
@@ -534,7 +534,7 @@ identifier shape.
 
 `ArtifactMetadata` is flat on the wire: its descriptive properties
 (`name`, `description`, `identifier`, `preferredLabel`, `altLabels`),
-its `provenance` slot, and its `annotations` slot are all direct
+its `lifecycle` slot, and its `annotations` slot are all direct
 members of the same object — there is no `descriptiveMetadata`
 wrapper.
 
@@ -550,7 +550,7 @@ ArtifactMetadata ::: object {
   identifier?: string
   preferredLabel?: MultilingualString
   altLabels?: array<MultilingualString>
-  provenance: TemporalProvenance
+  lifecycle: LifecycleMetadata
   annotations?: array<Annotation>
 }
   // altLabels SHOULD be omitted from the wire when empty; it round-trips
@@ -573,7 +573,7 @@ SchemaArtifactMetadata ::: object {
   identifier?: string
   preferredLabel?: MultilingualString
   altLabels?: array<MultilingualString>
-  provenance: TemporalProvenance
+  lifecycle: LifecycleMetadata
   annotations?: array<Annotation>
   versioning: SchemaVersioning
 }
@@ -587,7 +587,7 @@ into the outer object: every property of `ArtifactMetadata` appears
 directly alongside `versioning`. There is no `metadata.artifact`
 intermediate.
 
-### 6.3 Temporal provenance
+### 6.3 Lifecycle metadata
 
 ```
 CreatedOn ::: string
@@ -595,7 +595,7 @@ CreatedBy ::: string
 ModifiedOn ::: string
 ModifiedBy ::: string
 
-TemporalProvenance ::: object {
+LifecycleMetadata ::: object {
   createdOn: string
   createdBy: string
   modifiedOn: string

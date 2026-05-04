@@ -272,14 +272,14 @@ Each `Value` family is encoded as a tagged object. The full set of variants is g
 
 ### 6.5 Metadata and annotations
 
-`TemporalProvenance`, `SchemaVersioning`, `ArtifactMetadata`, and `SchemaArtifactMetadata` each appear at a fixed singleton position and are encoded as untagged JSON objects. The descriptive properties of an artifact (`name`, `description`, `identifier`, `preferredLabel`, `altLabels`) sit directly on `ArtifactMetadata` rather than under a `descriptiveMetadata` wrapper.
+`LifecycleMetadata`, `SchemaVersioning`, `ArtifactMetadata`, and `SchemaArtifactMetadata` each appear at a fixed singleton position and are encoded as untagged JSON objects. The descriptive properties of an artifact (`name`, `description`, `identifier`, `preferredLabel`, `altLabels`) sit directly on `ArtifactMetadata` rather than under a `descriptiveMetadata` wrapper.
 
 ```json
 {
   "name": [{ "value": "Full Name", "lang": "en" }],
   "description": [{ "value": "Full legal name.", "lang": "en" }],
   "preferredLabel": [{ "value": "Name", "lang": "en" }],
-  "provenance": {
+  "lifecycle": {
     "createdOn": "2024-01-01T00:00:00Z",
     "createdBy": "https://orcid.org/0000-0002-1825-0097",
     "modifiedOn": "2024-06-15T12:30:00Z",
@@ -538,14 +538,12 @@ The `name` property below is a `MultilingualString` (§6.3): an array of `{value
   "id": "https://example.org/templates/empty",
   "modelVersion": "2.0.0",
   "metadata": {
-    "artifact": {
-      "name": [{ "value": "Empty", "lang": "en" }],
-      "provenance": {
-        "createdOn": "2024-01-01T00:00:00Z",
-        "createdBy": "https://example.org/u",
-        "modifiedOn": "2024-01-01T00:00:00Z",
-        "modifiedBy": "https://example.org/u"
-      }
+    "name": [{ "value": "Empty", "lang": "en" }],
+    "lifecycle": {
+      "createdOn": "2024-01-01T00:00:00Z",
+      "createdBy": "https://example.org/u",
+      "modifiedOn": "2024-01-01T00:00:00Z",
+      "modifiedBy": "https://example.org/u"
     },
     "versioning": {
       "version": "1.0.0",
@@ -563,7 +561,7 @@ The `name` property below is a `MultilingualString` (§6.3): an array of `{value
   "kind": "Template",
   "id": "https://example.org/templates/note",
   "modelVersion": "2.0.0",
-  "metadata": { "artifact": "...", "versioning": "..." },
+  "metadata": { "name": "...", "lifecycle": "...", "versioning": "..." },
   "embedded": [
     {
       "kind": "EmbeddedTextField",
@@ -583,7 +581,7 @@ The `name` property below is a `MultilingualString` (§6.3): an array of `{value
   "kind": "TemplateInstance",
   "id": "https://example.org/instances/i1",
   "modelVersion": "2.0.0",
-  "metadata": { "name": "...", "provenance": "...", "annotations": [] },
+  "metadata": { "name": "...", "lifecycle": "...", "annotations": [] },
   "templateRef": "https://example.org/templates/note",
   "values": [
     {
