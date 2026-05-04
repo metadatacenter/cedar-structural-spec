@@ -44,7 +44,9 @@ An `EmbeddedField` is **multi-valued** if its effective maximum cardinality is g
 
 ### Versioning
 
-`Version` and `ModelVersion` MUST conform to Semantic Versioning 2.0.0.
+`Version` MUST conform to Semantic Versioning 2.0.0.
+
+`ModelVersion` MUST conform to Semantic Versioning 2.0.0. `ModelVersion` is a top-level component of every concrete `Artifact` (every `Template`, `TemplateInstance`, every `Field`, and every `PresentationComponent`); it is not a component of `SchemaVersioning`.
 
 `Status` MUST be either `draft` or `published`.
 
@@ -224,11 +226,11 @@ The algorithm is expressed as a set of named subroutines. Each subroutine takes 
 
 Entry point for schema validation.
 
-1. Run `validate_artifact_metadata(T.schema_artifact_metadata)`.
+1. Run `validate_model_version(T.model_version)` and `validate_artifact_metadata(T.schema_artifact_metadata)`.
 2. Let `fields` = the set of `Field` artifacts referenced by `EmbeddedField` constructs in `T`.
-3. For each `F` in `fields`: run `validate_artifact_metadata(F.schema_artifact_metadata)` and `validate_field_spec(F.field_spec)`.
+3. For each `F` in `fields`: run `validate_model_version(F.model_version)`, `validate_artifact_metadata(F.schema_artifact_metadata)`, and `validate_field_spec(F.field_spec)`.
 4. Let `pcs` = the set of `PresentationComponent` artifacts referenced by `EmbeddedPresentationComponent` constructs in `T`.
-5. For each `PC` in `pcs`: run `validate_artifact_metadata(PC.artifact_metadata)`.
+5. For each `PC` in `pcs`: run `validate_model_version(PC.model_version)` and `validate_artifact_metadata(PC.artifact_metadata)`.
 6. Run `validate_embedded_artifact_keys(T)`.
 7. For each `E` in `T.embedded_artifacts`:
    1. Run `validate_embedding_reference(E)`.
@@ -246,8 +248,17 @@ Entry point for schema validation.
 Applies the [Versioning](#versioning) rules.
 
 1. Let `v` = `M.versioning_metadata.version`. Verify `v` is a well-formed Semantic Versioning 2.0.0 string.
-2. Let `mv` = `M.versioning_metadata.model_version`. Verify `mv` is a well-formed Semantic Versioning 2.0.0 string.
-3. Let `s` = `M.versioning_metadata.status`. Verify `s ∈ { draft, published }`.
+2. Let `s` = `M.versioning_metadata.status`. Verify `s ∈ { draft, published }`.
+
+When invoked with an `ArtifactMetadata` value (e.g. a `PresentationComponent`'s metadata), step 1 and step 2 are skipped: `ArtifactMetadata` does not carry `SchemaVersioning`.
+
+---
+
+##### `validate_model_version(mv: ModelVersion)`
+
+Applies the [Versioning](#versioning) rules to the artifact-level `ModelVersion` carried directly by every concrete `Artifact`.
+
+1. Verify `mv` is a well-formed Semantic Versioning 2.0.0 string.
 
 ---
 
@@ -383,13 +394,14 @@ Let `FT` = the `FieldSpec` of the `Field` referenced by `E`.
 
 Entry point for instance validation.
 
-1. Run `validate_instance_alignment(I, T)`.
-2. Run `validate_field_presence_and_cardinality(I, T)`.
-3. For each `FV` in `I.instance_values` where `FV` is a `FieldValue`:
+1. Run `validate_model_version(I.model_version)`.
+2. Run `validate_instance_alignment(I, T)`.
+3. Run `validate_field_presence_and_cardinality(I, T)`.
+4. For each `FV` in `I.instance_values` where `FV` is a `FieldValue`:
    1. Let `EF` = the `EmbeddedField` in `T` whose key = `FV.key`.
    2. Run `validate_field_value(FV, EF)`.
-4. Run `validate_nested_template_presence_and_cardinality(I, T)`.
-5. For each `NTI` in `I.instance_values` where `NTI` is a `NestedTemplateInstance`:
+5. Run `validate_nested_template_presence_and_cardinality(I, T)`.
+6. For each `NTI` in `I.instance_values` where `NTI` is a `NestedTemplateInstance`:
    1. Let `ET` = the `EmbeddedTemplate` in `T` whose key = `NTI.key`.
    2. Let `RT` = the `Template` identified by `ET.reference`.
    3. Run `validate_instance(NTI, RT)`.

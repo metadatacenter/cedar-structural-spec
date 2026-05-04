@@ -112,12 +112,21 @@ classDiagram
   }
   class Template {
     TemplateId
+    ModelVersion
     SchemaArtifactMetadata
     [Header]
     [Footer]
   }
-  class PresentationComponent
-  class TemplateInstance
+  class PresentationComponent {
+    PresentationComponentId
+    ModelVersion
+    ArtifactMetadata
+  }
+  class TemplateInstance {
+    TemplateInstanceId
+    ModelVersion
+    ArtifactMetadata
+  }
 
   class EmbeddedArtifact {
     <<abstract>>
@@ -190,6 +199,7 @@ SchemaArtifact ::= Field
 ```ebnf
 Template ::= template(
                TemplateId
+               ModelVersion
                SchemaArtifactMetadata
                [Header]
                [Footer]
@@ -240,19 +250,21 @@ ExternalAuthorityField ::= OrcidField
 
 ### Concrete Field Artifacts
 
-Each concrete `Field` variant carries exactly three components: a typed artifact identifier that permanently identifies the reusable field; `SchemaArtifactMetadata` providing the descriptive, provenance, versioning, and annotation metadata common to all schema artifacts; and a typed `FieldSpec` that specifies the value semantics and configuration for that field category. The identifier and `FieldSpec` are specific to each concrete variant; `SchemaArtifactMetadata` is uniform across all fields. The groupings below mirror the abstract `Field` hierarchy defined in Core Structure.
+Each concrete `Field` variant carries exactly four components: a typed artifact identifier that permanently identifies the reusable field; a `ModelVersion` identifying the version of the CEDAR structural model the artifact conforms to; `SchemaArtifactMetadata` providing the descriptive, provenance, versioning, and annotation metadata common to all schema artifacts; and a typed `FieldSpec` that specifies the value semantics and configuration for that field category. The identifier and `FieldSpec` are specific to each concrete variant; `ModelVersion` and `SchemaArtifactMetadata` are uniform across all fields. The groupings below mirror the abstract `Field` hierarchy defined in Core Structure.
 
 `TextField` and `NumericField` are the two simple scalar field specs. Each carries the most basic value semantics — free text and typed numeric values respectively.
 
 ```ebnf
 TextField ::= text_field(
                TextFieldId
+               ModelVersion
                SchemaArtifactMetadata
                TextFieldSpec
              )
 
 NumericField ::= numeric_field(
                   NumericFieldId
+                  ModelVersion
                   SchemaArtifactMetadata
                   NumericFieldSpec
                 )
@@ -263,18 +275,21 @@ The temporal field variants correspond to the `TemporalField` abstract category.
 ```ebnf
 DateField ::= date_field(
                DateFieldId
+               ModelVersion
                SchemaArtifactMetadata
                DateFieldSpec
              )
 
 TimeField ::= time_field(
                TimeFieldId
+               ModelVersion
                SchemaArtifactMetadata
                TimeFieldSpec
              )
 
 DateTimeField ::= date_time_field(
                    DateTimeFieldId
+                   ModelVersion
                    SchemaArtifactMetadata
                    DateTimeFieldSpec
                  )
@@ -285,12 +300,14 @@ DateTimeField ::= date_time_field(
 ```ebnf
 ControlledTermField ::= controlled_term_field(
                           ControlledTermFieldId
+                          ModelVersion
                           SchemaArtifactMetadata
                           ControlledTermFieldSpec
                         )
 
 LinkField ::= link_field(
                LinkFieldId
+               ModelVersion
                SchemaArtifactMetadata
                LinkFieldSpec
              )
@@ -301,12 +318,14 @@ LinkField ::= link_field(
 ```ebnf
 SingleChoiceField ::= single_choice_field(
                          SingleChoiceFieldId
+                         ModelVersion
                          SchemaArtifactMetadata
                          SingleChoiceFieldSpec
                        )
 
 MultipleChoiceField ::= multiple_choice_field(
                            MultipleChoiceFieldId
+                           ModelVersion
                            SchemaArtifactMetadata
                            MultipleChoiceFieldSpec
                          )
@@ -317,12 +336,14 @@ The contact field variants correspond to the `ContactField` abstract category an
 ```ebnf
 EmailField ::= email_field(
                 EmailFieldId
+                ModelVersion
                 SchemaArtifactMetadata
                 EmailFieldSpec
               )
 
 PhoneNumberField ::= phone_number_field(
                       PhoneNumberFieldId
+                      ModelVersion
                       SchemaArtifactMetadata
                       PhoneNumberFieldSpec
                     )
@@ -333,36 +354,42 @@ The external authority field variants correspond to the `ExternalAuthorityField`
 ```ebnf
 OrcidField ::= orcid_field(
                 OrcidFieldId
+                ModelVersion
                 SchemaArtifactMetadata
                 OrcidFieldSpec
               )
 
 RorField ::= ror_field(
               RorFieldId
+              ModelVersion
               SchemaArtifactMetadata
               RorFieldSpec
             )
 
 DoiField ::= doi_field(
               DoiFieldId
+              ModelVersion
               SchemaArtifactMetadata
               DoiFieldSpec
             )
 
 PubMedIdField ::= pub_med_id_field(
                     PubMedIdFieldId
+                    ModelVersion
                     SchemaArtifactMetadata
                     PubMedIdFieldSpec
                   )
 
 RridField ::= rrid_field(
                RridFieldId
+               ModelVersion
                SchemaArtifactMetadata
                RridFieldSpec
              )
 
 NihGrantIdField ::= nih_grant_id_field(
                      NihGrantIdFieldId
+                     ModelVersion
                      SchemaArtifactMetadata
                      NihGrantIdFieldSpec
                    )
@@ -373,6 +400,7 @@ NihGrantIdField ::= nih_grant_id_field(
 ```ebnf
 AttributeValueField ::= attribute_value_field(
                           AttributeValueFieldId
+                          ModelVersion
                           SchemaArtifactMetadata
                           AttributeValueFieldSpec
                         )
@@ -784,13 +812,12 @@ See [`IsoDateTimeStamp`](#core-iri-and-string-types) and [`Iri`](#core-iri-and-s
 
 ### Schema Versioning
 
-`SchemaVersioning` identifies version-related metadata specific to reusable schema artifacts. It captures artifact version, publication status, the version of the schema model used, and optional derivation links to earlier or source artifacts.
+`SchemaVersioning` identifies version-related metadata specific to reusable schema artifacts. It captures artifact version, publication status, and optional derivation links to earlier or source artifacts.
 
 ```ebnf
 SchemaVersioning ::= schema_versioning(
                        Version
                        Status
-                       ModelVersion
                        [PreviousVersion]
                        [DerivedFrom]
                      )
@@ -821,7 +848,7 @@ DerivedFrom ::= derived_from(
                 )
 ```
 
-`Version` and `ModelVersion` denote Semantic Versioning 2.0.0 version identifiers.
+`Version` denotes a Semantic Versioning 2.0.0 version identifier. `ModelVersion` (defined above as a standalone production and carried directly by every concrete `Artifact`) likewise denotes a Semantic Versioning 2.0.0 version identifier.
 
 `Status` denotes the publication status of a reusable schema artifact and is restricted to `draft` or `published`.
 
@@ -1985,29 +2012,34 @@ PresentationComponent ::= RichTextComponent
 
 RichTextComponent ::= rich_text_component(
                         PresentationComponentId
+                        ModelVersion
                         ArtifactMetadata
                         HtmlContent
                       )
 
 ImageComponent ::= image_component(
                      PresentationComponentId
+                     ModelVersion
                      ArtifactMetadata
                      ImageSource
                    )
 
 YoutubeVideoComponent ::= you_tube_video_component(
                             PresentationComponentId
+                            ModelVersion
                             ArtifactMetadata
                             YoutubeVideoSource
                           )
 
 SectionBreakComponent ::= section_break_component(
                             PresentationComponentId
+                            ModelVersion
                             ArtifactMetadata
                           )
 
 PageBreakComponent ::= page_break_component(
                          PresentationComponentId
+                         ModelVersion
                          ArtifactMetadata
                        )
 ```
@@ -2078,6 +2110,7 @@ A `TemplateInstance` contains zero or more `InstanceValue` constructs, each keye
 ```ebnf
 TemplateInstance ::= template_instance(
                        TemplateInstanceId
+                       ModelVersion
                        ArtifactMetadata
                        TemplateReference
                        InstanceValue*

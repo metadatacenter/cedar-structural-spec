@@ -357,10 +357,13 @@ A `Field` artifact (shown for the text family; the other seventeen families subs
 {
   "kind": "TextField",
   "id": "<FieldId>",
+  "modelVersion": "<SemanticVersion>",
   "metadata": "<SchemaArtifactMetadata>",
   "fieldSpec": "<FieldSpec>"
 }
 ```
+
+The `modelVersion` property is a top-level property of every concrete artifact (`Template`, `TemplateInstance`, every `XxxField`, and every `PresentationComponent` variant). It is encoded as a JSON string carrying a Semantic Versioning 2.0.0 lexical form and identifies the version of the CEDAR structural model the artifact conforms to. The position is immediately after `id` and before `metadata`.
 
 The `kind` value MUST match the family of the nested `fieldSpec`. Conforming encoders MUST ensure that the IRI placed at `id` belongs to a field of the same family.
 
@@ -462,6 +465,7 @@ Multiple-choice embeddings carry a single `ChoiceValue` at `defaultValue`; suppl
 {
   "kind": "Template",
   "id": "<TemplateId>",
+  "modelVersion": "<SemanticVersion>",
   "metadata": "<SchemaArtifactMetadata>",
   "header": [{ "value": "Template Header Text", "lang": "en" }],
   "embedded": ["<EmbeddedArtifact>*"]
@@ -473,13 +477,13 @@ The `embedded` array MUST preserve order. The `EmbeddedArtifactKey` values withi
 ### 6.11 Presentation components
 
 ```json
-{ "kind": "RichTextComponent", "id": "<PresentationComponentId>", "metadata": "<ArtifactMetadata>", "html": "<p>Hello</p>" }
+{ "kind": "RichTextComponent", "id": "<PresentationComponentId>", "modelVersion": "<SemanticVersion>", "metadata": "<ArtifactMetadata>", "html": "<p>Hello</p>" }
 ```
 ```json
-{ "kind": "ImageComponent", "id": "<PresentationComponentId>", "metadata": "<ArtifactMetadata>", "image": "https://example.org/image.png" }
+{ "kind": "ImageComponent", "id": "<PresentationComponentId>", "modelVersion": "<SemanticVersion>", "metadata": "<ArtifactMetadata>", "image": "https://example.org/image.png" }
 ```
 ```json
-{ "kind": "SectionBreakComponent", "id": "<PresentationComponentId>", "metadata": "<ArtifactMetadata>" }
+{ "kind": "SectionBreakComponent", "id": "<PresentationComponentId>", "modelVersion": "<SemanticVersion>", "metadata": "<ArtifactMetadata>" }
 ```
 
 ### 6.12 Instances
@@ -488,6 +492,7 @@ The `embedded` array MUST preserve order. The `EmbeddedArtifactKey` values withi
 {
   "kind": "TemplateInstance",
   "id": "<TemplateInstanceId>",
+  "modelVersion": "<SemanticVersion>",
   "metadata": "<ArtifactMetadata>",
   "templateRef": "<TemplateId>",
   "values": ["<InstanceValue>*"]
@@ -534,6 +539,7 @@ The `name` property below is a `MultilingualString` (§6.3): an array of `{value
 {
   "kind": "Template",
   "id": "https://example.org/templates/empty",
+  "modelVersion": "2.0.0",
   "metadata": {
     "artifact": {
       "descriptiveMetadata": {
@@ -550,8 +556,7 @@ The `name` property below is a `MultilingualString` (§6.3): an array of `{value
     },
     "versioning": {
       "version": "1.0.0",
-      "status": "draft",
-      "modelVersion": "2.0.0"
+      "status": "draft"
     }
   },
   "embedded": []
@@ -564,6 +569,7 @@ The `name` property below is a `MultilingualString` (§6.3): an array of `{value
 {
   "kind": "Template",
   "id": "https://example.org/templates/note",
+  "modelVersion": "2.0.0",
   "metadata": { "artifact": "...", "versioning": "..." },
   "embedded": [
     {
@@ -583,6 +589,7 @@ The `name` property below is a `MultilingualString` (§6.3): an array of `{value
 {
   "kind": "TemplateInstance",
   "id": "https://example.org/instances/i1",
+  "modelVersion": "2.0.0",
   "metadata": { "descriptiveMetadata": "...", "provenance": "...", "annotations": [] },
   "templateRef": "https://example.org/templates/note",
   "values": [

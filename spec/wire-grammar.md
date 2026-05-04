@@ -590,14 +590,15 @@ TemporalProvenance ::: object {
 SchemaVersioning ::: object {
   version: string
   status: Status
-  modelVersion: string
   previousVersion?: string
   derivedFrom?: string
 }
-  // version and modelVersion are SemanticVersion lexical forms
+  // version is a SemanticVersion lexical form
 
 Version ::: string
 ModelVersion ::: string
+  // a SemanticVersion 2.0.0 lexical form; carried directly on every
+  // concrete artifact wire object as the top-level `modelVersion` slot
 PreviousVersion ::: Iri
 DerivedFrom ::: Iri
 
@@ -1136,128 +1137,164 @@ ExternalAuthorityField ::: OrcidField | RorField | DoiField
 TextField ::: object {
   "kind": "TextField"
   id: string
+  modelVersion: string
   metadata: SchemaArtifactMetadata
   fieldSpec: TextFieldSpec
 }
+  // modelVersion is a SemanticVersion 2.0.0 lexical form
 
 NumericField ::: object {
   "kind": "NumericField"
   id: string
+  modelVersion: string
   metadata: SchemaArtifactMetadata
   fieldSpec: NumericFieldSpec
 }
+  // modelVersion is a SemanticVersion 2.0.0 lexical form
 
 DateField ::: object {
   "kind": "DateField"
   id: string
+  modelVersion: string
   metadata: SchemaArtifactMetadata
   fieldSpec: DateFieldSpec
 }
+  // modelVersion is a SemanticVersion 2.0.0 lexical form
 
 TimeField ::: object {
   "kind": "TimeField"
   id: string
+  modelVersion: string
   metadata: SchemaArtifactMetadata
   fieldSpec: TimeFieldSpec
 }
+  // modelVersion is a SemanticVersion 2.0.0 lexical form
 
 DateTimeField ::: object {
   "kind": "DateTimeField"
   id: string
+  modelVersion: string
   metadata: SchemaArtifactMetadata
   fieldSpec: DateTimeFieldSpec
 }
+  // modelVersion is a SemanticVersion 2.0.0 lexical form
 
 ControlledTermField ::: object {
   "kind": "ControlledTermField"
   id: string
+  modelVersion: string
   metadata: SchemaArtifactMetadata
   fieldSpec: ControlledTermFieldSpec
 }
+  // modelVersion is a SemanticVersion 2.0.0 lexical form
 
 SingleChoiceField ::: object {
   "kind": "SingleChoiceField"
   id: string
+  modelVersion: string
   metadata: SchemaArtifactMetadata
   fieldSpec: SingleChoiceFieldSpec
 }
+  // modelVersion is a SemanticVersion 2.0.0 lexical form
 
 MultipleChoiceField ::: object {
   "kind": "MultipleChoiceField"
   id: string
+  modelVersion: string
   metadata: SchemaArtifactMetadata
   fieldSpec: MultipleChoiceFieldSpec
 }
+  // modelVersion is a SemanticVersion 2.0.0 lexical form
 
 LinkField ::: object {
   "kind": "LinkField"
   id: string
+  modelVersion: string
   metadata: SchemaArtifactMetadata
   fieldSpec: LinkFieldSpec
 }
+  // modelVersion is a SemanticVersion 2.0.0 lexical form
 
 EmailField ::: object {
   "kind": "EmailField"
   id: string
+  modelVersion: string
   metadata: SchemaArtifactMetadata
   fieldSpec: EmailFieldSpec
 }
+  // modelVersion is a SemanticVersion 2.0.0 lexical form
 
 PhoneNumberField ::: object {
   "kind": "PhoneNumberField"
   id: string
+  modelVersion: string
   metadata: SchemaArtifactMetadata
   fieldSpec: PhoneNumberFieldSpec
 }
+  // modelVersion is a SemanticVersion 2.0.0 lexical form
 
 OrcidField ::: object {
   "kind": "OrcidField"
   id: string
+  modelVersion: string
   metadata: SchemaArtifactMetadata
   fieldSpec: OrcidFieldSpec
 }
+  // modelVersion is a SemanticVersion 2.0.0 lexical form
 
 RorField ::: object {
   "kind": "RorField"
   id: string
+  modelVersion: string
   metadata: SchemaArtifactMetadata
   fieldSpec: RorFieldSpec
 }
+  // modelVersion is a SemanticVersion 2.0.0 lexical form
 
 DoiField ::: object {
   "kind": "DoiField"
   id: string
+  modelVersion: string
   metadata: SchemaArtifactMetadata
   fieldSpec: DoiFieldSpec
 }
+  // modelVersion is a SemanticVersion 2.0.0 lexical form
 
 PubMedIdField ::: object {
   "kind": "PubMedIdField"
   id: string
+  modelVersion: string
   metadata: SchemaArtifactMetadata
   fieldSpec: PubMedIdFieldSpec
 }
+  // modelVersion is a SemanticVersion 2.0.0 lexical form
 
 RridField ::: object {
   "kind": "RridField"
   id: string
+  modelVersion: string
   metadata: SchemaArtifactMetadata
   fieldSpec: RridFieldSpec
 }
+  // modelVersion is a SemanticVersion 2.0.0 lexical form
 
 NihGrantIdField ::: object {
   "kind": "NihGrantIdField"
   id: string
+  modelVersion: string
   metadata: SchemaArtifactMetadata
   fieldSpec: NihGrantIdFieldSpec
 }
+  // modelVersion is a SemanticVersion 2.0.0 lexical form
 
 AttributeValueField ::: object {
   "kind": "AttributeValueField"
   id: string
+  modelVersion: string
   metadata: SchemaArtifactMetadata
   fieldSpec: AttributeValueFieldSpec
 }
+  // modelVersion is a SemanticVersion 2.0.0 lexical form
 ```
 
 ---
@@ -1550,35 +1587,45 @@ PresentationComponent ::: RichTextComponent | ImageComponent
 RichTextComponent ::: object {
   "kind": "RichTextComponent"
   id: string
+  modelVersion: string
   metadata: ArtifactMetadata
   html: string
 }
+  // modelVersion is a SemanticVersion 2.0.0 lexical form
 
 ImageComponent ::: object {
   "kind": "ImageComponent"
   id: string
+  modelVersion: string
   metadata: ArtifactMetadata
   image: string
 }
+  // modelVersion is a SemanticVersion 2.0.0 lexical form
 
 YoutubeVideoComponent ::: object {
   "kind": "YoutubeVideoComponent"
   id: string
+  modelVersion: string
   metadata: ArtifactMetadata
   video: string
 }
+  // modelVersion is a SemanticVersion 2.0.0 lexical form
 
 SectionBreakComponent ::: object {
   "kind": "SectionBreakComponent"
   id: string
+  modelVersion: string
   metadata: ArtifactMetadata
 }
+  // modelVersion is a SemanticVersion 2.0.0 lexical form
 
 PageBreakComponent ::: object {
   "kind": "PageBreakComponent"
   id: string
+  modelVersion: string
   metadata: ArtifactMetadata
 }
+  // modelVersion is a SemanticVersion 2.0.0 lexical form
 
 HtmlContent ::: string
 ImageSource ::: Iri
@@ -1602,11 +1649,13 @@ SchemaArtifact ::: Field | Template
 Template ::: object {
   "kind": "Template"
   id: string
+  modelVersion: string
   metadata: SchemaArtifactMetadata
   header?: MultilingualString
   footer?: MultilingualString
   embedded: array<EmbeddedArtifact>
 }
+  // modelVersion is a SemanticVersion 2.0.0 lexical form
   // EmbeddedArtifact keys (each member's `key` property) MUST be unique
   // within `embedded` (per grammar.md §Embedded Artifact Key)
   // the order of `embedded` MUST be preserved
@@ -1623,10 +1672,12 @@ Footer ::: MultilingualString
 TemplateInstance ::: object {
   "kind": "TemplateInstance"
   id: string
+  modelVersion: string
   metadata: ArtifactMetadata
   templateRef: string
   values: array<InstanceValue>
 }
+  // modelVersion is a SemanticVersion 2.0.0 lexical form
   // metadata is ArtifactMetadata, not SchemaArtifactMetadata
   // (instances do not carry schema versioning)
 

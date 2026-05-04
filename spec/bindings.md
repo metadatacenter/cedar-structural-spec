@@ -788,10 +788,23 @@ class SchemaVersioning(BaseModel):
     model_config = ConfigDict(populate_by_name=True, frozen=True)
     version: str
     status: Status
-    model_version: str = Field(alias="modelVersion")
     previous_version: str | None = Field(default=None, alias="previousVersion")
     derived_from: str | None = Field(default=None, alias="derivedFrom")
+
+
+class TextField(BaseModel):
+    model_config = ConfigDict(populate_by_name=True, frozen=True)
+    kind: Literal["TextField"] = "TextField"
+    id: str
+    model_version: str = Field(alias="modelVersion")
+    metadata: SchemaArtifactMetadata
+    field_spec: TextFieldSpec = Field(alias="fieldSpec")
 ```
+
+`model_version` is a top-level field on every concrete artifact class
+(`Template`, `TemplateInstance`, every `XxxField`, and every
+`PresentationComponent` variant); it is no longer nested inside
+`SchemaVersioning`.
 
 A binding MAY instead expose `lowerCamelCase` Python attribute names
 to avoid the alias layer; the alias approach is recommended for
