@@ -850,6 +850,30 @@ DerivedFrom ::= derived_from(
 
 `PreviousVersion` and `DerivedFrom` denote IRIs identifying related source or predecessor artifacts.
 
+The combined meaning of these fields and their interaction with artifact identity is specified in [Versioning Model](#versioning-model) below.
+
+#### Versioning Model
+
+The CEDAR versioning model rests on one guiding rule: **identity is per-version**. Every version of a `Field` or `Template` is itself a distinct `Artifact` with its own IRI. There is no separate "version-independent" identifier for the conceptual artifact; what holds successive versions together is the `PreviousVersion` link from each artifact to the one it replaces.
+
+**Identity and immutability.** Every reusable schema artifact (every `Field` and every `Template`) is identified by a single `SchemaArtifactId` (a `FieldId` or `TemplateId`). That IRI denotes one specific version: distinct versions of "the same" artifact are distinct artifacts in the model, each with its own IRI. A `published` artifact MUST be treated as immutable — once `Status` is `PublishedStatus`, the content addressed by its IRI MUST NOT change. A `draft` artifact MAY be edited in place while its `Status` remains `DraftStatus`. The transition from `draft` to `published` is one-way: an artifact whose `Status` is `PublishedStatus` MUST NOT transition back to `DraftStatus`.
+
+**Creating a new version.** To produce a revised version of a published artifact, mint a new IRI, allocate a new artifact at that IRI with `Status` set to `DraftStatus`, and set `PreviousVersion` to the IRI of the artifact being revised. Editing happens on the new draft; once the new artifact is itself published, it joins the version chain and becomes immutable in turn. The published predecessor is unaffected by the existence of its successor: it remains addressable at its own IRI and continues to be a valid target for `TemplateInstance` references.
+
+**Version chains.** Successive versions of an artifact form a *version chain*: a sequence of distinct artifacts, each with its own IRI, linked by `PreviousVersion`. Artifact `B` is the immediate successor of artifact `A` when `B.previousVersion = A.id`. The first artifact in a chain MUST omit `PreviousVersion`. Every subsequent artifact in the chain MUST set `PreviousVersion` to the IRI of its immediate predecessor. A chain is therefore a singly-linked list of IRIs, traversable backwards from any version to the original.
+
+**The role of `Version`.** `Version` carries a Semantic Versioning identifier as advisory metadata describing this artifact's place in its chain (e.g. `1.0.0` → `1.1.0` for a backwards-compatible change, `1.0.0` → `2.0.0` for a breaking change). The pairing of IRI and `PreviousVersion` is what *authoritatively* establishes the chain; `Version` is descriptive and is not load-bearing for chain identity. Successive artifacts in a chain SHOULD carry monotonically increasing `SemanticVersion` values, but this specification does not impose a structural constraint to that effect.
+
+**Derivation versus succession.** `DerivedFrom` and `PreviousVersion` are distinct relationships and answer different questions. `PreviousVersion` records *succession within a single version chain*: the successor is intended to replace its predecessor as the same conceptual artifact evolves. `DerivedFrom` records *non-version lineage*: the new artifact is a fork or adaptation — it was authored by copying or modifying an existing artifact, but it is not the next version of that artifact. A fork begins its own independent version chain. Typical uses of `DerivedFrom` include adopting a community-published template into an institutional namespace or spawning a specialised variant of an existing field. An artifact MAY carry both `PreviousVersion` and `DerivedFrom` simultaneously: the artifact succeeds another within its own chain *and* was originally derived from a separate source artifact. The two relationships are independent. `PreviousVersion` and `DerivedFrom`, when both present, MUST NOT carry the same IRI value — succession and derivation are mutually exclusive at any single point.
+
+**Summary of normative rules.**
+
+1. Every version of a `Field` or `Template` MUST have a distinct IRI.
+2. A `published` artifact MUST NOT change at its IRI.
+3. A `published` artifact MUST NOT transition back to `draft`.
+4. The first artifact in a version chain MUST omit `PreviousVersion`. Every other artifact in the chain MUST set `PreviousVersion` to the IRI of its immediate predecessor in that chain.
+5. When both `PreviousVersion` and `DerivedFrom` are present on the same artifact, they MUST NOT carry the same IRI.
+
 ### Annotations
 
 `Annotation` provides an extensible metadata mechanism for additional named metadata values that are not captured by the core descriptive, lifecycle, or versioning structures. The first `Iri` identifies the annotation property — the predicate IRI under which the annotation is asserted. The `AnnotationValue` is the associated metadata value: either a literal or an IRI. This supports linking to external resources such as DOIs and grant identifiers, as well as storing institutional metadata.
