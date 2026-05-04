@@ -127,25 +127,33 @@ on the wire. (See [`bindings.md`](bindings.md) §2.1 for examples.)
 
 ### 1.6 Collapsed wrappers
 
-The grammar's branded singleton wrappers — `NonNegativeInteger`,
-`KeyIdentifier`, `LexicalForm`, `Iri`, `DatatypeIri`, `TermIri`,
-`LanguageTag`, `IsoDateTimeStamp`, every `XxxFieldId` /
-`XxxFieldReference` / `TemplateId` / `TemplateInstanceId` /
-`PresentationComponentId` / `PropertyIri` / `OrcidIri` / `RorIri` /
-`DoiIri` / `PubMedIri` / `RridIri` / `NihGrantIri` / `OntologyIri` /
-`RootTermIri` / `ValueSetIri` / `OntologyAcronym` / `ValueSetIdentifier`
-/ `Notation` / `LinkLabel` / `Identifier` / `MinCardinality` /
-`MaxCardinality` / `MinLength` / `MaxLength` / `ValidationRegex` /
-`NumericPrecision` / `MaxTraversalDepth` / `Version` / `ModelVersion` /
-`PreviousVersion` / `DerivedFrom` / `CreatedOn` / `CreatedBy` /
-`ModifiedOn` / `ModifiedBy` / `EmbeddedArtifactKey` / `Header` /
-`Footer` / `Name` / `Description` / `PreferredLabel` /
-`AlternativeLabel` / `Label` / `PropertyLabel` / `OntologyName` /
-`ValueSetName` / `RootTermLabel` / `AttributeName` / `HtmlContent` /
-`ImageSource` / `YoutubeVideoSource` — collapse on the wire to their
+The grammar's branded singleton wrappers collapse on the wire to their
 inner primitive. The wire grammar names them where the abstract grammar
 does, but their type is whatever JSON primitive (or already-collapsed
 production) they carry.
+
+The wrappers fall into five groups by inner type:
+
+- **IRI-typed** (`string`, syntactically valid IRI per RFC 3987):
+  `Iri`, `DatatypeIri`, `TermIri`, every `XxxFieldId` and
+  `XxxFieldReference`, `TemplateId`, `TemplateInstanceId`,
+  `PresentationComponentId`, `PropertyIri`, `OrcidIri`, `RorIri`,
+  `DoiIri`, `PubMedIri`, `RridIri`, `NihGrantIri`, `OntologyIri`,
+  `RootTermIri`, `ValueSetIri`, `ImageSource`, `YoutubeVideoSource`.
+- **Other strings** (`string`): `LanguageTag`, `LexicalForm`,
+  `IsoDateTimeStamp`, `OntologyAcronym`, `ValueSetIdentifier`,
+  `Notation`, `LinkLabel`, `Identifier`, `AttributeName`, `HtmlContent`,
+  `KeyIdentifier`, `EmbeddedArtifactKey`, `ValidationRegex`.
+- **Numbers**: `NonNegativeInteger`, `MinCardinality`, `MaxCardinality`,
+  `MinLength`, `MaxLength`, `NumericPrecision`, `MaxTraversalDepth`.
+- **MultilingualString-typed**: `Name`, `Description`, `PreferredLabel`,
+  `AlternativeLabel`, `Label`, `PropertyLabel`, `OntologyName`,
+  `ValueSetName`, `RootTermLabel`, `Header`, `Footer`.
+- **Versioning / lifecycle leaves**: `Version` and `ModelVersion` carry
+  SemanticVersion lexical strings; `PreviousVersion` and `DerivedFrom`
+  collapse to `Iri`; `CreatedOn` / `CreatedBy` / `ModifiedOn` /
+  `ModifiedBy` collapse to their lifecycle-metadata primitives
+  (`IsoDateTimeStamp` and `Iri` respectively).
 
 ---
 
@@ -522,9 +530,13 @@ PresentationComponentId ::: Iri
 TemplateInstanceId ::: Iri
 ```
 
-The eighteen field families are determined by the `kind`
-discriminator on the enclosing `Field` or `EmbeddedField`, not by the
-identifier shape.
+The family of an identifier is recovered from the `kind` discriminator
+on the enclosing object — `Field` and `EmbeddedField` for `FieldId`
+variants, `Template` and `EmbeddedTemplate` for `TemplateId`,
+`PresentationComponent` and `EmbeddedPresentationComponent` for
+`PresentationComponentId`, and `TemplateInstance` for
+`TemplateInstanceId`. The identifier shape itself carries no family
+information.
 
 ---
 
@@ -642,10 +654,17 @@ Annotation ::: object {
 AnnotationValue ::: SimpleLiteral | LangTaggedLiteral | TypedLiteral
                   | object { iri: string }
   // discriminator: property-set
-  // value-only          ⇒ SimpleLiteral
-  // value + lang        ⇒ LangTaggedLiteral
-  // value + datatype    ⇒ TypedLiteral
-  // iri only            ⇒ Iri (wrapped at this polymorphic position)
+  //
+  // The four arms are distinguished by which properties the encoded
+  // object carries:
+  //
+  //   { "value": "..." }                        ⇒ SimpleLiteral
+  //   { "value": "...", "lang": "..." }         ⇒ LangTaggedLiteral
+  //   { "value": "...", "datatype": "..." }     ⇒ TypedLiteral
+  //   { "iri": "..." }                          ⇒ Iri (wrapped at this
+  //                                               polymorphic position)
+  //
+  // An object that carries both `iri` and `value` is non-conforming.
 ```
 
 ---
@@ -660,13 +679,17 @@ EmbeddedArtifactKey ::: string
   // unique within the containing Template (constraint enforced on Template)
 
 KeyIdentifier ::: string
-  // collapsed wrapper; matches the AsciiIdentifier pattern
+  // matches the AsciiIdentifier pattern
 ```
 
 ### 7.2 References
 
-Each reference encodes as a plain Iri; the family is determined by the
-enclosing `EmbeddedField`'s `kind` discriminator.
+References mirror the identifiers in §5: each `XxxFieldReference`,
+`TemplateReference`, and `PresentationComponentReference` encodes as a
+plain IRI, carried at the `artifactRef` slot of the enclosing
+embedding. The family is recovered from the `kind` discriminator on
+the enclosing `EmbeddedField`, `EmbeddedTemplate`, or
+`EmbeddedPresentationComponent`.
 
 ```
 FieldReference ::: string
@@ -764,8 +787,11 @@ The wire form per family is therefore:
 | `EmbeddedRridField` | `RridValue` (kind dropped at singleton) |
 | `EmbeddedNihGrantIdField` | `NihGrantIdValue` (kind dropped at singleton) |
 
-`TextFieldSpec.defaultValue` is also a singleton position and encodes
-as a `TextLiteral` directly (property-set discriminated, no `kind`).
+**Spec-level defaults.** `TextFieldSpec` is the only `FieldSpec` that
+carries a `defaultValue` slot, and it follows the same
+singleton-position rule as the embedding-level defaults above (encodes
+as `TextLiteral`, property-set discriminated, no `kind`). See §8 for
+the production.
 
 ### 7.7 Label override
 
@@ -812,6 +838,9 @@ TextFieldSpec ::: object {
   validationRegex?: string
   renderingHint?: TextRenderingHint
 }
+  // defaultValue, when present, encodes as a TextLiteral (property-set
+  // discriminated; no kind). TextFieldSpec is the only FieldSpec that
+  // carries a defaultValue slot (see §7.6).
 
 NumericFieldSpec ::: object {
   "kind": "NumericFieldSpec"
