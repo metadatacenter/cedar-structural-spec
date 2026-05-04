@@ -844,7 +844,7 @@ DerivedFrom ::= derived_from(
                 )
 ```
 
-`Version` denotes a Semantic Versioning 2.0.0 version identifier. `ModelVersion` (defined above as a standalone production and carried directly by every concrete `Artifact`) likewise denotes a Semantic Versioning 2.0.0 version identifier.
+`Version` denotes a Semantic Versioning 2.0.0 version identifier.
 
 `Status` denotes the publication status of a reusable schema artifact and is restricted to `draft` or `published`.
 
