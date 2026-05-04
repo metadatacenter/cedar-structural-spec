@@ -732,6 +732,8 @@ TemplateInstanceId ::= template_instance_id( Iri )
 
 All artifact identifier productions are IRI-valued. See [`Iri`](#core-iri-and-string-types).
 
+Concrete serializations need not preserve the per-family identifier distinctions drawn here. In the JSON wire encoding, every artifact identifier — whether a per-family `FieldId` variant such as `TextFieldId` or `SingleChoiceFieldId`, or one of the non-field identifiers `TemplateId`, `PresentationComponentId`, and `TemplateInstanceId` — is encoded as a bare IRI string with no per-family discriminator. The field family of a `FieldId` reference is recovered from the `kind` of the enclosing `Field` or `EmbeddedField`. See [`wire-grammar.md`](wire-grammar.md) §5 and [`serialization.md`](serialization.md).
+
 ## Artifact Metadata
 
 Artifact metadata defines descriptive information, lifecycle information, versioning, and annotations. `ArtifactMetadata` provides the common metadata carried by all artifacts other than identity. `SchemaArtifactMetadata` extends that common structure with schema-versioning information used by reusable schema artifacts.
