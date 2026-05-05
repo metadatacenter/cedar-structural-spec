@@ -172,7 +172,7 @@ A production carries information beyond its payload, and so MUST be encoded as a
 
 - **(a) Composite structure.** The production has more than one named component (e.g. `Cardinality`, `Property`, `LabelOverride`, every `Value` family).
 
-- **(b) Discriminated union membership.** The production participates in a union where alternatives must be distinguished at decode time (e.g. `Value`, every artifact's `kind`, the eighteen `Field` family variants). The discriminator is `"kind"` by default, with a small set of property-set-discriminated unions per §4.4.
+- **(b) Discriminated union membership.** The production participates in a union where alternatives must be distinguished at decode time (e.g. `Value`, every artifact's `kind`, the nineteen `Field` family variants). The discriminator is `"kind"` by default, with a small set of property-set-discriminated unions per §4.4.
 
 - **(c) Lexical-form preservation.** The production carries lexical content whose preservation requires more than a JSON primitive can express (e.g. `LangTaggedLiteral` carries a lexical form *and* a language tag; both must be present in the wire form).
 
@@ -206,7 +206,7 @@ Every artifact identifier is encoded as a plain JSON string carrying the IRI. Th
 "https://example.org/fields/title"
 ```
 
-A `FieldId` (or `FieldReference`) appears only in two grammar positions: as `Field.id` and as `EmbeddedField.artifactRef`. Both surrounding constructs carry a `kind` discriminator that conveys the field family. The eighteen permitted family-bearing `kind` values for `Field` variants are: `"TextField"`, `"NumericField"`, `"DateField"`, `"TimeField"`, `"DateTimeField"`, `"ControlledTermField"`, `"SingleChoiceField"`, `"MultipleChoiceField"`, `"LinkField"`, `"EmailField"`, `"PhoneNumberField"`, `"OrcidField"`, `"RorField"`, `"DoiField"`, `"PubMedIdField"`, `"RridField"`, `"NihGrantIdField"`, or `"AttributeValueField"`. The corresponding `EmbeddedField` variants prefix `Embedded` (e.g. `"EmbeddedTextField"`). A conforming encoder MUST ensure that the IRI it places at a `FieldId` position belongs to a field of the family declared by the surrounding `kind`.
+A `FieldId` (or `FieldReference`) appears only in two grammar positions: as `Field.id` and as `EmbeddedField.artifactRef`. Both surrounding constructs carry a `kind` discriminator that conveys the field family. The nineteen permitted family-bearing `kind` values for `Field` variants are: `"TextField"`, `"NumericField"`, `"BooleanField"`, `"DateField"`, `"TimeField"`, `"DateTimeField"`, `"ControlledTermField"`, `"SingleChoiceField"`, `"MultipleChoiceField"`, `"LinkField"`, `"EmailField"`, `"PhoneNumberField"`, `"OrcidField"`, `"RorField"`, `"DoiField"`, `"PubMedIdField"`, `"RridField"`, `"NihGrantIdField"`, or `"AttributeValueField"`. The corresponding `EmbeddedField` variants prefix `Embedded` (e.g. `"EmbeddedTextField"`). A conforming encoder MUST ensure that the IRI it places at a `FieldId` position belongs to a field of the family declared by the surrounding `kind`.
 
 ### 6.2 Literals
 

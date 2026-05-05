@@ -219,7 +219,7 @@ whose runtime narrowing predicate (`value.kind === 'TextValue'` /
 Where a sealed union permits another sealed union as a member (for
 example, `EmbeddedArtifact permits EmbeddedField,
 EmbeddedPresentationComponent`, with `EmbeddedField` itself sealed
-over the 18 family records), prefer a **flat dispatch table** at
+over the 19 family records), prefer a **flat dispatch table** at
 the outer interface — enumerate all leaf concrete records directly
 in the outer's `@JsonSubTypes`, not the intermediate sealed
 interface. Nested-`@JsonTypeInfo` delegation through an intermediate
@@ -405,7 +405,7 @@ export function iri(value: string): Iri { /* validate */ return value as Iri; }
 ```
 
 cedar-ts's `FieldId` family uses the structural-wrapper form with a
-per-family `kind` discriminant so the eighteen families remain
+per-family `kind` discriminant so the nineteen families remain
 distinguishable in the type system.
 
 **Java idiom.** A dedicated value record:

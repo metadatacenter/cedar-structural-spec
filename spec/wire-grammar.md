@@ -116,6 +116,70 @@ wire and reconstructed at decode time. Where the `defaultValue` slot is
 a polymorphic union (`DateValue`, `ChoiceValue`), the inner `kind` is
 retained as it is required to discriminate the union arms.
 
+**Worked examples.** Three cases illustrate the rule.
+
+*Case 1 — kind dropped (singleton position, family fixed).*
+`ControlledTermValue` is a kind-tagged production. As a member of the
+`Value` union (which uses `discriminator: kind`), it carries its
+`kind`:
+
+```json
+{
+  "kind": "ControlledTermValue",
+  "term": "http://example.org/term/1",
+  "label": [{ "value": "Example", "lang": "en" }]
+}
+```
+
+At the `defaultValue` slot of an `EmbeddedControlledTermField`, the
+surrounding embedding's `"kind": "EmbeddedControlledTermField"` already
+fixes the value family. The inner `kind` is dropped:
+
+```json
+{
+  "kind": "EmbeddedControlledTermField",
+  "key": "topic",
+  "artifactRef": "https://example.org/fields/topic",
+  "defaultValue": {
+    "term": "http://example.org/term/1",
+    "label": [{ "value": "Example", "lang": "en" }]
+  }
+}
+```
+
+*Case 2 — kind retained (singleton position, slot still polymorphic).*
+`DateValue` is *itself* a discriminated union of `YearValue`,
+`YearMonthValue`, and `FullDateValue`. When it appears at the
+`defaultValue` slot of an `EmbeddedDateField`, the enclosing embedding
+fixes that the value is a `DateValue` — but does not fix which arm.
+The inner `kind` is therefore retained:
+
+```json
+{
+  "kind": "EmbeddedDateField",
+  "key": "born",
+  "artifactRef": "https://example.org/fields/born",
+  "defaultValue": {
+    "kind": "FullDateValue",
+    "literal": { "value": "1990-06-15" }
+  }
+}
+```
+
+*Case 3 — never tagged (singleton-only production).* `Cardinality` is
+not a member of any `discriminator: kind` union — it appears only at
+singleton positions (e.g. `EmbeddedField.cardinality`,
+`EmbeddedTemplate.cardinality`). Its wire form never carries `kind`:
+
+```json
+{
+  "kind": "EmbeddedTextField",
+  "key": "alias",
+  "artifactRef": "https://example.org/fields/alias",
+  "cardinality": { "min": 0, "max": 3 }
+}
+```
+
 The polymorphic-only rule constrains the **wire form**, not the
 **in-memory form** of any host-language binding. Bindings MAY carry
 synthetic `kind` (or any other) discriminator fields on their
@@ -281,6 +345,13 @@ NumericLiteral ::: object {
   // datatype MAY be present; when omitted, the surrounding NumericValue's
   // NumericDatatypeIri determines the XSD numeric datatype IRI
 
+BooleanLiteral ::: object {
+  value: boolean
+}
+  // value is a JSON boolean (true or false)
+  // datatype is implicit (xsd:boolean) and not carried on the wire;
+  // the literal's category is fixed by the enclosing BooleanValue
+
 TemporalLiteral ::: FullDateLiteral | TimeLiteral | DateTimeLiteral
   // discriminator: position
   // resolved by the enclosing FullDateValue / TimeValue / DateTimeValue
@@ -312,7 +383,8 @@ DateTimeLiteral ::: object {
 ## 4. Values
 
 ```
-Value ::: TextValue | NumericValue | DateValue | TimeValue | DateTimeValue
+Value ::: TextValue | NumericValue | BooleanValue
+        | DateValue | TimeValue | DateTimeValue
         | ControlledTermValue | ChoiceValue | LinkValue
         | EmailValue | PhoneNumberValue | ExternalAuthorityValue
         | AttributeValue
@@ -332,6 +404,11 @@ TextValue ::: object {
 NumericValue ::: object {
   "kind": "NumericValue"
   literal: NumericLiteral
+}
+
+BooleanValue ::: object {
+  "kind": "BooleanValue"
+  literal: BooleanLiteral
 }
 ```
 
@@ -508,6 +585,7 @@ abstract grammar's branding is not visible on the wire.
 FieldId ::: string
 TextFieldId ::: Iri
 NumericFieldId ::: Iri
+BooleanFieldId ::: Iri
 DateFieldId ::: Iri
 TimeFieldId ::: Iri
 DateTimeFieldId ::: Iri
@@ -696,6 +774,7 @@ FieldReference ::: string
 
 TextFieldReference ::: Iri
 NumericFieldReference ::: Iri
+BooleanFieldReference ::: Iri
 DateFieldReference ::: Iri
 TimeFieldReference ::: Iri
 DateTimeFieldReference ::: Iri
@@ -771,6 +850,7 @@ The wire form per family is therefore:
 |---|---|
 | `EmbeddedTextField` | `TextLiteral` (property-set discriminated `SimpleLiteral \| LangTaggedLiteral`) |
 | `EmbeddedNumericField` | `NumericLiteral` (`{ value, datatype? }`) |
+| `EmbeddedBooleanField` | `BooleanLiteral` (`{ value }` where value is a JSON boolean) |
 | `EmbeddedDateField` | `DateValue` (kind retained: `YearValue \| YearMonthValue \| FullDateValue`) |
 | `EmbeddedTimeField` | `TimeLiteral` (`{ value, datatype? }`) |
 | `EmbeddedDateTimeField` | `DateTimeLiteral` (`{ value, datatype? }`) |
@@ -821,7 +901,8 @@ PropertyLabel ::: MultilingualString
 ## 8. Field Specs
 
 ```
-FieldSpec ::: TextFieldSpec | NumericFieldSpec | TemporalFieldSpec
+FieldSpec ::: TextFieldSpec | NumericFieldSpec | BooleanFieldSpec
+            | TemporalFieldSpec
             | ControlledTermFieldSpec | ChoiceFieldSpec | LinkFieldSpec
             | ContactFieldSpec | ExternalAuthorityFieldSpec
             | AttributeValueFieldSpec
@@ -850,6 +931,11 @@ NumericFieldSpec ::: object {
   minValue?: NumericValue
   maxValue?: NumericValue
   renderingHint?: NumericRenderingHint
+}
+
+BooleanFieldSpec ::: object {
+  "kind": "BooleanFieldSpec"
+  renderingHint?: BooleanRenderingHint
 }
 
 Unit ::: object {
@@ -1130,6 +1216,7 @@ ValueSetIri ::: Iri
 ```
 RenderingHint ::: TextRenderingHint | SingleChoiceRenderingHint
                 | MultipleChoiceRenderingHint | NumericRenderingHint
+                | BooleanRenderingHint
                 | DateRenderingHint | TimeRenderingHint | DateTimeRenderingHint
   // discriminator: position
   // resolved by the renderingHint property of the enclosing FieldSpec
@@ -1152,18 +1239,24 @@ MultiSelectDropdownRenderingHint ::: "multiSelectDropdown"
 NumericRenderingHint ::: "numericInput"
 
 NumericInputRenderingHint ::: "numericInput"
+
+BooleanRenderingHint ::: "checkbox" | "toggle"
+
+BooleanCheckboxRenderingHint ::: "checkbox"
+BooleanToggleRenderingHint ::: "toggle"
 ```
 
 `DateRenderingHint`, `TimeRenderingHint`, and `DateTimeRenderingHint`
 are defined in §8.1; on the wire they are objects, while the simpler
-text/choice/numeric hints are flat strings.
+text/choice/numeric/boolean hints are flat strings.
 
 ---
 
 ## 9. Field artifacts
 
 ```
-Field ::: TextField | NumericField | DateField | TimeField | DateTimeField
+Field ::: TextField | NumericField | BooleanField
+        | DateField | TimeField | DateTimeField
         | ControlledTermField | SingleChoiceField | MultipleChoiceField
         | LinkField | EmailField | PhoneNumberField
         | OrcidField | RorField | DoiField | PubMedIdField
@@ -1199,6 +1292,15 @@ NumericField ::: object {
   modelVersion: string
   metadata: SchemaArtifactMetadata
   fieldSpec: NumericFieldSpec
+}
+  // modelVersion is a SemanticVersion 2.0.0 lexical form
+
+BooleanField ::: object {
+  "kind": "BooleanField"
+  id: string
+  modelVersion: string
+  metadata: SchemaArtifactMetadata
+  fieldSpec: BooleanFieldSpec
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
@@ -1357,6 +1459,7 @@ EmbeddedArtifact ::: EmbeddedField | EmbeddedTemplate
   // discriminator: kind
 
 EmbeddedField ::: EmbeddedTextField | EmbeddedNumericField
+                | EmbeddedBooleanField
                 | EmbeddedDateField | EmbeddedTimeField | EmbeddedDateTimeField
                 | EmbeddedControlledTermField
                 | EmbeddedSingleChoiceField | EmbeddedMultipleChoiceField
@@ -1391,6 +1494,19 @@ EmbeddedNumericField ::: object {
   labelOverride?: LabelOverride
   property?: Property
 }
+
+EmbeddedBooleanField ::: object {
+  "kind": "EmbeddedBooleanField"
+  key: string
+  artifactRef: string
+  valueRequirement?: ValueRequirement
+  visibility?: Visibility
+  defaultValue?: BooleanLiteral
+  labelOverride?: LabelOverride
+  property?: Property
+}
+  // boolean embeddings carry no cardinality slot per grammar.md
+  // (booleans are inherently single-valued)
 
 EmbeddedDateField ::: object {
   "kind": "EmbeddedDateField"

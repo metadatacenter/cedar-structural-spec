@@ -222,6 +222,7 @@ The following productions introduce the abstract field categories. `Field` remai
 ```ebnf
 Field ::= TextField
         | NumericField
+        | BooleanField
         | TemporalField
         | ControlledTermField
         | ChoiceField
@@ -252,7 +253,7 @@ ExternalAuthorityField ::= OrcidField
 
 Each concrete `Field` variant carries exactly four components: a typed artifact identifier that permanently identifies the reusable field; a `ModelVersion` identifying the version of the CEDAR structural model the artifact conforms to; `SchemaArtifactMetadata` providing the descriptive, lifecycle, versioning, and annotation metadata common to all schema artifacts; and a typed `FieldSpec` that specifies the value semantics and configuration for that field category. The identifier and `FieldSpec` are specific to each concrete variant; `ModelVersion` and `SchemaArtifactMetadata` are uniform across all fields. The groupings below mirror the abstract `Field` hierarchy defined in Core Structure.
 
-`TextField` and `NumericField` are the two simple scalar field specs. Each carries the most basic value semantics — free text and typed numeric values respectively.
+`TextField`, `NumericField`, and `BooleanField` are the three simple scalar field specs. Each carries the most basic value semantics — free text, typed numeric values, and `true` / `false` respectively.
 
 ```ebnf
 TextField ::= text_field(
@@ -267,6 +268,13 @@ NumericField ::= numeric_field(
                   ModelVersion
                   SchemaArtifactMetadata
                   NumericFieldSpec
+                )
+
+BooleanField ::= boolean_field(
+                  BooleanFieldId
+                  ModelVersion
+                  SchemaArtifactMetadata
+                  BooleanFieldSpec
                 )
 ```
 
@@ -421,6 +429,7 @@ EmbeddedArtifact ::= EmbeddedField
 
 EmbeddedField ::= EmbeddedTextField
                 | EmbeddedNumericField
+                | EmbeddedBooleanField
                 | EmbeddedDateField
                 | EmbeddedTimeField
                 | EmbeddedDateTimeField
@@ -441,6 +450,8 @@ EmbeddedField ::= EmbeddedTextField
 
 Every concrete `EmbeddedField` variant follows the same structural pattern. Each carries: an `EmbeddedArtifactKey` uniquely identifying the embedding site within the containing `Template`; a typed field reference identifying the reusable `Field` being embedded; an optional `ValueRequirement` specifying whether a value is required, recommended, or optional; an optional `Cardinality` bounding the permitted number of values; an optional `Visibility` controlling whether the field is shown in rendered interfaces; an optional `defaultValue` providing an embedding-specific default whose type is the family-specific underlying value or literal type (e.g. `TextLiteral` for `EmbeddedTextField`, `DateValue` for `EmbeddedDateField`); an optional `LabelOverride` allowing the template to override the field's label in this context; and an optional `Property` associating a semantic property IRI with the embedding site. The only variation across concrete `EmbeddedField` variants is the typed field reference and the typed default value, both of which match the value family of the referenced field.
 
+`EmbeddedBooleanField` is the one exception to this pattern: it omits the `[Cardinality]` slot. A boolean field is inherently single-valued — its `ValueRequirement` slot already distinguishes the meaningful states (required, recommended, optional). Multi-valued booleans are not expressible in this grammar.
+
 ```ebnf
 EmbeddedTextField ::= embedded_text_field(
                         EmbeddedArtifactKey
@@ -460,6 +471,16 @@ EmbeddedNumericField ::= embedded_numeric_field(
                            [Cardinality]
                            [Visibility]
                            [NumericLiteral]
+                           [LabelOverride]
+                           [Property]
+                         )
+
+EmbeddedBooleanField ::= embedded_boolean_field(
+                           EmbeddedArtifactKey
+                           BooleanFieldReference
+                           [ValueRequirement]
+                           [Visibility]
+                           [BooleanLiteral]
                            [LabelOverride]
                            [Property]
                          )
@@ -670,6 +691,7 @@ Each field kind has its own typed identifier rather than sharing a single generi
 ```ebnf
 FieldId ::= TextFieldId
           | NumericFieldId
+          | BooleanFieldId
           | DateFieldId
           | TimeFieldId
           | DateTimeFieldId
@@ -690,6 +712,8 @@ FieldId ::= TextFieldId
 TextFieldId ::= text_field_id( Iri )
 
 NumericFieldId ::= numeric_field_id( Iri )
+
+BooleanFieldId ::= boolean_field_id( Iri )
 
 DateFieldId ::= date_field_id( Iri )
 
@@ -1110,6 +1134,16 @@ NumericLiteral ::= numeric_literal(
                    )
 ```
 
+### Boolean Literal
+
+`BooleanLiteral` is the class of literals permitted in `BooleanValue`. It carries a single boolean payload — either `true` or `false`. Its datatype IRI is implicitly `http://www.w3.org/2001/XMLSchema#boolean` (`xsd:boolean`); the wire form carries no explicit datatype because the datatype is fixed by the literal's category.
+
+```ebnf
+BooleanLiteral ::= boolean_literal(
+                     boolean
+                   )
+```
+
 ### Temporal Literals
 
 A temporal literal is a typed literal that represents a date, a time of day, or a combined date-time value. Each production carries a `LexicalForm` and the fixed XSD datatype IRI for its precision level: `xsd:date`, `xsd:time`, or `xsd:dateTime`. `TemporalLiteral` is the abstract supertype. `FullDateLiteral` carries a full calendar date; `TimeLiteral` and `DateTimeLiteral` correspond to the time and date-time field specs respectively. Year-only and year-month date values are represented as plain strings rather than typed literals — see `YearValue` and `YearMonthValue` in the Temporal Values section.
@@ -1166,6 +1200,7 @@ This section defines the `Value` types that represent instance-level data. `Valu
 ```ebnf
 Value ::= TextValue
         | NumericValue
+        | BooleanValue
         | DateValue
         | TimeValue
         | DateTimeValue
@@ -1180,7 +1215,7 @@ Value ::= TextValue
 
 ### Scalar Values
 
-`TextValue` and `NumericValue` are the simplest value forms, each wrapping a single typed literal that corresponds directly to its field spec. `TextValue` accepts either a plain string or a language-tagged string via `TextLiteral`. `NumericValue` carries a typed numeric literal with an XML Schema numeric datatype IRI.
+`TextValue`, `NumericValue`, and `BooleanValue` are the simplest value forms, each wrapping a single typed literal that corresponds directly to its field spec. `TextValue` accepts either a plain string or a language-tagged string via `TextLiteral`. `NumericValue` carries a typed numeric literal with an XML Schema numeric datatype IRI. `BooleanValue` carries a `BooleanLiteral` whose datatype is implicitly `xsd:boolean`.
 
 ```ebnf
 TextValue ::= text_value(
@@ -1189,6 +1224,10 @@ TextValue ::= text_value(
 
 NumericValue ::= numeric_value(
                    NumericLiteral
+                 )
+
+BooleanValue ::= boolean_value(
+                   BooleanLiteral
                  )
 ```
 
@@ -1404,6 +1443,7 @@ These productions identify the reusable artifact that is being included in the t
 ```ebnf
 FieldReference ::= TextFieldReference
                  | NumericFieldReference
+                 | BooleanFieldReference
                  | DateFieldReference
                  | TimeFieldReference
                  | DateTimeFieldReference
@@ -1424,6 +1464,8 @@ FieldReference ::= TextFieldReference
 TextFieldReference ::= TextFieldId
 
 NumericFieldReference ::= NumericFieldId
+
+BooleanFieldReference ::= BooleanFieldId
 
 DateFieldReference ::= DateFieldId
 
@@ -1518,6 +1560,7 @@ The optional `defaultValue` component of an `EmbeddedField` specifies the value 
 |---|---|
 | `EmbeddedTextField` | `TextLiteral` (= `SimpleLiteral \| LangTaggedLiteral`) |
 | `EmbeddedNumericField` | `NumericLiteral` |
+| `EmbeddedBooleanField` | `BooleanLiteral` |
 | `EmbeddedDateField` | `DateValue` (polymorphic: `YearValue \| YearMonthValue \| FullDateValue`) |
 | `EmbeddedTimeField` | `TimeLiteral` |
 | `EmbeddedDateTimeField` | `DateTimeLiteral` |
@@ -1583,6 +1626,7 @@ One might ask why `FieldSpec` exists as a separate construct rather than folding
 ```ebnf
 FieldSpec ::= TextFieldSpec
             | NumericFieldSpec
+            | BooleanFieldSpec
             | TemporalFieldSpec
             | ControlledTermFieldSpec
             | ChoiceFieldSpec
@@ -1636,6 +1680,10 @@ NumericMinValue ::= numeric_min_value(
 NumericMaxValue ::= numeric_max_value(
                       NumericValue
                     )
+
+BooleanFieldSpec ::= boolean_field_spec(
+                       [BooleanRenderingHint]
+                     )
 
 TemporalFieldSpec ::= DateFieldSpec
                     | TimeFieldSpec
@@ -1975,6 +2023,7 @@ RenderingHint ::= TextRenderingHint
                 | SingleChoiceRenderingHint
                 | MultipleChoiceRenderingHint
                 | NumericRenderingHint
+                | BooleanRenderingHint
                 | DateRenderingHint
                 | TimeRenderingHint
                 | DateTimeRenderingHint
@@ -2003,6 +2052,13 @@ MultiSelectDropdownRenderingHint ::= multi_select_dropdown_rendering_hint()
 NumericRenderingHint ::= NumericInputRenderingHint
 
 NumericInputRenderingHint ::= numeric_input_rendering_hint()
+
+BooleanRenderingHint ::= BooleanCheckboxRenderingHint
+                       | BooleanToggleRenderingHint
+
+BooleanCheckboxRenderingHint ::= boolean_checkbox_rendering_hint()
+
+BooleanToggleRenderingHint ::= boolean_toggle_rendering_hint()
 ```
 
 This specification draws a strict distinction between semantic structure and presentation. Semantic distinctions MUST be modeled in `FieldSpec` when they affect the meaning, cardinality, or value structure of a field. This includes distinctions such as single-choice versus multiple-choice, date versus time versus date-time, and permitted temporal precision. Purely presentational distinctions MUST NOT be modeled as separate field specs. Instead, distinctions such as single-line versus multi-line text entry, date component ordering, and 12-hour versus 24-hour time display MUST be expressed only through compatible typed rendering hints.
@@ -2100,6 +2156,7 @@ The table below gives the complete correspondence. The Field Family column ident
 |---|---|---|
 | | `TextFieldSpec` | `TextValue` |
 | | `NumericFieldSpec` | `NumericValue` |
+| | `BooleanFieldSpec` | `BooleanValue` |
 | `TemporalField` | `DateFieldSpec` | `DateValue` |
 | `TemporalField` | `TimeFieldSpec` | `TimeValue` |
 | `TemporalField` | `DateTimeFieldSpec` | `DateTimeValue` |

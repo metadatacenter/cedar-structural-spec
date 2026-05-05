@@ -280,24 +280,25 @@ Applies the [Embedding References](#embedding-references) rules.
 
 1. If `E` is an `EmbeddedTextField`: verify `E.artifactRef` is a `TextFieldId` identifying an existing `TextField`.
 2. If `E` is an `EmbeddedNumericField`: verify `E.artifactRef` is a `NumericFieldId` identifying an existing `NumericField`.
-3. If `E` is an `EmbeddedDateField`: verify `E.artifactRef` is a `DateFieldId` identifying an existing `DateField`.
-4. If `E` is an `EmbeddedTimeField`: verify `E.artifactRef` is a `TimeFieldId` identifying an existing `TimeField`.
-5. If `E` is an `EmbeddedDateTimeField`: verify `E.artifactRef` is a `DateTimeFieldId` identifying an existing `DateTimeField`.
-6. If `E` is an `EmbeddedControlledTermField`: verify `E.artifactRef` is a `ControlledTermFieldId` identifying an existing `ControlledTermField`.
-7. If `E` is an `EmbeddedSingleChoiceField`: verify `E.artifactRef` is a `SingleChoiceFieldId` identifying an existing `SingleChoiceField`.
-8. If `E` is an `EmbeddedMultipleChoiceField`: verify `E.artifactRef` is a `MultipleChoiceFieldId` identifying an existing `MultipleChoiceField`.
-9. If `E` is an `EmbeddedLinkField`: verify `E.artifactRef` is a `LinkFieldId` identifying an existing `LinkField`.
-10. If `E` is an `EmbeddedEmailField`: verify `E.artifactRef` is an `EmailFieldId` identifying an existing `EmailField`.
-11. If `E` is an `EmbeddedPhoneNumberField`: verify `E.artifactRef` is a `PhoneNumberFieldId` identifying an existing `PhoneNumberField`.
-12. If `E` is an `EmbeddedOrcidField`: verify `E.artifactRef` is an `OrcidFieldId` identifying an existing `OrcidField`.
-13. If `E` is an `EmbeddedRorField`: verify `E.artifactRef` is a `RorFieldId` identifying an existing `RorField`.
-14. If `E` is an `EmbeddedDoiField`: verify `E.artifactRef` is a `DoiFieldId` identifying an existing `DoiField`.
-15. If `E` is an `EmbeddedPubMedIdField`: verify `E.artifactRef` is a `PubMedIdFieldId` identifying an existing `PubMedIdField`.
-16. If `E` is an `EmbeddedRridField`: verify `E.artifactRef` is an `RridFieldId` identifying an existing `RridField`.
-17. If `E` is an `EmbeddedNihGrantIdField`: verify `E.artifactRef` is a `NihGrantIdFieldId` identifying an existing `NihGrantIdField`.
-18. If `E` is an `EmbeddedAttributeValueField`: verify `E.artifactRef` is an `AttributeValueFieldId` identifying an existing `AttributeValueField`.
-19. If `E` is an `EmbeddedTemplate`: verify `E.artifactRef` is a `TemplateId` identifying an existing `Template`.
-20. If `E` is an `EmbeddedPresentationComponent`: verify `E.artifactRef` is a `PresentationComponentId` identifying an existing `PresentationComponent`.
+3. If `E` is an `EmbeddedBooleanField`: verify `E.artifactRef` is a `BooleanFieldId` identifying an existing `BooleanField`.
+4. If `E` is an `EmbeddedDateField`: verify `E.artifactRef` is a `DateFieldId` identifying an existing `DateField`.
+5. If `E` is an `EmbeddedTimeField`: verify `E.artifactRef` is a `TimeFieldId` identifying an existing `TimeField`.
+6. If `E` is an `EmbeddedDateTimeField`: verify `E.artifactRef` is a `DateTimeFieldId` identifying an existing `DateTimeField`.
+7. If `E` is an `EmbeddedControlledTermField`: verify `E.artifactRef` is a `ControlledTermFieldId` identifying an existing `ControlledTermField`.
+8. If `E` is an `EmbeddedSingleChoiceField`: verify `E.artifactRef` is a `SingleChoiceFieldId` identifying an existing `SingleChoiceField`.
+9. If `E` is an `EmbeddedMultipleChoiceField`: verify `E.artifactRef` is a `MultipleChoiceFieldId` identifying an existing `MultipleChoiceField`.
+10. If `E` is an `EmbeddedLinkField`: verify `E.artifactRef` is a `LinkFieldId` identifying an existing `LinkField`.
+11. If `E` is an `EmbeddedEmailField`: verify `E.artifactRef` is an `EmailFieldId` identifying an existing `EmailField`.
+12. If `E` is an `EmbeddedPhoneNumberField`: verify `E.artifactRef` is a `PhoneNumberFieldId` identifying an existing `PhoneNumberField`.
+13. If `E` is an `EmbeddedOrcidField`: verify `E.artifactRef` is an `OrcidFieldId` identifying an existing `OrcidField`.
+14. If `E` is an `EmbeddedRorField`: verify `E.artifactRef` is a `RorFieldId` identifying an existing `RorField`.
+15. If `E` is an `EmbeddedDoiField`: verify `E.artifactRef` is a `DoiFieldId` identifying an existing `DoiField`.
+16. If `E` is an `EmbeddedPubMedIdField`: verify `E.artifactRef` is a `PubMedIdFieldId` identifying an existing `PubMedIdField`.
+17. If `E` is an `EmbeddedRridField`: verify `E.artifactRef` is an `RridFieldId` identifying an existing `RridField`.
+18. If `E` is an `EmbeddedNihGrantIdField`: verify `E.artifactRef` is a `NihGrantIdFieldId` identifying an existing `NihGrantIdField`.
+19. If `E` is an `EmbeddedAttributeValueField`: verify `E.artifactRef` is an `AttributeValueFieldId` identifying an existing `AttributeValueField`.
+20. If `E` is an `EmbeddedTemplate`: verify `E.artifactRef` is a `TemplateId` identifying an existing `Template`.
+21. If `E` is an `EmbeddedPresentationComponent`: verify `E.artifactRef` is a `PresentationComponentId` identifying an existing `PresentationComponent`.
 
 ---
 
