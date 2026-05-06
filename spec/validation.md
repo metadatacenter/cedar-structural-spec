@@ -65,7 +65,9 @@ Values in a `FieldValue` MUST satisfy the `FieldSpec` and any field-spec-specifi
 The contained values MUST follow the `FieldSpec`-to-`Value` correspondence defined in `spec/grammar.md`. In particular:
 
 - `TextFieldSpec` values MUST be `TextValue`
-- `NumericFieldSpec` values MUST be `NumericValue`
+- `IntegerNumberFieldSpec` values MUST be `IntegerNumberValue`
+- `RealNumberFieldSpec` values MUST be `RealNumberValue`
+- `BooleanFieldSpec` values MUST be `BooleanValue`
 - `DateFieldSpec` values MUST be `DateValue`
 - `TimeFieldSpec` values MUST be `TimeValue`
 - `DateTimeFieldSpec` values MUST be `DateTimeValue`
@@ -94,14 +96,23 @@ For text values:
 - if `ValidationRegex` is present, each `TextLiteral` lexical form MUST match that regular expression
 - `TextDefaultValue`, if present, MUST satisfy any defined `MinLength`, `MaxLength`, and `ValidationRegex`
 
-For numeric values:
+For integer-number values:
 
-- `NumericValue` MUST contain `NumericLiteral`
-- `NumericLiteral` uses `NumericDatatypeIri`
-- if both `NumericMinValue` and `NumericMaxValue` are present, `NumericMinValue` MUST NOT exceed `NumericMaxValue`
-- if `NumericMinValue` is present, each `NumericLiteral` value MUST be greater than or equal to that minimum
-- if `NumericMaxValue` is present, each `NumericLiteral` value MUST be less than or equal to that maximum
-- `NumericDefaultValue`, if present, MUST satisfy any defined `NumericMinValue` and `NumericMaxValue`
+- `IntegerNumberValue` MUST contain `IntegerNumberLiteral`
+- `IntegerNumberLiteral` carries an integer lexical form; its datatype is implicitly `xsd:integer`
+- if both `IntegerNumberMinValue` and `IntegerNumberMaxValue` are present on the field spec, `IntegerNumberMinValue` MUST NOT exceed `IntegerNumberMaxValue`
+- if `IntegerNumberMinValue` is present, each `IntegerNumberLiteral` value MUST be greater than or equal to that minimum
+- if `IntegerNumberMaxValue` is present, each `IntegerNumberLiteral` value MUST be less than or equal to that maximum
+- `IntegerNumberDefaultValue`, if present, MUST satisfy any defined `IntegerNumberMinValue` and `IntegerNumberMaxValue`
+
+For real-number values:
+
+- `RealNumberValue` MUST contain `RealNumberLiteral`
+- `RealNumberLiteral` uses `RealNumberDatatypeIri` (one of `xsd:decimal`, `xsd:float`, or `xsd:double`)
+- if both `RealNumberMinValue` and `RealNumberMaxValue` are present on the field spec, `RealNumberMinValue` MUST NOT exceed `RealNumberMaxValue`
+- if `RealNumberMinValue` is present, each `RealNumberLiteral` value MUST be greater than or equal to that minimum
+- if `RealNumberMaxValue` is present, each `RealNumberLiteral` value MUST be less than or equal to that maximum
+- `RealNumberDefaultValue`, if present, MUST satisfy any defined `RealNumberMinValue` and `RealNumberMaxValue`
 
 For date values:
 
@@ -160,7 +171,9 @@ For literals generally:
 
 For typed defaults:
 
-- `NumericDefaultValue`, if present, MUST contain `NumericValue`
+- `IntegerNumberDefaultValue`, if present, MUST contain `IntegerNumberValue`
+- `RealNumberDefaultValue`, if present, MUST contain `RealNumberValue`
+- `BooleanDefaultValue`, if present, MUST contain `BooleanValue`
 - `DateDefaultValue`, if present, MUST contain `DateValue`
 - `TimeDefaultValue`, if present, MUST contain `TimeValue`
 - `DateTimeDefaultValue`, if present, MUST contain `DateTimeValue`
@@ -194,7 +207,7 @@ Any rendering hint used by the model MUST be compatible with the associated `Fie
 
 `MultipleChoiceRenderingHint` MUST be used only with `MultipleChoiceFieldSpec`.
 
-`NumericRenderingHint` MUST be used only with `NumericFieldSpec`.
+`NumericRenderingHint` MUST be used only with `IntegerNumberFieldSpec` or `RealNumberFieldSpec`.
 
 `DateRenderingHint` MUST be used only with `DateFieldSpec`.
 
@@ -279,26 +292,27 @@ Applies the [EmbeddedArtifactKey Uniqueness](#embeddedartifactkey-uniqueness) ru
 Applies the [Embedding References](#embedding-references) rules.
 
 1. If `E` is an `EmbeddedTextField`: verify `E.artifactRef` is a `TextFieldId` identifying an existing `TextField`.
-2. If `E` is an `EmbeddedNumericField`: verify `E.artifactRef` is a `NumericFieldId` identifying an existing `NumericField`.
-3. If `E` is an `EmbeddedBooleanField`: verify `E.artifactRef` is a `BooleanFieldId` identifying an existing `BooleanField`.
-4. If `E` is an `EmbeddedDateField`: verify `E.artifactRef` is a `DateFieldId` identifying an existing `DateField`.
-5. If `E` is an `EmbeddedTimeField`: verify `E.artifactRef` is a `TimeFieldId` identifying an existing `TimeField`.
-6. If `E` is an `EmbeddedDateTimeField`: verify `E.artifactRef` is a `DateTimeFieldId` identifying an existing `DateTimeField`.
-7. If `E` is an `EmbeddedControlledTermField`: verify `E.artifactRef` is a `ControlledTermFieldId` identifying an existing `ControlledTermField`.
-8. If `E` is an `EmbeddedSingleChoiceField`: verify `E.artifactRef` is a `SingleChoiceFieldId` identifying an existing `SingleChoiceField`.
-9. If `E` is an `EmbeddedMultipleChoiceField`: verify `E.artifactRef` is a `MultipleChoiceFieldId` identifying an existing `MultipleChoiceField`.
-10. If `E` is an `EmbeddedLinkField`: verify `E.artifactRef` is a `LinkFieldId` identifying an existing `LinkField`.
-11. If `E` is an `EmbeddedEmailField`: verify `E.artifactRef` is an `EmailFieldId` identifying an existing `EmailField`.
-12. If `E` is an `EmbeddedPhoneNumberField`: verify `E.artifactRef` is a `PhoneNumberFieldId` identifying an existing `PhoneNumberField`.
-13. If `E` is an `EmbeddedOrcidField`: verify `E.artifactRef` is an `OrcidFieldId` identifying an existing `OrcidField`.
-14. If `E` is an `EmbeddedRorField`: verify `E.artifactRef` is a `RorFieldId` identifying an existing `RorField`.
-15. If `E` is an `EmbeddedDoiField`: verify `E.artifactRef` is a `DoiFieldId` identifying an existing `DoiField`.
-16. If `E` is an `EmbeddedPubMedIdField`: verify `E.artifactRef` is a `PubMedIdFieldId` identifying an existing `PubMedIdField`.
-17. If `E` is an `EmbeddedRridField`: verify `E.artifactRef` is an `RridFieldId` identifying an existing `RridField`.
-18. If `E` is an `EmbeddedNihGrantIdField`: verify `E.artifactRef` is a `NihGrantIdFieldId` identifying an existing `NihGrantIdField`.
-19. If `E` is an `EmbeddedAttributeValueField`: verify `E.artifactRef` is an `AttributeValueFieldId` identifying an existing `AttributeValueField`.
-20. If `E` is an `EmbeddedTemplate`: verify `E.artifactRef` is a `TemplateId` identifying an existing `Template`.
-21. If `E` is an `EmbeddedPresentationComponent`: verify `E.artifactRef` is a `PresentationComponentId` identifying an existing `PresentationComponent`.
+2. If `E` is an `EmbeddedIntegerNumberField`: verify `E.artifactRef` is an `IntegerNumberFieldId` identifying an existing `IntegerNumberField`.
+3. If `E` is an `EmbeddedRealNumberField`: verify `E.artifactRef` is a `RealNumberFieldId` identifying an existing `RealNumberField`.
+4. If `E` is an `EmbeddedBooleanField`: verify `E.artifactRef` is a `BooleanFieldId` identifying an existing `BooleanField`.
+5. If `E` is an `EmbeddedDateField`: verify `E.artifactRef` is a `DateFieldId` identifying an existing `DateField`.
+6. If `E` is an `EmbeddedTimeField`: verify `E.artifactRef` is a `TimeFieldId` identifying an existing `TimeField`.
+7. If `E` is an `EmbeddedDateTimeField`: verify `E.artifactRef` is a `DateTimeFieldId` identifying an existing `DateTimeField`.
+8. If `E` is an `EmbeddedControlledTermField`: verify `E.artifactRef` is a `ControlledTermFieldId` identifying an existing `ControlledTermField`.
+9. If `E` is an `EmbeddedSingleChoiceField`: verify `E.artifactRef` is a `SingleChoiceFieldId` identifying an existing `SingleChoiceField`.
+10. If `E` is an `EmbeddedMultipleChoiceField`: verify `E.artifactRef` is a `MultipleChoiceFieldId` identifying an existing `MultipleChoiceField`.
+11. If `E` is an `EmbeddedLinkField`: verify `E.artifactRef` is a `LinkFieldId` identifying an existing `LinkField`.
+12. If `E` is an `EmbeddedEmailField`: verify `E.artifactRef` is an `EmailFieldId` identifying an existing `EmailField`.
+13. If `E` is an `EmbeddedPhoneNumberField`: verify `E.artifactRef` is a `PhoneNumberFieldId` identifying an existing `PhoneNumberField`.
+14. If `E` is an `EmbeddedOrcidField`: verify `E.artifactRef` is an `OrcidFieldId` identifying an existing `OrcidField`.
+15. If `E` is an `EmbeddedRorField`: verify `E.artifactRef` is a `RorFieldId` identifying an existing `RorField`.
+16. If `E` is an `EmbeddedDoiField`: verify `E.artifactRef` is a `DoiFieldId` identifying an existing `DoiField`.
+17. If `E` is an `EmbeddedPubMedIdField`: verify `E.artifactRef` is a `PubMedIdFieldId` identifying an existing `PubMedIdField`.
+18. If `E` is an `EmbeddedRridField`: verify `E.artifactRef` is an `RridFieldId` identifying an existing `RridField`.
+19. If `E` is an `EmbeddedNihGrantIdField`: verify `E.artifactRef` is a `NihGrantIdFieldId` identifying an existing `NihGrantIdField`.
+20. If `E` is an `EmbeddedAttributeValueField`: verify `E.artifactRef` is an `AttributeValueFieldId` identifying an existing `AttributeValueField`.
+21. If `E` is an `EmbeddedTemplate`: verify `E.artifactRef` is a `TemplateId` identifying an existing `Template`.
+22. If `E` is an `EmbeddedPresentationComponent`: verify `E.artifactRef` is a `PresentationComponentId` identifying an existing `PresentationComponent`.
 
 ---
 
@@ -323,7 +337,8 @@ Applies the [Field Spec Compatibility](#field-spec-compatibility) rules. See als
 Dispatch on the kind of `FT`:
 
 - If `FT` is `TextFieldSpec`: run `validate_text_field_spec(FT)`.
-- If `FT` is `NumericFieldSpec`: run `validate_numeric_field_spec(FT)`.
+- If `FT` is `IntegerNumberFieldSpec`: run `validate_integer_number_field_spec(FT)`.
+- If `FT` is `RealNumberFieldSpec`: run `validate_real_number_field_spec(FT)`.
 - If `FT` is `SingleChoiceFieldSpec` or `MultipleChoiceFieldSpec`: run `validate_choice_field_spec(FT)`.
 - All other field specs have no additional schema-level well-formedness checks beyond structural grammar conformance.
 
@@ -335,7 +350,13 @@ Dispatch on the kind of `FT`:
 
 ---
 
-##### `validate_numeric_field_spec(FT: NumericFieldSpec)`
+##### `validate_integer_number_field_spec(FT: IntegerNumberFieldSpec)`
+
+1. If both `FT.min_value` and `FT.max_value` are present: verify `FT.min_value ≤ FT.max_value`.
+
+---
+
+##### `validate_real_number_field_spec(FT: RealNumberFieldSpec)`
 
 1. If both `FT.min_value` and `FT.max_value` are present: verify `FT.min_value ≤ FT.max_value`.
 
@@ -354,17 +375,21 @@ Dispatch on the kind of `FT`:
 
 Let `FT` = the `FieldSpec` of the `Field` referenced by `E`.
 
-1. Verify `D` is of the correct type for `FT`: e.g. `TextDefaultValue` for `TextFieldSpec`, `NumericDefaultValue` for `NumericFieldSpec`, etc.
+1. Verify `D` is of the correct type for `FT`: e.g. `TextDefaultValue` for `TextFieldSpec`, `IntegerNumberDefaultValue` for `IntegerNumberFieldSpec`, `RealNumberDefaultValue` for `RealNumberFieldSpec`, etc.
 2. If `D` is `TextDefaultValue`:
    1. Let `s` = `D.text_value.text_literal.lexical_form`.
    2. If `FT.min_length` is present: verify `len(s) ≥ FT.min_length`.
    3. If `FT.max_length` is present: verify `len(s) ≤ FT.max_length`.
    4. If `FT.validation_regex` is present: verify `s` matches `FT.validation_regex`.
-3. If `D` is `NumericDefaultValue`:
-   1. Let `n` = the numeric value of `D.numeric_value.numeric_literal`.
+3. If `D` is `IntegerNumberDefaultValue`:
+   1. Let `n` = the integer value of `D.integer_number_value.integer_number_literal`.
    2. If `FT.min_value` is present: verify `n ≥ FT.min_value`.
    3. If `FT.max_value` is present: verify `n ≤ FT.max_value`.
-4. If `D` is `ChoiceDefaultValue` and `E` is an `EmbeddedSingleChoiceField`:
+4. If `D` is `RealNumberDefaultValue`:
+   1. Let `n` = the numeric value of `D.real_number_value.real_number_literal`.
+   2. If `FT.min_value` is present: verify `n ≥ FT.min_value`.
+   3. If `FT.max_value` is present: verify `n ≤ FT.max_value`.
+5. If `D` is `ChoiceDefaultValue` and `E` is an `EmbeddedSingleChoiceField`:
    1. Verify `count(D.choice_values) = 1`.
 
 ---
@@ -380,7 +405,7 @@ Let `FT` = the `FieldSpec` of the `Field` referenced by `E`.
 1. If `E` carries a `TextRenderingHint`: verify `FT` is `TextFieldSpec`.
 2. If `E` carries a `SingleChoiceRenderingHint`: verify `FT` is `SingleChoiceFieldSpec`.
 3. If `E` carries a `MultipleChoiceRenderingHint`: verify `FT` is `MultipleChoiceFieldSpec`.
-4. If `E` carries a `NumericRenderingHint`: verify `FT` is `NumericFieldSpec`.
+4. If `E` carries a `NumericRenderingHint`: verify `FT` is `IntegerNumberFieldSpec` or `RealNumberFieldSpec`.
 5. If `E` carries a `DateRenderingHint`: verify `FT` is `DateFieldSpec`.
 6. If `E` carries a `TimeRenderingHint`: verify `FT` is `TimeFieldSpec`.
 7. If `E` carries a `DateTimeRenderingHint`: verify `FT` is `DateTimeFieldSpec`.
@@ -461,7 +486,9 @@ For each `EF` in `T.embedded_artifacts` where `EF` is an `EmbeddedField`:
 Dispatch on the kind of `FT`:
 
 - `TextFieldSpec` → `validate_text_value(V, FT)`
-- `NumericFieldSpec` → `validate_numeric_value(V, FT)`
+- `IntegerNumberFieldSpec` → `validate_integer_number_value(V, FT)`
+- `RealNumberFieldSpec` → `validate_real_number_value(V, FT)`
+- `BooleanFieldSpec` → `validate_boolean_value(V, FT)`
 - `DateFieldSpec` → `validate_date_value(V, FT)`
 - `TimeFieldSpec` → `validate_time_value(V, FT)`
 - `DateTimeFieldSpec` → `validate_datetime_value(V, FT)`
@@ -483,12 +510,26 @@ Dispatch on the kind of `FT`:
 
 ---
 
-##### `validate_numeric_value(V: NumericValue, FT: NumericFieldSpec)`
+##### `validate_integer_number_value(V: IntegerNumberValue, FT: IntegerNumberFieldSpec)`
 
-1. Verify `V` contains a `NumericLiteral`. Let `n` = its numeric value and `d` = its datatype IRI.
+1. Verify `V` contains an `IntegerNumberLiteral`. Let `n` = its integer value.
+2. If `FT.min_value` is present: verify `n ≥ FT.min_value`.
+3. If `FT.max_value` is present: verify `n ≤ FT.max_value`.
+
+---
+
+##### `validate_real_number_value(V: RealNumberValue, FT: RealNumberFieldSpec)`
+
+1. Verify `V` contains a `RealNumberLiteral`. Let `n` = its numeric value and `d` = its datatype IRI.
 2. Verify `d = FT.datatype_iri`.
 3. If `FT.min_value` is present: verify `n ≥ FT.min_value`.
 4. If `FT.max_value` is present: verify `n ≤ FT.max_value`.
+
+---
+
+##### `validate_boolean_value(V: BooleanValue, FT: BooleanFieldSpec)`
+
+1. Verify `V` contains a `BooleanLiteral` whose value is `true` or `false`.
 
 ---
 

@@ -231,6 +231,9 @@ Field ::= TextField
         | ExternalAuthorityField
         | AttributeValueField
 
+NumericField ::= IntegerNumberField
+               | RealNumberField
+
 TemporalField ::= DateField
                 | TimeField
                 | DateTimeField
@@ -253,7 +256,7 @@ ExternalAuthorityField ::= OrcidField
 
 Each concrete `Field` variant carries exactly four components: a typed artifact identifier that permanently identifies the reusable field; a `ModelVersion` identifying the version of the CEDAR structural model the artifact conforms to; `SchemaArtifactMetadata` providing the descriptive, lifecycle, versioning, and annotation metadata common to all schema artifacts; and a typed `FieldSpec` that specifies the value semantics and configuration for that field category. The identifier and `FieldSpec` are specific to each concrete variant; `ModelVersion` and `SchemaArtifactMetadata` are uniform across all fields. The groupings below mirror the abstract `Field` hierarchy defined in Core Structure.
 
-`TextField`, `NumericField`, and `BooleanField` are the three simple scalar field specs. Each carries the most basic value semantics — free text, typed numeric values, and `true` / `false` respectively.
+`TextField`, `BooleanField`, and the two numeric field families (`IntegerNumberField` and `RealNumberField`) are the simple scalar field specs. Each carries the most basic value semantics — free text, `true` / `false`, exact integer values, and real-valued numbers respectively.
 
 ```ebnf
 TextField ::= text_field(
@@ -263,19 +266,30 @@ TextField ::= text_field(
                TextFieldSpec
              )
 
-NumericField ::= numeric_field(
-                  NumericFieldId
-                  ModelVersion
-                  SchemaArtifactMetadata
-                  NumericFieldSpec
-                )
-
 BooleanField ::= boolean_field(
                   BooleanFieldId
                   ModelVersion
                   SchemaArtifactMetadata
                   BooleanFieldSpec
                 )
+```
+
+The numeric field variants correspond to the `NumericField` abstract category. They share the broader concept of numeric content but split semantically: `IntegerNumberField` carries arbitrary-precision integer values (no fractional part); `RealNumberField` carries real-valued numbers (decimal arbitrary precision, or IEEE 754 single- or double-precision floating point). The split is principled: integer arithmetic is exact and closed under the usual operations, whereas real-valued arithmetic carries approximation concerns. See [Field Specs](#field-specs) for the per-family configuration.
+
+```ebnf
+IntegerNumberField ::= integer_number_field(
+                         IntegerNumberFieldId
+                         ModelVersion
+                         SchemaArtifactMetadata
+                         IntegerNumberFieldSpec
+                       )
+
+RealNumberField ::= real_number_field(
+                      RealNumberFieldId
+                      ModelVersion
+                      SchemaArtifactMetadata
+                      RealNumberFieldSpec
+                    )
 ```
 
 The temporal field variants correspond to the `TemporalField` abstract category. Each is typed to a distinct temporal semantic — date, time of day, or combined date-time — and carries its own `FieldSpec` with precision and rendering options appropriate to that category.
@@ -428,7 +442,8 @@ EmbeddedArtifact ::= EmbeddedField
                    | EmbeddedPresentationComponent
 
 EmbeddedField ::= EmbeddedTextField
-                | EmbeddedNumericField
+                | EmbeddedIntegerNumberField
+                | EmbeddedRealNumberField
                 | EmbeddedBooleanField
                 | EmbeddedDateField
                 | EmbeddedTimeField
@@ -464,16 +479,27 @@ EmbeddedTextField ::= embedded_text_field(
                         [Property]
                       )
 
-EmbeddedNumericField ::= embedded_numeric_field(
-                           EmbeddedArtifactKey
-                           NumericFieldReference
-                           [ValueRequirement]
-                           [Cardinality]
-                           [Visibility]
-                           [NumericLiteral]
-                           [LabelOverride]
-                           [Property]
-                         )
+EmbeddedIntegerNumberField ::= embedded_integer_number_field(
+                                 EmbeddedArtifactKey
+                                 IntegerNumberFieldReference
+                                 [ValueRequirement]
+                                 [Cardinality]
+                                 [Visibility]
+                                 [IntegerNumberLiteral]
+                                 [LabelOverride]
+                                 [Property]
+                               )
+
+EmbeddedRealNumberField ::= embedded_real_number_field(
+                              EmbeddedArtifactKey
+                              RealNumberFieldReference
+                              [ValueRequirement]
+                              [Cardinality]
+                              [Visibility]
+                              [RealNumberLiteral]
+                              [LabelOverride]
+                              [Property]
+                            )
 
 EmbeddedBooleanField ::= embedded_boolean_field(
                            EmbeddedArtifactKey
@@ -690,7 +716,8 @@ Each field kind has its own typed identifier rather than sharing a single generi
 
 ```ebnf
 FieldId ::= TextFieldId
-          | NumericFieldId
+          | IntegerNumberFieldId
+          | RealNumberFieldId
           | BooleanFieldId
           | DateFieldId
           | TimeFieldId
@@ -711,7 +738,9 @@ FieldId ::= TextFieldId
 
 TextFieldId ::= text_field_id( Iri )
 
-NumericFieldId ::= numeric_field_id( Iri )
+IntegerNumberFieldId ::= integer_number_field_id( Iri )
+
+RealNumberFieldId ::= real_number_field_id( Iri )
 
 BooleanFieldId ::= boolean_field_id( Iri )
 
@@ -1006,29 +1035,14 @@ The `'und'` (undetermined) BCP 47 subtag MAY be used to denote a `LangString` wh
 
 ### Numeric Datatype IRIs
 
-`NumericDatatype` carries the XSD datatype IRI that identifies the numeric type of a `NumericLiteral`. `NumericDatatypeIri` enumerates the supported XSD numeric datatype IRIs. Each alternative is a nullary constructor; the corresponding XSD datatype IRI for each is given in the table below.
+`IntegerNumberLiteral` carries the implicit XSD datatype IRI `xsd:integer`; the IRI is fixed by the literal's category and is not a configurable component of the production. `RealNumberLiteral` carries an explicit `RealNumberDatatypeIri` chosen from three alternatives — `xsd:decimal`, `xsd:float`, or `xsd:double`. Each is a nullary constructor; the corresponding XSD datatype IRI for each is given in the table below.
 
 ```ebnf
-NumericDatatype ::= numeric_datatype(
-                      NumericDatatypeIri
-                    )
+IntegerNumberDatatypeIri ::= XsdIntegerDatatypeIri
 
-NumericDatatypeIri ::= XsdIntegerDatatypeIri
-                     | XsdDecimalDatatypeIri
-                     | XsdFloatDatatypeIri
-                     | XsdDoubleDatatypeIri
-                     | XsdLongDatatypeIri
-                     | XsdIntDatatypeIri
-                     | XsdShortDatatypeIri
-                     | XsdByteDatatypeIri
-                     | XsdNonNegativeIntegerDatatypeIri
-                     | XsdPositiveIntegerDatatypeIri
-                     | XsdNonPositiveIntegerDatatypeIri
-                     | XsdNegativeIntegerDatatypeIri
-                     | XsdUnsignedLongDatatypeIri
-                     | XsdUnsignedIntDatatypeIri
-                     | XsdUnsignedShortDatatypeIri
-                     | XsdUnsignedByteDatatypeIri
+RealNumberDatatypeIri ::= XsdDecimalDatatypeIri
+                        | XsdFloatDatatypeIri
+                        | XsdDoubleDatatypeIri
 ```
 
 | Production | XSD Datatype IRI |
@@ -1037,18 +1051,8 @@ NumericDatatypeIri ::= XsdIntegerDatatypeIri
 | `XsdDecimalDatatypeIri` | `http://www.w3.org/2001/XMLSchema#decimal` |
 | `XsdFloatDatatypeIri` | `http://www.w3.org/2001/XMLSchema#float` |
 | `XsdDoubleDatatypeIri` | `http://www.w3.org/2001/XMLSchema#double` |
-| `XsdLongDatatypeIri` | `http://www.w3.org/2001/XMLSchema#long` |
-| `XsdIntDatatypeIri` | `http://www.w3.org/2001/XMLSchema#int` |
-| `XsdShortDatatypeIri` | `http://www.w3.org/2001/XMLSchema#short` |
-| `XsdByteDatatypeIri` | `http://www.w3.org/2001/XMLSchema#byte` |
-| `XsdNonNegativeIntegerDatatypeIri` | `http://www.w3.org/2001/XMLSchema#nonNegativeInteger` |
-| `XsdPositiveIntegerDatatypeIri` | `http://www.w3.org/2001/XMLSchema#positiveInteger` |
-| `XsdNonPositiveIntegerDatatypeIri` | `http://www.w3.org/2001/XMLSchema#nonPositiveInteger` |
-| `XsdNegativeIntegerDatatypeIri` | `http://www.w3.org/2001/XMLSchema#negativeInteger` |
-| `XsdUnsignedLongDatatypeIri` | `http://www.w3.org/2001/XMLSchema#unsignedLong` |
-| `XsdUnsignedIntDatatypeIri` | `http://www.w3.org/2001/XMLSchema#unsignedInt` |
-| `XsdUnsignedShortDatatypeIri` | `http://www.w3.org/2001/XMLSchema#unsignedShort` |
-| `XsdUnsignedByteDatatypeIri` | `http://www.w3.org/2001/XMLSchema#unsignedByte` |
+
+This specification narrows the supported numeric datatype IRIs to four. Earlier drafts admitted the full XSD numeric hierarchy (16 datatypes including `xsd:long`, `xsd:short`, `xsd:byte`, the signed/unsigned bounded subtypes, and the sign-constrained subtypes such as `xsd:nonNegativeInteger`); those are not part of the conforming set. Sign and range constraints are expressed via `IntegerNumberMinValue` / `IntegerNumberMaxValue` (or the real-valued equivalents). Bit-precision distinctions are not modelled at the type level; `decimal` covers exact arbitrary precision when needed, and `float` / `double` cover IEEE 754 single- and double-precision when storage precision matters.
 
 ### Temporal Datatype IRIs
 
@@ -1125,14 +1129,20 @@ Concrete syntaxes MAY use simpler surface forms that omit an explicit datatype I
 
 ### Numeric Literals
 
-`NumericLiteral` is the class of literals permitted in `NumericValue`. It pairs a lexical form with a numeric datatype IRI drawn from `NumericDatatypeIri` (see Numeric Datatype IRIs).
+The numeric literal types are split along the same boundary as the numeric field families. `IntegerNumberLiteral` carries an integer lexical form with implicit datatype `xsd:integer`; the datatype is fixed by the literal's category and is not carried as a component. `RealNumberLiteral` carries a real-valued lexical form paired with an explicit `RealNumberDatatypeIri` (one of `xsd:decimal`, `xsd:float`, or `xsd:double`).
 
 ```ebnf
-NumericLiteral ::= numeric_literal(
-                     LexicalForm
-                     NumericDatatypeIri
-                   )
+IntegerNumberLiteral ::= integer_number_literal(
+                           LexicalForm
+                         )
+
+RealNumberLiteral ::= real_number_literal(
+                        LexicalForm
+                        RealNumberDatatypeIri
+                      )
 ```
+
+`IntegerNumberLiteral`'s lexical form MUST be a base-10 integer literal (per the `IntegerLexicalForm` primitive in §Primitive String Types). `RealNumberLiteral`'s lexical form is a base-10 real-valued literal whose admissible form depends on the carried datatype: `xsd:decimal` admits an arbitrary-precision decimal lexical form; `xsd:float` and `xsd:double` admit IEEE 754-style lexical forms (including special values such as `INF`, `-INF`, and `NaN`).
 
 ### Boolean Literal
 
@@ -1211,25 +1221,34 @@ Value ::= TextValue
         | PhoneNumberValue
         | ExternalAuthorityValue
         | AttributeValue
+
+NumericValue ::= IntegerNumberValue
+               | RealNumberValue
 ```
 
 ### Scalar Values
 
-`TextValue`, `NumericValue`, and `BooleanValue` are the simplest value forms, each wrapping a single typed literal that corresponds directly to its field spec. `TextValue` accepts either a plain string or a language-tagged string via `TextLiteral`. `NumericValue` carries a typed numeric literal with an XML Schema numeric datatype IRI. `BooleanValue` carries a `BooleanLiteral` whose datatype is implicitly `xsd:boolean`.
+`TextValue`, `BooleanValue`, and the two numeric value forms (`IntegerNumberValue` and `RealNumberValue`) are the simplest value types, each wrapping a single typed literal that corresponds directly to its field spec. `TextValue` accepts either a plain string or a language-tagged string via `TextLiteral`. `BooleanValue` carries a `BooleanLiteral` whose datatype is implicitly `xsd:boolean`. `IntegerNumberValue` carries an `IntegerNumberLiteral` whose datatype is implicitly `xsd:integer`. `RealNumberValue` carries a `RealNumberLiteral` whose datatype is one of `xsd:decimal`, `xsd:float`, or `xsd:double`.
 
 ```ebnf
 TextValue ::= text_value(
                 TextLiteral
               )
 
-NumericValue ::= numeric_value(
-                   NumericLiteral
-                 )
+IntegerNumberValue ::= integer_number_value(
+                         IntegerNumberLiteral
+                       )
+
+RealNumberValue ::= real_number_value(
+                      RealNumberLiteral
+                    )
 
 BooleanValue ::= boolean_value(
                    BooleanLiteral
                  )
 ```
+
+`NumericValue` is the abstract category admitting `IntegerNumberValue` and `RealNumberValue`; the two are distinct concrete value types and a `FieldValue` carrying numeric content discriminates between them by `kind`.
 
 ### Temporal Values
 
@@ -1442,7 +1461,8 @@ These productions identify the reusable artifact that is being included in the t
 
 ```ebnf
 FieldReference ::= TextFieldReference
-                 | NumericFieldReference
+                 | IntegerNumberFieldReference
+                 | RealNumberFieldReference
                  | BooleanFieldReference
                  | DateFieldReference
                  | TimeFieldReference
@@ -1463,7 +1483,9 @@ FieldReference ::= TextFieldReference
 
 TextFieldReference ::= TextFieldId
 
-NumericFieldReference ::= NumericFieldId
+IntegerNumberFieldReference ::= IntegerNumberFieldId
+
+RealNumberFieldReference ::= RealNumberFieldId
 
 BooleanFieldReference ::= BooleanFieldId
 
@@ -1559,7 +1581,8 @@ The optional `defaultValue` component of an `EmbeddedField` specifies the value 
 | Embedded field | `defaultValue` type |
 |---|---|
 | `EmbeddedTextField` | `TextLiteral` (= `SimpleLiteral \| LangTaggedLiteral`) |
-| `EmbeddedNumericField` | `NumericLiteral` |
+| `EmbeddedIntegerNumberField` | `IntegerNumberLiteral` |
+| `EmbeddedRealNumberField` | `RealNumberLiteral` |
 | `EmbeddedBooleanField` | `BooleanLiteral` |
 | `EmbeddedDateField` | `DateValue` (polymorphic: `YearValue \| YearMonthValue \| FullDateValue`) |
 | `EmbeddedTimeField` | `TimeLiteral` |
@@ -1635,6 +1658,9 @@ FieldSpec ::= TextFieldSpec
             | ExternalAuthorityFieldSpec
             | AttributeValueFieldSpec
 
+NumericFieldSpec ::= IntegerNumberFieldSpec
+                   | RealNumberFieldSpec
+
 TextFieldSpec ::= text_field_spec(
                     [TextLiteral]
                     [MinLength]
@@ -1643,14 +1669,24 @@ TextFieldSpec ::= text_field_spec(
                     [TextRenderingHint]
                   )
 
-NumericFieldSpec ::= numeric_field_spec(
-                       NumericDatatype
-                       [Unit]
-                       [NumericPrecision]
-                       [NumericMinValue]
-                       [NumericMaxValue]
-                       [NumericRenderingHint]
-                     )
+IntegerNumberFieldSpec ::= integer_number_field_spec(
+                             [Unit]
+                             [IntegerNumberMinValue]
+                             [IntegerNumberMaxValue]
+                             [NumericRenderingHint]
+                           )
+
+RealNumberFieldSpec ::= real_number_field_spec(
+                          RealNumberDatatype
+                          [Unit]
+                          [RealNumberMinValue]
+                          [RealNumberMaxValue]
+                          [NumericRenderingHint]
+                        )
+
+RealNumberDatatype ::= real_number_datatype(
+                         RealNumberDatatypeIri
+                       )
 
 Unit ::= unit(
            Iri
@@ -1669,17 +1705,21 @@ ValidationRegex ::= validation_regex(
                       string
                     )
 
-NumericPrecision ::= numeric_precision(
-                       NonNegativeInteger
-                     )
+IntegerNumberMinValue ::= integer_number_min_value(
+                            IntegerNumberValue
+                          )
 
-NumericMinValue ::= numeric_min_value(
-                      NumericValue
-                    )
+IntegerNumberMaxValue ::= integer_number_max_value(
+                            IntegerNumberValue
+                          )
 
-NumericMaxValue ::= numeric_max_value(
-                      NumericValue
-                    )
+RealNumberMinValue ::= real_number_min_value(
+                         RealNumberValue
+                       )
+
+RealNumberMaxValue ::= real_number_max_value(
+                         RealNumberValue
+                       )
 
 BooleanFieldSpec ::= boolean_field_spec(
                        [BooleanRenderingHint]
@@ -1767,9 +1807,11 @@ AttributeValueFieldSpec ::= attribute_value_field_spec()
 
 `Unit` denotes an identified measurement or quantity unit optionally paired with a human-readable label.
 
-The current placement of `Unit` on `NumericFieldSpec` is a pragmatic compromise. A later revision may introduce a distinct `QuantityFieldSpec` to model numeric values with fixed units more explicitly.
+The current placement of `Unit` on `IntegerNumberFieldSpec` and `RealNumberFieldSpec` is a pragmatic compromise. A later revision may introduce a distinct `QuantityFieldSpec` to model numeric values with fixed units more explicitly.
 
-`NumericMinValue` and `NumericMaxValue` specify inclusive lower and upper bounds on the numeric values that a field accepts. Both are expressed as `NumericValue` constructs so that the datatype of the bound matches the datatype of the field values it constrains.
+`IntegerNumberMinValue` and `IntegerNumberMaxValue` specify inclusive lower and upper bounds on the integer values that an `IntegerNumberField` accepts. Both are expressed as `IntegerNumberValue` constructs. `RealNumberMinValue` and `RealNumberMaxValue` are the analogous bounds on `RealNumberField` and carry `RealNumberValue` constructs whose `RealNumberDatatypeIri` matches the field's declared datatype.
+
+A `RealNumberFieldSpec` MAY use the family-shared `NumericRenderingHint`; if it carries a non-zero `decimalPlaces` rendering hint, the hint applies to display rounding only and does not constrain the lexical form of submitted values. `IntegerNumberFieldSpec` MAY also use `NumericRenderingHint`; a `decimalPlaces` value other than `0` on an integer field is harmless (display only) and SHOULD be omitted when not meaningful.
 
 `ChoiceFieldSpec` is refined along two independent dimensions: cardinality and value kind. The cardinality dimension distinguishes `SingleChoiceFieldSpec` — which permits exactly one selection — from `MultipleChoiceFieldSpec` — which permits one or more simultaneous selections. The value kind dimension distinguishes `LiteralSingleChoiceFieldSpec` and `LiteralMultipleChoiceFieldSpec`, whose options are plain string or typed literals, from `ControlledTermSingleChoiceFieldSpec` and `ControlledTermMultipleChoiceFieldSpec`, whose options are ontology-backed controlled terms carrying an IRI and a human-readable label. All options within a single choice field spec must be of the same kind: a literal choice field spec carries only `LiteralChoiceOption` entries, and a controlled term choice field spec carries only `ControlledTermChoiceOption` entries. This uniformity means that the value kind of a choice field is declared structurally rather than inferred by inspecting individual options.
 
@@ -2049,9 +2091,13 @@ CheckboxRenderingHint ::= checkbox_rendering_hint()
 
 MultiSelectDropdownRenderingHint ::= multi_select_dropdown_rendering_hint()
 
-NumericRenderingHint ::= NumericInputRenderingHint
+NumericRenderingHint ::= numeric_rendering_hint(
+                           [DecimalPlaces]
+                         )
 
-NumericInputRenderingHint ::= numeric_input_rendering_hint()
+DecimalPlaces ::= decimal_places(
+                    NonNegativeInteger
+                  )
 
 BooleanRenderingHint ::= BooleanCheckboxRenderingHint
                        | BooleanToggleRenderingHint
@@ -2071,7 +2117,9 @@ Similarly, `ChoiceFieldSpec` distinguishes `SingleChoiceFieldSpec` from `Multipl
 
 Temporal semantics are also split structurally: `DateFieldSpec`, `TimeFieldSpec`, and `DateTimeFieldSpec` are distinct semantic field specs, and each carries only the rendering hints and temporal options that are meaningful for that temporal category.
 
-The current rendering vocabulary is explicit but deliberately small: numeric fields use `NumericInputRenderingHint`, date fields use `DatePickerRenderingWidget`, time fields use `TimePickerRenderingWidget`, and date-time fields use `DateTimePickerRenderingWidget`.
+The current rendering vocabulary is explicit but deliberately small: numeric fields use `NumericRenderingHint` (which carries an optional `DecimalPlaces` for display-time rounding); date fields use `DatePickerRenderingWidget`; time fields use `TimePickerRenderingWidget`; and date-time fields use `DateTimePickerRenderingWidget`.
+
+`DecimalPlaces` is a presentation concern, not a value-semantics constraint. Conforming consumers SHOULD use it to control display rounding and MAY use it as a UX-level input nicety (e.g., limiting the number of digits an end-user can type after the decimal point). It does not constrain the lexical form of a submitted `RealNumberValue`; conforming validators MUST NOT reject a value purely on grounds of decimal-places mismatch with the rendering hint. The slot is meaningful for `RealNumberFieldSpec`; on `IntegerNumberFieldSpec` it is harmless and conventionally omitted.
 
 ## Presentation Components
 
@@ -2155,7 +2203,8 @@ The table below gives the complete correspondence. The Field Family column ident
 | Field Family | `FieldSpec` | `Value` |
 |---|---|---|
 | | `TextFieldSpec` | `TextValue` |
-| | `NumericFieldSpec` | `NumericValue` |
+| `NumericField` | `IntegerNumberFieldSpec` | `IntegerNumberValue` |
+| `NumericField` | `RealNumberFieldSpec` | `RealNumberValue` |
 | | `BooleanFieldSpec` | `BooleanValue` |
 | `TemporalField` | `DateFieldSpec` | `DateValue` |
 | `TemporalField` | `TimeFieldSpec` | `TimeValue` |
@@ -2225,4 +2274,4 @@ Absence of a value for an optional field is represented by omitting the `FieldVa
 
 - Should embedded artifacts always refer to reusable artifacts by explicit reference construct, or does the CEDAR model require some embeddings to support inline artifact definition?
 - Should `PresentationComponent` remain a direct subclass of `Artifact`, or should a later revision introduce an intermediate superclass for reusable non-schema artifacts? This would make the distinction between reusable schema artifacts such as `Template` and `Field` and reusable non-schema artifacts such as rich text, images, videos, and section breaks more explicit in the hierarchy.
-- Should a later revision introduce a distinct `QuantityFieldSpec` rather than attaching optional `Unit` information directly to `NumericFieldSpec`? The current model permits fixed units on numeric fields as a pragmatic compromise, but a dedicated quantity field spec may provide a cleaner semantic distinction for numeric values that are intrinsically unit-bearing.
+- Should a later revision introduce a distinct `QuantityFieldSpec` rather than attaching optional `Unit` information directly to `IntegerNumberFieldSpec` and `RealNumberFieldSpec`? The current model permits fixed units on both numeric field families as a pragmatic compromise, but a dedicated quantity field spec may provide a cleaner semantic distinction for numeric values that are intrinsically unit-bearing.

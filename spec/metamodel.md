@@ -14,7 +14,7 @@ A `SchemaArtifact` is a reusable artifact that defines schema structure. `Templa
 
 A `Template` is the central container of the model. It specifies an ordered arrangement of `EmbeddedArtifact` constructs and defines the schema that `TemplateInstance` constructs must conform to.
 
-A `Field` is an abstract category refined into typed concrete variants — `TextField`, `NumericField`, `DateField`, `TimeField`, `DateTimeField`, `ControlledTermField`, `SingleChoiceField`, `MultipleChoiceField`, `LinkField`, `EmailField`, `PhoneNumberField`, the external authority fields, and `AttributeValueField`. Each concrete field carries a matching `FieldSpec` that specifies its value semantics and configuration. The field artifact carries identity, metadata, and lifecycle information; the `FieldSpec` carries value rules and rendering properties. See `grammar.md` for the rationale behind this separation.
+A `Field` is an abstract category refined into typed concrete variants — `TextField`, `IntegerNumberField`, `RealNumberField`, `BooleanField`, `DateField`, `TimeField`, `DateTimeField`, `ControlledTermField`, `SingleChoiceField`, `MultipleChoiceField`, `LinkField`, `EmailField`, `PhoneNumberField`, the external authority fields, and `AttributeValueField`. Each concrete field carries a matching `FieldSpec` that specifies its value semantics and configuration. The field artifact carries identity, metadata, and lifecycle information; the `FieldSpec` carries value rules and rendering properties. `IntegerNumberField` and `RealNumberField` together form the `NumericField` abstract category; `DateField`, `TimeField`, and `DateTimeField` form the `TemporalField` abstract category. See `grammar.md` for the rationale behind these splits.
 
 A `PresentationComponent` is a reusable non-data-bearing artifact that contributes presentational or instructional structure within a template. Examples include rich text, images, YouTube videos, section breaks, and page breaks. Presentation components do not produce instance values.
 
@@ -64,9 +64,14 @@ classDiagram
   class RridField
   class NihGrantIdField
   class AttributeValueField
+  class IntegerNumberField
+  class RealNumberField
+  class BooleanField
 
   class TextFieldSpec
-  class NumericFieldSpec
+  class IntegerNumberFieldSpec
+  class RealNumberFieldSpec
+  class BooleanFieldSpec
   class DateFieldSpec
   class TimeFieldSpec
   class DateTimeFieldSpec
@@ -86,6 +91,7 @@ classDiagram
 
   Field <|-- TextField
   Field <|-- NumericField
+  Field <|-- BooleanField
   Field <|-- TemporalField
   Field <|-- ControlledTermField
   Field <|-- ChoiceField
@@ -93,6 +99,9 @@ classDiagram
   Field <|-- ContactField
   Field <|-- ExternalAuthorityField
   Field <|-- AttributeValueField
+
+  NumericField <|-- IntegerNumberField
+  NumericField <|-- RealNumberField
 
   TemporalField <|-- DateField
   TemporalField <|-- TimeField
@@ -112,7 +121,9 @@ classDiagram
   ExternalAuthorityField <|-- NihGrantIdField
 
   TextField --> TextFieldSpec : carries
-  NumericField --> NumericFieldSpec : carries
+  IntegerNumberField --> IntegerNumberFieldSpec : carries
+  RealNumberField --> RealNumberFieldSpec : carries
+  BooleanField --> BooleanFieldSpec : carries
   DateField --> DateFieldSpec : carries
   TimeField --> TimeFieldSpec : carries
   DateTimeField --> DateTimeFieldSpec : carries

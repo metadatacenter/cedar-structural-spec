@@ -151,11 +151,11 @@ export interface TextValue {
   readonly kind: 'TextValue';
   readonly literal: TextLiteral;
 }
-export interface NumericValue {
-  readonly kind: 'NumericValue';
-  readonly literal: NumericLiteral;
+export interface IntegerNumberValue {
+  readonly kind: 'IntegerNumberValue';
+  readonly literal: IntegerNumberLiteral;
 }
-export type Value = TextValue | NumericValue /* | … */;
+export type Value = TextValue | IntegerNumberValue /* | … */;
 
 export function textValue(input: TextLiteral | string): TextValue {
   return { kind: 'TextValue', literal: typeof input === 'string' ? stringLiteral(input) : input };
@@ -169,15 +169,15 @@ Jackson's polymorphic-type annotations using the property name `kind`.
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "kind")
 @JsonSubTypes({
     @JsonSubTypes.Type(value = TextValue.class, name = "TextValue"),
-    @JsonSubTypes.Type(value = NumericValue.class, name = "NumericValue")
+    @JsonSubTypes.Type(value = IntegerNumberValue.class, name = "IntegerNumberValue")
 })
-public sealed interface Value permits TextValue, NumericValue { }
+public sealed interface Value permits TextValue, IntegerNumberValue { }
 
 @JsonTypeName("TextValue")
 public record TextValue(TextLiteral literal) implements Value { }
 
-@JsonTypeName("NumericValue")
-public record NumericValue(NumericLiteral literal) implements Value { }
+@JsonTypeName("IntegerNumberValue")
+public record IntegerNumberValue(IntegerNumberLiteral literal) implements Value { }
 ```
 
 **Python idiom.** A discriminated `Union` annotated with
@@ -193,12 +193,12 @@ class TextValue(BaseModel):
     kind: Literal["TextValue"] = "TextValue"
     literal: TextLiteral
 
-class NumericValue(BaseModel):
+class IntegerNumberValue(BaseModel):
     model_config = ConfigDict(frozen=True)
-    kind: Literal["NumericValue"] = "NumericValue"
-    literal: NumericLiteral
+    kind: Literal["IntegerNumberValue"] = "IntegerNumberValue"
+    literal: IntegerNumberLiteral
 
-Value = Annotated[Union[TextValue, NumericValue], Discriminator("kind")]
+Value = Annotated[Union[TextValue, IntegerNumberValue], Discriminator("kind")]
 ```
 
 For complex roots, wrap in a `pydantic.RootModel[Value]` to permit
@@ -209,7 +209,7 @@ value is not a known member. Encoders MUST emit `kind` with the exact
 production name (no aliasing). The construction-time invariants of
 each variant apply normally.
 
-**Worked example: `Value` (subset: `TextValue | NumericValue`).** Wire
+**Worked example: `Value` (subset: `TextValue | IntegerNumberValue`).** Wire
 shape: `{"kind": "TextValue", "literal": {"value": "hi"}}`. All three
 idioms decode that JSON to a value whose static type is `Value` and
 whose runtime narrowing predicate (`value.kind === 'TextValue'` /
@@ -219,7 +219,7 @@ whose runtime narrowing predicate (`value.kind === 'TextValue'` /
 Where a sealed union permits another sealed union as a member (for
 example, `EmbeddedArtifact permits EmbeddedField,
 EmbeddedPresentationComponent`, with `EmbeddedField` itself sealed
-over the 19 family records), prefer a **flat dispatch table** at
+over the 20 family records), prefer a **flat dispatch table** at
 the outer interface — enumerate all leaf concrete records directly
 in the outer's `@JsonSubTypes`, not the intermediate sealed
 interface. Nested-`@JsonTypeInfo` delegation through an intermediate
@@ -339,11 +339,11 @@ correct in-memory variant.
 **What it is.** A wire production written as `T ::: A | B | …` with
 `// discriminator: position`. The variant is determined entirely by
 *the enclosing property and surrounding context*; the encoded object
-itself carries no discriminator. Examples: the four typed-literal
-subtypes (`NumericLiteral`, `FullDateLiteral`, `TimeLiteral`,
-`DateTimeLiteral`) inside their typed `Value` parents; `RenderingHint`
-inside the various `FieldSpec` families; `TemporalLiteral` inside the
-temporal value types.
+itself carries no discriminator. Examples: the typed-literal subtypes
+(`IntegerNumberLiteral`, `RealNumberLiteral`, `FullDateLiteral`,
+`TimeLiteral`, `DateTimeLiteral`) inside their typed `Value` parents;
+`RenderingHint` inside the various `FieldSpec` families; `TemporalLiteral`
+inside the temporal value types.
 
 Bindings can usually realise each use site as a single concrete
 class, since the position fixes the variant. There is no need for a
@@ -405,7 +405,7 @@ export function iri(value: string): Iri { /* validate */ return value as Iri; }
 ```
 
 cedar-ts's `FieldId` family uses the structural-wrapper form with a
-per-family `kind` discriminant so the nineteen families remain
+per-family `kind` discriminant so the twenty families remain
 distinguishable in the type system.
 
 **Java idiom.** A dedicated value record:
@@ -592,10 +592,10 @@ are drawn from a fixed set. All values are `lowerCamelCase` per
 [`serialization.md`](serialization.md) §3.3. Examples: `Status`,
 `ValueRequirement`, `Visibility`, `DateValueType`, `DateComponentOrder`,
 `TimeFormat`, `TimePrecision`, `DateTimeValueType`,
-`TimezoneRequirement`, `NumericDatatypeIri` (sixteen values), the
+`TimezoneRequirement`, `RealNumberDatatypeIri` (three values), the
 flat-string rendering hints (`TextRenderingHint`,
 `SingleChoiceRenderingHint`, `MultipleChoiceRenderingHint`,
-`NumericRenderingHint`).
+`BooleanRenderingHint`).
 
 **TypeScript idiom.** A string-literal union. cedar-ts also exports a
 frozen array of permitted values and an `isXxx` type guard.
@@ -824,8 +824,8 @@ High-level structure (the `src/` tree mirrors the grammar layering):
 - `leaves/` — primitive validators and branded leaves (`Iri`,
   `LanguageTag`, `IsoDateTimeStamp`, ASCII-id, BCP 47, SemVer, integer).
 - `multilingual.ts` — `MultilingualString` and `LangString`.
-- `literals/` — `Literal`, `TextLiteral`, `NumericLiteral`,
-  `TemporalLiteral`.
+- `literals/` — `Literal`, `TextLiteral`, `IntegerNumberLiteral`,
+  `RealNumberLiteral`, `TemporalLiteral`.
 - `values/` — the `Value` family.
 - `identity.ts` — artifact identifiers (`FieldId`, `TemplateId`,
   `PresentationComponentId`, `TemplateInstanceId`).

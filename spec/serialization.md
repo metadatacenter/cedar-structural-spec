@@ -134,7 +134,7 @@ Conforming encoders, by construction, never emit objects matching either the no-
 
 #### Position-discriminated unions
 
-A few unions occupy fixed singleton positions where the surrounding property name fully determines the variant. For example, `RenderingHint` is determined by which `FieldSpec` family the parent is, and the four typed-literal subtypes (`NumericLiteral`, `FullDateLiteral`, `TimeLiteral`, `DateTimeLiteral`) are determined by their parent value's `kind`. These wire entries are flagged `// discriminator: position` in [`wire-grammar.md`](wire-grammar.md).
+A few unions occupy fixed singleton positions where the surrounding property name fully determines the variant. For example, `RenderingHint` is determined by which `FieldSpec` family the parent is, and the typed-literal subtypes (`IntegerNumberLiteral`, `RealNumberLiteral`, `FullDateLiteral`, `TimeLiteral`, `DateTimeLiteral`) are determined by their parent value's `kind`. These wire entries are flagged `// discriminator: position` in [`wire-grammar.md`](wire-grammar.md).
 
 Implementations MUST NOT rely on JSON property ordering to discriminate alternatives.
 
@@ -182,9 +182,9 @@ The full list of productions that collapse this way is given in §1.7 of [`wire-
 
 - All `MultilingualString`-typed wrappers (`Header`, `Footer`, `Name`, `Description`, `PreferredLabel`, `AlternativeLabel`, `Label`, `PropertyLabel`, `OntologyName`, `RootTermLabel`, `ValueSetName`) flatten to a JSON array of `LangString` entries.
 - All single-`Iri` wrappers (artifact identifiers and references, `PropertyIri`, the typed external-authority IRIs, `OntologyIri`, etc.) flatten to a plain JSON string.
-- All single-`NonNegativeInteger` wrappers (`MinLength`, `MaxLength`, `MinCardinality`, `MaxCardinality`, `NumericPrecision`, `MaxTraversalDepth`) flatten to a plain JSON number.
+- All single-`NonNegativeInteger` wrappers (`MinLength`, `MaxLength`, `MinCardinality`, `MaxCardinality`, `DecimalPlaces`, `MaxTraversalDepth`) flatten to a plain JSON number.
 - Plain-`string` wrappers (`Identifier`, `Notation`, `LinkLabel`, `OntologyAcronym`, `ValueSetIdentifier`, `HtmlContent`) flatten to a plain JSON string.
-- Enum-style productions (`Status`, `ValueRequirement`, `Visibility`, `DateValueType`, `TimePrecision`, `DateTimeValueType`, `TimezoneRequirement`, `DateComponentOrder`, `TimeFormat`, `TextRenderingHint`, `SingleChoiceRenderingHint`, `MultipleChoiceRenderingHint`, `NumericRenderingHint`) flatten to a JSON string drawn from a fixed set.
+- Enum-style productions (`Status`, `ValueRequirement`, `Visibility`, `DateValueType`, `TimePrecision`, `DateTimeValueType`, `TimezoneRequirement`, `DateComponentOrder`, `TimeFormat`, `TextRenderingHint`, `SingleChoiceRenderingHint`, `MultipleChoiceRenderingHint`, `BooleanRenderingHint`, `RealNumberDatatypeIri`) flatten to a JSON string drawn from a fixed set.
 
 ### 5.1 Lexical-form preservation
 
@@ -206,7 +206,7 @@ Every artifact identifier is encoded as a plain JSON string carrying the IRI. Th
 "https://example.org/fields/title"
 ```
 
-A `FieldId` (or `FieldReference`) appears only in two grammar positions: as `Field.id` and as `EmbeddedField.artifactRef`. Both surrounding constructs carry a `kind` discriminator that conveys the field family. The nineteen permitted family-bearing `kind` values for `Field` variants are: `"TextField"`, `"NumericField"`, `"BooleanField"`, `"DateField"`, `"TimeField"`, `"DateTimeField"`, `"ControlledTermField"`, `"SingleChoiceField"`, `"MultipleChoiceField"`, `"LinkField"`, `"EmailField"`, `"PhoneNumberField"`, `"OrcidField"`, `"RorField"`, `"DoiField"`, `"PubMedIdField"`, `"RridField"`, `"NihGrantIdField"`, or `"AttributeValueField"`. The corresponding `EmbeddedField` variants prefix `Embedded` (e.g. `"EmbeddedTextField"`). A conforming encoder MUST ensure that the IRI it places at a `FieldId` position belongs to a field of the family declared by the surrounding `kind`.
+A `FieldId` (or `FieldReference`) appears only in two grammar positions: as `Field.id` and as `EmbeddedField.artifactRef`. Both surrounding constructs carry a `kind` discriminator that conveys the field family. The twenty permitted family-bearing `kind` values for `Field` variants are: `"TextField"`, `"IntegerNumberField"`, `"RealNumberField"`, `"BooleanField"`, `"DateField"`, `"TimeField"`, `"DateTimeField"`, `"ControlledTermField"`, `"SingleChoiceField"`, `"MultipleChoiceField"`, `"LinkField"`, `"EmailField"`, `"PhoneNumberField"`, `"OrcidField"`, `"RorField"`, `"DoiField"`, `"PubMedIdField"`, `"RridField"`, `"NihGrantIdField"`, or `"AttributeValueField"`. The corresponding `EmbeddedField` variants prefix `Embedded` (e.g. `"EmbeddedTextField"`). A conforming encoder MUST ensure that the IRI it places at a `FieldId` position belongs to a field of the family declared by the surrounding `kind`.
 
 ### 6.2 Literals
 
@@ -224,7 +224,7 @@ Literals are encoded as JSON objects whose **set of properties** identifies the 
 
 `lang` and `datatype` MUST NOT both be present.
 
-The four specialized typed-literal subtypes (`NumericLiteral`, `FullDateLiteral`, `TimeLiteral`, `DateTimeLiteral`) appear only at singleton positions in the grammar; per §4.4 the position determines the type, so the `datatype` property MAY be omitted and is reconstructed at decode time from the surrounding context. A conforming encoder MAY include the canonical `datatype` IRI for clarity; a conforming decoder MUST accept either form.
+The specialized typed-literal subtypes (`RealNumberLiteral`, `FullDateLiteral`, `TimeLiteral`, `DateTimeLiteral`) appear only at singleton positions in the grammar; per §4.4 the position determines the type, so the `datatype` property MAY be omitted and is reconstructed at decode time from the surrounding context. A conforming encoder MAY include the canonical `datatype` IRI for clarity; a conforming decoder MUST accept either form. `IntegerNumberLiteral` and `BooleanLiteral` carry no `datatype` slot at all — their datatypes are fixed by category.
 
 ### 6.3 Multilingual strings
 
@@ -246,7 +246,10 @@ Each `Value` family is encoded as a tagged object. The full set of variants is g
 { "kind": "TextValue", "literal": { "value": "Jane Smith" } }
 ```
 ```json
-{ "kind": "NumericValue", "literal": { "value": "42", "datatype": "http://www.w3.org/2001/XMLSchema#integer" } }
+{ "kind": "IntegerNumberValue", "literal": { "value": "42" } }
+```
+```json
+{ "kind": "RealNumberValue", "literal": { "value": "3.14", "datatype": "http://www.w3.org/2001/XMLSchema#decimal" } }
 ```
 ```json
 { "kind": "YearValue", "value": "2024" }
@@ -327,7 +330,7 @@ Each concrete `FieldSpec` is encoded as a tagged object whose `"kind"` matches t
 { "kind": "TextFieldSpec", "minLength": 1, "maxLength": 200, "renderingHint": "singleLine" }
 ```
 ```json
-{ "kind": "NumericFieldSpec", "datatype": "integer", "minValue": { "kind": "NumericValue", "literal": { "value": "0" } } }
+{ "kind": "IntegerNumberFieldSpec", "minValue": { "kind": "IntegerNumberValue", "literal": { "value": "0" } } }
 ```
 ```json
 { "kind": "DateFieldSpec", "dateValueType": "fullDate", "renderingHint": { "componentOrder": "dayMonthYear" } }
@@ -344,11 +347,11 @@ Each concrete `FieldSpec` is encoded as a tagged object whose `"kind"` matches t
 
 The `default` property on choice options is encoded as JSON `true` when set; the property is omitted otherwise. An `OntologyDisplayHint` MUST carry at least one of `acronym` or `name` (a constraint enforced by `wire-grammar.md`).
 
-The flat-string rendering hints (`TextRenderingHint`, `SingleChoiceRenderingHint`, `MultipleChoiceRenderingHint`, `NumericRenderingHint`) appear directly as JSON enum strings; the temporal rendering hints (`DateRenderingHint`, `TimeRenderingHint`, `DateTimeRenderingHint`) are JSON objects.
+The flat-string rendering hints (`TextRenderingHint`, `SingleChoiceRenderingHint`, `MultipleChoiceRenderingHint`, `BooleanRenderingHint`) appear directly as JSON enum strings; the object-shaped rendering hints (`NumericRenderingHint`, `DateRenderingHint`, `TimeRenderingHint`, `DateTimeRenderingHint`) are JSON objects with optional configuration slots.
 
 ### 6.8 Field artifacts and embedded artifacts
 
-A `Field` artifact (shown for the text family; the other seventeen families substitute `"NumericField"`, `"DateField"`, etc. for `kind`):
+A `Field` artifact (shown for the text family; the other nineteen families substitute `"IntegerNumberField"`, `"RealNumberField"`, `"BooleanField"`, `"DateField"`, etc. for `kind`):
 
 ```json
 {
@@ -364,7 +367,7 @@ The `modelVersion` property is a top-level property of every concrete artifact (
 
 The `kind` value MUST match the family of the nested `fieldSpec`. Conforming encoders MUST ensure that the IRI placed at `id` belongs to a field of the same family.
 
-An `EmbeddedField` (shown for the text family; substitute `"EmbeddedNumericField"`, `"EmbeddedDateField"`, etc. for the other seventeen families):
+An `EmbeddedField` (shown for the text family; substitute `"EmbeddedIntegerNumberField"`, `"EmbeddedRealNumberField"`, `"EmbeddedBooleanField"`, `"EmbeddedDateField"`, etc. for the other nineteen families):
 
 ```json
 {
@@ -408,7 +411,8 @@ Examples by family:
 "defaultValue": { "value": "Stanford University" }
 "defaultValue": { "value": "Bonjour", "lang": "fr" }
 
-// EmbeddedNumericField.defaultValue — NumericLiteral
+// EmbeddedIntegerNumberField.defaultValue — IntegerNumberLiteral
+// EmbeddedRealNumberField.defaultValue — RealNumberLiteral
 "defaultValue": { "value": "42", "datatype": "http://www.w3.org/2001/XMLSchema#integer" }
 
 // EmbeddedDateField.defaultValue — DateValue (polymorphic, kind retained)

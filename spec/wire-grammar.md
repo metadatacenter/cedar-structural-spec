@@ -209,7 +209,7 @@ The wrappers fall into five groups by inner type:
   `Notation`, `LinkLabel`, `Identifier`, `AttributeName`, `HtmlContent`,
   `KeyIdentifier`, `EmbeddedArtifactKey`, `ValidationRegex`.
 - **Numbers**: `NonNegativeInteger`, `MinCardinality`, `MaxCardinality`,
-  `MinLength`, `MaxLength`, `NumericPrecision`, `MaxTraversalDepth`.
+  `MinLength`, `MaxLength`, `DecimalPlaces`, `MaxTraversalDepth`.
 - **MultilingualString-typed**: `Name`, `Description`, `PreferredLabel`,
   `AlternativeLabel`, `Label`, `PropertyLabel`, `OntologyName`,
   `ValueSetName`, `RootTermLabel`, `Header`, `Footer`.
@@ -276,19 +276,20 @@ MultilingualString ::: nonEmptyArray<LangString>
 ### 2.3 Numeric datatype IRIs
 
 ```
-NumericDatatype ::: NumericDatatypeIri
+RealNumberDatatype ::: RealNumberDatatypeIri
   // collapses to the inner enum string (the wrapper carries no extra info)
 
-NumericDatatypeIri ::: "integer" | "decimal" | "float" | "double"
-                     | "long" | "int" | "short" | "byte"
-                     | "nonNegativeInteger" | "positiveInteger"
-                     | "nonPositiveInteger" | "negativeInteger"
-                     | "unsignedLong" | "unsignedInt"
-                     | "unsignedShort" | "unsignedByte"
+RealNumberDatatypeIri ::: "decimal" | "float" | "double"
   // each value names an XSD numeric datatype IRI per grammar.md §Numeric
   // Datatype IRIs; the corresponding XSD IRIs are reconstructed at decode
-  // the per-arm productions XsdIntegerDatatypeIri, …, XsdUnsignedByteDatatypeIri
-  // collapse to their string-literal alternative above
+  // the per-arm productions XsdDecimalDatatypeIri, XsdFloatDatatypeIri,
+  // XsdDoubleDatatypeIri collapse to their string-literal alternative above
+
+IntegerNumberDatatypeIri ::: "integer"
+  // a singleton-valued enum; XsdIntegerDatatypeIri collapses to the literal
+  // "integer" but in practice this enum is reconstructed at decode time and
+  // is not carried in the wire form (IntegerNumberLiteral has no datatype
+  // slot — its datatype is fixed by the literal's category)
 ```
 
 ### 2.4 Temporal datatype IRIs
@@ -337,13 +338,20 @@ positions where the surrounding production fixes the datatype; the
 decode time from the position.
 
 ```
-NumericLiteral ::: object {
+IntegerNumberLiteral ::: object {
+  value: string
+}
+  // value is a base-10 integer lexical form
+  // datatype is implicit (xsd:integer) and not carried on the wire;
+  // the literal's category is fixed by the enclosing IntegerNumberValue
+
+RealNumberLiteral ::: object {
   value: string
   datatype?: string
 }
-  // value is a base-10 numeric lexical form
-  // datatype MAY be present; when omitted, the surrounding NumericValue's
-  // NumericDatatypeIri determines the XSD numeric datatype IRI
+  // value is a base-10 real-valued lexical form
+  // datatype MAY be present; when omitted, the surrounding RealNumberValue's
+  // RealNumberDatatypeIri determines the XSD numeric datatype IRI
 
 BooleanLiteral ::: object {
   value: boolean
@@ -389,8 +397,11 @@ Value ::: TextValue | NumericValue | BooleanValue
         | EmailValue | PhoneNumberValue | ExternalAuthorityValue
         | AttributeValue
   // discriminator: kind
-  // ChoiceValue and ExternalAuthorityValue are themselves unions;
-  // their members supply the kind discriminator directly
+  // NumericValue, ChoiceValue, and ExternalAuthorityValue are themselves
+  // unions; their members supply the kind discriminator directly
+
+NumericValue ::: IntegerNumberValue | RealNumberValue
+  // discriminator: kind
 ```
 
 ### 4.1 Scalar values
@@ -401,9 +412,14 @@ TextValue ::: object {
   literal: TextLiteral
 }
 
-NumericValue ::: object {
-  "kind": "NumericValue"
-  literal: NumericLiteral
+IntegerNumberValue ::: object {
+  "kind": "IntegerNumberValue"
+  literal: IntegerNumberLiteral
+}
+
+RealNumberValue ::: object {
+  "kind": "RealNumberValue"
+  literal: RealNumberLiteral
 }
 
 BooleanValue ::: object {
@@ -584,7 +600,8 @@ abstract grammar's branding is not visible on the wire.
 ```
 FieldId ::: string
 TextFieldId ::: Iri
-NumericFieldId ::: Iri
+IntegerNumberFieldId ::: Iri
+RealNumberFieldId ::: Iri
 BooleanFieldId ::: Iri
 DateFieldId ::: Iri
 TimeFieldId ::: Iri
@@ -773,7 +790,8 @@ the enclosing `EmbeddedField`, `EmbeddedTemplate`, or
 FieldReference ::: string
 
 TextFieldReference ::: Iri
-NumericFieldReference ::: Iri
+IntegerNumberFieldReference ::: Iri
+RealNumberFieldReference ::: Iri
 BooleanFieldReference ::: Iri
 DateFieldReference ::: Iri
 TimeFieldReference ::: Iri
@@ -849,7 +867,8 @@ The wire form per family is therefore:
 | Embedded field | `defaultValue` wire form |
 |---|---|
 | `EmbeddedTextField` | `TextLiteral` (property-set discriminated `SimpleLiteral \| LangTaggedLiteral`) |
-| `EmbeddedNumericField` | `NumericLiteral` (`{ value, datatype? }`) |
+| `EmbeddedIntegerNumberField` | `IntegerNumberLiteral` (`{ value }`) |
+| `EmbeddedRealNumberField` | `RealNumberLiteral` (`{ value, datatype? }`) |
 | `EmbeddedBooleanField` | `BooleanLiteral` (`{ value }` where value is a JSON boolean) |
 | `EmbeddedDateField` | `DateValue` (kind retained: `YearValue \| YearMonthValue \| FullDateValue`) |
 | `EmbeddedTimeField` | `TimeLiteral` (`{ value, datatype? }`) |
@@ -907,9 +926,12 @@ FieldSpec ::: TextFieldSpec | NumericFieldSpec | BooleanFieldSpec
             | ContactFieldSpec | ExternalAuthorityFieldSpec
             | AttributeValueFieldSpec
   // discriminator: kind
-  // TemporalFieldSpec, ChoiceFieldSpec, ContactFieldSpec, and
-  // ExternalAuthorityFieldSpec are unions; their members supply
+  // NumericFieldSpec, TemporalFieldSpec, ChoiceFieldSpec, ContactFieldSpec,
+  // and ExternalAuthorityFieldSpec are unions; their members supply
   // the kind discriminator directly
+
+NumericFieldSpec ::: IntegerNumberFieldSpec | RealNumberFieldSpec
+  // discriminator: kind
 
 TextFieldSpec ::: object {
   "kind": "TextFieldSpec"
@@ -923,13 +945,20 @@ TextFieldSpec ::: object {
   // discriminated; no kind). TextFieldSpec is the only FieldSpec that
   // carries a defaultValue slot (see §7.6).
 
-NumericFieldSpec ::: object {
-  "kind": "NumericFieldSpec"
-  datatype: NumericDatatypeIri
+IntegerNumberFieldSpec ::: object {
+  "kind": "IntegerNumberFieldSpec"
   unit?: Unit
-  numericPrecision?: number
-  minValue?: NumericValue
-  maxValue?: NumericValue
+  minValue?: IntegerNumberValue
+  maxValue?: IntegerNumberValue
+  renderingHint?: NumericRenderingHint
+}
+
+RealNumberFieldSpec ::: object {
+  "kind": "RealNumberFieldSpec"
+  datatype: RealNumberDatatypeIri
+  unit?: Unit
+  minValue?: RealNumberValue
+  maxValue?: RealNumberValue
   renderingHint?: NumericRenderingHint
 }
 
@@ -946,9 +975,11 @@ Unit ::: object {
 MinLength ::: number
 MaxLength ::: number
 ValidationRegex ::: string
-NumericPrecision ::: number
-NumericMinValue ::: NumericValue
-NumericMaxValue ::: NumericValue
+DecimalPlaces ::: number
+IntegerNumberMinValue ::: IntegerNumberValue
+IntegerNumberMaxValue ::: IntegerNumberValue
+RealNumberMinValue ::: RealNumberValue
+RealNumberMaxValue ::: RealNumberValue
 ```
 
 ### 8.1 Temporal field specs
@@ -1236,9 +1267,12 @@ MultipleChoiceRenderingHint ::: "checkbox" | "multiSelectDropdown"
 CheckboxRenderingHint ::: "checkbox"
 MultiSelectDropdownRenderingHint ::: "multiSelectDropdown"
 
-NumericRenderingHint ::: "numericInput"
-
-NumericInputRenderingHint ::: "numericInput"
+NumericRenderingHint ::: object {
+  decimalPlaces?: number
+}
+  // decimalPlaces, when present, MUST be a non-negative integer
+  // it is a presentation concern (display rounding); it does NOT
+  // constrain the lexical form of submitted values
 
 BooleanRenderingHint ::: "checkbox" | "toggle"
 
@@ -1246,9 +1280,9 @@ BooleanCheckboxRenderingHint ::: "checkbox"
 BooleanToggleRenderingHint ::: "toggle"
 ```
 
-`DateRenderingHint`, `TimeRenderingHint`, and `DateTimeRenderingHint`
-are defined in §8.1; on the wire they are objects, while the simpler
-text/choice/numeric/boolean hints are flat strings.
+`DateRenderingHint`, `TimeRenderingHint`, `DateTimeRenderingHint`, and
+`NumericRenderingHint` are objects on the wire (each can carry
+configuration); the simpler text/choice/boolean hints are flat strings.
 
 ---
 
@@ -1261,6 +1295,10 @@ Field ::: TextField | NumericField | BooleanField
         | LinkField | EmailField | PhoneNumberField
         | OrcidField | RorField | DoiField | PubMedIdField
         | RridField | NihGrantIdField | AttributeValueField
+  // discriminator: kind
+  // NumericField is itself a union of IntegerNumberField and RealNumberField
+
+NumericField ::: IntegerNumberField | RealNumberField
   // discriminator: kind
 
 TemporalField ::: DateField | TimeField | DateTimeField
@@ -1286,12 +1324,21 @@ TextField ::: object {
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
-NumericField ::: object {
-  "kind": "NumericField"
+IntegerNumberField ::: object {
+  "kind": "IntegerNumberField"
   id: string
   modelVersion: string
   metadata: SchemaArtifactMetadata
-  fieldSpec: NumericFieldSpec
+  fieldSpec: IntegerNumberFieldSpec
+}
+  // modelVersion is a SemanticVersion 2.0.0 lexical form
+
+RealNumberField ::: object {
+  "kind": "RealNumberField"
+  id: string
+  modelVersion: string
+  metadata: SchemaArtifactMetadata
+  fieldSpec: RealNumberFieldSpec
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
@@ -1458,7 +1505,8 @@ EmbeddedArtifact ::: EmbeddedField | EmbeddedTemplate
                    | EmbeddedPresentationComponent
   // discriminator: kind
 
-EmbeddedField ::: EmbeddedTextField | EmbeddedNumericField
+EmbeddedField ::: EmbeddedTextField
+                | EmbeddedIntegerNumberField | EmbeddedRealNumberField
                 | EmbeddedBooleanField
                 | EmbeddedDateField | EmbeddedTimeField | EmbeddedDateTimeField
                 | EmbeddedControlledTermField
@@ -1483,14 +1531,26 @@ EmbeddedTextField ::: object {
   property?: Property
 }
 
-EmbeddedNumericField ::: object {
-  "kind": "EmbeddedNumericField"
+EmbeddedIntegerNumberField ::: object {
+  "kind": "EmbeddedIntegerNumberField"
   key: string
   artifactRef: string
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
-  defaultValue?: NumericLiteral
+  defaultValue?: IntegerNumberLiteral
+  labelOverride?: LabelOverride
+  property?: Property
+}
+
+EmbeddedRealNumberField ::: object {
+  "kind": "EmbeddedRealNumberField"
+  key: string
+  artifactRef: string
+  valueRequirement?: ValueRequirement
+  cardinality?: Cardinality
+  visibility?: Visibility
+  defaultValue?: RealNumberLiteral
   labelOverride?: LabelOverride
   property?: Property
 }
