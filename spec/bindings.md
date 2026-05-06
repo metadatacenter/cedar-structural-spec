@@ -149,16 +149,19 @@ is by `switch` on `value.kind`.
 ```typescript
 export interface TextValue {
   readonly kind: 'TextValue';
-  readonly literal: TextLiteral;
+  readonly value: string;
+  readonly lang?: LanguageTag;
 }
 export interface IntegerNumberValue {
   readonly kind: 'IntegerNumberValue';
-  readonly literal: IntegerNumberLiteral;
+  readonly value: string;
 }
 export type Value = TextValue | IntegerNumberValue /* | … */;
 
-export function textValue(input: TextLiteral | string): TextValue {
-  return { kind: 'TextValue', literal: typeof input === 'string' ? stringLiteral(input) : input };
+export function textValue(value: string, lang?: LanguageTag): TextValue {
+  return lang === undefined
+    ? { kind: 'TextValue', value }
+    : { kind: 'TextValue', value, lang };
 }
 ```
 
@@ -174,10 +177,10 @@ Jackson's polymorphic-type annotations using the property name `kind`.
 public sealed interface Value permits TextValue, IntegerNumberValue { }
 
 @JsonTypeName("TextValue")
-public record TextValue(TextLiteral literal) implements Value { }
+public record TextValue(String value, Optional<String> lang) implements Value { }
 
 @JsonTypeName("IntegerNumberValue")
-public record IntegerNumberValue(IntegerNumberLiteral literal) implements Value { }
+public record IntegerNumberValue(String value) implements Value { }
 ```
 
 **Python idiom.** A discriminated `Union` annotated with
@@ -191,12 +194,13 @@ from pydantic import BaseModel, ConfigDict, Discriminator
 class TextValue(BaseModel):
     model_config = ConfigDict(frozen=True)
     kind: Literal["TextValue"] = "TextValue"
-    literal: TextLiteral
+    value: str
+    lang: str | None = None
 
 class IntegerNumberValue(BaseModel):
     model_config = ConfigDict(frozen=True)
     kind: Literal["IntegerNumberValue"] = "IntegerNumberValue"
-    literal: IntegerNumberLiteral
+    value: str
 
 Value = Annotated[Union[TextValue, IntegerNumberValue], Discriminator("kind")]
 ```
@@ -210,10 +214,10 @@ production name (no aliasing). The construction-time invariants of
 each variant apply normally.
 
 **Worked example: `Value` (subset: `TextValue | IntegerNumberValue`).** Wire
-shape: `{"kind": "TextValue", "literal": {"value": "hi"}}`. All three
-idioms decode that JSON to a value whose static type is `Value` and
-whose runtime narrowing predicate (`value.kind === 'TextValue'` /
-`instanceof TextValue` / `isinstance(v, TextValue)`) returns true.
+shape: `{"kind": "TextValue", "value": "hi"}`. All three idioms decode
+that JSON to a value whose static type is `Value` and whose runtime
+narrowing predicate (`value.kind === 'TextValue'` / `instanceof TextValue`
+/ `isinstance(v, TextValue)`) returns true.
 
 **Java note: nested sealed interfaces and Jackson dispatch tables.**
 Where a sealed union permits another sealed union as a member (for
@@ -235,86 +239,82 @@ correct by construction.
 **What it is.** A wire production written as `T ::: A | B | …` with
 `// discriminator: property-set`. The variants are distinguished by
 *which properties are present* on the encoded object — there is no
-`kind` tag. The unions encoded this way are `Literal`, `TextLiteral`,
-and `AnnotationValue` ([`wire-grammar.md`](wire-grammar.md) §1.3,
-§1.4). The property-set rule is permitted only because the variants'
-property sets are structurally disjoint; `wire-grammar.md` reserves
-this style for unions where that disjointness can be proven.
+`kind` tag. The only union encoded this way is `AnnotationValue`
+([`wire-grammar.md`](wire-grammar.md) §1.3, §1.4). The property-set
+rule is permitted only because the variants' property sets are
+structurally disjoint; `wire-grammar.md` reserves this style for
+unions where that disjointness can be proven.
 
 **TypeScript idiom.** A structural union; type guards inspect property
-presence. cedar-ts adds a synthetic `kind` discriminator to the
-*in-memory* representation (e.g. `SimpleLiteral.kind = "SimpleLiteral"`)
-purely for ergonomic narrowing — that synthetic discriminator is
-stripped at encode time and is not part of the wire shape.
+presence. A binding MAY add a synthetic `kind` discriminator to the
+*in-memory* representation (e.g. `AnnotationStringValue.kind =
+"AnnotationStringValue"`) purely for ergonomic narrowing — that
+synthetic discriminator is stripped at encode time and is not part of
+the wire shape.
 
 ```typescript
-export interface SimpleLiteral { readonly kind: 'SimpleLiteral'; readonly lexicalForm: string; }
-export interface LangTaggedLiteral { readonly kind: 'LangTaggedLiteral'; readonly lexicalForm: string; readonly lang: LanguageTag; }
-export interface TypedLiteral { readonly kind: 'TypedLiteral'; readonly lexicalForm: string; readonly datatype: Iri; }
-export type Literal = TypedLiteral | LangTaggedLiteral;
-// Decode: pick variant by property-set; encode: emit value/lang/datatype only.
+export interface AnnotationStringValue {
+  readonly kind?: 'AnnotationStringValue';  // synthetic; not on the wire
+  readonly value: string;
+  readonly lang?: LanguageTag;
+}
+export interface AnnotationIri {
+  readonly kind?: 'AnnotationIri';  // synthetic; not on the wire
+  readonly iri: Iri;
+}
+export type AnnotationValue = AnnotationStringValue | AnnotationIri;
+// Decode: pick variant by property-set; encode: emit value/lang or iri only.
 ```
 
 (A binding MAY choose not to add a synthetic discriminator and rely
-purely on type guards; cedar-ts adopts the synthetic discriminator
-because TS narrowing on a literal `kind` is the most ergonomic path.)
+purely on type guards.)
 
 **Java idiom.** A sealed interface with a custom Jackson deserializer
 that reads the property set. Alternatively — and often simpler — model
-`Literal` as a single concrete record with all optional properties plus
-an explicit `LiteralKind` enum derived at deserialize time. The
+`AnnotationValue` as a single concrete record with all optional
+properties plus an explicit kind enum derived at deserialize time. The
 single-record approach trades static-type expressiveness for a much
 shorter Jackson configuration.
 
 ```java
-@JsonDeserialize(using = LiteralDeserializer.class)
-public sealed interface Literal permits SimpleLiteral, LangTaggedLiteral, TypedLiteral { }
+@JsonDeserialize(using = AnnotationValueDeserializer.class)
+public sealed interface AnnotationValue permits AnnotationStringValue, AnnotationIri { }
 
-public record SimpleLiteral(String value) implements Literal { }
-public record LangTaggedLiteral(String value, String lang) implements Literal { }
-public record TypedLiteral(String value, String datatype) implements Literal { }
+public record AnnotationStringValue(String value, Optional<String> lang) implements AnnotationValue { }
+public record AnnotationIri(String iri) implements AnnotationValue { }
 
-// LiteralDeserializer: read JsonNode; if has(lang) -> LangTaggedLiteral;
-// else if has(datatype) -> TypedLiteral; else SimpleLiteral.
+// AnnotationValueDeserializer: read JsonNode; if has(iri) -> AnnotationIri;
+// else -> AnnotationStringValue.
 ```
 
 **Python idiom.** Pydantic v2 with a callable `Discriminator` that
 returns the variant tag from the parsed payload. The callable inspects
-the keys present and returns a string like `"string"`, `"lang"`, or
-`"datatype"`.
+the keys present and returns `"iri"` or `"string"`.
 
 ```python
-from typing import Annotated, Literal as Lit, Union
+from typing import Annotated, Union
 from pydantic import BaseModel, ConfigDict, Discriminator, Tag
 
-class SimpleLiteral(BaseModel):
+class AnnotationStringValue(BaseModel):
     model_config = ConfigDict(frozen=True)
     value: str
+    lang: str | None = None
 
-class LangTaggedLiteral(BaseModel):
+class AnnotationIri(BaseModel):
     model_config = ConfigDict(frozen=True)
-    value: str
-    lang: str
+    iri: str
 
-class TypedLiteral(BaseModel):
-    model_config = ConfigDict(frozen=True)
-    value: str
-    datatype: str
-
-def _literal_disc(v: object) -> str:
+def _annotation_value_disc(v: object) -> str:
     if isinstance(v, dict):
-        if "lang" in v: return "lang"
-        if "datatype" in v: return "datatype"
-        return "string"
-    return type(v).__name__  # round-trip from instance
+        return "iri" if "iri" in v else "string"
+    return "iri" if isinstance(v, AnnotationIri) else "string"
 
-Literal = Annotated[
+AnnotationValue = Annotated[
     Union[
-        Annotated[SimpleLiteral, Tag("string")],
-        Annotated[LangTaggedLiteral, Tag("lang")],
-        Annotated[TypedLiteral, Tag("datatype")],
+        Annotated[AnnotationStringValue, Tag("string")],
+        Annotated[AnnotationIri, Tag("iri")],
     ],
-    Discriminator(_literal_disc),
+    Discriminator(_annotation_value_disc),
 ]
 ```
 
@@ -322,15 +322,14 @@ A `model_validator(mode="before")` on a parent model is an alternative
 when the discriminator depends on context.
 
 **Validation guidance.** Decoders MUST reject objects whose property
-set matches no variant (e.g., `{"value": "x", "lang": "en", "datatype":
-"…"}` carries both `lang` and `datatype` and is invalid; cf.
-[`wire-grammar.md`](wire-grammar.md) §3 `TypedLiteral`
-constraint). Encoders MUST omit the optional discriminating properties
-when not applicable.
+set matches no variant (e.g., `{"iri": "...", "value": "..."}` carries
+both `iri` and `value` and is non-conforming; cf.
+[`wire-grammar.md`](wire-grammar.md) §5.4). Encoders MUST omit the
+inapplicable arm's properties.
 
-**Worked example: `Literal` (`SimpleLiteral | LangTaggedLiteral |
-TypedLiteral`).** Wire shapes: `{"value":"x"}`,
-`{"value":"x","lang":"en"}`, `{"value":"x","datatype":"…"}`. Each
+**Worked example: `AnnotationValue` (`AnnotationStringValue |
+AnnotationIri`).** Wire shapes: `{"value":"x"}`,
+`{"value":"x","lang":"en"}`, `{"iri":"https://example.org/r"}`. Each
 binding decodes by inspecting property presence and reconstructs the
 correct in-memory variant.
 
@@ -339,19 +338,18 @@ correct in-memory variant.
 **What it is.** A wire production written as `T ::: A | B | …` with
 `// discriminator: position`. The variant is determined entirely by
 *the enclosing property and surrounding context*; the encoded object
-itself carries no discriminator. Examples: the typed-literal subtypes
-(`IntegerNumberLiteral`, `RealNumberLiteral`, `FullDateLiteral`,
-`TimeLiteral`, `DateTimeLiteral`) inside their typed `Value` parents;
-`RenderingHint` inside the various `FieldSpec` families; `TemporalLiteral`
-inside the temporal value types.
+itself carries no discriminator. The principal example is `RenderingHint`
+inside the various `FieldSpec` families: each `FieldSpec` family fixes
+which `RenderingHint` variant is permitted at its `renderingHint` slot,
+so the rendering hint encodes without a `kind` tag.
 
 Bindings can usually realise each use site as a single concrete
 class, since the position fixes the variant. There is no need for a
 runtime union at the use site.
 
 **TypeScript idiom.** A single concrete interface per use site; the
-abstract union (`RenderingHint`, `TemporalLiteral`) exists only as a
-documentation alias and is not used as a runtime narrowing target.
+abstract union (`RenderingHint`) exists only as a documentation alias
+and is not used as a runtime narrowing target.
 
 **Java idiom.** A concrete record per use site. The intermediate
 union interface MAY exist purely for documentation but does not need
@@ -364,12 +362,11 @@ union may be exposed as a `TypeAlias` for documentation.
 enclosing property's type. Decoders SHOULD NOT attempt cross-variant
 disambiguation at this position.
 
-**Worked example: `FullDateLiteral` inside `FullDateValue.literal`.**
-Wire: `{"kind":"FullDateValue","literal":{"value":"2024-06-15"}}`. The
-`literal` property is statically typed as `FullDateLiteral`; the
-`datatype` property MAY be omitted on the wire and is reconstructed
-at decode (per [`wire-grammar.md`](wire-grammar.md) §3 and
-[`serialization.md`](serialization.md) §6.2).
+**Worked example: `DateRenderingHint` inside `DateFieldSpec.renderingHint`.**
+Wire: `{"kind":"DateFieldSpec","dateValueType":"fullDate","renderingHint":{"componentOrder":"dayMonthYear"}}`. The
+`renderingHint` property is statically typed as `DateRenderingHint`;
+no `kind` tag appears on the inner object since the position fixes
+the variant.
 
 ### 2.5 Branded primitive
 
@@ -458,9 +455,10 @@ use site.
 **What it is.** A wire production `MultilingualString :::
 nonEmptyArray<LangString>` with the inline constraint that lang tags
 MUST be unique within the array (case-folded, [`wire-grammar.md`](wire-grammar.md)
-§2.2). Distinct from `LangTaggedLiteral` (which is a single
-`{value, lang}` literal); a `MultilingualString` is an *array* of one
-or more `{value, lang}` localizations of the *same* conceptual string.
+§2.2). Distinct from a single language-tagged `TextValue` (a single
+tagged object carrying `kind`, `value`, and `lang`); a
+`MultilingualString` is an *array* of one or more `{value, lang}`
+localizations of the *same* conceptual string.
 
 The (value, lang) pattern recurs across all three target languages and
 deserves its own section because the non-empty-and-unique-lang
@@ -592,7 +590,7 @@ are drawn from a fixed set. All values are `lowerCamelCase` per
 [`serialization.md`](serialization.md) §3.3. Examples: `Status`,
 `ValueRequirement`, `Visibility`, `DateValueType`, `DateComponentOrder`,
 `TimeFormat`, `TimePrecision`, `DateTimeValueType`,
-`TimezoneRequirement`, `RealNumberDatatypeIri` (three values), the
+`TimezoneRequirement`, `RealNumberDatatypeKind` (three values), the
 flat-string rendering hints (`TextRenderingHint`,
 `SingleChoiceRenderingHint`, `MultipleChoiceRenderingHint`,
 `BooleanRenderingHint`).
@@ -824,9 +822,10 @@ High-level structure (the `src/` tree mirrors the grammar layering):
 - `leaves/` — primitive validators and branded leaves (`Iri`,
   `LanguageTag`, `IsoDateTimeStamp`, ASCII-id, BCP 47, SemVer, integer).
 - `multilingual.ts` — `MultilingualString` and `LangString`.
-- `literals/` — `Literal`, `TextLiteral`, `IntegerNumberLiteral`,
-  `RealNumberLiteral`, `TemporalLiteral`.
-- `values/` — the `Value` family.
+- `values/` — the `Value` family. Each `Value` variant carries its
+  family-specific content directly (lexical form, language tag,
+  datatype, or boolean payload, as appropriate); there is no separate
+  `Literal` layer.
 - `identity.ts` — artifact identifiers (`FieldId`, `TemplateId`,
   `PresentationComponentId`, `TemplateInstanceId`).
 - `metadata/` — `LifecycleMetadata`, `SchemaVersioning`, `Annotation`.
@@ -860,14 +859,13 @@ Conventions adopted by cedar-ts (already documented in §2 above):
 
 **Java.**
 
-- Jackson handling of the property-set discriminated unions
-  (`Literal`, `TextLiteral`, `AnnotationValue`) requires either
-  per-union custom deserializers or the "fat record with nullable
-  fields plus a derived enum" approach (§2.3). The custom-deserializer
-  approach yields a cleaner public API but more code; the fat-record
-  approach is shorter but loses static type expressiveness for the
-  variant. The reference Java binding (when produced) SHOULD pick one
-  and document the choice.
+- Jackson handling of the property-set discriminated `AnnotationValue`
+  union requires either a custom deserializer or the "fat record with
+  nullable fields plus a derived enum" approach (§2.3). The
+  custom-deserializer approach yields a cleaner public API but more
+  code; the fat-record approach is shorter but loses static type
+  expressiveness for the variant. The reference Java binding (when
+  produced) SHOULD pick one and document the choice.
 - `record` types cannot have generic type parameters with bounded
   variance the same way regular classes can. For `NonEmptyList<T>`
   -style helpers used as a `MultilingualString` substrate, prefer

@@ -72,7 +72,7 @@ Three discrimination strategies are recognised, declared inline:
 - `discriminator: property-set` — members are distinguished by which
   properties are present on the encoded object. Used where members are
   structurally disjoint and a `kind` discriminator would be redundant
-  (currently `Literal`, `TextLiteral`, and `AnnotationValue`).
+  (currently `AnnotationValue`).
 - `discriminator: position` — members are distinguished by the
   enclosing property name and the surrounding context, not by anything
   on the encoded object itself. Used at singleton positions where the
@@ -161,7 +161,7 @@ The inner `kind` is therefore retained:
   "artifactRef": "https://example.org/fields/born",
   "defaultValue": {
     "kind": "FullDateValue",
-    "literal": { "value": "1990-06-15" }
+    "value": "1990-06-15"
   }
 }
 ```
@@ -238,7 +238,7 @@ Iri ::: string
   // EXCEPT in `AnnotationValue` (the only polymorphic position
   // admitting a bare Iri). At that one position the IRI is wrapped
   // as `object { iri: string }` so the property-set discriminator
-  // distinguishes it from the literal arms — see §6 for that wrapper.
+  // distinguishes it from the string-bearing arm — see §5 for that wrapper.
 
 DatatypeIri ::: Iri
   // a documented role; encodes as Iri
@@ -273,122 +273,24 @@ MultilingualString ::: nonEmptyArray<LangString>
   // lang tags MUST be unique within the array (case-folded comparison)
 ```
 
-### 2.3 Numeric datatype IRIs
+### 2.3 Numeric datatype kind
 
 ```
-RealNumberDatatype ::: RealNumberDatatypeIri
-  // collapses to the inner enum string (the wrapper carries no extra info)
-
-RealNumberDatatypeIri ::: "decimal" | "float" | "double"
-  // each value names an XSD numeric datatype IRI per grammar.md §Numeric
-  // Datatype IRIs; the corresponding XSD IRIs are reconstructed at decode
-  // the per-arm productions XsdDecimalDatatypeIri, XsdFloatDatatypeIri,
-  // XsdDoubleDatatypeIri collapse to their string-literal alternative above
-
-IntegerNumberDatatypeIri ::: "integer"
-  // a singleton-valued enum; XsdIntegerDatatypeIri collapses to the literal
-  // "integer" but in practice this enum is reconstructed at decode time and
-  // is not carried in the wire form (IntegerNumberLiteral has no datatype
-  // slot — its datatype is fixed by the literal's category)
+RealNumberDatatypeKind ::: "decimal" | "float" | "double"
+  // CEDAR-native enum naming the three real-number kinds.
+  // The mapping to XSD datatype IRIs is defined separately in
+  // rdf-projection.md and is out of scope for the wire form.
 ```
 
-### 2.4 Temporal datatype IRIs
-
-```
-DateDatatypeIri ::: "date"
-TimeDatatypeIri ::: "time"
-DateTimeDatatypeIri ::: "dateTime"
-  // the per-arm productions XsdDateDatatypeIri, XsdTimeDatatypeIri, and
-  // XsdDateTimeDatatypeIri collapse to their string-literal alternative above
-  // the canonical XSD IRI is reconstructed at decode
-```
+`IntegerNumberValue` is fixed to a single integer category and carries
+no datatype slot on the wire. Temporal `Value` variants
+(`FullDateValue`, `TimeValue`, `DateTimeValue`) likewise carry no
+datatype slot — the temporal category is fixed by the variant's
+`kind`.
 
 ---
 
-## 3. Literals
-
-```
-Literal ::: SimpleLiteral | LangTaggedLiteral | TypedLiteral
-  // discriminator: property-set
-
-SimpleLiteral ::: object {
-  value: string
-}
-
-LangTaggedLiteral ::: object {
-  value: string
-  lang: string
-}
-  // lang MUST be a well-formed BCP 47 tag
-
-TypedLiteral ::: object {
-  value: string
-  datatype: string
-}
-  // datatype is an Iri identifying the literal's RDF datatype
-  // value and datatype MUST NOT both carry a lang property
-
-TextLiteral ::: SimpleLiteral | LangTaggedLiteral
-  // discriminator: property-set
-```
-
-The four specialised typed-literal subtypes appear only at singleton
-positions where the surrounding production fixes the datatype; the
-`datatype` property MAY be omitted on the wire and is reconstructed at
-decode time from the position.
-
-```
-IntegerNumberLiteral ::: object {
-  value: string
-}
-  // value is a base-10 integer lexical form
-  // datatype is implicit (xsd:integer) and not carried on the wire;
-  // the literal's category is fixed by the enclosing IntegerNumberValue
-
-RealNumberLiteral ::: object {
-  value: string
-  datatype?: string
-}
-  // value is a base-10 real-valued lexical form
-  // datatype MAY be present; when omitted, the surrounding RealNumberValue's
-  // RealNumberDatatypeIri determines the XSD numeric datatype IRI
-
-BooleanLiteral ::: object {
-  value: boolean
-}
-  // value is a JSON boolean (true or false)
-  // datatype is implicit (xsd:boolean) and not carried on the wire;
-  // the literal's category is fixed by the enclosing BooleanValue
-
-TemporalLiteral ::: FullDateLiteral | TimeLiteral | DateTimeLiteral
-  // discriminator: position
-  // resolved by the enclosing FullDateValue / TimeValue / DateTimeValue
-
-FullDateLiteral ::: object {
-  value: string
-  datatype?: string
-}
-  // value is an xsd:date lexical form (YYYY-MM-DD with optional zone)
-  // datatype, when present, MUST be the xsd:date IRI
-
-TimeLiteral ::: object {
-  value: string
-  datatype?: string
-}
-  // value is an xsd:time lexical form
-  // datatype, when present, MUST be the xsd:time IRI
-
-DateTimeLiteral ::: object {
-  value: string
-  datatype?: string
-}
-  // value is an xsd:dateTime lexical form
-  // datatype, when present, MUST be the xsd:dateTime IRI
-```
-
----
-
-## 4. Values
+## 3. Values
 
 ```
 Value ::: TextValue | NumericValue | BooleanValue
@@ -404,31 +306,53 @@ NumericValue ::: IntegerNumberValue | RealNumberValue
   // discriminator: kind
 ```
 
-### 4.1 Scalar values
+### 3.1 Scalar values
+
+Scalar `Value` variants carry their content directly. There is no inner
+literal wrapper. `TextValue` carries an optional `lang` for
+language-tagged text; `IntegerNumberValue` carries a base-10 integer
+lexical form (datatype is fixed at `xsd:integer` and not carried);
+`RealNumberValue` carries a real-valued lexical form paired with the
+required `datatype` enum (`decimal | float | double`); `BooleanValue`
+carries a JSON boolean.
 
 ```
 TextValue ::: object {
   "kind": "TextValue"
-  literal: TextLiteral
+  value: string
+  lang?: string
 }
+  // lang, when present, MUST be a well-formed BCP 47 tag
+  // value MUST be in Unicode Normalization Form C
 
 IntegerNumberValue ::: object {
   "kind": "IntegerNumberValue"
-  literal: IntegerNumberLiteral
+  value: string
 }
+  // value is a base-10 integer lexical form
+  // datatype is implicit (xsd:integer) and not carried on the wire
 
 RealNumberValue ::: object {
   "kind": "RealNumberValue"
-  literal: RealNumberLiteral
+  value: string
+  datatype: "decimal" | "float" | "double"
 }
+  // value is a base-10 real-valued lexical form
+  // datatype names the XSD datatype (xsd:decimal, xsd:float, or xsd:double)
 
 BooleanValue ::: object {
   "kind": "BooleanValue"
-  literal: BooleanLiteral
+  value: boolean
 }
+  // value is a JSON boolean (true or false)
+  // datatype is implicit (xsd:boolean) and not carried on the wire
 ```
 
-### 4.2 Temporal values
+### 3.2 Temporal values
+
+Each temporal `Value` variant carries its lexical form directly. The
+datatype is fixed by the variant's `kind` and is not carried on the
+wire.
 
 ```
 DateValue ::: YearValue | YearMonthValue | FullDateValue
@@ -448,21 +372,24 @@ YearMonthValue ::: object {
 
 FullDateValue ::: object {
   "kind": "FullDateValue"
-  literal: FullDateLiteral
+  value: string
 }
+  // value is an xsd:date lexical form (YYYY-MM-DD with optional zone)
 
 TimeValue ::: object {
   "kind": "TimeValue"
-  literal: TimeLiteral
+  value: string
 }
+  // value is an xsd:time lexical form
 
 DateTimeValue ::: object {
   "kind": "DateTimeValue"
-  literal: DateTimeLiteral
+  value: string
 }
+  // value is an xsd:dateTime lexical form
 ```
 
-### 4.3 Controlled-term value
+### 3.3 Controlled-term value
 
 ```
 Label ::: MultilingualString
@@ -479,7 +406,7 @@ ControlledTermValue ::: object {
   // term is a TermIri (an Iri identifying the term)
 ```
 
-### 4.4 Choice value
+### 3.4 Choice value
 
 ```
 ChoiceValue ::: LiteralChoiceValue | ControlledTermChoiceValue
@@ -487,8 +414,14 @@ ChoiceValue ::: LiteralChoiceValue | ControlledTermChoiceValue
 
 LiteralChoiceValue ::: object {
   "kind": "LiteralChoiceValue"
-  literal: Literal
+  value: string
+  lang?: string
+  datatype?: string
 }
+  // value is the chosen lexical form
+  // lang and datatype are mutually exclusive: at most one is present
+  // lang, when present, MUST be a well-formed BCP 47 tag
+  // datatype, when present, MUST be a syntactically valid IRI
 
 ControlledTermChoiceValue ::: object {
   "kind": "ControlledTermChoiceValue"
@@ -498,7 +431,16 @@ ControlledTermChoiceValue ::: object {
   // it is encoded untagged (the kind property is omitted in this position)
 ```
 
-### 4.5 Link value
+A `LiteralChoiceValue` is shape-discriminated by which optional property
+is present:
+
+| Wire shape | Selected option kind |
+|---|---|
+| `{ "kind": "LiteralChoiceValue", "value": "..." }` | plain text choice |
+| `{ "kind": "LiteralChoiceValue", "value": "...", "lang": "..." }` | language-tagged text choice |
+| `{ "kind": "LiteralChoiceValue", "value": "...", "datatype": "..." }` | typed-literal choice |
+
+### 3.5 Link value
 
 ```
 LinkValue ::: object {
@@ -511,21 +453,21 @@ LinkLabel ::: string
   // plain Unicode text; not multilingual
 ```
 
-### 4.6 Contact values
+### 3.6 Contact values
 
 ```
 EmailValue ::: object {
   "kind": "EmailValue"
-  literal: SimpleLiteral
+  value: string
 }
 
 PhoneNumberValue ::: object {
   "kind": "PhoneNumberValue"
-  literal: SimpleLiteral
+  value: string
 }
 ```
 
-### 4.7 External authority values
+### 3.7 External authority values
 
 ```
 ExternalAuthorityValue ::: OrcidValue | RorValue | DoiValue
@@ -576,7 +518,7 @@ RridIri ::: Iri
 NihGrantIri ::: Iri
 ```
 
-### 4.8 Attribute value
+### 3.8 Attribute value
 
 ```
 AttributeName ::: string
@@ -592,7 +534,7 @@ AttributeValue ::: object {
 
 ---
 
-## 5. Identifiers (artifact)
+## 4. Identifiers (artifact)
 
 Each artifact identifier wire-encodes as a plain string IRI; the
 abstract grammar's branding is not visible on the wire.
@@ -635,9 +577,9 @@ information.
 
 ---
 
-## 6. Artifact Metadata
+## 5. Artifact Metadata
 
-### 6.1 Aggregate structure
+### 5.1 Aggregate structure
 
 `ArtifactMetadata` is flat on the wire: its descriptive properties
 (`name`, `description`, `identifier`, `preferredLabel`, `altLabels`),
@@ -694,7 +636,7 @@ into the outer object: every property of `ArtifactMetadata` appears
 directly alongside `versioning`. There is no `metadata.artifact`
 intermediate.
 
-### 6.2 Lifecycle metadata
+### 5.2 Lifecycle metadata
 
 ```
 CreatedOn ::: string
@@ -712,7 +654,7 @@ LifecycleMetadata ::: object {
   // createdBy and modifiedBy carry agent Iri values
 ```
 
-### 6.3 Schema versioning
+### 5.3 Schema versioning
 
 ```
 SchemaVersioning ::: object {
@@ -736,7 +678,7 @@ DraftStatus ::: "draft"
 PublishedStatus ::: "published"
 ```
 
-### 6.4 Annotations
+### 5.4 Annotations
 
 ```
 Annotation ::: object {
@@ -746,27 +688,32 @@ Annotation ::: object {
   // property is the annotation-property Iri (the grammar's bare Iri
   // collapses to a string at this singleton position)
 
-AnnotationValue ::: SimpleLiteral | LangTaggedLiteral | TypedLiteral
-                  | object { iri: string }
+AnnotationValue ::: AnnotationStringValue | object { iri: string }
   // discriminator: property-set
   //
-  // The four arms are distinguished by which properties the encoded
+  // The two arms are distinguished by which properties the encoded
   // object carries:
   //
-  //   { "value": "..." }                        ⇒ SimpleLiteral
-  //   { "value": "...", "lang": "..." }         ⇒ LangTaggedLiteral
-  //   { "value": "...", "datatype": "..." }     ⇒ TypedLiteral
-  //   { "iri": "..." }                          ⇒ Iri (wrapped at this
-  //                                               polymorphic position)
+  //   { "value": "..." }                ⇒ AnnotationStringValue (no lang)
+  //   { "value": "...", "lang": "..." } ⇒ AnnotationStringValue (lang-tagged)
+  //   { "iri": "..." }                  ⇒ Iri (wrapped at this
+  //                                        polymorphic position)
   //
   // An object that carries both `iri` and `value` is non-conforming.
+
+AnnotationStringValue ::: object {
+  value: string
+  lang?: string
+}
+  // lang, when present, MUST be a well-formed BCP 47 tag
+  // value MUST be in Unicode Normalization Form C
 ```
 
 ---
 
-## 7. Embedded Artifact Properties
+## 6. Embedded Artifact Properties
 
-### 7.1 Embedded artifact key
+### 6.1 Embedded artifact key
 
 ```
 EmbeddedArtifactKey ::: string
@@ -777,9 +724,9 @@ KeyIdentifier ::: string
   // matches the AsciiIdentifier pattern
 ```
 
-### 7.2 References
+### 6.2 References
 
-References mirror the identifiers in §5: each `XxxFieldReference`,
+References mirror the identifiers in §4: each `XxxFieldReference`,
 `TemplateReference`, and `PresentationComponentReference` encodes as a
 plain IRI, carried at the `artifactRef` slot of the enclosing
 embedding. The family is recovered from the `kind` discriminator on
@@ -814,7 +761,7 @@ TemplateReference ::: Iri
 PresentationComponentReference ::: Iri
 ```
 
-### 7.3 Requirements
+### 6.3 Requirements
 
 ```
 ValueRequirement ::: "required" | "recommended" | "optional"
@@ -822,7 +769,7 @@ ValueRequirement ::: "required" | "recommended" | "optional"
   // to their string-literal alternative above
 ```
 
-### 7.4 Cardinality
+### 6.4 Cardinality
 
 ```
 Cardinality ::: object {
@@ -836,7 +783,7 @@ MinCardinality ::: number
 MaxCardinality ::: number
 ```
 
-### 7.5 Visibility
+### 6.5 Visibility
 
 ```
 Visibility ::: "visible" | "hidden"
@@ -844,55 +791,53 @@ Visibility ::: "visible" | "hidden"
   // string-literal alternative above
 ```
 
-### 7.6 Defaults
+### 6.6 Defaults
 
 The optional `defaultValue` slot on each `EmbeddedXxxField` is typed
-family-by-family with the family's underlying value or literal type
-(see `grammar.md` §Defaults for the full table). There is no
-`DefaultValue` union and no per-family `XxxDefaultValue` wrapper on the
-wire: the `defaultValue` JSON encodes directly as the corresponding
-family-specific type.
+family-by-family with the family's `Value` type (see `grammar.md`
+§Defaults for the full table). There is no `DefaultValue` union and no
+per-family `XxxDefaultValue` wrapper on the wire: the `defaultValue`
+JSON encodes directly as the corresponding family's `Value`.
 
-For the kind-tagged Value types that appear at a `defaultValue` slot
-(`ControlledTermValue`, `LinkValue`, the six external-authority value
-types), the `defaultValue` slot is a singleton position: per the
-polymorphic-only kind rule (§1.5), these productions encode at this
-position **without** a `kind` property. The polymorphic `DateValue` and
-`ChoiceValue` unions retain their `kind` discriminators at this
-position because a kind tag is required to discriminate the union
-arms.
+A `defaultValue` slot is a singleton position: per the polymorphic-only
+kind rule (§1.5), the family is fixed by the enclosing
+`EmbeddedXxxField.kind` and the inner `kind` property is dropped on the
+wire and reconstructed at decode time. The two polymorphic `Value`
+unions — `DateValue` and `ChoiceValue` — retain their `kind`
+discriminators at this position because a kind tag is required to
+discriminate the union arms.
 
 The wire form per family is therefore:
 
 | Embedded field | `defaultValue` wire form |
 |---|---|
-| `EmbeddedTextField` | `TextLiteral` (property-set discriminated `SimpleLiteral \| LangTaggedLiteral`) |
-| `EmbeddedIntegerNumberField` | `IntegerNumberLiteral` (`{ value }`) |
-| `EmbeddedRealNumberField` | `RealNumberLiteral` (`{ value, datatype? }`) |
-| `EmbeddedBooleanField` | `BooleanLiteral` (`{ value }` where value is a JSON boolean) |
+| `EmbeddedTextField` | `TextValue` (kind dropped: `{ value, lang? }`) |
+| `EmbeddedIntegerNumberField` | `IntegerNumberValue` (kind dropped: `{ value }`) |
+| `EmbeddedRealNumberField` | `RealNumberValue` (kind dropped: `{ value, datatype }`) |
+| `EmbeddedBooleanField` | `BooleanValue` (kind dropped: `{ value }` where value is a JSON boolean) |
 | `EmbeddedDateField` | `DateValue` (kind retained: `YearValue \| YearMonthValue \| FullDateValue`) |
-| `EmbeddedTimeField` | `TimeLiteral` (`{ value, datatype? }`) |
-| `EmbeddedDateTimeField` | `DateTimeLiteral` (`{ value, datatype? }`) |
-| `EmbeddedControlledTermField` | `ControlledTermValue` (kind dropped at singleton) |
+| `EmbeddedTimeField` | `TimeValue` (kind dropped: `{ value }`) |
+| `EmbeddedDateTimeField` | `DateTimeValue` (kind dropped: `{ value }`) |
+| `EmbeddedControlledTermField` | `ControlledTermValue` (kind dropped) |
 | `EmbeddedSingleChoiceField` | `ChoiceValue` (kind retained) |
 | `EmbeddedMultipleChoiceField` | `ChoiceValue` (kind retained) |
-| `EmbeddedLinkField` | `LinkValue` (kind dropped at singleton) |
-| `EmbeddedEmailField` | `SimpleLiteral` (`{ value }`) |
-| `EmbeddedPhoneNumberField` | `SimpleLiteral` (`{ value }`) |
-| `EmbeddedOrcidField` | `OrcidValue` (kind dropped at singleton) |
-| `EmbeddedRorField` | `RorValue` (kind dropped at singleton) |
-| `EmbeddedDoiField` | `DoiValue` (kind dropped at singleton) |
-| `EmbeddedPubMedIdField` | `PubMedIdValue` (kind dropped at singleton) |
-| `EmbeddedRridField` | `RridValue` (kind dropped at singleton) |
-| `EmbeddedNihGrantIdField` | `NihGrantIdValue` (kind dropped at singleton) |
+| `EmbeddedLinkField` | `LinkValue` (kind dropped) |
+| `EmbeddedEmailField` | `EmailValue` (kind dropped: `{ value }`) |
+| `EmbeddedPhoneNumberField` | `PhoneNumberValue` (kind dropped: `{ value }`) |
+| `EmbeddedOrcidField` | `OrcidValue` (kind dropped) |
+| `EmbeddedRorField` | `RorValue` (kind dropped) |
+| `EmbeddedDoiField` | `DoiValue` (kind dropped) |
+| `EmbeddedPubMedIdField` | `PubMedIdValue` (kind dropped) |
+| `EmbeddedRridField` | `RridValue` (kind dropped) |
+| `EmbeddedNihGrantIdField` | `NihGrantIdValue` (kind dropped) |
 
 **Spec-level defaults.** `TextFieldSpec` is the only `FieldSpec` that
 carries a `defaultValue` slot, and it follows the same
 singleton-position rule as the embedding-level defaults above (encodes
-as `TextLiteral`, property-set discriminated, no `kind`). See §8 for
-the production.
+as `TextValue` with kind dropped: `{ value, lang? }`). See §7 for the
+production.
 
-### 7.7 Label override
+### 6.7 Label override
 
 ```
 LabelOverride ::: object {
@@ -902,7 +847,7 @@ LabelOverride ::: object {
   // altLabels MAY be empty
 ```
 
-### 7.8 Properties
+### 6.8 Properties
 
 ```
 Property ::: object {
@@ -917,7 +862,7 @@ PropertyLabel ::: MultilingualString
 
 ---
 
-## 8. Field Specs
+## 7. Field Specs
 
 ```
 FieldSpec ::: TextFieldSpec | NumericFieldSpec | BooleanFieldSpec
@@ -935,15 +880,16 @@ NumericFieldSpec ::: IntegerNumberFieldSpec | RealNumberFieldSpec
 
 TextFieldSpec ::: object {
   "kind": "TextFieldSpec"
-  defaultValue?: TextLiteral
+  defaultValue?: TextValue
   minLength?: number
   maxLength?: number
   validationRegex?: string
   renderingHint?: TextRenderingHint
 }
-  // defaultValue, when present, encodes as a TextLiteral (property-set
-  // discriminated; no kind). TextFieldSpec is the only FieldSpec that
-  // carries a defaultValue slot (see §7.6).
+  // defaultValue, when present, encodes as a TextValue with kind
+  // dropped at this singleton position (i.e. `{ value, lang? }`).
+  // TextFieldSpec is the only FieldSpec that carries a defaultValue
+  // slot (see §6.6).
 
 IntegerNumberFieldSpec ::: object {
   "kind": "IntegerNumberFieldSpec"
@@ -955,7 +901,7 @@ IntegerNumberFieldSpec ::: object {
 
 RealNumberFieldSpec ::: object {
   "kind": "RealNumberFieldSpec"
-  datatype: RealNumberDatatypeIri
+  datatype: RealNumberDatatypeKind
   unit?: Unit
   minValue?: RealNumberValue
   maxValue?: RealNumberValue
@@ -982,7 +928,7 @@ RealNumberMinValue ::: RealNumberValue
 RealNumberMaxValue ::: RealNumberValue
 ```
 
-### 8.1 Temporal field specs
+### 7.1 Temporal field specs
 
 ```
 TemporalFieldSpec ::: DateFieldSpec | TimeFieldSpec | DateTimeFieldSpec
@@ -1078,7 +1024,7 @@ TwelveHourTimeFormat ::: "twelveHour"
 TwentyFourHourTimeFormat ::: "twentyFourHour"
 ```
 
-### 8.2 Controlled term field spec
+### 7.2 Controlled term field spec
 
 ```
 ControlledTermFieldSpec ::: object {
@@ -1087,7 +1033,7 @@ ControlledTermFieldSpec ::: object {
 }
 ```
 
-### 8.3 Choice field specs
+### 7.3 Choice field specs
 
 ```
 ChoiceFieldSpec ::: SingleChoiceFieldSpec | MultipleChoiceFieldSpec
@@ -1126,9 +1072,15 @@ ControlledTermMultipleChoiceFieldSpec ::: object {
 }
 
 LiteralChoiceOption ::: object {
-  literal: Literal
+  value: string
+  lang?: string
+  datatype?: string
   default?: true
 }
+  // value is the option's lexical form
+  // lang and datatype are mutually exclusive: at most one is present
+  // lang, when present, MUST be a well-formed BCP 47 tag
+  // datatype, when present, MUST be a syntactically valid IRI
   // default, when present, MUST be JSON true; omitted when not the default
 
 ControlledTermChoiceOption ::: object {
@@ -1142,7 +1094,7 @@ DefaultOption ::: true
   // collapses on the wire to a JSON boolean true on the parent option
 ```
 
-### 8.4 Other field specs
+### 7.4 Other field specs
 
 ```
 LinkFieldSpec ::: object {
@@ -1177,7 +1129,7 @@ AttributeValueFieldSpec ::: object {
 }
 ```
 
-### 8.5 Controlled term sources
+### 7.5 Controlled term sources
 
 ```
 ControlledTermSource ::: OntologySource | BranchSource
@@ -1242,7 +1194,7 @@ ValueSetName ::: MultilingualString
 ValueSetIri ::: Iri
 ```
 
-### 8.6 Rendering hints
+### 7.6 Rendering hints
 
 ```
 RenderingHint ::: TextRenderingHint | SingleChoiceRenderingHint
@@ -1286,7 +1238,7 @@ configuration); the simpler text/choice/boolean hints are flat strings.
 
 ---
 
-## 9. Field artifacts
+## 8. Field artifacts
 
 ```
 Field ::: TextField | NumericField | BooleanField
@@ -1498,7 +1450,7 @@ AttributeValueField ::: object {
 
 ---
 
-## 10. Embedded artifacts
+## 9. Embedded artifacts
 
 ```
 EmbeddedArtifact ::: EmbeddedField | EmbeddedTemplate
@@ -1526,7 +1478,7 @@ EmbeddedTextField ::: object {
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
-  defaultValue?: TextLiteral
+  defaultValue?: TextValue
   labelOverride?: LabelOverride
   property?: Property
 }
@@ -1538,7 +1490,7 @@ EmbeddedIntegerNumberField ::: object {
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
-  defaultValue?: IntegerNumberLiteral
+  defaultValue?: IntegerNumberValue
   labelOverride?: LabelOverride
   property?: Property
 }
@@ -1550,7 +1502,7 @@ EmbeddedRealNumberField ::: object {
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
-  defaultValue?: RealNumberLiteral
+  defaultValue?: RealNumberValue
   labelOverride?: LabelOverride
   property?: Property
 }
@@ -1561,7 +1513,7 @@ EmbeddedBooleanField ::: object {
   artifactRef: string
   valueRequirement?: ValueRequirement
   visibility?: Visibility
-  defaultValue?: BooleanLiteral
+  defaultValue?: BooleanValue
   labelOverride?: LabelOverride
   property?: Property
 }
@@ -1587,7 +1539,7 @@ EmbeddedTimeField ::: object {
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
-  defaultValue?: TimeLiteral
+  defaultValue?: TimeValue
   labelOverride?: LabelOverride
   property?: Property
 }
@@ -1599,7 +1551,7 @@ EmbeddedDateTimeField ::: object {
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
-  defaultValue?: DateTimeLiteral
+  defaultValue?: DateTimeValue
   labelOverride?: LabelOverride
   property?: Property
 }
@@ -1667,7 +1619,7 @@ EmbeddedEmailField ::: object {
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
-  defaultValue?: SimpleLiteral
+  defaultValue?: EmailValue
   labelOverride?: LabelOverride
   property?: Property
 }
@@ -1679,7 +1631,7 @@ EmbeddedPhoneNumberField ::: object {
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
-  defaultValue?: SimpleLiteral
+  defaultValue?: PhoneNumberValue
   labelOverride?: LabelOverride
   property?: Property
 }
@@ -1802,7 +1754,7 @@ EmbeddedPresentationComponent ::: object {
 
 ---
 
-## 11. Presentation Components
+## 10. Presentation Components
 
 ```
 PresentationComponent ::: RichTextComponent | ImageComponent
@@ -1860,7 +1812,7 @@ YoutubeVideoSource ::: Iri
 
 ---
 
-## 12. Templates and Top-Level Artifacts
+## 11. Templates and Top-Level Artifacts
 
 ```
 Artifact ::: SchemaArtifact | PresentationComponent | TemplateInstance
@@ -1892,7 +1844,7 @@ Footer ::: MultilingualString
 
 ---
 
-## 13. Instances
+## 12. Instances
 
 ```
 TemplateInstance ::: object {
@@ -1928,7 +1880,7 @@ NestedTemplateInstance ::: object {
 
 ---
 
-## 14. Cross-reference
+## 13. Cross-reference
 
 For the JSON-encoding rules that frame this grammar — property naming
 (lowerCamelCase), Unicode normalisation, big-integer string fallback,

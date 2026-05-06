@@ -178,7 +178,7 @@ Two embedded fields:
 | Key | Property IRI | ValueRequirement | FieldSpec |
 |---|---|---|---|
 | `title` | `https://schema.org/name` | `Required` | `TextFieldSpec` (single line) |
-| `count` | `https://example.org/sampleCount` | `Optional` | `NumericFieldSpec` (`XsdIntegerDatatypeIri`) |
+| `count` | `https://example.org/sampleCount` | `Optional` | `IntegerNumberFieldSpec` |
 
 **Instance — "Sample 42"**
 
@@ -296,7 +296,7 @@ Both fields are single-valued ([`is_multi`](#2-conventions) = false), so `encode
 }
 ```
 
-**`count` field** — `encode_numeric_field_spec` applies `NUMBER_VALUE_SHAPE`. `encode_numeric_datatype` maps `XsdIntegerDatatypeIri` to `"xsd:integer"`. `encode_embedding_constraints` sets `requiredValue: false` (Optional).
+**`count` field** — `encode_integer_number_field_spec` applies `NUMBER_VALUE_SHAPE` and emits `"xsd:integer"` for the datatype slot (an integer-number field's category is fixed). `encode_embedding_constraints` sets `requiredValue: false` (Optional).
 
 ```javascript
 {
@@ -344,10 +344,10 @@ Both fields are single-valued ([`is_multi`](#2-conventions) = false), so `encode
   "pav:lastUpdatedOn":  "2024-03-10T09:30:00Z",
   "oslc:modifiedBy":    "https://orcid.example.org/0000-0001-2345-6789",
 
-  // encode_field_value → encode_text_value (SimpleLiteral, no language tag)
+  // encode_field_value → encode_text_value (no language tag)
   "title": { "@value": "Mouse Sample 42" },
 
-  // encode_field_value → encode_numeric_value
+  // encode_field_value → encode_integer_number_value
   "count": { "@value": "5", "@type": "xsd:integer" }
 }
 ```
@@ -880,7 +880,7 @@ Text fields accept free-form string input. The rendering hint determines whether
 
 | Key | Value | Condition |
 |---|---|---|
-| `"defaultValue"` | `FT.text_default_value.text_value.text_literal.lexical_form.unicode_string` | Omit if absent |
+| `"defaultValue"` | `FT.default_value.text_value.lexical_form.unicode_string` | Omit if absent |
 | `"minLength"` | `FT.min_length.non_negative_integer (as integer)` | Omit if absent |
 | `"maxLength"` | `FT.max_length.non_negative_integer (as integer)` | Omit if absent |
 | `"regex"` | `FT.validation_regex.regex_pattern.unicode_string` | Omit if absent |
@@ -900,9 +900,9 @@ Returns the string corresponding to the hint kind:
 
 ---
 
-### `encode_numeric_field_spec(FT: NumericFieldSpec, E: EmbeddedField) → Object`
+### `encode_integer_number_field_spec(FT: IntegerNumberFieldSpec, E: EmbeddedField) → Object`
 
-Numeric fields hold typed numeric literals. The `numberType` key is always written and carries the XSD datatype IRI string. Optional unit, precision, and range constraints are included only when present. Note that `Unit` is modelled as an IRI in the Structural Model, but CTM 1.6.0 `unitOfMeasure` takes a plain string, so the IRI string value is used directly.
+Integer-number fields hold base-10 integer lexical values. The `numberType` key is always written and carries `"xsd:integer"`; the integer category is fixed by the field family.
 
 **Value shape:** `NUMBER_VALUE_SHAPE` | **Required:** `["@value"]`
 
@@ -910,40 +910,47 @@ Numeric fields hold typed numeric literals. The `numberType` key is always writt
 
 | Key | Value | Condition |
 |---|---|---|
-| `"numberType"` | `encode_numeric_datatype(FT.numeric_datatype)` | Always present |
+| `"numberType"` | `"xsd:integer"` | Always present |
 | `"unitOfMeasure"` | `iri(FT.unit.iri)` | Omit if absent |
-| `"decimalPlaces"` | `FT.numeric_precision.non_negative_integer (as integer)` | Omit if absent |
-| `"minValue"` | `FT.numeric_min_value.numeric_value.numeric_literal (as number)` | Omit if absent |
-| `"maxValue"` | `FT.numeric_max_value.numeric_value.numeric_literal (as number)` | Omit if absent |
+| `"minValue"` | `FT.integer_number_min_value.integer_number_value.value (as integer)` | Omit if absent |
+| `"maxValue"` | `FT.integer_number_max_value.integer_number_value.value (as integer)` | Omit if absent |
 
 **`_ui` extras:** `{ "inputType": "numeric" }`
 
 `Unit` carries an `Iri` in the Structural Model; CTM 1.6.0 `unitOfMeasure` is a plain string. The IRI string value is used directly.
 
-**Calls:** [`encode_embedding_constraints`](#encode_embedding_constraintse-embeddedfield--object), [`encode_embedding_ui`](#encode_embedding_uie-embeddedfield--object), [`encode_numeric_datatype`](#encode_numeric_datatyped-numericdatatype--string)
+**Calls:** [`encode_embedding_constraints`](#encode_embedding_constraintse-embeddedfield--object), [`encode_embedding_ui`](#encode_embedding_uie-embeddedfield--object)
 
-### `encode_numeric_datatype(D: NumericDatatype) → String`
+### `encode_real_number_field_spec(FT: RealNumberFieldSpec, E: EmbeddedField) → Object`
 
-Returns the string corresponding to the `NumericDatatypeIri` kind:
+Real-number fields hold lexical values for one of three real-number kinds (`decimal`, `float`, `double`). The `numberType` key carries the corresponding XSD datatype IRI string.
 
-| `NumericDatatypeIri` kind | Returns |
+**Value shape:** `NUMBER_VALUE_SHAPE` | **Required:** `["@value"]`
+
+**`_valueConstraints` extras:**
+
+| Key | Value | Condition |
+|---|---|---|
+| `"numberType"` | `encode_real_number_datatype(FT.datatype)` | Always present |
+| `"unitOfMeasure"` | `iri(FT.unit.iri)` | Omit if absent |
+| `"minValue"` | `FT.real_number_min_value.real_number_value.value (as number)` | Omit if absent |
+| `"maxValue"` | `FT.real_number_max_value.real_number_value.value (as number)` | Omit if absent |
+
+A `decimalPlaces` hint, when present on the field's `NumericRenderingHint`, is emitted under `_ui` rather than `_valueConstraints`.
+
+**`_ui` extras:** `{ "inputType": "numeric", "decimalPlaces": FT.rendering_hint.decimal_places (as integer; omit if absent) }`
+
+**Calls:** [`encode_embedding_constraints`](#encode_embedding_constraintse-embeddedfield--object), [`encode_embedding_ui`](#encode_embedding_uie-embeddedfield--object), [`encode_real_number_datatype`](#encode_real_number_datataked-realnumberdatatypekind--string)
+
+### `encode_real_number_datatype(K: RealNumberDatatypeKind) → String`
+
+Returns the XSD datatype IRI string corresponding to the CEDAR-native `RealNumberDatatypeKind`:
+
+| `RealNumberDatatypeKind` | Returns |
 |---|---|
-| `XsdIntegerDatatypeIri` | `"xsd:integer"` |
-| `XsdDecimalDatatypeIri` | `"xsd:decimal"` |
-| `XsdFloatDatatypeIri` | `"xsd:float"` |
-| `XsdDoubleDatatypeIri` | `"xsd:double"` |
-| `XsdLongDatatypeIri` | `"xsd:long"` |
-| `XsdIntDatatypeIri` | `"xsd:int"` |
-| `XsdShortDatatypeIri` | `"xsd:short"` |
-| `XsdByteDatatypeIri` | `"xsd:byte"` |
-| `XsdNonNegativeIntegerDatatypeIri` | `"xsd:nonNegativeInteger"` |
-| `XsdPositiveIntegerDatatypeIri` | `"xsd:positiveInteger"` |
-| `XsdNonPositiveIntegerDatatypeIri` | `"xsd:nonPositiveInteger"` |
-| `XsdNegativeIntegerDatatypeIri` | `"xsd:negativeInteger"` |
-| `XsdUnsignedLongDatatypeIri` | `"xsd:unsignedLong"` |
-| `XsdUnsignedIntDatatypeIri` | `"xsd:unsignedInt"` |
-| `XsdUnsignedShortDatatypeIri` | `"xsd:unsignedShort"` |
-| `XsdUnsignedByteDatatypeIri` | `"xsd:unsignedByte"` |
+| `"decimal"` | `"xsd:decimal"` |
+| `"float"` | `"xsd:float"` |
+| `"double"` | `"xsd:double"` |
 
 ---
 
@@ -1355,7 +1362,9 @@ Dispatches to the encoding function for the `Value` kind:
 | `Value` kind | Encoding function |
 |---|---|
 | `TextValue` | `encode_text_value(V)` |
-| `NumericValue` | `encode_numeric_value(V)` |
+| `IntegerNumberValue` | `encode_integer_number_value(V)` |
+| `RealNumberValue` | `encode_real_number_value(V)` |
+| `BooleanValue` | `encode_boolean_value(V)` |
 | `DateValue` | `encode_date_value(V)` |
 | `TimeValue` | `encode_time_value(V)` |
 | `DateTimeValue` | `encode_datetime_value(V)` |
@@ -1367,29 +1376,40 @@ Dispatches to the encoding function for the `Value` kind:
 | `ExternalAuthorityValue` | `encode_external_authority_value(V)` |
 | `AttributeValue` | `encode_attribute_value(V)` |
 
-**Calls:** [`encode_text_value`](#encode_text_valuev-textvalue--object), [`encode_numeric_value`](#encode_numeric_valuev-numericvalue--object), [`encode_date_value`](#encode_date_valuev-datevalue--object), [`encode_time_value`](#encode_time_valuev-timevalue--object), [`encode_datetime_value`](#encode_datetime_valuev-datetimevalue--object), [`encode_controlled_term_value`](#encode_controlled_term_valuev-controlledtermvalue--object), [`encode_choice_value`](#encode_choice_valuev-choicevalue--object), [`encode_link_value`](#encode_link_valuev-linkvalue--object), [`encode_email_value`](#encode_email_valuev-emailvalue--object), [`encode_phone_number_value`](#encode_phone_number_valuev-phonenumbervalue--object), [`encode_external_authority_value`](#encode_external_authority_valuev-externalauthorityvalue--object), [`encode_attribute_value`](#encode_attribute_valuev-attributevalue--object)
+**Calls:** [`encode_text_value`](#encode_text_valuev-textvalue--object), [`encode_integer_number_value`](#encode_integer_number_valuev-integernumbervalue--object), [`encode_real_number_value`](#encode_real_number_valuev-realnumbervalue--object), `encode_boolean_value`, [`encode_date_value`](#encode_date_valuev-datevalue--object), [`encode_time_value`](#encode_time_valuev-timevalue--object), [`encode_datetime_value`](#encode_datetime_valuev-datetimevalue--object), [`encode_controlled_term_value`](#encode_controlled_term_valuev-controlledtermvalue--object), [`encode_choice_value`](#encode_choice_valuev-choicevalue--object), [`encode_link_value`](#encode_link_valuev-linkvalue--object), [`encode_email_value`](#encode_email_valuev-emailvalue--object), [`encode_phone_number_value`](#encode_phone_number_valuev-phonenumbervalue--object), [`encode_external_authority_value`](#encode_external_authority_valuev-externalauthorityvalue--object), [`encode_attribute_value`](#encode_attribute_valuev-attributevalue--object)
 
 ---
 
 ### `encode_text_value(V: TextValue) → Object`
 
-Returns a JSON object whose keys depend on the `TextLiteral` kind:
+Returns a JSON object whose keys depend on whether `V` carries a language tag:
 
-| `TextLiteral` kind | `"@value"` source | `"@language"` |
+| Condition | `"@value"` source | `"@language"` |
 |---|---|---|
-| `SimpleLiteral` | `V.text_literal.lexical_form.unicode_string` | Omit |
-| `LangTaggedLiteral` | `V.text_literal.lexical_form.unicode_string` | `V.text_literal.language_tag.bcp_47_tag` |
+| `V.lang` absent | `V.value.unicode_string` | Omit |
+| `V.lang` present | `V.value.unicode_string` | `V.lang.bcp_47_tag` |
 
 ---
 
-### `encode_numeric_value(V: NumericValue) → Object`
+### `encode_integer_number_value(V: IntegerNumberValue) → Object`
 
-Numeric instance values carry both a lexical form and an explicit XSD datatype IRI, encoded as `@value` and `@type` respectively. The datatype string is produced by the same `encode_numeric_datatype` function used for field schema encoding.
+Integer-number instance values carry a base-10 integer lexical form. The XSD datatype IRI is fixed at `"xsd:integer"`.
 
 ```javascript
 {
-  "@value": V.numeric_literal.lexical_form.unicode_string,
-  "@type":  encode_numeric_datatype(V.numeric_literal.numeric_datatype_iri)
+  "@value": V.value.unicode_string,
+  "@type":  "xsd:integer"
+}
+```
+
+### `encode_real_number_value(V: RealNumberValue) → Object`
+
+Real-number instance values carry both a lexical form and an explicit `RealNumberDatatypeKind`. The kind is mapped to the corresponding XSD datatype IRI string by `encode_real_number_datatype`.
+
+```javascript
+{
+  "@value": V.value.unicode_string,
+  "@type":  encode_real_number_datatype(V.datatype)
 }
 ```
 
@@ -1616,6 +1636,6 @@ Implementations SHOULD confirm that annotation IRI keys are valid within the CTM
 
 8. **`Unit` as IRI** — CTM 1.6.0 `unitOfMeasure` is a plain string. The IRI string value is used directly; any human-readable label associated with `Unit` is omitted.
 
-9. **`LangTaggedLiteral` in text values** — CTM 1.6.0 does not model language-tagged strings explicitly. The `@language` key is included in the encoded value object as a JSON-LD extension; support in CTM 1.6.0 tooling is not guaranteed.
+9. **Language-tagged text values** — CTM 1.6.0 does not model language-tagged strings explicitly. The `@language` key is included in the encoded value object as a JSON-LD extension; support in CTM 1.6.0 tooling is not guaranteed.
 
 10. **External authority `inputType` values** — The `inputType` string values for ORCID, ROR, DOI, PubMed, RRID, and NIH Grant fields are not standardised in the published CTM 1.6.0 specification and SHOULD be confirmed against the deployed implementation.

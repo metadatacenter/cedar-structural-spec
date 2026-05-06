@@ -28,9 +28,9 @@ This document defines that common wire format using JSON ([RFC 8259](https://www
 
 #### Note on JSON-LD shape parallel
 
-The literal and IRI encodings defined below are structurally similar to JSON-LD's term forms — `value`/`lang`/`datatype` parallels JSON-LD's `@value`/`@language`/`@type`, and `iri` parallels `@id`. This similarity is deliberate: the property-set shape JSON-LD landed on is genuinely well-suited to RDF-flavored data, and adopting that shape (without the `@` prefix) yields a clean, future-proof encoding for literal and resource values.
+The string-bearing and IRI-bearing `Value` shapes defined below are structurally similar to JSON-LD's term forms — `value`/`lang`/`datatype` parallel JSON-LD's `@value`/`@language`/`@type`, and `iri` parallels `@id`. This similarity is incidental: the wire form is CEDAR-native and stands on its own. RDF interoperability is provided by a separate derived projection (see [`rdf-projection.md`](rdf-projection.md)).
 
-Conforming documents are nevertheless **not** JSON-LD. They carry no `@context`, are not interpretable as RDF graphs without external schema knowledge, and do not follow JSON-LD's compaction, expansion, or framing algorithms. RDF-graph interoperability for CEDAR artifacts, when needed, is the subject of a future separate document (`json-ld-mapping.md`, planned) that will define a JSON-LD encoding parallel to (and convertible to/from) the native form defined here, in the same way `ctm-1.6.0-serialization.md` defines the legacy mapping.
+Conforming documents are **not** JSON-LD. They carry no `@context`, are not interpretable as RDF graphs without external schema knowledge, and do not follow JSON-LD's compaction, expansion, or framing algorithms. A future JSON-LD encoding parallel to (and convertible to/from) the native form defined here MAY be defined; that work is out of scope for this document.
 
 ### 1.3 Scope
 
@@ -118,9 +118,7 @@ This rule applies recursively: an untagged object at a singleton position whose 
 
 A small set of polymorphic unions is discriminated **by the combination of property names present** rather than by an explicit `"kind"` value. This is permitted only when the union's alternatives have structurally distinct property sets that cannot collide. The unions encoded this way are:
 
-- `Literal` (`SimpleLiteral | LangTaggedLiteral | TypedLiteral`): discriminated by `value`, `lang`, and `datatype` presence.
-- `TextLiteral` (`SimpleLiteral | LangTaggedLiteral`): discriminated by `lang` presence.
-- `AnnotationValue` (`Literal | Iri`): discriminated by `value` (literal arms) vs `iri` only (Iri arm).
+- `AnnotationValue` (`AnnotationStringValue | Iri`): discriminated by `value` (string-bearing arm) vs `iri` (IRI arm).
 
 Future unions that would admit variants with overlapping property sets MUST use `"kind"` discrimination instead.
 
@@ -128,19 +126,19 @@ A conforming decoder at a property-set-discriminated position MUST resolve the v
 
 1. The encoded object's set of property names MUST equal the property set of exactly one variant — every required property of that variant present, no property absent that the variant requires, and no property present that the variant does not list (required or optional).
 2. If the encoded object's property set matches no variant exactly, the decoder MUST reject the document.
-3. If the encoded object's property set matches more than one variant — for example, a `Literal` position carrying `{"value":"x","lang":"en","datatype":"…"}` (which simultaneously fits no single variant cleanly because `lang` and `datatype` MUST NOT both be present, and the same combination cannot match `LangTaggedLiteral` and `TypedLiteral` together) — the decoder MUST reject the document.
+3. If the encoded object's property set matches more than one variant — for example, an `AnnotationValue` position carrying `{"iri":"…","value":"…"}` (which fits neither variant cleanly because `iri` and `value` MUST NOT both be present) — the decoder MUST reject the document.
 
 Conforming encoders, by construction, never emit objects matching either the no-match or multi-match conditions, because every abstract construct corresponds to exactly one variant.
 
 #### Position-discriminated unions
 
-A few unions occupy fixed singleton positions where the surrounding property name fully determines the variant. For example, `RenderingHint` is determined by which `FieldSpec` family the parent is, and the typed-literal subtypes (`IntegerNumberLiteral`, `RealNumberLiteral`, `FullDateLiteral`, `TimeLiteral`, `DateTimeLiteral`) are determined by their parent value's `kind`. These wire entries are flagged `// discriminator: position` in [`wire-grammar.md`](wire-grammar.md).
+A few unions occupy fixed singleton positions where the surrounding property name fully determines the variant. For example, `RenderingHint` is determined by which `FieldSpec` family the parent is. These wire entries are flagged `// discriminator: position` in [`wire-grammar.md`](wire-grammar.md).
 
 Implementations MUST NOT rely on JSON property ordering to discriminate alternatives.
 
 ### 4.5 String values
 
-Strings are JSON strings encoded in UTF-8. Lexical-form strings (e.g. the `value` property of a `SimpleLiteral`) MUST be transmitted in Unicode Normalization Form C (NFC). A conforming implementation SHOULD normalize on encode.
+Strings are JSON strings encoded in UTF-8. Lexical-form strings (e.g. the `value` property of a `TextValue`) MUST be transmitted in Unicode Normalization Form C (NFC). A conforming implementation SHOULD normalize on encode.
 
 ### 4.6 Number values
 
@@ -174,7 +172,7 @@ A production carries information beyond its payload, and so MUST be encoded as a
 
 - **(b) Discriminated union membership.** The production participates in a union where alternatives must be distinguished at decode time (e.g. `Value`, every artifact's `kind`, the nineteen `Field` family variants). The discriminator is `"kind"` by default, with a small set of property-set-discriminated unions per §4.4.
 
-- **(c) Lexical-form preservation.** The production carries lexical content whose preservation requires more than a JSON primitive can express (e.g. `LangTaggedLiteral` carries a lexical form *and* a language tag; both must be present in the wire form).
+- **(c) Lexical-form preservation.** The production carries lexical content whose preservation requires more than a JSON primitive can express (e.g. `LangString` carries a lexical form *and* a language tag; both must be present in the wire form).
 
 A production that satisfies none of these is encoded *flat*: the JSON value at the corresponding property position in the enclosing object is the JSON encoding of the production's single component, with no `"kind"` wrapper.
 
@@ -184,7 +182,7 @@ The full list of productions that collapse this way is given in §1.7 of [`wire-
 - All single-`Iri` wrappers (artifact identifiers and references, `PropertyIri`, the typed external-authority IRIs, `OntologyIri`, etc.) flatten to a plain JSON string.
 - All single-`NonNegativeInteger` wrappers (`MinLength`, `MaxLength`, `MinCardinality`, `MaxCardinality`, `DecimalPlaces`, `MaxTraversalDepth`) flatten to a plain JSON number.
 - Plain-`string` wrappers (`Identifier`, `Notation`, `LinkLabel`, `OntologyAcronym`, `ValueSetIdentifier`, `HtmlContent`) flatten to a plain JSON string.
-- Enum-style productions (`Status`, `ValueRequirement`, `Visibility`, `DateValueType`, `TimePrecision`, `DateTimeValueType`, `TimezoneRequirement`, `DateComponentOrder`, `TimeFormat`, `TextRenderingHint`, `SingleChoiceRenderingHint`, `MultipleChoiceRenderingHint`, `BooleanRenderingHint`, `RealNumberDatatypeIri`) flatten to a JSON string drawn from a fixed set.
+- Enum-style productions (`Status`, `ValueRequirement`, `Visibility`, `DateValueType`, `TimePrecision`, `DateTimeValueType`, `TimezoneRequirement`, `DateComponentOrder`, `TimeFormat`, `TextRenderingHint`, `SingleChoiceRenderingHint`, `MultipleChoiceRenderingHint`, `BooleanRenderingHint`, `RealNumberDatatypeKind`) flatten to a JSON string drawn from a fixed set.
 
 ### 5.1 Lexical-form preservation
 
@@ -208,25 +206,7 @@ Every artifact identifier is encoded as a plain JSON string carrying the IRI. Th
 
 A `FieldId` (or `FieldReference`) appears only in two grammar positions: as `Field.id` and as `EmbeddedField.artifactRef`. Both surrounding constructs carry a `kind` discriminator that conveys the field family. The twenty permitted family-bearing `kind` values for `Field` variants are: `"TextField"`, `"IntegerNumberField"`, `"RealNumberField"`, `"BooleanField"`, `"DateField"`, `"TimeField"`, `"DateTimeField"`, `"ControlledTermField"`, `"SingleChoiceField"`, `"MultipleChoiceField"`, `"LinkField"`, `"EmailField"`, `"PhoneNumberField"`, `"OrcidField"`, `"RorField"`, `"DoiField"`, `"PubMedIdField"`, `"RridField"`, `"NihGrantIdField"`, or `"AttributeValueField"`. The corresponding `EmbeddedField` variants prefix `Embedded` (e.g. `"EmbeddedTextField"`). A conforming encoder MUST ensure that the IRI it places at a `FieldId` position belongs to a field of the family declared by the surrounding `kind`.
 
-### 6.2 Literals
-
-Literals are encoded as JSON objects whose **set of properties** identifies the literal variant. There is no `"kind"` discriminator for literals; the combination of properties present (`value`, `lang`, `datatype`) determines the literal type unambiguously.
-
-```json
-{ "value": "Hello" }
-```
-```json
-{ "value": "Bonjour", "lang": "fr" }
-```
-```json
-{ "value": "42", "datatype": "http://www.w3.org/2001/XMLSchema#integer" }
-```
-
-`lang` and `datatype` MUST NOT both be present.
-
-The specialized typed-literal subtypes (`RealNumberLiteral`, `FullDateLiteral`, `TimeLiteral`, `DateTimeLiteral`) appear only at singleton positions in the grammar; per §4.4 the position determines the type, so the `datatype` property MAY be omitted and is reconstructed at decode time from the surrounding context. A conforming encoder MAY include the canonical `datatype` IRI for clarity; a conforming decoder MUST accept either form. `IntegerNumberLiteral` and `BooleanLiteral` carry no `datatype` slot at all — their datatypes are fixed by category.
-
-### 6.3 Multilingual strings
+### 6.2 Multilingual strings
 
 A `MultilingualString` is encoded as a non-empty JSON array of untagged `LangString` objects. There is no `kind` discriminator: `MultilingualString` appears only at singleton positions, and `LangString` appears only as an entry of a `MultilingualString` array.
 
@@ -236,44 +216,59 @@ A `MultilingualString` is encoded as a non-empty JSON array of untagged `LangStr
 
 The BCP 47 `'und'` (undetermined) subtag MAY be used when the natural language is unspecified.
 
-`MultilingualString` and `LangTaggedLiteral` (§6.2) share the `{value, lang}` entry shape but are structurally distinct: a `LangTaggedLiteral` is a *single* language-tagged literal (one JSON object), whereas a `MultilingualString` is an *array* of one or more such pairs. Encoders MUST NOT collapse a single-entry `MultilingualString` into a bare `LangTaggedLiteral` object, and decoders MUST NOT promote a `LangTaggedLiteral` object into a `MultilingualString` array.
+`MultilingualString` and a single language-tagged `TextValue` share the `{value, lang}` shape but are structurally distinct: a `TextValue` is a *single* tagged value object (carrying `kind: "TextValue"`), whereas a `MultilingualString` is an *array* of one or more untagged `{value, lang}` entries. Encoders MUST NOT collapse a single-entry `MultilingualString` into a bare `LangString` object, and decoders MUST NOT promote a single `LangString` into a `MultilingualString` array.
 
-### 6.4 Values
+### 6.3 Values
 
-Each `Value` family is encoded as a tagged object. The full set of variants is given in [`wire-grammar.md`](wire-grammar.md) §4.
+Each `Value` family is encoded as a tagged object that carries its content directly. The full set of variants is given in [`wire-grammar.md`](wire-grammar.md) §3.
 
 ```json
-{ "kind": "TextValue", "literal": { "value": "Jane Smith" } }
+{ "kind": "TextValue", "value": "Jane Smith" }
 ```
 ```json
-{ "kind": "IntegerNumberValue", "literal": { "value": "42" } }
+{ "kind": "TextValue", "value": "Jane Smith", "lang": "en" }
 ```
 ```json
-{ "kind": "RealNumberValue", "literal": { "value": "3.14", "datatype": "http://www.w3.org/2001/XMLSchema#decimal" } }
+{ "kind": "IntegerNumberValue", "value": "42" }
+```
+```json
+{ "kind": "RealNumberValue", "value": "3.14", "datatype": "decimal" }
+```
+```json
+{ "kind": "BooleanValue", "value": true }
 ```
 ```json
 { "kind": "YearValue", "value": "2024" }
 ```
 ```json
-{ "kind": "FullDateValue", "literal": { "value": "2024-06-15" } }
+{ "kind": "FullDateValue", "value": "2024-06-15" }
+```
+```json
+{ "kind": "TimeValue", "value": "10:30:00" }
+```
+```json
+{ "kind": "DateTimeValue", "value": "2024-06-15T10:30:00Z" }
 ```
 ```json
 { "kind": "ControlledTermValue", "term": "http://example.org/term/1", "label": [{ "value": "Term 1", "lang": "en" }] }
 ```
 ```json
-{ "kind": "LiteralChoiceValue", "literal": { "value": "Professor", "lang": "en" } }
+{ "kind": "LiteralChoiceValue", "value": "Professor", "lang": "en" }
 ```
 ```json
 { "kind": "LinkValue", "iri": "https://example.org/page" }
 ```
 ```json
+{ "kind": "EmailValue", "value": "jane@example.org" }
+```
+```json
 { "kind": "OrcidValue", "iri": "https://orcid.org/0000-0002-1825-0097", "label": [{ "value": "Jane Smith", "lang": "en" }] }
 ```
 ```json
-{ "kind": "AttributeValue", "name": "color", "value": { "kind": "TextValue", "literal": { "value": "blue" } } }
+{ "kind": "AttributeValue", "name": "https://example.org/p/color", "value": { "kind": "TextValue", "value": "blue" } }
 ```
 
-### 6.5 Metadata and annotations
+### 6.4 Metadata and annotations
 
 `LifecycleMetadata`, `SchemaVersioning`, `ArtifactMetadata`, and `SchemaArtifactMetadata` each appear at a fixed singleton position and are encoded as untagged JSON objects. The descriptive properties of an artifact (`name`, `description`, `identifier`, `preferredLabel`, `altLabels`) sit directly on `ArtifactMetadata` rather than under a `descriptiveMetadata` wrapper.
 
@@ -297,15 +292,21 @@ Each `Value` family is encoded as a tagged object. The full set of variants is g
 }
 ```
 
-`AnnotationValue` is a property-set-discriminated polymorphic union (`Literal | Iri`). The literal arms carry `value` (and optionally `lang` or `datatype`); the IRI arm carries `iri` only:
+`AnnotationValue` is a property-set-discriminated polymorphic union (`AnnotationStringValue | Iri`). The string-bearing arm carries `value` (and optionally `lang`); the IRI arm carries `iri` only:
 
+```json
+{ "value": "An institutional note." }
+```
+```json
+{ "value": "Une note institutionnelle.", "lang": "fr" }
+```
 ```json
 { "iri": "https://example.org/related-resource" }
 ```
 
-The wire-form property name on `Annotation` is `body` (for the grammar's `AnnotationValue` component) — chosen to avoid the visual collision that a `value`/`value` nesting would create with the literal's `value` property. The naming follows the W3C Web Annotations convention.
+The wire-form property name on `Annotation` is `body` (for the grammar's `AnnotationValue` component) — chosen to avoid the visual collision that a `value`/`value` nesting would create with the string-bearing arm's `value` property. The naming follows the W3C Web Annotations convention.
 
-### 6.6 Embedded artifact properties
+### 6.5 Embedded artifact properties
 
 `Cardinality`, `Property`, `LabelOverride`, and `Unit` are untagged JSON objects (singleton positions). `EmbeddedArtifactKey` flattens to a plain JSON string. `ValueRequirement` and `Visibility` flatten to JSON enum strings.
 
@@ -322,7 +323,7 @@ The wire-form property name on `Annotation` is `body` (for the grammar's `Annota
 "required"
 ```
 
-### 6.7 Field specs
+### 6.6 Field specs
 
 Each concrete `FieldSpec` is encoded as a tagged object whose `"kind"` matches the spec's grammar production name. Optional configuration properties are omitted when absent.
 
@@ -330,13 +331,13 @@ Each concrete `FieldSpec` is encoded as a tagged object whose `"kind"` matches t
 { "kind": "TextFieldSpec", "minLength": 1, "maxLength": 200, "renderingHint": "singleLine" }
 ```
 ```json
-{ "kind": "IntegerNumberFieldSpec", "minValue": { "kind": "IntegerNumberValue", "literal": { "value": "0" } } }
+{ "kind": "IntegerNumberFieldSpec", "minValue": { "kind": "IntegerNumberValue", "value": "0" } }
 ```
 ```json
 { "kind": "DateFieldSpec", "dateValueType": "fullDate", "renderingHint": { "componentOrder": "dayMonthYear" } }
 ```
 ```json
-{ "kind": "LiteralSingleChoiceFieldSpec", "options": [{ "literal": { "value": "Yes", "lang": "en" }, "default": true }] }
+{ "kind": "LiteralSingleChoiceFieldSpec", "options": [{ "value": "Yes", "lang": "en", "default": true }] }
 ```
 ```json
 { "kind": "ControlledTermFieldSpec", "sources": [
@@ -349,7 +350,7 @@ The `default` property on choice options is encoded as JSON `true` when set; the
 
 The flat-string rendering hints (`TextRenderingHint`, `SingleChoiceRenderingHint`, `MultipleChoiceRenderingHint`, `BooleanRenderingHint`) appear directly as JSON enum strings; the object-shaped rendering hints (`NumericRenderingHint`, `DateRenderingHint`, `TimeRenderingHint`, `DateTimeRenderingHint`) are JSON objects with optional configuration slots.
 
-### 6.8 Field artifacts and embedded artifacts
+### 6.7 Field artifacts and embedded artifacts
 
 A `Field` artifact (shown for the text family; the other nineteen families substitute `"IntegerNumberField"`, `"RealNumberField"`, `"BooleanField"`, `"DateField"`, etc. for `kind`):
 
@@ -400,67 +401,72 @@ An `EmbeddedAttributeValueField` MUST NOT carry a `defaultValue` property.
 }
 ```
 
-### 6.9 Default values
+### 6.8 Default values
 
-The optional `defaultValue` slot on each `EmbeddedXxxField` is encoded directly as the family-specific underlying type (see [`wire-grammar.md`](wire-grammar.md) §7.6 for the full table). There is no `DefaultValue` wrapper on the wire: a default value flattens to its `Value` or `Literal` shape in place. For thin-wrapper families (text, numeric, time, date-time, email, phone) the `defaultValue` is the literal type directly. For the kind-tagged `Value` families that occupy a `defaultValue` slot at a singleton position (`ControlledTermValue`, `LinkValue`, `OrcidValue`, `RorValue`, `DoiValue`, `PubMedIdValue`, `RridValue`, `NihGrantIdValue`), the `kind` property is omitted on the wire per [`wire-grammar.md`](wire-grammar.md) §1.5. For polymorphic union families (`DateValue`, `ChoiceValue`), the `kind` discriminator is retained.
+The optional `defaultValue` slot on each `EmbeddedXxxField` is encoded directly as the family-specific `Value` (see [`wire-grammar.md`](wire-grammar.md) §6.6 for the full table). There is no `DefaultValue` wrapper on the wire: a default value is the family's `Value` shape in place. The `defaultValue` slot is a singleton position; per [`wire-grammar.md`](wire-grammar.md) §1.5, the `kind` property is omitted from the encoded `Value` because the surrounding `EmbeddedXxxField.kind` already fixes the family. The two polymorphic `Value` unions — `DateValue` and `ChoiceValue` — retain their `kind` discriminator at this position because a kind tag is required to discriminate the union arms.
 
 Examples by family:
 
 ```json
-// EmbeddedTextField.defaultValue — TextLiteral (property-set discriminated)
+// EmbeddedTextField.defaultValue — TextValue (kind dropped)
 "defaultValue": { "value": "Stanford University" }
 "defaultValue": { "value": "Bonjour", "lang": "fr" }
 
-// EmbeddedIntegerNumberField.defaultValue — IntegerNumberLiteral
-// EmbeddedRealNumberField.defaultValue — RealNumberLiteral
-"defaultValue": { "value": "42", "datatype": "http://www.w3.org/2001/XMLSchema#integer" }
+// EmbeddedIntegerNumberField.defaultValue — IntegerNumberValue (kind dropped)
+"defaultValue": { "value": "42" }
 
-// EmbeddedDateField.defaultValue — DateValue (polymorphic, kind retained)
-"defaultValue": { "kind": "FullDateValue", "literal": { "value": "2024-06-15" } }
+// EmbeddedRealNumberField.defaultValue — RealNumberValue (kind dropped)
+"defaultValue": { "value": "3.14", "datatype": "decimal" }
+
+// EmbeddedBooleanField.defaultValue — BooleanValue (kind dropped)
+"defaultValue": { "value": true }
+
+// EmbeddedDateField.defaultValue — DateValue (polymorphic; kind retained)
+"defaultValue": { "kind": "FullDateValue", "value": "2024-06-15" }
 "defaultValue": { "kind": "YearValue", "value": "2024" }
 
-// EmbeddedTimeField.defaultValue — TimeLiteral
-"defaultValue": { "value": "10:30:00", "datatype": "http://www.w3.org/2001/XMLSchema#time" }
+// EmbeddedTimeField.defaultValue — TimeValue (kind dropped)
+"defaultValue": { "value": "10:30:00" }
 
-// EmbeddedDateTimeField.defaultValue — DateTimeLiteral
-"defaultValue": { "value": "2024-06-15T10:30:00", "datatype": "http://www.w3.org/2001/XMLSchema#dateTime" }
+// EmbeddedDateTimeField.defaultValue — DateTimeValue (kind dropped)
+"defaultValue": { "value": "2024-06-15T10:30:00Z" }
 
-// EmbeddedControlledTermField.defaultValue — ControlledTermValue (kind dropped at singleton)
+// EmbeddedControlledTermField.defaultValue — ControlledTermValue (kind dropped)
 "defaultValue": {
   "term": "http://purl.obolibrary.org/obo/UBERON_0000955",
   "label": [{ "value": "brain", "lang": "en" }]
 }
 
-// EmbeddedSingleChoiceField.defaultValue / EmbeddedMultipleChoiceField.defaultValue — ChoiceValue (polymorphic, kind retained)
-"defaultValue": { "kind": "LiteralChoiceValue", "literal": { "value": "Yes", "lang": "en" } }
+// EmbeddedSingleChoiceField.defaultValue / EmbeddedMultipleChoiceField.defaultValue — ChoiceValue (polymorphic; kind retained)
+"defaultValue": { "kind": "LiteralChoiceValue", "value": "Yes", "lang": "en" }
 "defaultValue": { "kind": "ControlledTermChoiceValue", "value": {
   "term": "http://example.org/term", "label": [{ "value": "Term", "lang": "en" }]
 }}
 
-// EmbeddedLinkField.defaultValue — LinkValue (kind dropped at singleton)
+// EmbeddedLinkField.defaultValue — LinkValue (kind dropped)
 "defaultValue": { "iri": "https://example.org", "label": "Example" }
 
-// EmbeddedEmailField.defaultValue — SimpleLiteral
+// EmbeddedEmailField.defaultValue — EmailValue (kind dropped)
 "defaultValue": { "value": "jane@example.org" }
 
-// EmbeddedPhoneNumberField.defaultValue — SimpleLiteral
+// EmbeddedPhoneNumberField.defaultValue — PhoneNumberValue (kind dropped)
 "defaultValue": { "value": "+1-650-555-0123" }
 
-// EmbeddedOrcidField.defaultValue — OrcidValue (kind dropped at singleton)
+// EmbeddedOrcidField.defaultValue — OrcidValue (kind dropped)
 "defaultValue": {
   "iri": "https://orcid.org/0000-0002-1825-0097",
   "label": [{ "value": "Josiah Carberry", "lang": "en" }]
 }
 
 // EmbeddedRorField.defaultValue / EmbeddedDoiField.defaultValue / EmbeddedPubMedIdField.defaultValue
-// EmbeddedRridField.defaultValue / EmbeddedNihGrantIdField.defaultValue — analogous; kind dropped at singleton
+// EmbeddedRridField.defaultValue / EmbeddedNihGrantIdField.defaultValue — analogous; kind dropped
 ```
 
-`TextFieldSpec.defaultValue` is also a singleton position and encodes as a `TextLiteral` directly.
+`TextFieldSpec.defaultValue` is also a singleton position and encodes as a `TextValue` with `kind` dropped (i.e. `{ value, lang? }`).
 
 Multiple-choice embeddings carry a single `ChoiceValue` at `defaultValue`; supplying multiple defaults for a multiple-choice field is not modelled.
 
-### 6.10 Templates
+### 6.9 Templates
 
 ```json
 {
@@ -475,7 +481,7 @@ Multiple-choice embeddings carry a single `ChoiceValue` at `defaultValue`; suppl
 
 The `members` array MUST preserve order. The `EmbeddedArtifactKey` values within `members` MUST be unique; a conforming encoder MUST verify uniqueness before producing the JSON, and a conforming decoder MUST reject input that violates this constraint.
 
-### 6.11 Presentation components
+### 6.10 Presentation components
 
 ```json
 { "kind": "RichTextComponent", "id": "<PresentationComponentId>", "modelVersion": "<SemanticVersion>", "metadata": "<ArtifactMetadata>", "html": "<p>Hello</p>" }
@@ -487,7 +493,7 @@ The `members` array MUST preserve order. The `EmbeddedArtifactKey` values within
 { "kind": "SectionBreakComponent", "id": "<PresentationComponentId>", "modelVersion": "<SemanticVersion>", "metadata": "<ArtifactMetadata>" }
 ```
 
-### 6.12 Instances
+### 6.11 Instances
 
 ```json
 {
@@ -592,7 +598,7 @@ The `name` property below is a `MultilingualString` (§6.3): an array of `{value
       "kind": "FieldValue",
       "key": "title",
       "values": [
-        { "kind": "TextValue", "literal": { "value": "First Note" } }
+        { "kind": "TextValue", "value": "First Note" }
       ]
     }
   ]

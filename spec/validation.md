@@ -88,49 +88,49 @@ Additional well-formedness conditions apply as follows.
 
 For text values:
 
-- `TextValue` MUST contain `TextLiteral`
-- `TextDefaultValue`, if present, MUST be a `TextValue`
+- `TextValue` MUST carry a lexical form; it MAY carry a language tag
+- `TextFieldSpec.defaultValue`, if present, MUST be a `TextValue`
 - if both `MinLength` and `MaxLength` are present, `MinLength` MUST NOT exceed `MaxLength`
-- if `MinLength` is present, each `TextLiteral` lexical form MUST have length greater than or equal to that minimum
-- if `MaxLength` is present, each `TextLiteral` lexical form MUST have length less than or equal to that maximum
-- if `ValidationRegex` is present, each `TextLiteral` lexical form MUST match that regular expression
-- `TextDefaultValue`, if present, MUST satisfy any defined `MinLength`, `MaxLength`, and `ValidationRegex`
+- if `MinLength` is present, each `TextValue` lexical form MUST have length greater than or equal to that minimum
+- if `MaxLength` is present, each `TextValue` lexical form MUST have length less than or equal to that maximum
+- if `ValidationRegex` is present, each `TextValue` lexical form MUST match that regular expression
+- `TextFieldSpec.defaultValue`, if present, MUST satisfy any defined `MinLength`, `MaxLength`, and `ValidationRegex`
+- `TextValue` lexical forms SHOULD be in Unicode Normalization Form C
+- when present, `TextValue.lang` MUST be non-empty and well-formed according to BCP 47
 
 For integer-number values:
 
-- `IntegerNumberValue` MUST contain `IntegerNumberLiteral`
-- `IntegerNumberLiteral` carries an integer lexical form; its datatype is implicitly `xsd:integer`
+- `IntegerNumberValue` MUST carry a base-10 integer lexical form; its datatype is implicitly `xsd:integer`
 - if both `IntegerNumberMinValue` and `IntegerNumberMaxValue` are present on the field spec, `IntegerNumberMinValue` MUST NOT exceed `IntegerNumberMaxValue`
-- if `IntegerNumberMinValue` is present, each `IntegerNumberLiteral` value MUST be greater than or equal to that minimum
-- if `IntegerNumberMaxValue` is present, each `IntegerNumberLiteral` value MUST be less than or equal to that maximum
-- `IntegerNumberDefaultValue`, if present, MUST satisfy any defined `IntegerNumberMinValue` and `IntegerNumberMaxValue`
+- if `IntegerNumberMinValue` is present, each `IntegerNumberValue` MUST be greater than or equal to that minimum
+- if `IntegerNumberMaxValue` is present, each `IntegerNumberValue` MUST be less than or equal to that maximum
 
 For real-number values:
 
-- `RealNumberValue` MUST contain `RealNumberLiteral`
-- `RealNumberLiteral` uses `RealNumberDatatypeIri` (one of `xsd:decimal`, `xsd:float`, or `xsd:double`)
+- `RealNumberValue` MUST carry a real-valued lexical form together with a `RealNumberDatatypeKind` (one of `decimal`, `float`, or `double`)
+- a `RealNumberValue`'s datatype MUST equal the `datatype` declared on the enclosing `RealNumberFieldSpec`
 - if both `RealNumberMinValue` and `RealNumberMaxValue` are present on the field spec, `RealNumberMinValue` MUST NOT exceed `RealNumberMaxValue`
-- if `RealNumberMinValue` is present, each `RealNumberLiteral` value MUST be greater than or equal to that minimum
-- if `RealNumberMaxValue` is present, each `RealNumberLiteral` value MUST be less than or equal to that maximum
-- `RealNumberDefaultValue`, if present, MUST satisfy any defined `RealNumberMinValue` and `RealNumberMaxValue`
+- if `RealNumberMinValue` is present, each `RealNumberValue` MUST be greater than or equal to that minimum
+- if `RealNumberMaxValue` is present, each `RealNumberValue` MUST be less than or equal to that maximum
+
+For boolean values:
+
+- `BooleanValue` MUST carry a boolean payload; its datatype is implicitly `xsd:boolean`
 
 For date values:
 
-- `DateFieldSpec` with `YearValueType` MUST use `YearValue`, whose value MUST be a string matching the pattern `YYYY`
-- `DateFieldSpec` with `YearMonthValueType` MUST use `YearMonthValue`, whose value MUST be a string matching the pattern `YYYY-MM`
-- `DateFieldSpec` with `FullDateValueType` MUST use `FullDateValue`, which MUST contain `FullDateLiteral`
-- `FullDateLiteral` uses `DateDatatypeIri`
+- `DateFieldSpec` with `YearValueType` MUST use `YearValue`, whose lexical form MUST match the pattern `YYYY`
+- `DateFieldSpec` with `YearMonthValueType` MUST use `YearMonthValue`, whose lexical form MUST match the pattern `YYYY-MM`
+- `DateFieldSpec` with `FullDateValueType` MUST use `FullDateValue`, whose lexical form MUST be a well-formed `xsd:date` lexical form
 
 For time values:
 
-- `TimeValue` MUST contain `TimeLiteral`
-- `TimeLiteral` uses `TimeDatatypeIri`
+- `TimeValue` MUST carry a well-formed `xsd:time` lexical form
 - `TimeFieldSpec` values MUST conform to any stated `TimePrecision`
 
 For date-time values:
 
-- `DateTimeValue` MUST contain `DateTimeLiteral`
-- `DateTimeLiteral` uses `DateTimeDatatypeIri`
+- `DateTimeValue` MUST carry a well-formed `xsd:dateTime` lexical form
 - `DateTimeFieldSpec` values MUST conform to the stated `DateTimeValueType`
 
 For choice values:
@@ -138,8 +138,9 @@ For choice values:
 - A `FieldValue` for a `LiteralSingleChoiceFieldSpec` or `LiteralMultipleChoiceFieldSpec` MUST contain `LiteralChoiceValue` constructs
 - A `FieldValue` for a `ControlledTermSingleChoiceFieldSpec` or `ControlledTermMultipleChoiceFieldSpec` MUST contain `ControlledTermChoiceValue` constructs
 - each contained `ChoiceValue` MUST match one of the declared options of the referenced field's choice field spec
+- a `LiteralChoiceValue` MUST carry at most one of `lang` and `datatype`
 
-A `LiteralChoiceValue` matches a `LiteralChoiceOption` if and only if the two `Literal` values are term-equal: their lexical forms and their datatype IRIs or language tags compare equal character by character.
+A `LiteralChoiceValue` matches a `LiteralChoiceOption` if and only if their lexical forms compare equal character by character and their language-tag-or-datatype components agree: both omit `lang` and `datatype`, or both carry the same `lang`, or both carry the same `datatype` IRI.
 
 A `ControlledTermChoiceValue` matches a `ControlledTermChoiceOption` if and only if the `TermIri` of the `ControlledTermValue` carried by the value equals the `TermIri` of the `ControlledTermValue` carried by the option.
 
@@ -149,8 +150,8 @@ For controlled-term values:
 
 For contact values:
 
-- `EmailValue` MUST contain a `SimpleLiteral`
-- `PhoneNumberValue` MUST contain a `SimpleLiteral`
+- `EmailValue` MUST carry a non-empty lexical form
+- `PhoneNumberValue` MUST carry a non-empty lexical form
 
 For external authority values:
 
@@ -162,33 +163,16 @@ For external authority values:
 - `NihGrantIdValue` MUST include a `NihGrantIri`
 - these values MAY additionally include a human-readable `Label`
 
-For literals generally:
+For string-bearing values generally:
 
-- `TypedLiteral` lexical forms SHOULD be in Unicode Normalization Form C
-- `LangTaggedLiteral` lexical forms SHOULD be in Unicode Normalization Form C
-- `SimpleLiteral` MUST denote an RDF literal with datatype IRI `http://www.w3.org/2001/XMLSchema#string`
-- `LangTaggedLiteral` language tags MUST be non-empty and well-formed according to BCP 47
+- lexical forms SHOULD be in Unicode Normalization Form C
+- when present, language tags MUST be non-empty and well-formed according to BCP 47
 
-For typed defaults:
+For embedding-level defaults:
 
-- `IntegerNumberDefaultValue`, if present, MUST contain `IntegerNumberValue`
-- `RealNumberDefaultValue`, if present, MUST contain `RealNumberValue`
-- `BooleanDefaultValue`, if present, MUST contain `BooleanValue`
-- `DateDefaultValue`, if present, MUST contain `DateValue`
-- `TimeDefaultValue`, if present, MUST contain `TimeValue`
-- `DateTimeDefaultValue`, if present, MUST contain `DateTimeValue`
-- `ControlledTermDefaultValue`, if present, MUST contain `ControlledTermValue`
-- `ChoiceDefaultValue`, if present, MUST contain one or more `ChoiceValue` constructs
-- `LinkDefaultValue`, if present, MUST contain `LinkValue`
-- `EmailDefaultValue`, if present, MUST contain `EmailValue`
-- `PhoneNumberDefaultValue`, if present, MUST contain `PhoneNumberValue`
-- `OrcidDefaultValue`, if present, MUST contain `OrcidValue`
-- `RorDefaultValue`, if present, MUST contain `RorValue`
-- `DoiDefaultValue`, if present, MUST contain `DoiValue`
-- `PubMedIdDefaultValue`, if present, MUST contain `PubMedIdValue`
-- `RridDefaultValue`, if present, MUST contain `RridValue`
-- `NihGrantIdDefaultValue`, if present, MUST contain `NihGrantIdValue`
-- `ChoiceDefaultValue` for an `EmbeddedSingleChoiceField` MUST contain exactly one `ChoiceValue`
+- `EmbeddedXxxField.defaultValue`, if present, MUST be the family-specific `Value` type as given in [grammar.md](grammar.md) §Defaults
+- a `defaultValue` MUST satisfy every well-formedness condition that a corresponding `FieldValue` would satisfy for the same `FieldSpec`
+- `EmbeddedSingleChoiceField.defaultValue`, if present, MUST be a single `ChoiceValue`
 
 For multiplicity:
 
@@ -219,7 +203,7 @@ Any rendering hint used by the model MUST be compatible with the associated `Fie
 
 If a value conforms to `ControlledTermFieldSpec`, the value MUST include a term identifier and SHOULD include a human-readable label.
 
-A `ControlledTermDefaultValue`, if present, MUST contain a `ControlledTermValue` whose `TermIri` identifies a term drawn from one of the declared `ControlledTermSource` entries of the referenced `ControlledTermFieldSpec`.
+An `EmbeddedControlledTermField.defaultValue`, if present, MUST be a `ControlledTermValue` whose `TermIri` identifies a term drawn from one of the declared `ControlledTermSource` entries of the referenced `ControlledTermFieldSpec`.
 
 ## Canonical Validation Algorithm
 
@@ -249,7 +233,7 @@ Entry point for schema validation.
    1. Run `validate_embedding_reference(E)`.
    2. Run `validate_cardinality_consistency(E)`.
    3. If `E` is an `EmbeddedField`: run `validate_rendering_hints(E)`.
-   4. If `E` has a `DefaultValue`: run `validate_default_value(E.default_value, E)`.
+   4. If `E.default_value` is present: run `validate_default_value(E.default_value, E)`.
    5. If `E` is an `EmbeddedTemplate`: run `validate_schema(E.referenced_template)`.
 
 ---
@@ -365,32 +349,20 @@ Dispatch on the kind of `FT`:
 ##### `validate_choice_field_spec(FT: ChoiceFieldSpec)`
 
 1. For each option `O` in `FT.options`:
-   1. Verify `O.value` is of structural form `Literal`, `ControlledTermValue`, or `Iri`.
+   1. If `FT` is a `LiteralSingleChoiceFieldSpec` or `LiteralMultipleChoiceFieldSpec`: verify `O` carries a lexical form and at most one of `lang` / `datatype`.
+   2. If `FT` is a `ControlledTermSingleChoiceFieldSpec` or `ControlledTermMultipleChoiceFieldSpec`: verify `O` carries a `ControlledTermValue`.
 
 ---
 
 #### Default Value Validation
 
-##### `validate_default_value(D: DefaultValue, E: EmbeddedArtifact)`
+##### `validate_default_value(D: Value, E: EmbeddedArtifact)`
 
 Let `FT` = the `FieldSpec` of the `Field` referenced by `E`.
 
-1. Verify `D` is of the correct type for `FT`: e.g. `TextDefaultValue` for `TextFieldSpec`, `IntegerNumberDefaultValue` for `IntegerNumberFieldSpec`, `RealNumberDefaultValue` for `RealNumberFieldSpec`, etc.
-2. If `D` is `TextDefaultValue`:
-   1. Let `s` = `D.text_value.text_literal.lexical_form`.
-   2. If `FT.min_length` is present: verify `len(s) ≥ FT.min_length`.
-   3. If `FT.max_length` is present: verify `len(s) ≤ FT.max_length`.
-   4. If `FT.validation_regex` is present: verify `s` matches `FT.validation_regex`.
-3. If `D` is `IntegerNumberDefaultValue`:
-   1. Let `n` = the integer value of `D.integer_number_value.integer_number_literal`.
-   2. If `FT.min_value` is present: verify `n ≥ FT.min_value`.
-   3. If `FT.max_value` is present: verify `n ≤ FT.max_value`.
-4. If `D` is `RealNumberDefaultValue`:
-   1. Let `n` = the numeric value of `D.real_number_value.real_number_literal`.
-   2. If `FT.min_value` is present: verify `n ≥ FT.min_value`.
-   3. If `FT.max_value` is present: verify `n ≤ FT.max_value`.
-5. If `D` is `ChoiceDefaultValue` and `E` is an `EmbeddedSingleChoiceField`:
-   1. Verify `count(D.choice_values) = 1`.
+1. Verify `D` is of the family-specific `Value` type for `FT`: `TextValue` for `TextFieldSpec`, `IntegerNumberValue` for `IntegerNumberFieldSpec`, `RealNumberValue` for `RealNumberFieldSpec`, `BooleanValue` for `BooleanFieldSpec`, `DateValue` for `DateFieldSpec`, `TimeValue` for `TimeFieldSpec`, `DateTimeValue` for `DateTimeFieldSpec`, `ControlledTermValue` for `ControlledTermFieldSpec`, `ChoiceValue` for the choice field specs, `LinkValue` for `LinkFieldSpec`, `EmailValue` for `EmailFieldSpec`, `PhoneNumberValue` for `PhoneNumberFieldSpec`, and the corresponding external-authority `Value` types for the external-authority field specs. `AttributeValueFieldSpec` does not admit a default value.
+2. Apply the family-specific `validate_xxx_value(D, FT)` procedure to `D`. The default value MUST satisfy every constraint that a `FieldValue` carrying the same `Value` would satisfy.
+3. If `E` is an `EmbeddedSingleChoiceField`: verify `D` is a single `ChoiceValue` (not a sequence).
 
 ---
 
@@ -503,16 +475,17 @@ Dispatch on the kind of `FT`:
 
 ##### `validate_text_value(V: TextValue, FT: TextFieldSpec)`
 
-1. Verify `V` contains a `TextLiteral`. Let `s` = its lexical form.
+1. Let `s` = `V.value` (the lexical form).
 2. If `FT.min_length` is present: verify `len(s) ≥ FT.min_length`.
 3. If `FT.max_length` is present: verify `len(s) ≤ FT.max_length`.
 4. If `FT.validation_regex` is present: verify `s` matches `FT.validation_regex`.
+5. If `V.lang` is present: verify it is non-empty and well-formed per BCP 47.
 
 ---
 
 ##### `validate_integer_number_value(V: IntegerNumberValue, FT: IntegerNumberFieldSpec)`
 
-1. Verify `V` contains an `IntegerNumberLiteral`. Let `n` = its integer value.
+1. Verify `V.value` is a base-10 integer lexical form. Let `n` = its integer value.
 2. If `FT.min_value` is present: verify `n ≥ FT.min_value`.
 3. If `FT.max_value` is present: verify `n ≤ FT.max_value`.
 
@@ -520,8 +493,8 @@ Dispatch on the kind of `FT`:
 
 ##### `validate_real_number_value(V: RealNumberValue, FT: RealNumberFieldSpec)`
 
-1. Verify `V` contains a `RealNumberLiteral`. Let `n` = its numeric value and `d` = its datatype IRI.
-2. Verify `d = FT.datatype_iri`.
+1. Verify `V.datatype = FT.datatype` (one of `decimal`, `float`, `double`).
+2. Verify `V.value` is a well-formed lexical form for that datatype. Let `n` = its numeric value.
 3. If `FT.min_value` is present: verify `n ≥ FT.min_value`.
 4. If `FT.max_value` is present: verify `n ≤ FT.max_value`.
 
@@ -529,35 +502,35 @@ Dispatch on the kind of `FT`:
 
 ##### `validate_boolean_value(V: BooleanValue, FT: BooleanFieldSpec)`
 
-1. Verify `V` contains a `BooleanLiteral` whose value is `true` or `false`.
+1. Verify `V.value` is `true` or `false`.
 
 ---
 
 ##### `validate_date_value(V: DateValue, FT: DateFieldSpec)`
 
-1. If `FT.date_value_type = YearValueType`: verify `V` is a `YearValue` whose value matches `[0-9]{4}`.
-2. If `FT.date_value_type = YearMonthValueType`: verify `V` is a `YearMonthValue` whose value matches `[0-9]{4}-(0[1-9]|1[0-2])`.
-3. If `FT.date_value_type = FullDateValueType`: verify `V` is a `FullDateValue` containing a `FullDateLiteral`.
+1. If `FT.date_value_type = YearValueType`: verify `V` is a `YearValue` whose `value` matches `[0-9]{4}`.
+2. If `FT.date_value_type = YearMonthValueType`: verify `V` is a `YearMonthValue` whose `value` matches `[0-9]{4}-(0[1-9]|1[0-2])`.
+3. If `FT.date_value_type = FullDateValueType`: verify `V` is a `FullDateValue` whose `value` is a well-formed `xsd:date` lexical form.
 
 ---
 
 ##### `validate_time_value(V: TimeValue, FT: TimeFieldSpec)`
 
-1. Verify `V` contains a `TimeLiteral`. Let `t` = its lexical form.
+1. Let `t` = `V.value`.
 2. If `FT.time_precision = HourMinutePrecision`: verify `t` contains only hour and minute components (form `HH:MM`; no seconds or fractional seconds present).
 3. If `FT.time_precision = HourMinuteSecondPrecision`: verify `t` contains hour, minute, and second components (form `HH:MM:SS`; no fractional seconds present).
-4. If `FT.time_precision = HourMinuteSecondFractionPrecision`: verify `t` is a well-formed time literal; fractional seconds are permitted.
-5. If `FT.time_precision` is absent: accept any well-formed `TimeLiteral`.
+4. If `FT.time_precision = HourMinuteSecondFractionPrecision`: verify `t` is a well-formed `xsd:time` lexical form; fractional seconds are permitted.
+5. If `FT.time_precision` is absent: verify `t` is a well-formed `xsd:time` lexical form.
 6. If `FT.timezone_requirement = TimezoneRequired`: verify `t` includes a timezone designator.
 
 ---
 
 ##### `validate_datetime_value(V: DateTimeValue, FT: DateTimeFieldSpec)`
 
-1. Verify `V` contains a `DateTimeLiteral`. Let `dt` = its lexical form.
+1. Let `dt` = `V.value`.
 2. If `FT.datetime_value_type = DateHourMinuteValueType`: verify the time component of `dt` contains only hour and minute (form `…THH:MM`; no seconds present).
 3. If `FT.datetime_value_type = DateHourMinuteSecondValueType`: verify the time component contains hour, minute, and second (form `…THH:MM:SS`; no fractional seconds present).
-4. If `FT.datetime_value_type = DateHourMinuteSecondFractionValueType`: verify `dt` is a well-formed datetime literal; fractional seconds are permitted.
+4. If `FT.datetime_value_type = DateHourMinuteSecondFractionValueType`: verify `dt` is a well-formed `xsd:dateTime` lexical form; fractional seconds are permitted.
 5. If `FT.timezone_requirement = TimezoneRequired`: verify `dt` includes a timezone designator.
 
 ---
@@ -573,15 +546,11 @@ Note: validation of `V.term_iri` against `FT.controlled_term_sources` requires a
 
 ##### `validate_choice_value(V: ChoiceValue, FT: ChoiceFieldSpec)`
 
-1. Let `S` = `V.selection`.
-2. Verify there exists an option `O` in `FT.options` such that `S` matches `O` according to the following rules:
-   1. If `S` is a `Literal` and `O.value` is a `Literal`: match iff their lexical forms are equal character by character and their datatype IRIs or language tags are equal character by character.
-   2. If `S` is a `ControlledTermValue` and `O.value` is a `ControlledTermValue`: match iff `S.term_iri = O.value.term_iri`.
-   3. If `S` is an `Iri` and `O.value` is an `Iri`: match iff `S = O.value`.
-   4. If `S` is a `ControlledTermValue` and `O.value` is an `Iri`: match iff `S.term_iri = O.value`.
-   5. If `S` is an `Iri` and `O.value` is a `ControlledTermValue`: match iff `S = O.value.term_iri`.
-   6. Otherwise: no match.
-3. If no such `O` exists: report error.
+1. Verify there exists an option `O` in `FT.options` such that `V` matches `O`:
+   1. If `V` is a `LiteralChoiceValue` and `O` is a `LiteralChoiceOption`: match iff their lexical forms are equal character by character AND their language-tag-or-datatype components agree (both omit `lang` and `datatype`, OR both carry the same `lang`, OR both carry the same `datatype` IRI).
+   2. If `V` is a `ControlledTermChoiceValue` and `O` is a `ControlledTermChoiceOption`: match iff `V.value.term_iri = O.value.term_iri`.
+   3. Otherwise: no match.
+2. If no such `O` exists: report error.
 
 ---
 
@@ -593,8 +562,8 @@ Note: validation of `V.term_iri` against `FT.controlled_term_sources` requires a
 
 ##### `validate_contact_value(V: ContactValue)`
 
-1. If `V` is an `EmailValue`: verify `V` contains a `SimpleLiteral`.
-2. If `V` is a `PhoneNumberValue`: verify `V` contains a `SimpleLiteral`.
+1. If `V` is an `EmailValue`: verify `V.value` is a non-empty lexical form.
+2. If `V` is a `PhoneNumberValue`: verify `V.value` is a non-empty lexical form.
 
 ---
 

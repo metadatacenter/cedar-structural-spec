@@ -58,13 +58,7 @@ A conceptual overview of the model — describing the principal categories, thei
 - [Scalar and Datatype Leaves](#scalar-and-datatype-leaves)
   - [Primitive String Types](#primitive-string-types)
   - [Core IRI and String Types](#core-iri-and-string-types)
-  - [Numeric Datatype IRIs](#numeric-datatype-iris)
-  - [Temporal Datatype IRIs](#temporal-datatype-iris)
-- [Literals](#literals)
-  - [Base Literals](#base-literals)
-  - [Numeric Literals](#numeric-literals)
-  - [Temporal Literals](#temporal-literals)
-  - [Literal Value Semantics](#literal-value-semantics)
+  - [Numeric Datatype Kind](#numeric-datatype-kind)
 - [Values](#values)
   - [Scalar Values](#scalar-values)
   - [Temporal Values](#temporal-values)
@@ -463,7 +457,7 @@ EmbeddedField ::= EmbeddedTextField
                 | EmbeddedAttributeValueField
 ```
 
-Every concrete `EmbeddedField` variant follows the same structural pattern. Each carries: an `EmbeddedArtifactKey` uniquely identifying the embedding site within the containing `Template`; a typed field reference identifying the reusable `Field` being embedded; an optional `ValueRequirement` specifying whether a value is required, recommended, or optional; an optional `Cardinality` bounding the permitted number of values; an optional `Visibility` controlling whether the field is shown in rendered interfaces; an optional `defaultValue` providing an embedding-specific default whose type is the family-specific underlying value or literal type (e.g. `TextLiteral` for `EmbeddedTextField`, `DateValue` for `EmbeddedDateField`); an optional `LabelOverride` allowing the template to override the field's label in this context; and an optional `Property` associating a semantic property IRI with the embedding site. The only variation across concrete `EmbeddedField` variants is the typed field reference and the typed default value, both of which match the value family of the referenced field.
+Every concrete `EmbeddedField` variant follows the same structural pattern. Each carries: an `EmbeddedArtifactKey` uniquely identifying the embedding site within the containing `Template`; a typed field reference identifying the reusable `Field` being embedded; an optional `ValueRequirement` specifying whether a value is required, recommended, or optional; an optional `Cardinality` bounding the permitted number of values; an optional `Visibility` controlling whether the field is shown in rendered interfaces; an optional `defaultValue` providing an embedding-specific default whose type is the family-specific `Value` type (e.g. `TextValue` for `EmbeddedTextField`, `DateValue` for `EmbeddedDateField`); an optional `LabelOverride` allowing the template to override the field's label in this context; and an optional `Property` associating a semantic property IRI with the embedding site. The only variation across concrete `EmbeddedField` variants is the typed field reference and the typed default value, both of which match the value family of the referenced field.
 
 `EmbeddedBooleanField` is the one exception to this pattern: it omits the `[Cardinality]` slot. A boolean field is inherently single-valued — its `ValueRequirement` slot already distinguishes the meaningful states (required, recommended, optional). Multi-valued booleans are not expressible in this grammar.
 
@@ -474,7 +468,7 @@ EmbeddedTextField ::= embedded_text_field(
                         [ValueRequirement]
                         [Cardinality]
                         [Visibility]
-                        [TextLiteral]
+                        [TextValue]
                         [LabelOverride]
                         [Property]
                       )
@@ -485,7 +479,7 @@ EmbeddedIntegerNumberField ::= embedded_integer_number_field(
                                  [ValueRequirement]
                                  [Cardinality]
                                  [Visibility]
-                                 [IntegerNumberLiteral]
+                                 [IntegerNumberValue]
                                  [LabelOverride]
                                  [Property]
                                )
@@ -496,7 +490,7 @@ EmbeddedRealNumberField ::= embedded_real_number_field(
                               [ValueRequirement]
                               [Cardinality]
                               [Visibility]
-                              [RealNumberLiteral]
+                              [RealNumberValue]
                               [LabelOverride]
                               [Property]
                             )
@@ -506,7 +500,7 @@ EmbeddedBooleanField ::= embedded_boolean_field(
                            BooleanFieldReference
                            [ValueRequirement]
                            [Visibility]
-                           [BooleanLiteral]
+                           [BooleanValue]
                            [LabelOverride]
                            [Property]
                          )
@@ -528,7 +522,7 @@ EmbeddedTimeField ::= embedded_time_field(
                         [ValueRequirement]
                         [Cardinality]
                         [Visibility]
-                        [TimeLiteral]
+                        [TimeValue]
                         [LabelOverride]
                         [Property]
                       )
@@ -539,7 +533,7 @@ EmbeddedDateTimeField ::= embedded_date_time_field(
                             [ValueRequirement]
                             [Cardinality]
                             [Visibility]
-                            [DateTimeLiteral]
+                            [DateTimeValue]
                             [LabelOverride]
                             [Property]
                           )
@@ -594,7 +588,7 @@ EmbeddedEmailField ::= embedded_email_field(
                          [ValueRequirement]
                          [Cardinality]
                          [Visibility]
-                         [SimpleLiteral]
+                         [EmailValue]
                          [LabelOverride]
                          [Property]
                        )
@@ -605,7 +599,7 @@ EmbeddedPhoneNumberField ::= embedded_phone_number_field(
                                [ValueRequirement]
                                [Cardinality]
                                [Visibility]
-                               [SimpleLiteral]
+                               [PhoneNumberValue]
                                [LabelOverride]
                                [Property]
                              )
@@ -931,7 +925,7 @@ The CEDAR versioning model rests on one guiding rule: **identity is per-version*
 
 ### Annotations
 
-`Annotation` provides an extensible metadata mechanism for additional named metadata values that are not captured by the core descriptive, lifecycle, or versioning structures. The first `Iri` identifies the annotation property — the predicate IRI under which the annotation is asserted. The `AnnotationValue` is the associated metadata value: either a literal or an IRI. This supports linking to external resources such as DOIs and grant identifiers, as well as storing institutional metadata.
+`Annotation` provides an extensible metadata mechanism for additional named metadata values that are not captured by the core descriptive, lifecycle, or versioning structures. The first `Iri` identifies the annotation property — the predicate IRI under which the annotation is asserted. The `AnnotationValue` is the associated metadata value: either a string-bearing scalar or an IRI. This supports linking to external resources such as DOIs and grant identifiers, as well as storing institutional metadata.
 
 ```ebnf
 Annotation ::= annotation(
@@ -939,13 +933,18 @@ Annotation ::= annotation(
                  AnnotationValue
                )
 
-AnnotationValue ::= Literal
+AnnotationValue ::= AnnotationStringValue
                   | Iri
+
+AnnotationStringValue ::= annotation_string_value(
+                            LexicalForm
+                            [LanguageTag]
+                          )
 ```
 
-`AnnotationValue` is a direct union of `Literal` and `Iri`. The two variants represent the only forms an annotation value may take in this model: a literal carrying lexical content (with optional language tag or datatype IRI), or an IRI denoting a resource.
+`AnnotationValue` is a direct union of `AnnotationStringValue` and `Iri`. The two variants represent the only forms an annotation value may take in this model: a string-bearing value carrying a lexical form with an optional language tag, or an IRI denoting a resource. `AnnotationStringValue` does not carry an explicit datatype: lexically-typed annotations are not modelled at this position, since annotation metadata is by convention either text or IRI-valued.
 
-See [`Iri`](#core-iri-and-string-types) and [`Literal`](#base-literals).
+See [`Iri`](#core-iri-and-string-types).
 
 ## Scalar and Datatype Leaves
 
@@ -964,7 +963,7 @@ The following nonterminals are intentionally left abstract. They define the stri
 
 ### Core IRI and String Types
 
-This subsection defines the fundamental IRI, string, and numeric leaf types that appear throughout the grammar. `Iri` is the base construct for all IRI-valued positions. `DatatypeIri` and `TermIri` are specialised IRI forms used in literal typing and controlled-vocabulary references respectively. `LanguageTag` and `LexicalForm` support RDF literal construction. `IsoDateTimeStamp` carries ISO 8601 date-time values used in lifecycle metadata. `NonNegativeInteger` supports field-spec constraints.
+This subsection defines the fundamental IRI, string, and numeric leaf types that appear throughout the grammar. `Iri` is the base construct for all IRI-valued positions. `DatatypeIri` is a specialised IRI form used at the single position that admits a user-authored datatype (`LiteralChoiceValue.datatype` and the matching `LiteralChoiceOption.datatype`); `TermIri` is a specialised IRI form for controlled-vocabulary references. `LanguageTag` and `LexicalForm` are leaf string types used by `Value` constructs that carry localized or lexically-typed content. `IsoDateTimeStamp` carries ISO 8601 date-time values used in lifecycle metadata. `NonNegativeInteger` supports field-spec constraints.
 
 ```ebnf
 Iri ::= iri(
@@ -1031,177 +1030,19 @@ MultilingualString ::= multilingual_string(
 
 The `'und'` (undetermined) BCP 47 subtag MAY be used to denote a `LangString` whose natural language is unspecified. Implementations MAY use `'und'` as the default tag when constructing a `MultilingualString` from a bare string with no language information.
 
-`MultilingualString` is structurally distinct from `LangTaggedLiteral` (a member of the [`Literal`](#base-literals) union): a `LangTaggedLiteral` is a single language-tagged RDF-style literal value, whereas `MultilingualString` is an unweighted localization set carried at singleton schema-metadata positions such as `Template.header` or `ArtifactMetadata.name`.
+`MultilingualString` differs from a single language-tagged scalar value (such as `TextValue` with a `LanguageTag`) in that it carries an unweighted localization *set* — multiple language tags coexist for the same conceptual string at metadata positions such as `Template.header` or `ArtifactMetadata.name`.
 
-### Numeric Datatype IRIs
+### Numeric Datatype Kind
 
-`IntegerNumberLiteral` carries the implicit XSD datatype IRI `xsd:integer`; the IRI is fixed by the literal's category and is not a configurable component of the production. `RealNumberLiteral` carries an explicit `RealNumberDatatypeIri` chosen from three alternatives — `xsd:decimal`, `xsd:float`, or `xsd:double`. Each is a nullary constructor; the corresponding XSD datatype IRI for each is given in the table below.
-
-```ebnf
-IntegerNumberDatatypeIri ::= XsdIntegerDatatypeIri
-
-RealNumberDatatypeIri ::= XsdDecimalDatatypeIri
-                        | XsdFloatDatatypeIri
-                        | XsdDoubleDatatypeIri
-```
-
-| Production | XSD Datatype IRI |
-|---|---|
-| `XsdIntegerDatatypeIri` | `http://www.w3.org/2001/XMLSchema#integer` |
-| `XsdDecimalDatatypeIri` | `http://www.w3.org/2001/XMLSchema#decimal` |
-| `XsdFloatDatatypeIri` | `http://www.w3.org/2001/XMLSchema#float` |
-| `XsdDoubleDatatypeIri` | `http://www.w3.org/2001/XMLSchema#double` |
-
-This specification narrows the supported numeric datatype IRIs to four. Earlier drafts admitted the full XSD numeric hierarchy (16 datatypes including `xsd:long`, `xsd:short`, `xsd:byte`, the signed/unsigned bounded subtypes, and the sign-constrained subtypes such as `xsd:nonNegativeInteger`); those are not part of the conforming set. Sign and range constraints are expressed via `IntegerNumberMinValue` / `IntegerNumberMaxValue` (or the real-valued equivalents). Bit-precision distinctions are not modelled at the type level; `decimal` covers exact arbitrary precision when needed, and `float` / `double` cover IEEE 754 single- and double-precision when storage precision matters.
-
-### Temporal Datatype IRIs
-
-These productions define the XSD datatype IRIs used by temporal literal categories. Each temporal precision level has a dedicated abstract IRI type that resolves to a single XSD constructor. The corresponding XSD datatype IRI for each constructor is given in the table below.
+`IntegerNumberValue` is fixed to a single integer category; its datatype is implicit and is not a configurable component of the production. `RealNumberValue` carries an explicit `RealNumberDatatypeKind` chosen from three alternatives — `decimal`, `float`, or `double`. The kind names are CEDAR-native enum values; their corresponding XSD datatype IRIs are defined externally to the abstract grammar by [`rdf-projection.md`](rdf-projection.md).
 
 ```ebnf
-DateDatatypeIri     ::= XsdDateDatatypeIri
-TimeDatatypeIri     ::= XsdTimeDatatypeIri
-DateTimeDatatypeIri ::= XsdDateTimeDatatypeIri
+RealNumberDatatypeKind ::= "decimal" | "float" | "double"
 ```
 
-| Production | XSD Datatype IRI |
-|---|---|
-| `XsdDateDatatypeIri` | `http://www.w3.org/2001/XMLSchema#date` |
-| `XsdTimeDatatypeIri` | `http://www.w3.org/2001/XMLSchema#time` |
-| `XsdDateTimeDatatypeIri` | `http://www.w3.org/2001/XMLSchema#dateTime` |
+`decimal` denotes exact arbitrary-precision decimal numbers. `float` and `double` denote IEEE 754 single- and double-precision floating-point numbers respectively.
 
-`DateDatatypeIri`, `TimeDatatypeIri`, and `DateTimeDatatypeIri` denote the XML Schema datatype IRIs used by the corresponding temporal literal categories.
-
-## Literals
-
-Literals are the atomic data values used throughout the instance model. This specification follows the RDF 1.1 literal model ([RDF Concepts §3.3](https://www.w3.org/TR/rdf11-concepts/#section-Graph-Literal)).
-
-### Every literal has a datatype
-
-In RDF 1.1, *every* literal has a datatype IRI. There is no such thing as a literal without a datatype. The three productions in this section differ only in how that datatype IRI is determined:
-
-- For `TypedLiteral` the datatype IRI is carried explicitly as a component of the literal.
-- For `LangTaggedLiteral` the datatype IRI is fixed by the literal's category — every language-tagged literal has datatype `http://www.w3.org/1999/02/22-rdf-syntax-ns#langString` (`rdf:langString`). The lang tag is an additional component that ONLY appears when this datatype is in effect.
-- For `SimpleLiteral` the datatype IRI is fixed by the literal's category — every simple literal has datatype `http://www.w3.org/2001/XMLSchema#string` (`xsd:string`). Simple literals are an abbreviation: a `SimpleLiteral` carrying lexical form `"foo"` denotes the same RDF literal as a `TypedLiteral` carrying lexical form `"foo"` and datatype `xsd:string`. The grammar keeps `SimpleLiteral` as a distinct production for ergonomics — most literals in real templates are plain strings, and requiring an explicit `xsd:string` IRI on each would be heavy.
-
-`SimpleLiteral` and `LangTaggedLiteral` are NOT subtypes of `TypedLiteral` in this grammar; they are sibling productions. The relationship is at the *RDF datatype level* (every literal in RDF 1.1 has a datatype IRI), not at the abstract-syntax level. A binding implementation MAY choose to internally represent a `SimpleLiteral` as a `TypedLiteral` with `datatype = xsd:string` — the two are RDF-term-equal — but the wire form preserves the distinction so that authorial intent (was the literal written as a simple literal or as an explicit typed literal?) round-trips faithfully.
-
-The lexical form of any literal SHOULD be in Unicode Normalization Form C.
-
-### Base Literals
-
-The base literal types define the two concrete RDF literal forms together with their string specialisation.
-
-```ebnf
-Literal ::= SimpleLiteral
-          | LangTaggedLiteral
-          | TypedLiteral
-
-TypedLiteral ::= typed_literal(
-                   LexicalForm
-                   DatatypeIri
-                 )
-
-LangTaggedLiteral ::= lang_tagged_literal(
-                        LexicalForm
-                        LanguageTag
-                      )
-
-SimpleLiteral ::= simple_literal(
-                    LexicalForm
-                  )
-
-TextLiteral ::= SimpleLiteral
-              | LangTaggedLiteral
-```
-
-`Literal` is the base category for all literals in this specification. It admits all three productions defined here: `SimpleLiteral` (implicit `xsd:string`), `LangTaggedLiteral` (implicit `rdf:langString`), and `TypedLiteral` (explicit datatype). At any `Literal` position, a plain string MAY be expressed either as a `SimpleLiteral` (the natural, abbreviated form) or as a `TypedLiteral` with datatype `xsd:string` (the fully-explicit form). Both abstract forms denote the same RDF literal; the abstract syntax preserves the distinction so that authorial intent round-trips through encode/decode.
-
-`TypedLiteral` consists of a lexical form and an explicit datatype IRI.
-
-`LangTaggedLiteral` consists of a lexical form and a language tag. Its datatype IRI is implicitly `http://www.w3.org/1999/02/22-rdf-syntax-ns#langString` (`rdf:langString`); a `LangTaggedLiteral` carries no `DatatypeIri` component because the language tag itself fixes the datatype. The language tag MUST be non-empty and well-formed according to BCP 47.
-
-`SimpleLiteral` consists of a lexical form alone. Its datatype IRI is implicitly `http://www.w3.org/2001/XMLSchema#string` (`xsd:string`).
-
-`TextLiteral` is the union of `SimpleLiteral` and `LangTaggedLiteral`. It is the class of literals permitted in `TextValue`, admitting both plain strings and language-tagged strings — but not arbitrarily-typed literals. The two members of `TextLiteral` are exactly the literals whose datatypes are the two RDF-defined string datatypes: `xsd:string` (plain) and `rdf:langString` (language-tagged).
-
-Concrete syntaxes MAY use simpler surface forms that omit an explicit datatype IRI for string literals or language-tagged strings. Such forms are syntactic sugar and do not change the abstract structure defined by this specification.
-
-### Numeric Literals
-
-The numeric literal types are split along the same boundary as the numeric field families. `IntegerNumberLiteral` carries an integer lexical form with implicit datatype `xsd:integer`; the datatype is fixed by the literal's category and is not carried as a component. `RealNumberLiteral` carries a real-valued lexical form paired with an explicit `RealNumberDatatypeIri` (one of `xsd:decimal`, `xsd:float`, or `xsd:double`).
-
-```ebnf
-IntegerNumberLiteral ::= integer_number_literal(
-                           LexicalForm
-                         )
-
-RealNumberLiteral ::= real_number_literal(
-                        LexicalForm
-                        RealNumberDatatypeIri
-                      )
-```
-
-`IntegerNumberLiteral`'s lexical form MUST be a base-10 integer literal (per the `IntegerLexicalForm` primitive in §Primitive String Types). `RealNumberLiteral`'s lexical form is a base-10 real-valued literal whose admissible form depends on the carried datatype: `xsd:decimal` admits an arbitrary-precision decimal lexical form; `xsd:float` and `xsd:double` admit IEEE 754-style lexical forms (including special values such as `INF`, `-INF`, and `NaN`).
-
-### Boolean Literal
-
-`BooleanLiteral` is the class of literals permitted in `BooleanValue`. It carries a single boolean payload — either `true` or `false`. Its datatype IRI is implicitly `http://www.w3.org/2001/XMLSchema#boolean` (`xsd:boolean`); the wire form carries no explicit datatype because the datatype is fixed by the literal's category.
-
-```ebnf
-BooleanLiteral ::= boolean_literal(
-                     boolean
-                   )
-```
-
-### Temporal Literals
-
-A temporal literal is a typed literal that represents a date, a time of day, or a combined date-time value. Each production carries a `LexicalForm` and the fixed XSD datatype IRI for its precision level: `xsd:date`, `xsd:time`, or `xsd:dateTime`. `TemporalLiteral` is the abstract supertype. `FullDateLiteral` carries a full calendar date; `TimeLiteral` and `DateTimeLiteral` correspond to the time and date-time field specs respectively. Year-only and year-month date values are represented as plain strings rather than typed literals — see `YearValue` and `YearMonthValue` in the Temporal Values section.
-
-```ebnf
-TemporalLiteral ::= FullDateLiteral
-                  | TimeLiteral
-                  | DateTimeLiteral
-
-FullDateLiteral ::= full_date_literal(
-                      LexicalForm
-                      DateDatatypeIri
-                    )
-
-TimeLiteral ::= time_literal(
-                  LexicalForm
-                  TimeDatatypeIri
-                )
-
-DateTimeLiteral ::= date_time_literal(
-                      LexicalForm
-                      DateTimeDatatypeIri
-                    )
-```
-
-Each temporal literal carries a datatype IRI from the corresponding temporal datatype IRI category, and is used in the corresponding `Value` type:
-
-| Literal | Datatype IRI category | Used in |
-|---|---|---|
-| `FullDateLiteral` | `DateDatatypeIri` | `FullDateValue` |
-| `TimeLiteral` | `TimeDatatypeIri` | `TimeValue` |
-| `DateTimeLiteral` | `DateTimeDatatypeIri` | `DateTimeValue` |
-
-### Literal Value Semantics
-
-The value associated with a `TypedLiteral` depends on whether its datatype IRI is recognised and whether its lexical form is in the lexical space of that datatype:
-
-| Condition | Result |
-|---|---|
-| Datatype IRI recognised; lexical form in lexical space | Literal value is obtained by applying the lexical-to-value mapping of the datatype to the lexical form |
-| Datatype IRI recognised; lexical form outside lexical space | Ill-typed literal: no valid literal value is determined |
-| Datatype IRI not recognised | Literal value is not defined by this specification |
-
-For a `LangTaggedLiteral`, the literal value is the pair consisting of lexical form and language tag, in that order.
-
-An ill-typed literal is not syntactically ill-formed, but it does not determine a valid literal value and produces a semantic inconsistency. Implementations MUST accept ill-typed literals and MAY produce warnings when encountering them.
-
-Two literals are term-equal if and only if their lexical forms and their datatype IRIs or language tags compare equal character by character.
+This specification narrows the supported numeric kinds to four (one integer kind plus the three real-number kinds). Earlier drafts admitted the full XSD numeric hierarchy (16 datatypes including `long`, `short`, `byte`, the signed/unsigned bounded subtypes, and the sign-constrained subtypes such as `nonNegativeInteger`); those are not part of the conforming set. Sign and range constraints are expressed via `IntegerNumberMinValue` / `IntegerNumberMaxValue` (or the real-valued equivalents). Bit-precision distinctions are not modelled at the type level; `decimal` covers exact arbitrary precision when needed, and `float` / `double` cover IEEE 754 single- and double-precision when storage precision matters.
 
 ## Values
 
@@ -1228,31 +1069,39 @@ NumericValue ::= IntegerNumberValue
 
 ### Scalar Values
 
-`TextValue`, `BooleanValue`, and the two numeric value forms (`IntegerNumberValue` and `RealNumberValue`) are the simplest value types, each wrapping a single typed literal that corresponds directly to its field spec. `TextValue` accepts either a plain string or a language-tagged string via `TextLiteral`. `BooleanValue` carries a `BooleanLiteral` whose datatype is implicitly `xsd:boolean`. `IntegerNumberValue` carries an `IntegerNumberLiteral` whose datatype is implicitly `xsd:integer`. `RealNumberValue` carries a `RealNumberLiteral` whose datatype is one of `xsd:decimal`, `xsd:float`, or `xsd:double`.
+`TextValue`, `BooleanValue`, and the two numeric value forms (`IntegerNumberValue` and `RealNumberValue`) are the simplest value types. Each carries the family-specific content directly: a lexical form for the string-bearing variants, a boolean payload for `BooleanValue`. `TextValue` carries an optional `LanguageTag`; when present, the value is a language-tagged string, when absent, a plain string. `IntegerNumberValue` carries a base-10 integer lexical form; its category is implicit and not carried as a component. `RealNumberValue` carries a base-10 real-valued lexical form paired with an explicit `RealNumberDatatypeKind` (`decimal`, `float`, or `double`).
 
 ```ebnf
 TextValue ::= text_value(
-                TextLiteral
+                LexicalForm
+                [LanguageTag]
               )
 
 IntegerNumberValue ::= integer_number_value(
-                         IntegerNumberLiteral
+                         LexicalForm
                        )
 
 RealNumberValue ::= real_number_value(
-                      RealNumberLiteral
+                      LexicalForm
+                      RealNumberDatatypeKind
                     )
 
 BooleanValue ::= boolean_value(
-                   BooleanLiteral
+                   boolean
                  )
 ```
 
+`IntegerNumberValue`'s lexical form MUST be a base-10 integer literal (per the `IntegerLexicalForm` primitive in §Primitive String Types). `RealNumberValue`'s lexical form is a base-10 real-valued literal whose admissible form depends on the carried datatype: `decimal` admits an arbitrary-precision decimal lexical form; `float` and `double` admit IEEE 754-style lexical forms (including special values such as `INF`, `-INF`, and `NaN`).
+
 `NumericValue` is the abstract category admitting `IntegerNumberValue` and `RealNumberValue`; the two are distinct concrete value types and a `FieldValue` carrying numeric content discriminates between them by `kind`.
+
+The lexical form of any string-bearing value SHOULD be in Unicode Normalization Form C.
+
+A `Value` whose lexical form lies outside the lexical space of its declared datatype is **ill-typed**: it is not syntactically ill-formed but does not determine a valid value. Implementations MUST accept ill-typed values and MAY produce warnings when encountering them. The corresponding RDF projection (see [rdf-projection.md](rdf-projection.md)) preserves the ill-typed lexical form.
 
 ### Temporal Values
 
-Temporal values represent date, time, and date-time data, corresponding directly to `DateFieldSpec`, `TimeFieldSpec`, and `DateTimeFieldSpec` respectively. `DateValue` is further refined into three precision variants — `YearValue`, `YearMonthValue`, and `FullDateValue`. `YearValue` and `YearMonthValue` carry plain strings matching the patterns `YYYY` and `YYYY-MM` respectively; `FullDateValue` carries a `FullDateLiteral` typed with `xsd:date`.
+Temporal values represent date, time, and date-time data, corresponding directly to `DateFieldSpec`, `TimeFieldSpec`, and `DateTimeFieldSpec` respectively. `DateValue` is further refined into three precision variants — `YearValue`, `YearMonthValue`, and `FullDateValue`. Each temporal `Value` variant carries a `LexicalForm` directly; the temporal category is fixed by the variant's `kind`. `FullDateValue` carries an ISO 8601 calendar-date lexical form; `TimeValue` carries an ISO 8601 time-of-day lexical form; `DateTimeValue` carries an ISO 8601 combined date-time lexical form. `YearValue` and `YearMonthValue` carry plain strings matching the patterns `YYYY` and `YYYY-MM` respectively. The RDF projection of these values is defined separately in [`rdf-projection.md`](rdf-projection.md).
 
 ```ebnf
 DateValue ::= YearValue
@@ -1260,23 +1109,23 @@ DateValue ::= YearValue
             | FullDateValue
 
 YearValue ::= year_value(
-                string    (* matches YYYY, e.g. "2024" *)
+                LexicalForm    (* matches YYYY, e.g. "2024" *)
               )
 
 YearMonthValue ::= year_month_value(
-                     string    (* matches YYYY-MM, e.g. "2024-06" *)
+                     LexicalForm    (* matches YYYY-MM, e.g. "2024-06" *)
                    )
 
 FullDateValue ::= full_date_value(
-                    FullDateLiteral
+                    LexicalForm
                   )
 
 TimeValue ::= time_value(
-                TimeLiteral
+                LexicalForm
               )
 
 DateTimeValue ::= date_time_value(
-                    DateTimeLiteral
+                    LexicalForm
                   )
 ```
 
@@ -1316,13 +1165,17 @@ ChoiceValue ::= LiteralChoiceValue
               | ControlledTermChoiceValue
 
 LiteralChoiceValue ::= literal_choice_value(
-                         Literal
+                         LexicalForm
+                         [LanguageTag]
+                         [DatatypeIri]
                        )
 
 ControlledTermChoiceValue ::= controlled_term_choice_value(
                                 ControlledTermValue
                               )
 ```
+
+`LiteralChoiceValue` admits three shapes selected by which optional component is present: a plain text choice (`LexicalForm` only), a language-tagged text choice (`LexicalForm` + `LanguageTag`), or a typed-literal choice (`LexicalForm` + `DatatypeIri`). At most one of `LanguageTag` and `DatatypeIri` is present. A `LiteralChoiceValue` MUST correspond to one of the declared options of its referenced `LiteralChoiceFieldSpec`; the spec's options carry the same three shapes.
 
 ### Link Value
 
@@ -1343,15 +1196,15 @@ LinkLabel ::= link_label(
 
 ### Contact Values
 
-Contact values represent human contact identifiers. `EmailValue` carries an email address as a plain string literal and `PhoneNumberValue` carries a telephone number as a plain string literal. Both use `SimpleLiteral` rather than a more specialised literal form; format validation is left to implementations.
+Contact values represent human contact identifiers. `EmailValue` carries an email address as a plain `LexicalForm`; `PhoneNumberValue` carries a telephone number as a plain `LexicalForm`. Format validation is left to implementations.
 
 ```ebnf
 EmailValue ::= email_value(
-                 SimpleLiteral
+                 LexicalForm
                )
 
 PhoneNumberValue ::= phone_number_value(
-                       SimpleLiteral
+                       LexicalForm
                      )
 ```
 
@@ -1576,23 +1429,23 @@ When `Visibility` is absent from an `EmbeddedArtifact`, the default is `Visible`
 
 ### Defaults
 
-The optional `defaultValue` component of an `EmbeddedField` specifies the value to be pre-populated for that embedding when no explicit value has been supplied by the user. The `defaultValue` slot is typed family-by-family with the underlying value or literal type that the embedded field accepts: thin-wrapper families (text, numeric, time, date-time, email, phone) use the literal type directly; richer families with structure beyond a single literal (date, controlled term, choice, link, and the six external-authority families) use their `Value` type. The per-family typing is given by the table below and appears directly in each `EmbeddedXxxField` production above. Because each `defaultValue` slot is a singleton position (the family is already fixed by the enclosing `EmbeddedXxxField`), no further wrapper or kind-tag is needed at the slot.
+The optional `defaultValue` component of an `EmbeddedField` specifies the value to be pre-populated for that embedding when no explicit value has been supplied by the user. The `defaultValue` slot is typed family-by-family with the family-specific `Value` type that the embedded field accepts. The per-family typing is given by the table below and appears directly in each `EmbeddedXxxField` production above.
 
 | Embedded field | `defaultValue` type |
 |---|---|
-| `EmbeddedTextField` | `TextLiteral` (= `SimpleLiteral \| LangTaggedLiteral`) |
-| `EmbeddedIntegerNumberField` | `IntegerNumberLiteral` |
-| `EmbeddedRealNumberField` | `RealNumberLiteral` |
-| `EmbeddedBooleanField` | `BooleanLiteral` |
+| `EmbeddedTextField` | `TextValue` |
+| `EmbeddedIntegerNumberField` | `IntegerNumberValue` |
+| `EmbeddedRealNumberField` | `RealNumberValue` |
+| `EmbeddedBooleanField` | `BooleanValue` |
 | `EmbeddedDateField` | `DateValue` (polymorphic: `YearValue \| YearMonthValue \| FullDateValue`) |
-| `EmbeddedTimeField` | `TimeLiteral` |
-| `EmbeddedDateTimeField` | `DateTimeLiteral` |
+| `EmbeddedTimeField` | `TimeValue` |
+| `EmbeddedDateTimeField` | `DateTimeValue` |
 | `EmbeddedControlledTermField` | `ControlledTermValue` |
 | `EmbeddedSingleChoiceField` | `ChoiceValue` (polymorphic: `LiteralChoiceValue \| ControlledTermChoiceValue`) |
 | `EmbeddedMultipleChoiceField` | `ChoiceValue` |
 | `EmbeddedLinkField` | `LinkValue` |
-| `EmbeddedEmailField` | `SimpleLiteral` |
-| `EmbeddedPhoneNumberField` | `SimpleLiteral` |
+| `EmbeddedEmailField` | `EmailValue` |
+| `EmbeddedPhoneNumberField` | `PhoneNumberValue` |
 | `EmbeddedOrcidField` | `OrcidValue` |
 | `EmbeddedRorField` | `RorValue` |
 | `EmbeddedDoiField` | `DoiValue` |
@@ -1601,7 +1454,7 @@ The optional `defaultValue` component of an `EmbeddedField` specifies the value 
 | `EmbeddedNihGrantIdField` | `NihGrantIdValue` |
 | `EmbeddedAttributeValueField` | (no default) |
 
-`TextFieldSpec` also carries an optional reusable field-level text default (a `TextLiteral` — see Field Specs). When both a field-level and an embedding-specific text default are present, the embedding-specific one takes precedence as it is more specific to the template context. All other default-value families appear only at the embedding level.
+`TextFieldSpec` also carries an optional reusable field-level text default (a `TextValue` — see Field Specs). When both a field-level and an embedding-specific text default are present, the embedding-specific one takes precedence as it is more specific to the template context. All other default-value families appear only at the embedding level.
 
 ### Label Override
 
@@ -1662,7 +1515,7 @@ NumericFieldSpec ::= IntegerNumberFieldSpec
                    | RealNumberFieldSpec
 
 TextFieldSpec ::= text_field_spec(
-                    [TextLiteral]
+                    [TextValue]
                     [MinLength]
                     [MaxLength]
                     [ValidationRegex]
@@ -1685,7 +1538,7 @@ RealNumberFieldSpec ::= real_number_field_spec(
                         )
 
 RealNumberDatatype ::= real_number_datatype(
-                         RealNumberDatatypeIri
+                         RealNumberDatatypeKind
                        )
 
 Unit ::= unit(
@@ -1763,7 +1616,9 @@ ControlledTermMultipleChoiceFieldSpec ::= controlled_term_multiple_choice_field_
                                           )
 
 LiteralChoiceOption ::= literal_choice_option(
-                          Literal
+                          LexicalForm
+                          [LanguageTag]
+                          [DatatypeIri]
                           [DefaultOption]
                         )
 
@@ -1809,7 +1664,7 @@ AttributeValueFieldSpec ::= attribute_value_field_spec()
 
 The current placement of `Unit` on `IntegerNumberFieldSpec` and `RealNumberFieldSpec` is a pragmatic compromise. A later revision may introduce a distinct `QuantityFieldSpec` to model numeric values with fixed units more explicitly.
 
-`IntegerNumberMinValue` and `IntegerNumberMaxValue` specify inclusive lower and upper bounds on the integer values that an `IntegerNumberField` accepts. Both are expressed as `IntegerNumberValue` constructs. `RealNumberMinValue` and `RealNumberMaxValue` are the analogous bounds on `RealNumberField` and carry `RealNumberValue` constructs whose `RealNumberDatatypeIri` matches the field's declared datatype.
+`IntegerNumberMinValue` and `IntegerNumberMaxValue` specify inclusive lower and upper bounds on the integer values that an `IntegerNumberField` accepts. Both are expressed as `IntegerNumberValue` constructs. `RealNumberMinValue` and `RealNumberMaxValue` are the analogous bounds on `RealNumberField` and carry `RealNumberValue` constructs whose `RealNumberDatatypeKind` matches the field's declared datatype.
 
 A `RealNumberFieldSpec` MAY use the family-shared `NumericRenderingHint`; if it carries a non-zero `decimalPlaces` rendering hint, the hint applies to display rounding only and does not constrain the lexical form of submitted values. `IntegerNumberFieldSpec` MAY also use `NumericRenderingHint`; a `decimalPlaces` value other than `0` on an integer field is harmless (display only) and SHOULD be omitted when not meaningful.
 
@@ -1873,15 +1728,15 @@ TimezoneNotRequired ::= timezone_not_required()
 
 The declared `TimePrecision` determines the required lexical form of conforming `TimeValue` constructs. Finer components than the declared precision MUST be omitted entirely; zeroing them is not equivalent to omitting them. Specifically:
 
-- `HourMinutePrecision`: `TimeLiteral` MUST carry only hour and minute components (`HH:MM`).
-- `HourMinuteSecondPrecision`: `TimeLiteral` MUST carry hour, minute, and second components (`HH:MM:SS`), with no fractional seconds.
-- `HourMinuteSecondFractionPrecision`: `TimeLiteral` MAY carry a fractional seconds component.
+- `HourMinutePrecision`: `TimeValue` MUST carry only hour and minute components (`HH:MM`).
+- `HourMinuteSecondPrecision`: `TimeValue` MUST carry hour, minute, and second components (`HH:MM:SS`), with no fractional seconds.
+- `HourMinuteSecondFractionPrecision`: `TimeValue` MAY carry a fractional seconds component.
 
-When `TimePrecision` is absent from a `TimeFieldSpec`, no precision constraint applies and any well-formed `TimeLiteral` is conforming.
+When `TimePrecision` is absent from a `TimeFieldSpec`, no precision constraint applies and any well-formed `TimeValue` is conforming.
 
 The same strict-truncation rule applies to `DateTimeValueType` for `DateTimeValue` constructs:
 
-- `DateHourMinuteValueType`: the time component of `DateTimeLiteral` MUST carry only hour and minute (`YYYY-MM-DDTHH:MM`).
+- `DateHourMinuteValueType`: the time component of `DateTimeValue` MUST carry only hour and minute (`YYYY-MM-DDTHH:MM`).
 - `DateHourMinuteSecondValueType`: the time component MUST carry hour, minute, and second (`YYYY-MM-DDTHH:MM:SS`), with no fractional seconds.
 - `DateHourMinuteSecondFractionValueType`: the time component MAY carry a fractional seconds component.
 

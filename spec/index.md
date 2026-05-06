@@ -33,6 +33,7 @@ This specification does not define:
 - [presentation.md](presentation.md) defines `PresentationComponent`.
 - [instances.md](instances.md) defines `TemplateInstance` and `InstanceValue`.
 - [validation.md](validation.md) defines well-formedness and validation rules.
+- [rdf-projection.md](rdf-projection.md) defines the derived projection from CEDAR `Value` instances to RDF.
 
 ## Core Design Principles
 

@@ -39,17 +39,11 @@ Typing terms:
 
 - `FieldSpec`
 
-## Literal Notation
+## Value Notation
 
-`Literal` denotes an RDF literal in the grammar.
+`Value` denotes an instance-level data value in the grammar.
 
-The grammar distinguishes `TypedLiteral` and `LangTaggedLiteral` explicitly.
+Each `Value` family carries its content directly: a `LexicalForm`, an optional `LanguageTag`, an explicit datatype IRI (where one is configurable), or a boolean payload, depending on the family. There is no separate RDF-`Literal` layer in the abstract grammar; an RDF projection is defined separately in [rdf-projection.md](rdf-projection.md).
 
-`TypedLiteral` consists of lexical content together with a datatype IRI.
-
-`NumericLiteral`, `FullDateLiteral`, `TimeLiteral`, and `DateTimeLiteral` use more specific datatype-Iri categories.
-
-`LangTaggedLiteral` consists of lexical content together with a language tag.
-
-The normative structure and semantics of literals are defined in the `Literals` section of [grammar.md](grammar.md).
+The normative structure and semantics of values are defined in the `Values` section of [grammar.md](grammar.md).
 

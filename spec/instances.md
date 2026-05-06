@@ -49,11 +49,11 @@ A conforming instance MUST use `EmbeddedArtifactKey` values that identify embedd
 
 Textual instance values MAY include language tags.
 
-`TextValue` is represented by `TextLiteral`, which may be either `SimpleLiteral` or `LangTaggedLiteral`.
+`TextValue` carries a lexical form and an optional language tag.
 
-Numeric instance values are represented by typed literals that carry numeric datatype IRIs.
+Numeric instance values carry a lexical form together with the corresponding XSD datatype: `IntegerNumberValue` is fixed at `xsd:integer`; `RealNumberValue` carries an explicit datatype (`xsd:decimal`, `xsd:float`, or `xsd:double`).
 
-Date, time, and date-time instance values are represented separately by `DateValue`, `TimeValue`, and `DateTimeValue`, each with its own strongly typed literal form. Within `DateValue`, `YearValue` and `YearMonthValue` carry plain strings matching `YYYY` and `YYYY-MM` respectively; `FullDateValue` carries a typed `xsd:date` literal.
+Date, time, and date-time instance values are represented separately by `DateValue`, `TimeValue`, and `DateTimeValue`, each carrying its own lexical form. Within `DateValue`, `YearValue` and `YearMonthValue` carry plain strings matching `YYYY` and `YYYY-MM` respectively; `FullDateValue` carries an `xsd:date` lexical form.
 
 Controlled term instance values SHOULD preserve both a term Iri and a human-readable label. They MAY additionally preserve notation and preferred label information from the source terminology.
 
