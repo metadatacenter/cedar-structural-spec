@@ -1,1 +1,5 @@
-This repo contains the structural specification for CEDAR artifacts.  The main specification is [here](https://github.com/metadatacenter/cedar-structural-spec/blob/main/spec/grammar.md).
+This repo contains the structural specification for CEDAR artifacts.
+
+The rendered specification is published at
+[metadatacenter.github.io/cedar-structural-spec](https://metadatacenter.github.io/cedar-structural-spec/).
+The main grammar source is [`spec/grammar.md`](spec/grammar.md).
