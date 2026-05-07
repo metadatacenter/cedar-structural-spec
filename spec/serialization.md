@@ -37,7 +37,7 @@ Conforming documents are **not** JSON-LD. They carry no `@context`, are not inte
 In scope:
 
 - The JSON encoding rules (property naming, NFC normalisation, integer handling) that frame the shapes formally defined in [`wire-grammar.md`](wire-grammar.md).
-- Discriminator placement (the `kind` / property-set / position rules).
+- Discriminator placement (the `kind` / position rules).
 - The wrapping principle that determines which productions are tagged JSON objects vs flat JSON values.
 - Worked end-to-end examples.
 
@@ -108,27 +108,11 @@ The order of elements in the JSON array MUST match the order of components in th
 
 A JSON object's discriminator presence depends on the position it occupies in the document.
 
-**Polymorphic positions** — those at which the grammar admits a union of productions, e.g. `EmbeddedArtifact ::= EmbeddedField | EmbeddedTemplate | EmbeddedPresentationComponent` — MUST encode each alternative as a tagged JSON object carrying `"kind"` per §4.1, except for the property-set-discriminated unions noted below. The document root is itself a polymorphic position (any artifact may appear there); a JSON document at the root therefore carries `"kind"`.
+**Polymorphic positions** — those at which the grammar admits a union of productions, e.g. `EmbeddedArtifact ::= EmbeddedField | EmbeddedTemplate | EmbeddedPresentationComponent` — MUST encode each alternative as a tagged JSON object carrying `"kind"` per §4.1. The document root is itself a polymorphic position (any artifact may appear there); a JSON document at the root therefore carries `"kind"`.
 
 **Singleton positions** — those at which the grammar admits exactly one production — MUST encode that production as an untagged JSON object whose properties correspond to the production's components. The enclosing object's property name, together with the grammar, fully determines the production at this position; a `"kind"` property MUST NOT appear.
 
 This rule applies recursively: an untagged object at a singleton position whose own components include further composite objects follows the same rule for each of those components.
-
-#### Property-set-discriminated unions
-
-A small set of polymorphic unions is discriminated **by the combination of property names present** rather than by an explicit `"kind"` value. This is permitted only when the union's alternatives have structurally distinct property sets that cannot collide. The unions encoded this way are:
-
-- `AnnotationValue` (`AnnotationStringValue | Iri`): discriminated by `value` (string-bearing arm) vs `iri` (IRI arm).
-
-Future unions that would admit variants with overlapping property sets MUST use `"kind"` discrimination instead.
-
-A conforming decoder at a property-set-discriminated position MUST resolve the variant by exact match on the property set:
-
-1. The encoded object's set of property names MUST equal the property set of exactly one variant — every required property of that variant present, no property absent that the variant requires, and no property present that the variant does not list (required or optional).
-2. If the encoded object's property set matches no variant exactly, the decoder MUST reject the document.
-3. If the encoded object's property set matches more than one variant — for example, an `AnnotationValue` position carrying `{"iri":"…","value":"…"}` (which fits neither variant cleanly because `iri` and `value` MUST NOT both be present) — the decoder MUST reject the document.
-
-Conforming encoders, by construction, never emit objects matching either the no-match or multi-match conditions, because every abstract construct corresponds to exactly one variant.
 
 #### Position-discriminated unions
 
@@ -170,13 +154,13 @@ A production carries information beyond its payload, and so MUST be encoded as a
 
 - **(a) Composite structure.** The production has more than one named component (e.g. `Cardinality`, `Property`, `LabelOverride`, every `Value` family).
 
-- **(b) Discriminated union membership.** The production participates in a union where alternatives must be distinguished at decode time (e.g. `Value`, every artifact's `kind`, the twenty `Field` family variants). The discriminator is `"kind"` by default, with a small set of property-set-discriminated unions per §4.4.
+- **(b) Discriminated union membership.** The production participates in a union where alternatives must be distinguished at decode time (e.g. `Value`, every artifact's `kind`, the twenty `Field` family variants). The discriminator is `"kind"`.
 
 - **(c) Lexical-form preservation.** The production carries lexical content whose preservation requires more than a JSON primitive can express (e.g. `LangString` carries a lexical form *and* a language tag; both must be present in the wire form).
 
 A production that satisfies none of these is encoded *flat*: the JSON value at the corresponding property position in the enclosing object is the JSON encoding of the production's single component, with no `"kind"` wrapper.
 
-The full list of productions that collapse this way is given in §1.7 of [`wire-grammar.md`](wire-grammar.md). At a glance:
+The full list of productions that collapse this way is given in §1.6 of [`wire-grammar.md`](wire-grammar.md). At a glance:
 
 - All `MultilingualString`-typed wrappers (`Header`, `Footer`, `Name`, `Description`, `PreferredLabel`, `AlternativeLabel`, `Label`, `PropertyLabel`, `OntologyName`, `RootTermLabel`, `ValueSetName`) flatten to a JSON array of `LangString` entries.
 - All single-`Iri` wrappers (artifact identifiers and references, `PropertyIri`, the typed external-authority IRIs, `OntologyIri`, etc.) flatten to a plain JSON string.
@@ -286,25 +270,27 @@ Each `Value` family is encoded as a tagged object that carries its content direc
   "annotations": [
     {
       "property": "https://example.org/annotation-properties/notes",
-      "body": { "value": "An institutional note." }
+      "body": { "kind": "AnnotationStringValue", "value": "An institutional note." }
     }
   ]
 }
 ```
 
-`AnnotationValue` is a property-set-discriminated polymorphic union (`AnnotationStringValue | Iri`). The string-bearing arm carries `value` (and optionally `lang`); the IRI arm carries `iri` only:
+`AnnotationValue` is a kind-discriminated polymorphic union over named annotation-value variants. Two variants are currently defined: `AnnotationStringValue` (a lexical form with optional language tag) and `AnnotationIriValue` (an IRI):
 
 ```json
-{ "value": "An institutional note." }
+{ "kind": "AnnotationStringValue", "value": "An institutional note." }
 ```
 ```json
-{ "value": "Une note institutionnelle.", "lang": "fr" }
+{ "kind": "AnnotationStringValue", "value": "Une note institutionnelle.", "lang": "fr" }
 ```
 ```json
-{ "iri": "https://example.org/related-resource" }
+{ "kind": "AnnotationIriValue", "iri": "https://example.org/related-resource" }
 ```
 
-The wire-form property name on `Annotation` is `body` (for the grammar's `AnnotationValue` component) — chosen to avoid the visual collision that a `value`/`value` nesting would create with the string-bearing arm's `value` property. The naming follows the W3C Web Annotations convention.
+The wire-form property name on `Annotation` is `body` (for the grammar's `AnnotationValue` component) — following the W3C Web Annotations convention.
+
+The `AnnotationValue` variant family is open to extension: future revisions of this specification MAY introduce additional `AnnotationXxxValue` variants. Conforming decoders MUST reject documents whose `body.kind` is not a known variant.
 
 ### 6.5 Embedded artifact properties
 
@@ -421,7 +407,7 @@ An `EmbeddedAttributeValueField` MUST NOT carry a `defaultValue` property.
 
 ### 6.8 Default values
 
-The optional `defaultValue` slot on each `EmbeddedXxxField` is encoded directly as the family-specific `Value` (see [`wire-grammar.md`](wire-grammar.md) §6.6 for the full table). There is no `DefaultValue` wrapper on the wire: a default value is the family's `Value` shape in place. The `defaultValue` slot is a singleton position; per [`wire-grammar.md`](wire-grammar.md) §1.5, the `kind` property is omitted from the encoded `Value` because the surrounding `EmbeddedXxxField.kind` already fixes the family. The one polymorphic `Value` union — `DateValue` — retains its `kind` discriminator at this position because a kind tag is required to discriminate the union arms.
+The optional `defaultValue` slot on each `EmbeddedXxxField` is encoded directly as the family-specific `Value` (see [`wire-grammar.md`](wire-grammar.md) §6.5 for the full table). There is no `DefaultValue` wrapper on the wire: a default value is the family's `Value` shape in place. The `defaultValue` slot is a singleton position; per [`wire-grammar.md`](wire-grammar.md) §1.5, the `kind` property is omitted from the encoded `Value` because the surrounding `EmbeddedXxxField.kind` already fixes the family. The one polymorphic `Value` union — `DateValue` — retains its `kind` discriminator at this position because a kind tag is required to discriminate the union arms.
 
 `EmbeddedMultiValuedEnumField.defaultValue` is the only embedding-level default whose wire form is a JSON array rather than a single object: it carries an array of `EnumValue` entries (each with `kind` dropped). All other embedding-level defaults are single `Value` objects.
 
@@ -560,7 +546,7 @@ Two conforming JSON documents that differ only in JSON object property order or 
 
 ### 8.1 A minimal `Template`
 
-The `name` property below is a `MultilingualString` (§6.3): an array of `{value, lang}` entries, one per language. A single-language artifact uses a single-element array. The same shape applies to `description`, `preferredLabel`, each entry of `altLabels`, the `Template`'s `header` and `footer`, controlled-term labels, unit labels, and any other human-display text.
+The `name` property below is a `MultilingualString` (§6.2): an array of `{value, lang}` entries, one per language. A single-language artifact uses a single-element array. The same shape applies to `description`, `preferredLabel`, each entry of `altLabels`, the `Template`'s `header` and `footer`, controlled-term labels, unit labels, and any other human-display text.
 
 ```json
 {

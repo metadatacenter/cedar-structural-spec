@@ -11,6 +11,14 @@ information.
 For every `XxxYyy ::=` in `grammar.md` there is exactly one
 `XxxYyy :::` in this file, and vice versa.
 
+> **Status: hand-maintained, eventually generated.** This file is
+> currently authored in lock-step with `grammar.md`. The longer-term
+> direction is to derive it mechanically from `grammar.md` plus the
+> property-name map (§14) plus the encoding rules (§1.7). Until that
+> generator exists, the file is hand-maintained; the §14 property-name
+> map and the §1.7 encoding rules together define what such a
+> generator would need to know.
+
 ## 1. Notation
 
 Each line takes one of two forms:
@@ -64,15 +72,11 @@ some_union ::: A | B | C
 
 (Placeholder shown in `lower_snake_case` for the same reason as §1.1.)
 
-Three discrimination strategies are recognised, declared inline:
+Two discrimination strategies are recognised, declared inline:
 
 - `discriminator: kind` — every member is an object production whose
   shape includes a `kind: "MemberName"` literal property. Decoders pick
   the variant by reading `kind`.
-- `discriminator: property-set` — members are distinguished by which
-  properties are present on the encoded object. Used where members are
-  structurally disjoint and a `kind` discriminator would be redundant
-  (currently `AnnotationValue`).
 - `discriminator: position` — members are distinguished by the
   enclosing property name and the surrounding context, not by anything
   on the encoded object itself. Used at singleton positions where the
@@ -202,21 +206,86 @@ The wrappers fall into five groups by inner type:
   `Iri`, `TermIri`, every `XxxFieldId`, `TemplateId`,
   `TemplateInstanceId`, `PresentationComponentId`, `PropertyIri`,
   `OrcidIri`, `RorIri`, `DoiIri`, `PubMedIri`, `RridIri`,
-  `NihGrantIri`, `OntologyIri`, `RootTermIri`, `ValueSetIri`.
+  `NihGrantIri`, `OntologyIri`, `RootTermIri`, `ValueSetIri`,
+  `PreviousVersion`, `DerivedFrom`, `CreatedBy`, `ModifiedBy`.
 - **Other strings** (`string`): `LanguageTag`, `LexicalForm`,
   `IsoDateTimeStamp`, `OntologyAcronym`, `ValueSetIdentifier`,
   `Notation`, `Identifier`, `AttributeName`, `HtmlContent`,
-  `EmbeddedArtifactKey`, `ValidationRegex`.
+  `EmbeddedArtifactKey`, `ValidationRegex`, `Token`,
+  `Version`, `ModelVersion`, `CreatedOn`, `ModifiedOn`.
 - **Numbers**: `NonNegativeInteger`, `MinCardinality`, `MaxCardinality`,
   `MinLength`, `MaxLength`, `DecimalPlaces`, `MaxTraversalDepth`.
 - **MultilingualString-typed**: `Name`, `Description`, `PreferredLabel`,
   `AlternativeLabel`, `Label`, `PropertyLabel`, `OntologyName`,
   `ValueSetName`, `RootTermLabel`, `Header`, `Footer`.
-- **Versioning / lifecycle leaves**: `Version` and `ModelVersion` carry
-  SemanticVersion lexical strings; `PreviousVersion` and `DerivedFrom`
-  collapse to `Iri`; `CreatedOn` / `CreatedBy` / `ModifiedOn` /
-  `ModifiedBy` collapse to their lifecycle-metadata primitives
-  (`IsoDateTimeStamp` and `Iri` respectively).
+
+`Version` and `ModelVersion` carry SemanticVersion 2.0.0 lexical
+strings. `CreatedOn` and `ModifiedOn` carry ISO 8601 date-time
+lexical strings. `CreatedBy`, `ModifiedBy`, `PreviousVersion`, and
+`DerivedFrom` carry IRIs.
+
+### 1.7 Encoding rules
+
+This section summarises the rules a generator would apply to derive
+wire-grammar.md from `grammar.md` plus the property-name map (§14).
+The rules are also the framing under which the file should be read:
+each `:::` production in the rest of the file is what these rules
+produce when applied to the corresponding `::=` production in
+`grammar.md`.
+
+1. **Production naming.** Every abstract production `XxxYyy ::= ...`
+   in `grammar.md` becomes a wire production `XxxYyy ::: ...` with the
+   same name.
+
+2. **Object-form productions.** A production that composes one or more
+   named components encodes as `object { ... }` with property names
+   drawn from the property-name map (§14). When such a production is a
+   member of a kind-discriminated union, its object additionally carries
+   `"kind": "XxxYyy"` (see rule 7).
+
+3. **Optional components.** A grammar.md `[X]` component becomes an
+   optional wire property `prop?: X` and is omitted from the JSON when
+   absent.
+
+4. **Repeated components.** A grammar.md `X*` becomes a wire
+   `array<X>`; a grammar.md `X+` becomes a wire `nonEmptyArray<X>`.
+   Some sequence positions are encoded as omittable optional arrays per
+   the wrapping principle of `serialization.md` §5 — `altLabels?:
+   array<AlternativeLabel>` and `annotations?: array<Annotation>` on
+   `ArtifactMetadata` and `SchemaArtifactMetadata` are SHOULD-omitted
+   when empty, and the spec-level `MultiValuedEnumFieldSpec.defaultValues`
+   is similarly optional. These exceptions are flagged at the
+   production sites with inline constraints.
+
+5. **Collapsed wrappers.** Productions whose abstract form is a
+   single-component wrapper around a primitive collapse to that
+   primitive on the wire (§1.6). Their `:::` definitions remain in this
+   file for completeness and for use as type names at slot positions in
+   composite productions: every slot in an `object { ... }` is typed
+   with the abstract grammar's component name (e.g. `key:
+   EmbeddedArtifactKey` rather than `key: string`). This makes the wire
+   form's slot types isomorphic to the abstract grammar's component
+   types, even where the encoding bottoms out at a JSON primitive.
+
+6. **Discriminator strategies.** Two strategies are recognised, declared
+   inline on the union: `discriminator: kind` (default) and
+   `discriminator: position`. See §1.3.
+
+7. **The polymorphic-only kind rule.** A `kind: "X"` literal property
+   appears on a wire object only when that object is a member of a
+   `discriminator: kind` union. At singleton positions the production
+   is encoded as a plain `object { ... }` with no `kind` property. See
+   §1.5 for the full statement (including its application at
+   `EmbeddedXxxField.defaultValue`).
+
+8. **Primitive bottom-out.** Where the abstract grammar uses a bare
+   primitive type (`string`, `boolean`, `number`) without a typed
+   wrapper, the wire form uses that primitive directly (e.g.
+   `Cardinality.min: number`, `BooleanValue.value: boolean`).
+
+The wrapping principle that underlies rule 5 is given normatively in
+[`serialization.md`](serialization.md) §5; this section restates only
+the form in which it appears in the wire grammar.
 
 ---
 
@@ -233,11 +302,7 @@ each site that uses them.
 ```
 Iri ::: string
   // a syntactically valid IRI per RFC 3987. At every position in the
-  // model where the grammar uses Iri the wire form is a JSON string,
-  // EXCEPT in `AnnotationValue` (the only polymorphic position
-  // admitting a bare Iri). At that one position the IRI is wrapped
-  // as `object { iri: string }` so the property-set discriminator
-  // distinguishes it from the string-bearing arm — see §5 for that wrapper.
+  // model where the grammar uses Iri the wire form is a JSON string.
 
 TermIri ::: Iri
   // a documented role; encodes as Iri
@@ -295,8 +360,8 @@ Value ::: TextValue | NumericValue | BooleanValue
         | EmailValue | PhoneNumberValue | ExternalAuthorityValue
         | AttributeValue
   // discriminator: kind
-  // NumericValue and ExternalAuthorityValue are themselves unions;
-  // their members supply the kind discriminator directly
+  // NumericValue, DateValue, and ExternalAuthorityValue are themselves
+  // unions; their members supply the kind discriminator directly
 
 NumericValue ::: IntegerNumberValue | RealNumberValue
   // discriminator: kind
@@ -315,23 +380,23 @@ carries a JSON boolean.
 ```
 TextValue ::: object {
   "kind": "TextValue"
-  value: string
-  lang?: string
+  value: LexicalForm
+  lang?: LanguageTag
 }
   // lang, when present, MUST be a well-formed BCP 47 tag
   // value MUST be in Unicode Normalization Form C
 
 IntegerNumberValue ::: object {
   "kind": "IntegerNumberValue"
-  value: string
+  value: LexicalForm
 }
   // value is a base-10 integer lexical form
   // datatype is implicit (xsd:integer) and not carried on the wire
 
 RealNumberValue ::: object {
   "kind": "RealNumberValue"
-  value: string
-  datatype: "decimal" | "float" | "double"
+  value: LexicalForm
+  datatype: RealNumberDatatypeKind
 }
   // value is a base-10 real-valued lexical form
   // datatype names the XSD datatype (xsd:decimal, xsd:float, or xsd:double)
@@ -356,31 +421,31 @@ DateValue ::: YearValue | YearMonthValue | FullDateValue
 
 YearValue ::: object {
   "kind": "YearValue"
-  value: string
+  value: LexicalForm
 }
   // value matches YYYY
 
 YearMonthValue ::: object {
   "kind": "YearMonthValue"
-  value: string
+  value: LexicalForm
 }
   // value matches YYYY-MM
 
 FullDateValue ::: object {
   "kind": "FullDateValue"
-  value: string
+  value: LexicalForm
 }
   // value is an xsd:date lexical form (YYYY-MM-DD with optional zone)
 
 TimeValue ::: object {
   "kind": "TimeValue"
-  value: string
+  value: LexicalForm
 }
   // value is an xsd:time lexical form
 
 DateTimeValue ::: object {
   "kind": "DateTimeValue"
-  value: string
+  value: LexicalForm
 }
   // value is an xsd:dateTime lexical form
 ```
@@ -394,10 +459,10 @@ PreferredLabel ::: MultilingualString
 
 ControlledTermValue ::: object {
   "kind": "ControlledTermValue"
-  term: string
-  label?: MultilingualString
-  notation?: string
-  preferredLabel?: MultilingualString
+  term: TermIri
+  label?: Label
+  notation?: Notation
+  preferredLabel?: PreferredLabel
 }
   // term is a TermIri (an Iri identifying the term)
 ```
@@ -407,7 +472,7 @@ ControlledTermValue ::: object {
 ```
 EnumValue ::: object {
   "kind": "EnumValue"
-  value: string
+  value: Token
 }
   // value is the canonical Token of one of the referenced
   // EnumFieldSpec's PermissibleValue entries
@@ -417,15 +482,15 @@ EnumValue ::: object {
 `EnumValue.value` carries the wire-form of the abstract grammar's
 `Token` slot — the wire property name is `value` for consistency with
 other `Value` variants, while the abstract production names the slot
-`Token`.
+`Token`. `Token` is defined in §7 alongside `PermissibleValue`.
 
 ### 3.5 Link value
 
 ```
 LinkValue ::: object {
   "kind": "LinkValue"
-  iri: string
-  label?: MultilingualString
+  iri: Iri
+  label?: Label
 }
 ```
 
@@ -434,12 +499,12 @@ LinkValue ::: object {
 ```
 EmailValue ::: object {
   "kind": "EmailValue"
-  value: string
+  value: LexicalForm
 }
 
 PhoneNumberValue ::: object {
   "kind": "PhoneNumberValue"
-  value: string
+  value: LexicalForm
 }
 ```
 
@@ -452,40 +517,45 @@ ExternalAuthorityValue ::: OrcidValue | RorValue | DoiValue
 
 OrcidValue ::: object {
   "kind": "OrcidValue"
-  iri: string
-  label?: MultilingualString
+  iri: OrcidIri
+  label?: Label
 }
 
 RorValue ::: object {
   "kind": "RorValue"
-  iri: string
-  label?: MultilingualString
+  iri: RorIri
+  label?: Label
 }
 
 DoiValue ::: object {
   "kind": "DoiValue"
-  iri: string
-  label?: MultilingualString
+  iri: DoiIri
+  label?: Label
 }
 
 PubMedIdValue ::: object {
   "kind": "PubMedIdValue"
-  iri: string
-  label?: MultilingualString
+  iri: PubMedIri
+  label?: Label
 }
 
 RridValue ::: object {
   "kind": "RridValue"
-  iri: string
-  label?: MultilingualString
+  iri: RridIri
+  label?: Label
 }
 
 NihGrantIdValue ::: object {
   "kind": "NihGrantIdValue"
-  iri: string
-  label?: MultilingualString
+  iri: NihGrantIri
+  label?: Label
 }
+```
 
+The typed external-authority IRI productions collapse to plain string
+IRIs on the wire — see §1.6.
+
+```
 OrcidIri ::: Iri
 RorIri ::: Iri
 DoiIri ::: Iri
@@ -501,7 +571,7 @@ AttributeName ::: string
 
 AttributeValue ::: object {
   "kind": "AttributeValue"
-  name: string
+  name: AttributeName
   value: Value
 }
   // value is a fully tagged Value (the polymorphic-only kind rule applies:
@@ -551,6 +621,14 @@ variants, `Template` and `EmbeddedTemplate` for `TemplateId`,
 `TemplateInstanceId`. The identifier shape itself carries no family
 information.
 
+The same identifier productions serve at both the **definition site**
+of a reusable artifact (e.g. `Field.id`, `Template.id`) and the
+**reference site** where it is embedded (e.g.
+`EmbeddedField.artifactRef`, `EmbeddedTemplate.artifactRef`); the
+abstract grammar does not distinguish reference-typed productions from
+identity-typed ones, and on the wire both positions encode as a plain
+IRI string.
+
 ---
 
 ## 5. Artifact Metadata
@@ -570,11 +648,11 @@ Identifier ::: string
 AlternativeLabel ::: MultilingualString
 
 ArtifactMetadata ::: object {
-  name: MultilingualString
-  description?: MultilingualString
-  identifier?: string
-  preferredLabel?: MultilingualString
-  altLabels?: array<MultilingualString>
+  name: Name
+  description?: Description
+  identifier?: Identifier
+  preferredLabel?: PreferredLabel
+  altLabels?: array<AlternativeLabel>
   lifecycle: LifecycleMetadata
   annotations?: array<Annotation>
 }
@@ -582,9 +660,10 @@ ArtifactMetadata ::: object {
   // as an empty array in memory
   // annotations SHOULD be omitted from the wire when empty; it round-trips
   // as an empty array in memory
-  // the grammar's PreferredLabel and AlternativeLabel productions are
-  // collapsed to MultilingualString; their semantic role is conveyed by
-  // the property name (preferredLabel, altLabels) on this object
+  // the grammar's Name, Description, PreferredLabel, and AlternativeLabel
+  // productions are MultilingualString-typed wrappers that collapse on
+  // the wire (§1.6); the type names appear here for parity with the
+  // abstract grammar's component naming
 ```
 
 `SchemaArtifactMetadata` is the wire form used by reusable schema
@@ -593,11 +672,11 @@ plus a `versioning` slot — there is no inner `artifact` wrapper.
 
 ```
 SchemaArtifactMetadata ::: object {
-  name: MultilingualString
-  description?: MultilingualString
-  identifier?: string
-  preferredLabel?: MultilingualString
-  altLabels?: array<MultilingualString>
+  name: Name
+  description?: Description
+  identifier?: Identifier
+  preferredLabel?: PreferredLabel
+  altLabels?: array<AlternativeLabel>
   lifecycle: LifecycleMetadata
   annotations?: array<Annotation>
   versioning: SchemaArtifactVersioning
@@ -621,10 +700,10 @@ ModifiedOn ::: string
 ModifiedBy ::: string
 
 LifecycleMetadata ::: object {
-  createdOn: string
-  createdBy: string
-  modifiedOn: string
-  modifiedBy: string
+  createdOn: CreatedOn
+  createdBy: CreatedBy
+  modifiedOn: ModifiedOn
+  modifiedBy: ModifiedBy
 }
   // createdOn and modifiedOn carry IsoDateTimeStamp values
   // createdBy and modifiedBy carry agent Iri values
@@ -634,10 +713,10 @@ LifecycleMetadata ::: object {
 
 ```
 SchemaArtifactVersioning ::: object {
-  version: string
+  version: Version
   status: Status
-  previousVersion?: string
-  derivedFrom?: string
+  previousVersion?: PreviousVersion
+  derivedFrom?: DerivedFrom
 }
   // version is a SemanticVersion lexical form
 
@@ -655,31 +734,28 @@ Status ::: "draft" | "published"
 
 ```
 Annotation ::: object {
-  property: string
+  property: Iri
   body: AnnotationValue
 }
   // property is the annotation-property Iri (the grammar's bare Iri
   // collapses to a string at this singleton position)
 
-AnnotationValue ::: AnnotationStringValue | object { iri: string }
-  // discriminator: property-set
-  //
-  // The two arms are distinguished by which properties the encoded
-  // object carries:
-  //
-  //   { "value": "..." }                ⇒ AnnotationStringValue (no lang)
-  //   { "value": "...", "lang": "..." } ⇒ AnnotationStringValue (lang-tagged)
-  //   { "iri": "..." }                  ⇒ Iri (wrapped at this
-  //                                        polymorphic position)
-  //
-  // An object that carries both `iri` and `value` is non-conforming.
+AnnotationValue ::: AnnotationStringValue | AnnotationIriValue
+  // discriminator: kind
 
 AnnotationStringValue ::: object {
-  value: string
-  lang?: string
+  "kind": "AnnotationStringValue"
+  value: LexicalForm
+  lang?: LanguageTag
 }
   // lang, when present, MUST be a well-formed BCP 47 tag
   // value MUST be in Unicode Normalization Form C
+
+AnnotationIriValue ::: object {
+  "kind": "AnnotationIriValue"
+  iri: Iri
+}
+  // iri carries an Iri value (RFC 3987)
 ```
 
 ---
@@ -694,22 +770,18 @@ EmbeddedArtifactKey ::: string
   // unique within the containing Template (constraint enforced on Template)
 ```
 
-### 6.2 References
-
-References to reusable artifacts use the same identifier productions as the artifact's own identity (§4); the abstract grammar does not distinguish reference-typed productions from identity-typed ones. At the `artifactRef` slot of an `EmbeddedField`, `EmbeddedTemplate`, or `EmbeddedPresentationComponent`, the identifier is encoded as a plain IRI string. The family is recovered from the `kind` discriminator on the enclosing embedding.
-
-### 6.3 Requirements
+### 6.2 Requirements
 
 ```
 ValueRequirement ::: "required" | "recommended" | "optional"
 ```
 
-### 6.4 Cardinality
+### 6.3 Cardinality
 
 ```
 Cardinality ::: object {
-  min: number
-  max?: number
+  min: MinCardinality
+  max?: MaxCardinality
 }
   // min is a non-negative integer
   // max omitted ⇒ unbounded above (per grammar.md §Cardinality)
@@ -718,13 +790,13 @@ MinCardinality ::: number
 MaxCardinality ::: number
 ```
 
-### 6.5 Visibility
+### 6.4 Visibility
 
 ```
 Visibility ::: "visible" | "hidden"
 ```
 
-### 6.6 Defaults
+### 6.5 Defaults
 
 The optional `defaultValue` slot on each `EmbeddedXxxField` is typed
 family-by-family with the family's `Value` type (see `grammar.md`
@@ -774,22 +846,22 @@ empty). The text default follows the singleton-position kind rule;
 the enum defaults are bare-string `Token` references and carry no
 `kind`. See §7 for the productions.
 
-### 6.7 Label override
+### 6.6 Label override
 
 ```
 LabelOverride ::: object {
-  label: MultilingualString
-  altLabels: array<MultilingualString>
+  label: Label
+  altLabels: array<AlternativeLabel>
 }
   // altLabels MAY be empty
 ```
 
-### 6.8 Properties
+### 6.7 Properties
 
 ```
 Property ::: object {
-  iri: string
-  label?: MultilingualString
+  iri: PropertyIri
+  label?: PropertyLabel
 }
   // iri carries the PropertyIri; label is the optional PropertyLabel
 
@@ -818,21 +890,21 @@ NumericFieldSpec ::: IntegerNumberFieldSpec | RealNumberFieldSpec
 TextFieldSpec ::: object {
   "kind": "TextFieldSpec"
   defaultValue?: TextValue
-  minLength?: number
-  maxLength?: number
-  validationRegex?: string
+  minLength?: MinLength
+  maxLength?: MaxLength
+  validationRegex?: ValidationRegex
   renderingHint?: TextRenderingHint
 }
   // defaultValue, when present, encodes as a TextValue with kind
   // dropped at this singleton position (i.e. `{ value, lang? }`).
   // TextFieldSpec is the only FieldSpec that carries a defaultValue
-  // slot (see §6.6).
+  // slot (see §6.5).
 
 IntegerNumberFieldSpec ::: object {
   "kind": "IntegerNumberFieldSpec"
   unit?: Unit
-  minValue?: IntegerNumberValue
-  maxValue?: IntegerNumberValue
+  minValue?: IntegerNumberMinValue
+  maxValue?: IntegerNumberMaxValue
   renderingHint?: NumericRenderingHint
 }
 
@@ -840,8 +912,8 @@ RealNumberFieldSpec ::: object {
   "kind": "RealNumberFieldSpec"
   datatype: RealNumberDatatypeKind
   unit?: Unit
-  minValue?: RealNumberValue
-  maxValue?: RealNumberValue
+  minValue?: RealNumberMinValue
+  maxValue?: RealNumberMaxValue
   renderingHint?: NumericRenderingHint
 }
 
@@ -851,8 +923,8 @@ BooleanFieldSpec ::: object {
 }
 
 Unit ::: object {
-  iri: string
-  label?: MultilingualString
+  iri: Iri
+  label?: Label
 }
 
 MinLength ::: number
@@ -935,7 +1007,7 @@ EnumFieldSpec ::: SingleValuedEnumFieldSpec | MultiValuedEnumFieldSpec
 SingleValuedEnumFieldSpec ::: object {
   "kind": "SingleValuedEnumFieldSpec"
   permissibleValues: nonEmptyArray<PermissibleValue>
-  defaultValue?: string
+  defaultValue?: Token
   renderingHint?: SingleValuedEnumRenderingHint
 }
   // defaultValue, when present, MUST equal the `value` of one of the
@@ -944,17 +1016,17 @@ SingleValuedEnumFieldSpec ::: object {
 MultiValuedEnumFieldSpec ::: object {
   "kind": "MultiValuedEnumFieldSpec"
   permissibleValues: nonEmptyArray<PermissibleValue>
-  defaultValues?: array<string>
+  defaultValues?: array<Token>
   renderingHint?: MultiValuedEnumRenderingHint
 }
   // defaultValues, when present, MUST be a (possibly empty) array of
-  // strings each equal to the `value` of one of the permissibleValues
-  // entries; the array MUST NOT contain duplicates
+  // Token values each equal to the `value` of one of the
+  // permissibleValues entries; the array MUST NOT contain duplicates
 
 PermissibleValue ::: object {
-  value: string
-  label?: MultilingualString
-  description?: MultilingualString
+  value: Token
+  label?: Label
+  description?: Description
   meanings?: array<Meaning>
 }
   // value carries the canonical Token of the permissible value and
@@ -964,9 +1036,13 @@ PermissibleValue ::: object {
   // objects binding the token to ontology terms; SHOULD be omitted
   // when empty
 
+Token ::: string
+  // a non-empty Unicode string serving as the canonical key of a
+  // PermissibleValue or the value carried by an EnumValue
+
 Meaning ::: object {
-  iri: string
-  label?: MultilingualString
+  iri: TermIri
+  label?: Label
 }
   // iri carries the TermIri of the bound ontology term
   // label, when present, is the cached human-readable label of the
@@ -1022,22 +1098,22 @@ OntologySource ::: object {
 }
 
 OntologyReference ::: object {
-  iri: string
+  iri: OntologyIri
   displayHint?: OntologyDisplayHint
 }
 
 OntologyDisplayHint ::: object {
-  acronym?: string
-  name?: MultilingualString
+  acronym?: OntologyAcronym
+  name?: OntologyName
 }
   // at least one of acronym, name MUST be present
 
 BranchSource ::: object {
   "kind": "BranchSource"
   ontology: OntologyReference
-  rootTermIri: string
-  rootTermLabel?: MultilingualString
-  maxTraversalDepth?: number
+  rootTermIri: RootTermIri
+  rootTermLabel?: RootTermLabel
+  maxTraversalDepth?: MaxTraversalDepth
 }
   // rootTermLabel SHOULD be present (captured at source-declaration time)
   // but MAY be omitted when the term's display text is not available
@@ -1048,8 +1124,8 @@ ClassSource ::: object {
 }
 
 ControlledTermClass ::: object {
-  term: string
-  label?: MultilingualString
+  term: TermIri
+  label?: Label
   ontology: OntologyReference
 }
   // term is a TermIri
@@ -1058,9 +1134,9 @@ ControlledTermClass ::: object {
 
 ValueSetSource ::: object {
   "kind": "ValueSetSource"
-  identifier: string
-  name?: MultilingualString
-  iri?: string
+  identifier: ValueSetIdentifier
+  name?: ValueSetName
+  iri?: ValueSetIri
 }
 
 OntologyAcronym ::: string
@@ -1073,6 +1149,10 @@ ValueSetIdentifier ::: string
 ValueSetName ::: MultilingualString
 ValueSetIri ::: Iri
 ```
+
+The leaf productions used by the controlled-term sources collapse on
+the wire per §1.6; their `:::` definitions are listed alongside the
+source productions for slot-type reference.
 
 ### 7.6 Rendering hints
 
@@ -1091,7 +1171,7 @@ SingleValuedEnumRenderingHint ::: "radio" | "dropdown"
 MultiValuedEnumRenderingHint ::: "checkbox" | "multiSelect"
 
 NumericRenderingHint ::: object {
-  decimalPlaces?: number
+  decimalPlaces?: DecimalPlaces
 }
   // decimalPlaces, when present, MUST be a non-negative integer
   // it is a presentation concern (display rounding); it does NOT
@@ -1138,8 +1218,8 @@ ExternalAuthorityField ::: OrcidField | RorField | DoiField
 
 TextField ::: object {
   "kind": "TextField"
-  id: string
-  modelVersion: string
+  id: TextFieldId
+  modelVersion: ModelVersion
   metadata: SchemaArtifactMetadata
   fieldSpec: TextFieldSpec
 }
@@ -1147,8 +1227,8 @@ TextField ::: object {
 
 IntegerNumberField ::: object {
   "kind": "IntegerNumberField"
-  id: string
-  modelVersion: string
+  id: IntegerNumberFieldId
+  modelVersion: ModelVersion
   metadata: SchemaArtifactMetadata
   fieldSpec: IntegerNumberFieldSpec
 }
@@ -1156,8 +1236,8 @@ IntegerNumberField ::: object {
 
 RealNumberField ::: object {
   "kind": "RealNumberField"
-  id: string
-  modelVersion: string
+  id: RealNumberFieldId
+  modelVersion: ModelVersion
   metadata: SchemaArtifactMetadata
   fieldSpec: RealNumberFieldSpec
 }
@@ -1165,8 +1245,8 @@ RealNumberField ::: object {
 
 BooleanField ::: object {
   "kind": "BooleanField"
-  id: string
-  modelVersion: string
+  id: BooleanFieldId
+  modelVersion: ModelVersion
   metadata: SchemaArtifactMetadata
   fieldSpec: BooleanFieldSpec
 }
@@ -1174,8 +1254,8 @@ BooleanField ::: object {
 
 DateField ::: object {
   "kind": "DateField"
-  id: string
-  modelVersion: string
+  id: DateFieldId
+  modelVersion: ModelVersion
   metadata: SchemaArtifactMetadata
   fieldSpec: DateFieldSpec
 }
@@ -1183,8 +1263,8 @@ DateField ::: object {
 
 TimeField ::: object {
   "kind": "TimeField"
-  id: string
-  modelVersion: string
+  id: TimeFieldId
+  modelVersion: ModelVersion
   metadata: SchemaArtifactMetadata
   fieldSpec: TimeFieldSpec
 }
@@ -1192,8 +1272,8 @@ TimeField ::: object {
 
 DateTimeField ::: object {
   "kind": "DateTimeField"
-  id: string
-  modelVersion: string
+  id: DateTimeFieldId
+  modelVersion: ModelVersion
   metadata: SchemaArtifactMetadata
   fieldSpec: DateTimeFieldSpec
 }
@@ -1201,8 +1281,8 @@ DateTimeField ::: object {
 
 ControlledTermField ::: object {
   "kind": "ControlledTermField"
-  id: string
-  modelVersion: string
+  id: ControlledTermFieldId
+  modelVersion: ModelVersion
   metadata: SchemaArtifactMetadata
   fieldSpec: ControlledTermFieldSpec
 }
@@ -1210,8 +1290,8 @@ ControlledTermField ::: object {
 
 SingleValuedEnumField ::: object {
   "kind": "SingleValuedEnumField"
-  id: string
-  modelVersion: string
+  id: SingleValuedEnumFieldId
+  modelVersion: ModelVersion
   metadata: SchemaArtifactMetadata
   fieldSpec: SingleValuedEnumFieldSpec
 }
@@ -1219,8 +1299,8 @@ SingleValuedEnumField ::: object {
 
 MultiValuedEnumField ::: object {
   "kind": "MultiValuedEnumField"
-  id: string
-  modelVersion: string
+  id: MultiValuedEnumFieldId
+  modelVersion: ModelVersion
   metadata: SchemaArtifactMetadata
   fieldSpec: MultiValuedEnumFieldSpec
 }
@@ -1228,8 +1308,8 @@ MultiValuedEnumField ::: object {
 
 LinkField ::: object {
   "kind": "LinkField"
-  id: string
-  modelVersion: string
+  id: LinkFieldId
+  modelVersion: ModelVersion
   metadata: SchemaArtifactMetadata
   fieldSpec: LinkFieldSpec
 }
@@ -1237,8 +1317,8 @@ LinkField ::: object {
 
 EmailField ::: object {
   "kind": "EmailField"
-  id: string
-  modelVersion: string
+  id: EmailFieldId
+  modelVersion: ModelVersion
   metadata: SchemaArtifactMetadata
   fieldSpec: EmailFieldSpec
 }
@@ -1246,8 +1326,8 @@ EmailField ::: object {
 
 PhoneNumberField ::: object {
   "kind": "PhoneNumberField"
-  id: string
-  modelVersion: string
+  id: PhoneNumberFieldId
+  modelVersion: ModelVersion
   metadata: SchemaArtifactMetadata
   fieldSpec: PhoneNumberFieldSpec
 }
@@ -1255,8 +1335,8 @@ PhoneNumberField ::: object {
 
 OrcidField ::: object {
   "kind": "OrcidField"
-  id: string
-  modelVersion: string
+  id: OrcidFieldId
+  modelVersion: ModelVersion
   metadata: SchemaArtifactMetadata
   fieldSpec: OrcidFieldSpec
 }
@@ -1264,8 +1344,8 @@ OrcidField ::: object {
 
 RorField ::: object {
   "kind": "RorField"
-  id: string
-  modelVersion: string
+  id: RorFieldId
+  modelVersion: ModelVersion
   metadata: SchemaArtifactMetadata
   fieldSpec: RorFieldSpec
 }
@@ -1273,8 +1353,8 @@ RorField ::: object {
 
 DoiField ::: object {
   "kind": "DoiField"
-  id: string
-  modelVersion: string
+  id: DoiFieldId
+  modelVersion: ModelVersion
   metadata: SchemaArtifactMetadata
   fieldSpec: DoiFieldSpec
 }
@@ -1282,8 +1362,8 @@ DoiField ::: object {
 
 PubMedIdField ::: object {
   "kind": "PubMedIdField"
-  id: string
-  modelVersion: string
+  id: PubMedIdFieldId
+  modelVersion: ModelVersion
   metadata: SchemaArtifactMetadata
   fieldSpec: PubMedIdFieldSpec
 }
@@ -1291,8 +1371,8 @@ PubMedIdField ::: object {
 
 RridField ::: object {
   "kind": "RridField"
-  id: string
-  modelVersion: string
+  id: RridFieldId
+  modelVersion: ModelVersion
   metadata: SchemaArtifactMetadata
   fieldSpec: RridFieldSpec
 }
@@ -1300,8 +1380,8 @@ RridField ::: object {
 
 NihGrantIdField ::: object {
   "kind": "NihGrantIdField"
-  id: string
-  modelVersion: string
+  id: NihGrantIdFieldId
+  modelVersion: ModelVersion
   metadata: SchemaArtifactMetadata
   fieldSpec: NihGrantIdFieldSpec
 }
@@ -1309,8 +1389,8 @@ NihGrantIdField ::: object {
 
 AttributeValueField ::: object {
   "kind": "AttributeValueField"
-  id: string
-  modelVersion: string
+  id: AttributeValueFieldId
+  modelVersion: ModelVersion
   metadata: SchemaArtifactMetadata
   fieldSpec: AttributeValueFieldSpec
 }
@@ -1342,8 +1422,8 @@ EmbeddedField ::: EmbeddedTextField
 
 EmbeddedTextField ::: object {
   "kind": "EmbeddedTextField"
-  key: string
-  artifactRef: string
+  key: EmbeddedArtifactKey
+  artifactRef: TextFieldId
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
@@ -1354,8 +1434,8 @@ EmbeddedTextField ::: object {
 
 EmbeddedIntegerNumberField ::: object {
   "kind": "EmbeddedIntegerNumberField"
-  key: string
-  artifactRef: string
+  key: EmbeddedArtifactKey
+  artifactRef: IntegerNumberFieldId
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
@@ -1366,8 +1446,8 @@ EmbeddedIntegerNumberField ::: object {
 
 EmbeddedRealNumberField ::: object {
   "kind": "EmbeddedRealNumberField"
-  key: string
-  artifactRef: string
+  key: EmbeddedArtifactKey
+  artifactRef: RealNumberFieldId
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
@@ -1378,8 +1458,8 @@ EmbeddedRealNumberField ::: object {
 
 EmbeddedBooleanField ::: object {
   "kind": "EmbeddedBooleanField"
-  key: string
-  artifactRef: string
+  key: EmbeddedArtifactKey
+  artifactRef: BooleanFieldId
   valueRequirement?: ValueRequirement
   visibility?: Visibility
   defaultValue?: BooleanValue
@@ -1391,8 +1471,8 @@ EmbeddedBooleanField ::: object {
 
 EmbeddedDateField ::: object {
   "kind": "EmbeddedDateField"
-  key: string
-  artifactRef: string
+  key: EmbeddedArtifactKey
+  artifactRef: DateFieldId
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
@@ -1403,8 +1483,8 @@ EmbeddedDateField ::: object {
 
 EmbeddedTimeField ::: object {
   "kind": "EmbeddedTimeField"
-  key: string
-  artifactRef: string
+  key: EmbeddedArtifactKey
+  artifactRef: TimeFieldId
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
@@ -1415,8 +1495,8 @@ EmbeddedTimeField ::: object {
 
 EmbeddedDateTimeField ::: object {
   "kind": "EmbeddedDateTimeField"
-  key: string
-  artifactRef: string
+  key: EmbeddedArtifactKey
+  artifactRef: DateTimeFieldId
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
@@ -1427,8 +1507,8 @@ EmbeddedDateTimeField ::: object {
 
 EmbeddedControlledTermField ::: object {
   "kind": "EmbeddedControlledTermField"
-  key: string
-  artifactRef: string
+  key: EmbeddedArtifactKey
+  artifactRef: ControlledTermFieldId
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
@@ -1441,8 +1521,8 @@ EmbeddedControlledTermField ::: object {
 
 EmbeddedSingleValuedEnumField ::: object {
   "kind": "EmbeddedSingleValuedEnumField"
-  key: string
-  artifactRef: string
+  key: EmbeddedArtifactKey
+  artifactRef: SingleValuedEnumFieldId
   valueRequirement?: ValueRequirement
   visibility?: Visibility
   defaultValue?: EnumValue
@@ -1456,8 +1536,8 @@ EmbeddedSingleValuedEnumField ::: object {
 
 EmbeddedMultiValuedEnumField ::: object {
   "kind": "EmbeddedMultiValuedEnumField"
-  key: string
-  artifactRef: string
+  key: EmbeddedArtifactKey
+  artifactRef: MultiValuedEnumFieldId
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
@@ -1471,8 +1551,8 @@ EmbeddedMultiValuedEnumField ::: object {
 
 EmbeddedLinkField ::: object {
   "kind": "EmbeddedLinkField"
-  key: string
-  artifactRef: string
+  key: EmbeddedArtifactKey
+  artifactRef: LinkFieldId
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
@@ -1485,8 +1565,8 @@ EmbeddedLinkField ::: object {
 
 EmbeddedEmailField ::: object {
   "kind": "EmbeddedEmailField"
-  key: string
-  artifactRef: string
+  key: EmbeddedArtifactKey
+  artifactRef: EmailFieldId
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
@@ -1497,8 +1577,8 @@ EmbeddedEmailField ::: object {
 
 EmbeddedPhoneNumberField ::: object {
   "kind": "EmbeddedPhoneNumberField"
-  key: string
-  artifactRef: string
+  key: EmbeddedArtifactKey
+  artifactRef: PhoneNumberFieldId
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
@@ -1509,8 +1589,8 @@ EmbeddedPhoneNumberField ::: object {
 
 EmbeddedOrcidField ::: object {
   "kind": "EmbeddedOrcidField"
-  key: string
-  artifactRef: string
+  key: EmbeddedArtifactKey
+  artifactRef: OrcidFieldId
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
@@ -1523,8 +1603,8 @@ EmbeddedOrcidField ::: object {
 
 EmbeddedRorField ::: object {
   "kind": "EmbeddedRorField"
-  key: string
-  artifactRef: string
+  key: EmbeddedArtifactKey
+  artifactRef: RorFieldId
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
@@ -1537,8 +1617,8 @@ EmbeddedRorField ::: object {
 
 EmbeddedDoiField ::: object {
   "kind": "EmbeddedDoiField"
-  key: string
-  artifactRef: string
+  key: EmbeddedArtifactKey
+  artifactRef: DoiFieldId
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
@@ -1551,8 +1631,8 @@ EmbeddedDoiField ::: object {
 
 EmbeddedPubMedIdField ::: object {
   "kind": "EmbeddedPubMedIdField"
-  key: string
-  artifactRef: string
+  key: EmbeddedArtifactKey
+  artifactRef: PubMedIdFieldId
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
@@ -1565,8 +1645,8 @@ EmbeddedPubMedIdField ::: object {
 
 EmbeddedRridField ::: object {
   "kind": "EmbeddedRridField"
-  key: string
-  artifactRef: string
+  key: EmbeddedArtifactKey
+  artifactRef: RridFieldId
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
@@ -1579,8 +1659,8 @@ EmbeddedRridField ::: object {
 
 EmbeddedNihGrantIdField ::: object {
   "kind": "EmbeddedNihGrantIdField"
-  key: string
-  artifactRef: string
+  key: EmbeddedArtifactKey
+  artifactRef: NihGrantIdFieldId
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
@@ -1593,8 +1673,8 @@ EmbeddedNihGrantIdField ::: object {
 
 EmbeddedAttributeValueField ::: object {
   "kind": "EmbeddedAttributeValueField"
-  key: string
-  artifactRef: string
+  key: EmbeddedArtifactKey
+  artifactRef: AttributeValueFieldId
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
@@ -1605,8 +1685,8 @@ EmbeddedAttributeValueField ::: object {
 
 EmbeddedTemplate ::: object {
   "kind": "EmbeddedTemplate"
-  key: string
-  artifactRef: string
+  key: EmbeddedArtifactKey
+  artifactRef: TemplateId
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
@@ -1616,8 +1696,8 @@ EmbeddedTemplate ::: object {
 
 EmbeddedPresentationComponent ::: object {
   "kind": "EmbeddedPresentationComponent"
-  key: string
-  artifactRef: string
+  key: EmbeddedArtifactKey
+  artifactRef: PresentationComponentId
   visibility?: Visibility
 }
 ```
@@ -1634,21 +1714,21 @@ PresentationComponent ::: RichTextComponent | ImageComponent
 
 RichTextComponent ::: object {
   "kind": "RichTextComponent"
-  id: string
-  modelVersion: string
+  id: PresentationComponentId
+  modelVersion: ModelVersion
   metadata: ArtifactMetadata
-  html: string
+  html: HtmlContent
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
 ImageComponent ::: object {
   "kind": "ImageComponent"
-  id: string
-  modelVersion: string
+  id: PresentationComponentId
+  modelVersion: ModelVersion
   metadata: ArtifactMetadata
-  image: string
-  label?: MultilingualString
-  description?: MultilingualString
+  image: Iri
+  label?: Label
+  description?: Description
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
   // image is an Iri identifying the image resource
@@ -1657,12 +1737,12 @@ ImageComponent ::: object {
 
 YoutubeVideoComponent ::: object {
   "kind": "YoutubeVideoComponent"
-  id: string
-  modelVersion: string
+  id: PresentationComponentId
+  modelVersion: ModelVersion
   metadata: ArtifactMetadata
-  video: string
-  label?: MultilingualString
-  description?: MultilingualString
+  video: Iri
+  label?: Label
+  description?: Description
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
   // video is an Iri identifying the video resource
@@ -1671,16 +1751,16 @@ YoutubeVideoComponent ::: object {
 
 SectionBreakComponent ::: object {
   "kind": "SectionBreakComponent"
-  id: string
-  modelVersion: string
+  id: PresentationComponentId
+  modelVersion: ModelVersion
   metadata: ArtifactMetadata
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
 PageBreakComponent ::: object {
   "kind": "PageBreakComponent"
-  id: string
-  modelVersion: string
+  id: PresentationComponentId
+  modelVersion: ModelVersion
   metadata: ArtifactMetadata
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
@@ -1704,11 +1784,11 @@ SchemaArtifact ::: Field | Template
 
 Template ::: object {
   "kind": "Template"
-  id: string
-  modelVersion: string
+  id: TemplateId
+  modelVersion: ModelVersion
   metadata: SchemaArtifactMetadata
-  header?: MultilingualString
-  footer?: MultilingualString
+  header?: Header
+  footer?: Footer
   members: array<EmbeddedArtifact>
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
@@ -1727,10 +1807,10 @@ Footer ::: MultilingualString
 ```
 TemplateInstance ::: object {
   "kind": "TemplateInstance"
-  id: string
-  modelVersion: string
+  id: TemplateInstanceId
+  modelVersion: ModelVersion
   metadata: ArtifactMetadata
-  templateRef: string
+  templateRef: TemplateId
   values: array<InstanceValue>
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
@@ -1742,7 +1822,7 @@ InstanceValue ::: FieldValue | NestedTemplateInstance
 
 FieldValue ::: object {
   "kind": "FieldValue"
-  key: string
+  key: EmbeddedArtifactKey
   values: nonEmptyArray<Value>
 }
   // values MUST be non-empty (per grammar's Value+; absence of a value is
@@ -1750,7 +1830,7 @@ FieldValue ::: object {
 
 NestedTemplateInstance ::: object {
   "kind": "NestedTemplateInstance"
-  key: string
+  key: EmbeddedArtifactKey
   values: array<InstanceValue>
 }
   // values MAY be empty
@@ -1766,3 +1846,411 @@ implementation-extension prefixes, and worked end-to-end examples —
 see [`serialization.md`](serialization.md). For the abstract grammar
 this file mirrors, see [`grammar.md`](grammar.md). For conformance
 rules, see [`validation.md`](validation.md).
+
+---
+
+## 14. Property-name map
+
+This section makes the implicit map between abstract grammar component
+slots and JSON property names explicit. Each entry lists, for one
+abstract production, the abstract component types in their
+grammar-defined order paired with the wire property name used to encode
+that component.
+
+The list covers every abstract production in `grammar.md` that has at
+least one component. Productions whose abstract form has no components
+(e.g. `EmailFieldSpec ::= email_field_spec()`) and pure-union or
+enum-string productions (e.g. `Value`, `ValueRequirement`) carry no
+property-name mapping and are not listed.
+
+Conventions:
+
+- Component order follows `grammar.md`. Component-index numbering is
+  zero-based.
+- Optional `[X]` and repeated `X*` / `X+` components are noted
+  alongside the component type.
+- Where the wire form omits the abstract grammar's own kind
+  discriminator (e.g. `EmbeddedXxxField.defaultValue` at a
+  singleton-position `Value` slot, per §1.5), the mapping records the
+  wire property name that the discriminator-bearing or
+  discriminator-stripped object lives under.
+
+### 14.1 Top-level artifacts and templates
+
+**`Template`** (`template`):
+0. `TemplateId` → `id`
+1. `ModelVersion` → `modelVersion`
+2. `SchemaArtifactMetadata` → `metadata`
+3. `[Header]` → `header?`
+4. `[Footer]` → `footer?`
+5. `EmbeddedArtifact*` → `members`
+
+**`TemplateInstance`** (`template_instance`):
+0. `TemplateInstanceId` → `id`
+1. `ModelVersion` → `modelVersion`
+2. `ArtifactMetadata` → `metadata`
+3. `TemplateId` → `templateRef`
+4. `InstanceValue*` → `values`
+
+### 14.2 Field artifacts
+
+Every concrete `Field` production has the same four-component shape:
+`(<Family>FieldId, ModelVersion, SchemaArtifactMetadata, <Family>FieldSpec)`.
+For all of `TextField`, `IntegerNumberField`, `RealNumberField`,
+`BooleanField`, `DateField`, `TimeField`, `DateTimeField`,
+`ControlledTermField`, `SingleValuedEnumField`, `MultiValuedEnumField`,
+`LinkField`, `EmailField`, `PhoneNumberField`, `OrcidField`,
+`RorField`, `DoiField`, `PubMedIdField`, `RridField`,
+`NihGrantIdField`, and `AttributeValueField`:
+
+0. `<Family>FieldId` → `id`
+1. `ModelVersion` → `modelVersion`
+2. `SchemaArtifactMetadata` → `metadata`
+3. `<Family>FieldSpec` → `fieldSpec`
+
+### 14.3 Embedded artifacts
+
+Every concrete `EmbeddedXxxField` production follows the same pattern,
+with the per-family typed-id and typed-default-value slots:
+
+0. `EmbeddedArtifactKey` → `key`
+1. `<Family>FieldId` → `artifactRef`
+2. `[ValueRequirement]` → `valueRequirement?`
+3. `[Cardinality]` → `cardinality?` (omitted on `EmbeddedBooleanField` and `EmbeddedSingleValuedEnumField`)
+4. `[Visibility]` → `visibility?`
+5. `[<Family>Value]` → `defaultValue?` (omitted on `EmbeddedAttributeValueField`; on `EmbeddedMultiValuedEnumField` the slot is `EnumValue*` → `defaultValue?: array<EnumValue>`)
+6. `[LabelOverride]` → `labelOverride?`
+7. `[Property]` → `property?`
+
+(Component indices are renumbered to skip slots a particular family
+omits, per the per-family abstract production. The list above gives the
+canonical ordering common to the family.)
+
+**`EmbeddedTemplate`** (`embedded_template`):
+0. `EmbeddedArtifactKey` → `key`
+1. `TemplateId` → `artifactRef`
+2. `[ValueRequirement]` → `valueRequirement?`
+3. `[Cardinality]` → `cardinality?`
+4. `[Visibility]` → `visibility?`
+5. `[LabelOverride]` → `labelOverride?`
+6. `[Property]` → `property?`
+
+**`EmbeddedPresentationComponent`** (`embedded_presentation_component`):
+0. `EmbeddedArtifactKey` → `key`
+1. `PresentationComponentId` → `artifactRef`
+2. `[Visibility]` → `visibility?`
+
+### 14.4 Artifact metadata
+
+**`SchemaArtifactMetadata`** (`schema_artifact_metadata`): the wire
+form is a flat union — `ArtifactMetadata`'s components appear directly
+on the same object alongside `versioning`. The mapping below records
+the abstract production's two components, but the encoded wire form is
+the union of the inner `ArtifactMetadata` properties plus
+`versioning`:
+0. `ArtifactMetadata` → (flattened — properties appear directly)
+1. `SchemaArtifactVersioning` → `versioning`
+
+**`ArtifactMetadata`** (`artifact_metadata`):
+0. `Name` → `name`
+1. `[Description]` → `description?`
+2. `[Identifier]` → `identifier?`
+3. `[PreferredLabel]` → `preferredLabel?`
+4. `AlternativeLabel*` → `altLabels?` (SHOULD-omitted when empty per §1.7 rule 4)
+5. `LifecycleMetadata` → `lifecycle`
+6. `Annotation*` → `annotations?` (SHOULD-omitted when empty)
+
+**`LifecycleMetadata`** (`lifecycle_metadata`):
+0. `CreatedOn` → `createdOn`
+1. `CreatedBy` → `createdBy`
+2. `ModifiedOn` → `modifiedOn`
+3. `ModifiedBy` → `modifiedBy`
+
+**`SchemaArtifactVersioning`** (`schema_artifact_versioning`):
+0. `Version` → `version`
+1. `Status` → `status`
+2. `[PreviousVersion]` → `previousVersion?`
+3. `[DerivedFrom]` → `derivedFrom?`
+
+**`Annotation`** (`annotation`):
+0. `Iri` → `property`
+1. `AnnotationValue` → `body`
+
+**`AnnotationStringValue`** (`annotation_string_value`):
+0. `LexicalForm` → `value`
+1. `[LanguageTag]` → `lang?`
+
+**`AnnotationIriValue`** (`annotation_iri_value`):
+0. `Iri` → `iri`
+
+### 14.5 Embedded artifact properties
+
+**`Cardinality`** (`cardinality`):
+0. `MinCardinality` → `min`
+1. `[MaxCardinality]` → `max?`
+
+**`LabelOverride`** (`label_override`):
+0. `Label` → `label`
+1. `AlternativeLabel*` → `altLabels`
+
+**`Property`** (`property`):
+0. `PropertyIri` → `iri`
+1. `[PropertyLabel]` → `label?`
+
+### 14.6 Multilingual strings
+
+**`LangString`** (`lang_string`):
+0. `string` → `value`
+1. `Bcp47Tag` → `lang`
+
+### 14.7 Values
+
+**`TextValue`** (`text_value`):
+0. `LexicalForm` → `value`
+1. `[LanguageTag]` → `lang?`
+
+**`IntegerNumberValue`** (`integer_number_value`):
+0. `LexicalForm` → `value`
+
+**`RealNumberValue`** (`real_number_value`):
+0. `LexicalForm` → `value`
+1. `RealNumberDatatypeKind` → `datatype`
+
+**`BooleanValue`** (`boolean_value`):
+0. `boolean` → `value`
+
+**`YearValue`** (`year_value`):
+0. `LexicalForm` → `value`
+
+**`YearMonthValue`** (`year_month_value`):
+0. `LexicalForm` → `value`
+
+**`FullDateValue`** (`full_date_value`):
+0. `LexicalForm` → `value`
+
+**`TimeValue`** (`time_value`):
+0. `LexicalForm` → `value`
+
+**`DateTimeValue`** (`date_time_value`):
+0. `LexicalForm` → `value`
+
+**`ControlledTermValue`** (`controlled_term_value`):
+0. `TermIri` → `term`
+1. `[Label]` → `label?`
+2. `[Notation]` → `notation?`
+3. `[PreferredLabel]` → `preferredLabel?`
+
+**`EnumValue`** (`enum_value`):
+0. `Token` → `value`
+
+**`LinkValue`** (`link_value`):
+0. `Iri` → `iri`
+1. `[Label]` → `label?`
+
+**`EmailValue`** (`email_value`):
+0. `LexicalForm` → `value`
+
+**`PhoneNumberValue`** (`phone_number_value`):
+0. `LexicalForm` → `value`
+
+**`OrcidValue`** (`orcid_value`):
+0. `OrcidIri` → `iri`
+1. `[Label]` → `label?`
+
+**`RorValue`** (`ror_value`):
+0. `RorIri` → `iri`
+1. `[Label]` → `label?`
+
+**`DoiValue`** (`doi_value`):
+0. `DoiIri` → `iri`
+1. `[Label]` → `label?`
+
+**`PubMedIdValue`** (`pub_med_id_value`):
+0. `PubMedIri` → `iri`
+1. `[Label]` → `label?`
+
+**`RridValue`** (`rrid_value`):
+0. `RridIri` → `iri`
+1. `[Label]` → `label?`
+
+**`NihGrantIdValue`** (`nih_grant_id_value`):
+0. `NihGrantIri` → `iri`
+1. `[Label]` → `label?`
+
+**`AttributeValue`** (`attribute_value`):
+0. `AttributeName` → `name`
+1. `Value` → `value`
+
+### 14.8 Field specs
+
+**`TextFieldSpec`** (`text_field_spec`):
+0. `[TextValue]` → `defaultValue?`
+1. `[MinLength]` → `minLength?`
+2. `[MaxLength]` → `maxLength?`
+3. `[ValidationRegex]` → `validationRegex?`
+4. `[TextRenderingHint]` → `renderingHint?`
+
+**`IntegerNumberFieldSpec`** (`integer_number_field_spec`):
+0. `[Unit]` → `unit?`
+1. `[IntegerNumberMinValue]` → `minValue?`
+2. `[IntegerNumberMaxValue]` → `maxValue?`
+3. `[NumericRenderingHint]` → `renderingHint?`
+
+**`RealNumberFieldSpec`** (`real_number_field_spec`):
+0. `RealNumberDatatypeKind` → `datatype`
+1. `[Unit]` → `unit?`
+2. `[RealNumberMinValue]` → `minValue?`
+3. `[RealNumberMaxValue]` → `maxValue?`
+4. `[NumericRenderingHint]` → `renderingHint?`
+
+**`BooleanFieldSpec`** (`boolean_field_spec`):
+0. `[BooleanRenderingHint]` → `renderingHint?`
+
+**`Unit`** (`unit`):
+0. `Iri` → `iri`
+1. `[Label]` → `label?`
+
+**`DateFieldSpec`** (`date_field_spec`):
+0. `DateValueType` → `dateValueType`
+1. `[DateRenderingHint]` → `renderingHint?`
+
+**`TimeFieldSpec`** (`time_field_spec`):
+0. `[TimePrecision]` → `timePrecision?`
+1. `[TimezoneRequirement]` → `timezoneRequirement?`
+2. `[TimeRenderingHint]` → `renderingHint?`
+
+**`DateTimeFieldSpec`** (`date_time_field_spec`):
+0. `DateTimeValueType` → `dateTimeValueType`
+1. `[TimezoneRequirement]` → `timezoneRequirement?`
+2. `[DateTimeRenderingHint]` → `renderingHint?`
+
+**`ControlledTermFieldSpec`** (`controlled_term_field_spec`):
+0. `ControlledTermSource+` → `sources`
+
+**`SingleValuedEnumFieldSpec`** (`single_valued_enum_field_spec`):
+0. `PermissibleValue+` → `permissibleValues`
+1. `[Token]` → `defaultValue?`
+2. `[SingleValuedEnumRenderingHint]` → `renderingHint?`
+
+**`MultiValuedEnumFieldSpec`** (`multi_valued_enum_field_spec`):
+0. `PermissibleValue+` → `permissibleValues`
+1. `Token*` → `defaultValues?` (SHOULD-omitted when empty per §1.7 rule 4)
+2. `[MultiValuedEnumRenderingHint]` → `renderingHint?`
+
+**`PermissibleValue`** (`permissible_value`):
+0. `Token` → `value`
+1. `[Label]` → `label?`
+2. `[Description]` → `description?`
+3. `Meaning*` → `meanings?` (SHOULD-omitted when empty)
+
+**`Meaning`** (`meaning`):
+0. `TermIri` → `iri`
+1. `[Label]` → `label?`
+
+**`DateRenderingHint`** (`date_rendering_hint`):
+0. `[DateComponentOrder]` → `componentOrder?`
+
+**`TimeRenderingHint`** (`time_rendering_hint`):
+0. `[TimeFormat]` → `timeFormat?`
+
+**`DateTimeRenderingHint`** (`date_time_rendering_hint`):
+0. `[TimeFormat]` → `timeFormat?`
+
+**`NumericRenderingHint`** (`numeric_rendering_hint`):
+0. `[DecimalPlaces]` → `decimalPlaces?`
+
+### 14.9 Controlled term sources
+
+**`OntologySource`** (`ontology_source`):
+0. `OntologyReference` → `ontology`
+
+**`OntologyReference`** (`ontology_reference`):
+0. `OntologyIri` → `iri`
+1. `[OntologyDisplayHint]` → `displayHint?`
+
+**`OntologyDisplayHint`** (`ontology_display_hint`):
+0. `[OntologyAcronym]` → `acronym?`
+1. `[OntologyName]` → `name?`
+
+**`BranchSource`** (`branch_source`):
+0. `OntologyReference` → `ontology`
+1. `RootTermIri` → `rootTermIri`
+2. `[RootTermLabel]` → `rootTermLabel?`
+3. `[MaxTraversalDepth]` → `maxTraversalDepth?`
+
+**`ClassSource`** (`class_source`):
+0. `ControlledTermClass+` → `classes`
+
+**`ControlledTermClass`** (`controlled_term_class`):
+0. `TermIri` → `term`
+1. `[Label]` → `label?`
+2. `OntologyReference` → `ontology`
+
+**`ValueSetSource`** (`value_set_source`):
+0. `ValueSetIdentifier` → `identifier`
+1. `[ValueSetName]` → `name?`
+2. `[ValueSetIri]` → `iri?`
+
+### 14.10 Presentation components
+
+**`RichTextComponent`** (`rich_text_component`):
+0. `PresentationComponentId` → `id`
+1. `ModelVersion` → `modelVersion`
+2. `ArtifactMetadata` → `metadata`
+3. `HtmlContent` → `html`
+
+**`ImageComponent`** (`image_component`):
+0. `PresentationComponentId` → `id`
+1. `ModelVersion` → `modelVersion`
+2. `ArtifactMetadata` → `metadata`
+3. `Iri` → `image`
+4. `[Label]` → `label?`
+5. `[Description]` → `description?`
+
+**`YoutubeVideoComponent`** (`you_tube_video_component`):
+0. `PresentationComponentId` → `id`
+1. `ModelVersion` → `modelVersion`
+2. `ArtifactMetadata` → `metadata`
+3. `Iri` → `video`
+4. `[Label]` → `label?`
+5. `[Description]` → `description?`
+
+**`SectionBreakComponent`** (`section_break_component`):
+0. `PresentationComponentId` → `id`
+1. `ModelVersion` → `modelVersion`
+2. `ArtifactMetadata` → `metadata`
+
+**`PageBreakComponent`** (`page_break_component`):
+0. `PresentationComponentId` → `id`
+1. `ModelVersion` → `modelVersion`
+2. `ArtifactMetadata` → `metadata`
+
+### 14.11 Instances
+
+**`FieldValue`** (`field_value`):
+0. `EmbeddedArtifactKey` → `key`
+1. `Value+` → `values`
+
+**`NestedTemplateInstance`** (`nested_template_instance`):
+0. `EmbeddedArtifactKey` → `key`
+1. `InstanceValue*` → `values`
+
+### 14.12 Collapsed-wrapper productions
+
+The single-component wrapper productions enumerated in §1.6 — every
+`XxxFieldId`, `TemplateId`, `TemplateInstanceId`,
+`PresentationComponentId`, `Iri`, `TermIri`, `LanguageTag`,
+`LexicalForm`, `IsoDateTimeStamp`, `NonNegativeInteger`,
+`MinCardinality`, `MaxCardinality`, `MinLength`, `MaxLength`,
+`DecimalPlaces`, `MaxTraversalDepth`, the typed external-authority
+IRIs, `Name`, `Description`, `PreferredLabel`, `AlternativeLabel`,
+`Label`, `PropertyLabel`, `OntologyName`, `OntologyAcronym`,
+`OntologyIri`, `RootTermIri`, `RootTermLabel`, `ValueSetIdentifier`,
+`ValueSetName`, `ValueSetIri`, `Notation`, `Identifier`,
+`AttributeName`, `EmbeddedArtifactKey`, `ValidationRegex`, `Token`,
+`Header`, `Footer`, `Version`, `ModelVersion`, `CreatedOn`,
+`CreatedBy`, `ModifiedOn`, `ModifiedBy`, `PreviousVersion`,
+`DerivedFrom`, `PropertyIri`, and `HtmlContent` — collapse to their
+inner primitive on the wire and have no per-production property name.
+The single component appears directly at the slot in the enclosing
+production whose property name is given by that production's mapping.

@@ -920,7 +920,7 @@ The CEDAR versioning model rests on one guiding rule: **identity is per-version*
 
 ### Annotations
 
-`Annotation` provides an extensible metadata mechanism for additional named metadata values that are not captured by the core descriptive, lifecycle, or versioning structures. The first `Iri` identifies the annotation property — the predicate IRI under which the annotation is asserted. The `AnnotationValue` is the associated metadata value: either a string-bearing scalar or an IRI. This supports linking to external resources such as DOIs and grant identifiers, as well as storing institutional metadata.
+`Annotation` provides an extensible metadata mechanism for additional named metadata values that are not captured by the core descriptive, lifecycle, or versioning structures. The first `Iri` identifies the annotation property — the predicate IRI under which the annotation is asserted. The `AnnotationValue` is the associated metadata value, currently a string-bearing scalar or an IRI. This supports linking to external resources such as DOIs and grant identifiers, as well as storing institutional metadata.
 
 ```ebnf
 Annotation ::= annotation(
@@ -929,17 +929,21 @@ Annotation ::= annotation(
                )
 
 AnnotationValue ::= AnnotationStringValue
-                  | Iri
+                  | AnnotationIriValue
 
 AnnotationStringValue ::= annotation_string_value(
                             LexicalForm
                             [LanguageTag]
                           )
+
+AnnotationIriValue ::= annotation_iri_value(
+                         Iri
+                       )
 ```
 
-`AnnotationValue` is a direct union of `AnnotationStringValue` and `Iri`. The two variants represent the only forms an annotation value may take in this model: a string-bearing value carrying a lexical form with an optional language tag, or an IRI denoting a resource. `AnnotationStringValue` does not carry an explicit datatype: lexically-typed annotations are not modelled at this position, since annotation metadata is by convention either text or IRI-valued.
+`AnnotationValue` is a discriminated union over named annotation-value productions. The two currently defined variants represent text-valued and IRI-valued annotations: `AnnotationStringValue` carries a lexical form with an optional language tag; `AnnotationIriValue` carries an IRI denoting a resource. `AnnotationStringValue` does not carry an explicit datatype; lexically-typed annotations are not modelled at this position, since annotation metadata is by convention either text or IRI-valued.
 
-See [`Iri`](#core-iri-and-string-types).
+The variant family is open to extension. A future revision MAY introduce additional `AnnotationXxxValue` productions (for example, integer- or real-number-valued annotations) without breaking the existing variants.
 
 ## Scalar and Datatype Leaves
 

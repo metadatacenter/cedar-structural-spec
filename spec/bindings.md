@@ -234,106 +234,7 @@ wire form already requires `kind` to be one of the leaf names
 (never an intermediate-group name), so a flat dispatch table is
 correct by construction.
 
-### 2.3 Property-set discriminated union
-
-**What it is.** A wire production written as `T ::: A | B | …` with
-`// discriminator: property-set`. The variants are distinguished by
-*which properties are present* on the encoded object — there is no
-`kind` tag. The only union encoded this way is `AnnotationValue`
-([`wire-grammar.md`](wire-grammar.md) §1.3, §1.4). The property-set
-rule is permitted only because the variants' property sets are
-structurally disjoint; `wire-grammar.md` reserves this style for
-unions where that disjointness can be proven.
-
-**TypeScript idiom.** A structural union; type guards inspect property
-presence. A binding MAY add a synthetic `kind` discriminator to the
-*in-memory* representation (e.g. `AnnotationStringValue.kind =
-"AnnotationStringValue"`) purely for ergonomic narrowing — that
-synthetic discriminator is stripped at encode time and is not part of
-the wire shape.
-
-```typescript
-export interface AnnotationStringValue {
-  readonly kind?: 'AnnotationStringValue';  // synthetic; not on the wire
-  readonly value: string;
-  readonly lang?: LanguageTag;
-}
-export interface AnnotationIri {
-  readonly kind?: 'AnnotationIri';  // synthetic; not on the wire
-  readonly iri: Iri;
-}
-export type AnnotationValue = AnnotationStringValue | AnnotationIri;
-// Decode: pick variant by property-set; encode: emit value/lang or iri only.
-```
-
-(A binding MAY choose not to add a synthetic discriminator and rely
-purely on type guards.)
-
-**Java idiom.** A sealed interface with a custom Jackson deserializer
-that reads the property set. Alternatively — and often simpler — model
-`AnnotationValue` as a single concrete record with all optional
-properties plus an explicit kind enum derived at deserialize time. The
-single-record approach trades static-type expressiveness for a much
-shorter Jackson configuration.
-
-```java
-@JsonDeserialize(using = AnnotationValueDeserializer.class)
-public sealed interface AnnotationValue permits AnnotationStringValue, AnnotationIri { }
-
-public record AnnotationStringValue(String value, Optional<String> lang) implements AnnotationValue { }
-public record AnnotationIri(String iri) implements AnnotationValue { }
-
-// AnnotationValueDeserializer: read JsonNode; if has(iri) -> AnnotationIri;
-// else -> AnnotationStringValue.
-```
-
-**Python idiom.** Pydantic v2 with a callable `Discriminator` that
-returns the variant tag from the parsed payload. The callable inspects
-the keys present and returns `"iri"` or `"string"`.
-
-```python
-from typing import Annotated, Union
-from pydantic import BaseModel, ConfigDict, Discriminator, Tag
-
-class AnnotationStringValue(BaseModel):
-    model_config = ConfigDict(frozen=True)
-    value: str
-    lang: str | None = None
-
-class AnnotationIri(BaseModel):
-    model_config = ConfigDict(frozen=True)
-    iri: str
-
-def _annotation_value_disc(v: object) -> str:
-    if isinstance(v, dict):
-        return "iri" if "iri" in v else "string"
-    return "iri" if isinstance(v, AnnotationIri) else "string"
-
-AnnotationValue = Annotated[
-    Union[
-        Annotated[AnnotationStringValue, Tag("string")],
-        Annotated[AnnotationIri, Tag("iri")],
-    ],
-    Discriminator(_annotation_value_disc),
-]
-```
-
-A `model_validator(mode="before")` on a parent model is an alternative
-when the discriminator depends on context.
-
-**Validation guidance.** Decoders MUST reject objects whose property
-set matches no variant (e.g., `{"iri": "...", "value": "..."}` carries
-both `iri` and `value` and is non-conforming; cf.
-[`wire-grammar.md`](wire-grammar.md) §5.4). Encoders MUST omit the
-inapplicable arm's properties.
-
-**Worked example: `AnnotationValue` (`AnnotationStringValue |
-AnnotationIri`).** Wire shapes: `{"value":"x"}`,
-`{"value":"x","lang":"en"}`, `{"iri":"https://example.org/r"}`. Each
-binding decodes by inspecting property presence and reconstructs the
-correct in-memory variant.
-
-### 2.4 Position-discriminated union
+### 2.3 Position-discriminated union
 
 **What it is.** A wire production written as `T ::: A | B | …` with
 `// discriminator: position`. The variant is determined entirely by
@@ -368,7 +269,7 @@ Wire: `{"kind":"DateFieldSpec","dateValueType":"fullDate","renderingHint":{"comp
 no `kind` tag appears on the inner object since the position fixes
 the variant.
 
-### 2.5 Branded primitive
+### 2.4 Branded primitive
 
 **What it is.** A wire production written as `T ::: string` (or
 `number`) where `T` names a specialised role for the primitive — `Iri`,
@@ -449,7 +350,7 @@ recovered from the surrounding `kind`. Bindings reconstruct the
 typed form by combining the JSON string with the static type at the
 use site.
 
-### 2.6 `MultilingualString`
+### 2.5 `MultilingualString`
 
 **What it is.** A wire production `MultilingualString :::
 nonEmptyArray<LangString>` with the inline constraint that lang tags
@@ -537,7 +438,7 @@ recommendation is Pydantic for the JSON round-trip story.
 **Validation guidance.** Validate at construction. A constructed
 `MultilingualString` is always non-empty and always lang-unique.
 
-### 2.7 Optional component
+### 2.6 Optional component
 
 **What it is.** A grammar production component marked `[X]`. On the
 wire the property is encoded only when present
@@ -582,7 +483,7 @@ or use a custom `model_dump_json` wrapper to make this implicit.
 encoding error (per [`serialization.md`](serialization.md) §4.2),
 distinct from omission of the property.
 
-### 2.8 String enum
+### 2.7 String enum
 
 **What it is.** A wire production `T ::: "a" | "b" | …` whose values
 are drawn from a fixed set. All values are `lowerCamelCase` per
@@ -639,7 +540,7 @@ class Status(StrEnum):
 declared set. The enum surface must be closed: future wire-grammar
 additions trigger a binding version bump.
 
-### 2.9 Repeated component
+### 2.8 Repeated component
 
 **What it is.** A grammar component marked `X*` (zero-or-more) or `X+`
 (one-or-more). On the wire both encode as JSON arrays
@@ -663,7 +564,7 @@ For non-empty, use `Field(min_length=1)` or a `model_validator`.
 **Validation guidance.** Decoders MUST reject empty arrays at
 `nonEmptyArray<X>` positions. Encoders MUST preserve element order.
 
-### 2.10 Constraints
+### 2.9 Constraints
 
 **What it is.** Inline `//`-comments on `wire-grammar.md` productions
 declare constraints not expressible in the type expression: BCP 47
@@ -697,7 +598,7 @@ heap. Where validation depends on a wider context (e.g., embedded-key
 uniqueness depends on the whole `Template.members` array), perform
 the check in the enclosing constructor.
 
-### 2.11 Idempotent / widening constructors
+### 2.10 Idempotent / widening constructors
 
 **What it is.** An ergonomic pattern in which a constructor accepts a
 broader set of input shapes than its return type: `iri()` accepts
@@ -723,7 +624,7 @@ types; the canonical Pydantic model constructor remains for the
 narrow shape. Avoid `__init__` overloading via sentinels; prefer
 explicit factory functions (`iri.from_string`, etc.).
 
-### 2.12 Immutability
+### 2.11 Immutability
 
 Strongly recommend immutable-by-default for all binding types. A CEDAR
 artifact is a value; mutability is a hazard.
@@ -848,13 +749,6 @@ Conventions adopted by cedar-ts (already documented in §2 above):
 
 **Java.**
 
-- Jackson handling of the property-set discriminated `AnnotationValue`
-  union requires either a custom deserializer or the "fat record with
-  nullable fields plus a derived enum" approach (§2.3). The
-  custom-deserializer approach yields a cleaner public API but more
-  code; the fat-record approach is shorter but loses static type
-  expressiveness for the variant. The reference Java binding (when
-  produced) SHOULD pick one and document the choice.
 - `record` types cannot have generic type parameters with bounded
   variance the same way regular classes can. For `NonEmptyList<T>`
   -style helpers used as a `MultilingualString` substrate, prefer
@@ -900,20 +794,19 @@ quickly classify it:
 
 | `wire-grammar.md` shape                                                           | Category                                |
 |-----------------------------------------------------------------------------------|-----------------------------------------|
-| `T ::: string` / `number` / `boolean` / `null`                                    | Primitive (or branded primitive — §2.5) |
-| `T ::: array<X>`                                                                  | Repeated component (§2.9)               |
-| `T ::: nonEmptyArray<X>`                                                          | Repeated component (§2.9); §2.6 for `MultilingualString` specifically |
+| `T ::: string` / `number` / `boolean` / `null`                                    | Primitive (or branded primitive — §2.4) |
+| `T ::: array<X>`                                                                  | Repeated component (§2.8)               |
+| `T ::: nonEmptyArray<X>`                                                          | Repeated component (§2.8); §2.5 for `MultilingualString` specifically |
 | `T ::: object { … }` with no `"kind": "..."` literal property                     | Plain object production (§2.1)          |
 | `T ::: object { … }` with a `"kind": "..."` literal property                      | Member of a kind-discriminated union (§2.2) |
 | `T ::: A | B | …` with no comment, or `// discriminator: kind`                    | Kind-discriminated union (§2.2)         |
-| `T ::: A | B | …` with `// discriminator: property-set`                           | Property-set discriminated union (§2.3) |
-| `T ::: A | B | …` with `// discriminator: position`                               | Position-discriminated union (§2.4)     |
-| `T ::: "a" | "b" | …`                                                             | String enum (§2.8)                      |
+| `T ::: A | B | …` with `// discriminator: position`                               | Position-discriminated union (§2.3)     |
+| `T ::: "a" | "b" | …`                                                             | String enum (§2.7)                      |
 | `T ::: SomeOtherProduction` (collapsed wrapper, e.g. `PreferredLabel ::: MultilingualString`) | The wrapper carries no extra information; bind it as the inner type's idiom. |
 
 Optional components are marked with `?` on the property
-(`prop?: Type`) — see §2.7. Inline `//`-comments declare constraints to
-enforce at construction (§2.10).
+(`prop?: Type`) — see §2.6. Inline `//`-comments declare constraints to
+enforce at construction (§2.9).
 
 ---
 

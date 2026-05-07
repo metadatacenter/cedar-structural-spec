@@ -1598,17 +1598,16 @@ else:
 ### `encode_annotation(A: Annotation) → { key: value }`
 
 ```javascript
-key:   iri(A.annotation_name.iri)
+key:   iri(A.property)
 
-value: if A.annotation_value is LiteralAnnotationValue:
-         encode_text_value(as TextValue) or the raw lexical form string
-       if A.annotation_value is IriAnnotationValue:
-         iri(A.annotation_value.iri)
+value: if A.body is AnnotationStringValue:
+         { "@value": A.body.value, "@language"?: A.body.lang }
+         (or the raw lexical form string if simpler form is preferred)
+       if A.body is AnnotationIriValue:
+         iri(A.body.iri)
 ```
 
 Implementations SHOULD confirm that annotation IRI keys are valid within the CTM 1.6.0 `@context` before including them.
-
-**Calls:** [`encode_text_value`](#encode_text_valuev-textvalue--object)
 
 ---
 
