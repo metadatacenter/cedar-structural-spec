@@ -61,6 +61,31 @@ pre.ebnf code {
   text-decoration: underline;
 }
 
+/* "See also" annotation appended to the LHS of EmbeddedXxxField
+   productions, linking to the standalone XxxField production. */
+.ebnf-see-also {
+  font-size: 0.7em;
+  font-weight: 400;
+  color: #5a8a8a;
+  text-decoration: none;
+  margin-left: 0.5em;
+  padding: 0.05em 0.4em;
+  border: 1px solid rgba(13, 111, 111, 0.25);
+  border-radius: 3px;
+  vertical-align: 0.15em;
+  white-space: nowrap;
+}
+.ebnf-see-also:hover {
+  background: rgba(13, 111, 111, 0.08);
+  color: #0d6f6f;
+}
+.navy .ebnf-see-also,
+.coal .ebnf-see-also,
+.ayu .ebnf-see-also {
+  color: #6dd3d3;
+  border-color: rgba(109, 211, 211, 0.3);
+}
+
 /* RHS reference — clickable link to the definition. */
 .ebnf-ref {
   color: #0d6f6f;

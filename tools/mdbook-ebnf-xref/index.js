@@ -54,7 +54,7 @@ function processBook(book) {
   const chapters = collectChapters(book);
 
   // Pass 1: find every production definition and where it lives.
-  const defs = new Map(); // Name -> { path, anchor, count }
+  const defs = new Map(); // Name -> { paths: Set<path>, anchor }
   for (const ch of chapters) {
     findDefs(ch, defs);
   }
@@ -63,6 +63,81 @@ function processBook(book) {
   for (const ch of chapters) {
     ch.content = rewriteChapter(ch, defs);
   }
+
+  // Pass 3: if a chapter named index-of-productions.md exists, fill it.
+  const indexCh = chapters.find(
+    (c) => c.path === 'index-of-productions.md'
+  );
+  if (indexCh) {
+    indexCh.content = renderProductionIndex(defs, indexCh.content);
+  }
+}
+
+// Render the alphabetical index of productions. Each entry lists the
+// name and one or more "defined in <chapter>" links. Pages from
+// FILE_SCOPED_FILES (e.g. wire-grammar.md) are kept distinct from the
+// abstract grammar so that the index reflects what actually exists.
+function renderProductionIndex(defs, existingContent) {
+  // Sort case-insensitively for a more readable A–Z.
+  const names = [...defs.keys()].sort((a, b) =>
+    a.toLowerCase().localeCompare(b.toLowerCase())
+  );
+
+  // Group entries by leading letter for an A–Z heading layout.
+  const groups = new Map();
+  for (const name of names) {
+    const letter = name[0].toUpperCase();
+    if (!groups.has(letter)) groups.set(letter, []);
+    groups.get(letter).push(name);
+  }
+
+  const lines = [];
+  // Preserve any author-written prose at the top of the chapter (above
+  // the auto-generated marker). If the file is empty or has no marker,
+  // start with a default heading + intro.
+  const marker = '<!-- AUTO-GENERATED PRODUCTION INDEX -->';
+  const split = (existingContent || '').split(marker);
+  const head = split[0].trim()
+    ? split[0].trimEnd() + '\n\n'
+    : '# Index of Productions\n\n' +
+      'An alphabetical index of every production defined in this specification. ' +
+      'Click a chapter link to jump to the production\'s definition.\n\n';
+  lines.push(head);
+  lines.push(marker + '\n');
+
+  // Letter navigation row.
+  const letters = [...groups.keys()];
+  lines.push(
+    letters
+      .map((l) => `[${l}](#index-${l.toLowerCase()})`)
+      .join(' · ') + '\n'
+  );
+
+  for (const letter of letters) {
+    lines.push(`\n## ${letter} {#index-${letter.toLowerCase()}}\n`);
+    for (const name of groups.get(letter)) {
+      const entry = defs.get(name);
+      const sites = [...entry.paths]
+        .sort()
+        .map((p) => {
+          const label = chapterLabel(p);
+          const href = p.replace(/\.md$/, '.html') + '#' + entry.anchor;
+          return `[${label}](${href})`;
+        })
+        .join(', ');
+      lines.push(`- **${name}** — ${sites}\n`);
+    }
+  }
+  return lines.join('');
+}
+
+function chapterLabel(path) {
+  // Strip directory and extension; turn "wire-grammar.md" -> "Wire Grammar".
+  const base = path.replace(/^.*\//, '').replace(/\.md$/, '');
+  return base
+    .split(/[-_]/)
+    .map((s) => (s ? s[0].toUpperCase() + s.slice(1) : s))
+    .join(' ');
 }
 
 function collectChapters(book) {
@@ -123,6 +198,31 @@ function findDefs(ch, defs) {
       entry.paths.add(path);
     }
   }
+}
+
+// Emit a "see also" annotation linking an EmbeddedXxxField production to
+// its standalone XxxField counterpart and vice versa. Returns the empty
+// string when no matching peer exists. Pairing is purely name-based:
+//
+//   EmbeddedXxxField   ↗  XxxField
+//   XxxField           ↗  EmbeddedXxxField
+//
+// The annotation is a sibling span next to the LHS anchor, styled by CSS.
+function seeAlsoFor(name, currentPath, defs) {
+  let peer = null;
+  const embedded = /^Embedded([A-Z][A-Za-z0-9]*Field)$/.exec(name);
+  if (embedded) {
+    peer = embedded[1];
+  } else if (/^[A-Z][A-Za-z0-9]*Field$/.test(name)) {
+    peer = `Embedded${name}`;
+  }
+  if (!peer) return '';
+  const target = resolveDef(peer, currentPath, defs);
+  if (!target) return '';
+  const fileScoped = FILE_SCOPED_FILES.has(currentPath);
+  if (fileScoped && target.path !== currentPath) return '';
+  const href = linkHref(currentPath, target);
+  return ` <a class="ebnf-see-also" href="${href}" title="See ${esc(peer)}">↗ ${esc(peer)}</a>`;
 }
 
 // Resolve a production reference from currentPath, returning a link
@@ -203,6 +303,7 @@ function renderEbnfLine(line, currentPath, defs) {
     return (
       lead +
       `<a id="prod-${name}" class="ebnf-def">${esc(name)}</a>` +
+      seeAlsoFor(name, currentPath, defs) +
       gap +
       spanEsc('ebnf-op', op) +
       renderRhs(rest, currentPath, defs)
