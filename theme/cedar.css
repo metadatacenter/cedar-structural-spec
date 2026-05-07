@@ -1,10 +1,11 @@
 /* Cedar spec — small visual tweaks on top of mdBook's default theme. */
 
-/* EBNF / wire-grammar code blocks — keep at the default font size
-   (mdBook shrinks <pre><code> by default, which makes productions hard
-   to read), with a slightly tighter line height. */
+/* mdBook shrinks <pre><code> blocks below body text by default, which
+   makes both EBNF productions and code samples (Python, TypeScript,
+   Java in bindings.md) hard to read. Bump them up across the board.
+   The dedicated `pre.ebnf code` rule below overrides this for EBNF. */
 pre code {
-  font-size: 1rem;
+  font-size: 1.4rem;
   line-height: 1.5;
 }
 

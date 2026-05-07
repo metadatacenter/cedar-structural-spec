@@ -98,7 +98,10 @@ No Jackson type info is needed because the value lives at a singleton
 position and is decoded by its enclosing field's static type.
 
 ```java
-public record Cardinality(int min, @JsonInclude(NON_NULL) Integer max) {
+public record Cardinality(
+        @JsonProperty("min") int min,
+        @JsonProperty("max") @JsonInclude(NON_NULL) Integer max) {
+    @JsonCreator
     public Cardinality {
         if (min < 0) throw new CedarConstructionException("Cardinality.min must be >= 0");
         if (max != null && max < 0) throw new CedarConstructionException("Cardinality.max must be >= 0");
@@ -177,10 +180,20 @@ Jackson's polymorphic-type annotations using the property name `kind`.
 public sealed interface Value permits TextValue, IntegerNumberValue { }
 
 @JsonTypeName("TextValue")
-public record TextValue(String value, Optional<String> lang) implements Value { }
+public record TextValue(
+        @JsonProperty("value") String value,
+        @JsonProperty("lang") @JsonInclude(NON_ABSENT) Optional<String> lang)
+        implements Value {
+    @JsonCreator
+    public TextValue { }
+}
 
 @JsonTypeName("IntegerNumberValue")
-public record IntegerNumberValue(String value) implements Value { }
+public record IntegerNumberValue(@JsonProperty("value") String value)
+        implements Value {
+    @JsonCreator
+    public IntegerNumberValue { }
+}
 ```
 
 **Python idiom.** A discriminated `Union` annotated with
@@ -382,7 +395,10 @@ export function multilingualString(input: MultilingualStringInput): Multilingual
 **Java idiom.** Two records, with the outer carrying the invariants:
 
 ```java
-public record LangString(String value, String lang) {
+public record LangString(
+        @JsonProperty("value") String value,
+        @JsonProperty("lang") String lang) {
+    @JsonCreator
     public LangString { /* BCP 47 check on lang */ }
 }
 
@@ -458,7 +474,9 @@ with records (Jackson must be configured to recognise empty
 `Optional`s) and adds a layer of allocation per access.
 
 ```java
-public record Cardinality(int min, @JsonInclude(NON_NULL) Integer max) { … }
+public record Cardinality(
+        @JsonProperty("min") int min,
+        @JsonProperty("max") @JsonInclude(NON_NULL) Integer max) { … }
 ```
 
 **Python idiom.** `T | None` with default `None`; Pydantic respects
@@ -506,25 +524,21 @@ export const isStatus = (x: unknown): x is Status =>
 ```
 
 **Java idiom.** A Java `enum` whose constants are uppercase by
-convention, mapped to `lowerCamelCase` wire values via Jackson
-`@JsonValue` / `@JsonCreator`:
+convention, with `@JsonProperty` annotations mapping each constant to
+its `lowerCamelCase` wire value:
 
 ```java
 public enum Status {
-    DRAFT("draft"), PUBLISHED("published");
-    private final String wire;
-    Status(String wire) { this.wire = wire; }
-    @JsonValue public String wire() { return wire; }
-    @JsonCreator public static Status fromWire(String s) {
-        for (var v : values()) if (v.wire.equals(s)) return v;
-        throw new CedarConstructionException("Unknown Status: " + s);
-    }
+    @JsonProperty("draft") DRAFT,
+    @JsonProperty("published") PUBLISHED
 }
 ```
 
-Equivalently, `@JsonProperty("draft")` on each constant. The
-`@JsonValue`/`@JsonCreator` pair is preferred for the symmetric
-explicit mapping.
+Jackson uses the annotation for both serialization and
+deserialization. An unknown wire value yields Jackson's standard
+`InvalidFormatException`. Bindings that prefer to surface custom
+errors, or that need a wire accessor on the enum (e.g. for non-Jackson
+code paths), can use the `@JsonValue` / `@JsonCreator` pair instead.
 
 **Python idiom.** `enum.StrEnum` (Python 3.11+); Pydantic accepts and
 emits the string form directly.
