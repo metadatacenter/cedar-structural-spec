@@ -12,6 +12,7 @@ git-repository-url = "https://github.com/metadatacenter/cedar-structural-spec"
 edit-url-template = "https://github.com/metadatacenter/cedar-structural-spec/edit/main/{path}"
 site-url = "/"
 additional-css = ["theme/cedar.css"]
+additional-js = ["mermaid.min.js", "mermaid-init.js"]
 
 [output.html.fold]
 enable = true
@@ -40,3 +41,6 @@ runnable = false
 [preprocessor.ebnf-xref]
 command = "node tools/mdbook-ebnf-xref/index.js"
 before = ["links"]
+
+[preprocessor.mermaid]
+command = "mdbook-mermaid"
