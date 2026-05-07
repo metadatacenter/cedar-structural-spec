@@ -101,20 +101,20 @@ production unambiguously), the production is encoded as a plain
 `object { … }` with no `kind` property. This applies to productions
 such as `Cardinality`, `Property`, `LabelOverride`,
 `SchemaArtifactMetadata`, `ArtifactMetadata`, `LifecycleMetadata`,
-`SchemaVersioning`, `Annotation`, `Unit`, `OntologyReference`,
-`OntologyDisplayHint`, `ControlledTermClass`, `LiteralChoiceOption`,
-`ControlledTermChoiceOption`, and the temporal `RenderingHint`
-variants.
+`SchemaArtifactVersioning`, `Annotation`, `Unit`, `OntologyReference`,
+`OntologyDisplayHint`, `ControlledTermClass`, `PermissibleValue`,
+`Meaning`, and the temporal `RenderingHint` variants.
 
 The rule also applies at the `EmbeddedXxxField.defaultValue` slot: when
 that slot is typed as a kind-tagged `Value` production
-(`ControlledTermValue`, `LinkValue`, or one of the six external-authority
-value types: `OrcidValue`, `RorValue`, `DoiValue`, `PubMedIdValue`,
-`RridValue`, `NihGrantIdValue`), the family is fixed by the enclosing
-`EmbeddedXxxField.kind`, so the inner `kind` property is dropped on the
-wire and reconstructed at decode time. Where the `defaultValue` slot is
-a polymorphic union (`DateValue`, `ChoiceValue`), the inner `kind` is
-retained as it is required to discriminate the union arms.
+(`ControlledTermValue`, `EnumValue`, `LinkValue`, or one of the six
+external-authority value types: `OrcidValue`, `RorValue`, `DoiValue`,
+`PubMedIdValue`, `RridValue`, `NihGrantIdValue`), the family is fixed
+by the enclosing `EmbeddedXxxField.kind`, so the inner `kind` property
+is dropped on the wire and reconstructed at decode time. Where the
+`defaultValue` slot is itself a polymorphic union (`DateValue`), the
+inner `kind` is retained as it is required to discriminate the union
+arms.
 
 **Worked examples.** Three cases illustrate the rule.
 
@@ -199,15 +199,14 @@ production) they carry.
 The wrappers fall into five groups by inner type:
 
 - **IRI-typed** (`string`, syntactically valid IRI per RFC 3987):
-  `Iri`, `DatatypeIri`, `TermIri`, every `XxxFieldId` and
-  `XxxFieldReference`, `TemplateId`, `TemplateInstanceId`,
-  `PresentationComponentId`, `PropertyIri`, `OrcidIri`, `RorIri`,
-  `DoiIri`, `PubMedIri`, `RridIri`, `NihGrantIri`, `OntologyIri`,
-  `RootTermIri`, `ValueSetIri`, `ImageSource`, `YoutubeVideoSource`.
+  `Iri`, `TermIri`, every `XxxFieldId`, `TemplateId`,
+  `TemplateInstanceId`, `PresentationComponentId`, `PropertyIri`,
+  `OrcidIri`, `RorIri`, `DoiIri`, `PubMedIri`, `RridIri`,
+  `NihGrantIri`, `OntologyIri`, `RootTermIri`, `ValueSetIri`.
 - **Other strings** (`string`): `LanguageTag`, `LexicalForm`,
   `IsoDateTimeStamp`, `OntologyAcronym`, `ValueSetIdentifier`,
-  `Notation`, `LinkLabel`, `Identifier`, `AttributeName`, `HtmlContent`,
-  `KeyIdentifier`, `EmbeddedArtifactKey`, `ValidationRegex`.
+  `Notation`, `Identifier`, `AttributeName`, `HtmlContent`,
+  `EmbeddedArtifactKey`, `ValidationRegex`.
 - **Numbers**: `NonNegativeInteger`, `MinCardinality`, `MaxCardinality`,
   `MinLength`, `MaxLength`, `DecimalPlaces`, `MaxTraversalDepth`.
 - **MultilingualString-typed**: `Name`, `Description`, `PreferredLabel`,
@@ -239,9 +238,6 @@ Iri ::: string
   // admitting a bare Iri). At that one position the IRI is wrapped
   // as `object { iri: string }` so the property-set discriminator
   // distinguishes it from the string-bearing arm — see §5 for that wrapper.
-
-DatatypeIri ::: Iri
-  // a documented role; encodes as Iri
 
 TermIri ::: Iri
   // a documented role; encodes as Iri
@@ -295,12 +291,12 @@ datatype slot — the temporal category is fixed by the variant's
 ```
 Value ::: TextValue | NumericValue | BooleanValue
         | DateValue | TimeValue | DateTimeValue
-        | ControlledTermValue | ChoiceValue | LinkValue
+        | ControlledTermValue | EnumValue | LinkValue
         | EmailValue | PhoneNumberValue | ExternalAuthorityValue
         | AttributeValue
   // discriminator: kind
-  // NumericValue, ChoiceValue, and ExternalAuthorityValue are themselves
-  // unions; their members supply the kind discriminator directly
+  // NumericValue and ExternalAuthorityValue are themselves unions;
+  // their members supply the kind discriminator directly
 
 NumericValue ::: IntegerNumberValue | RealNumberValue
   // discriminator: kind
@@ -406,39 +402,22 @@ ControlledTermValue ::: object {
   // term is a TermIri (an Iri identifying the term)
 ```
 
-### 3.4 Choice value
+### 3.4 Enum value
 
 ```
-ChoiceValue ::: LiteralChoiceValue | ControlledTermChoiceValue
-  // discriminator: kind
-
-LiteralChoiceValue ::: object {
-  "kind": "LiteralChoiceValue"
+EnumValue ::: object {
+  "kind": "EnumValue"
   value: string
-  lang?: string
-  datatype?: string
 }
-  // value is the chosen lexical form
-  // lang and datatype are mutually exclusive: at most one is present
-  // lang, when present, MUST be a well-formed BCP 47 tag
-  // datatype, when present, MUST be a syntactically valid IRI
-
-ControlledTermChoiceValue ::: object {
-  "kind": "ControlledTermChoiceValue"
-  value: ControlledTermValue
-}
-  // the inner ControlledTermValue is at a singleton position; on the wire
-  // it is encoded untagged (the kind property is omitted in this position)
+  // value is the canonical Token of one of the referenced
+  // EnumFieldSpec's PermissibleValue entries
+  // value MUST be a non-empty Unicode string
 ```
 
-A `LiteralChoiceValue` is shape-discriminated by which optional property
-is present:
-
-| Wire shape | Selected option kind |
-|---|---|
-| `{ "kind": "LiteralChoiceValue", "value": "..." }` | plain text choice |
-| `{ "kind": "LiteralChoiceValue", "value": "...", "lang": "..." }` | language-tagged text choice |
-| `{ "kind": "LiteralChoiceValue", "value": "...", "datatype": "..." }` | typed-literal choice |
+`EnumValue.value` carries the wire-form of the abstract grammar's
+`Token` slot — the wire property name is `value` for consistency with
+other `Value` variants, while the abstract production names the slot
+`Token`.
 
 ### 3.5 Link value
 
@@ -446,11 +425,8 @@ is present:
 LinkValue ::: object {
   "kind": "LinkValue"
   iri: string
-  label?: string
+  label?: MultilingualString
 }
-
-LinkLabel ::: string
-  // plain Unicode text; not multilingual
 ```
 
 ### 3.6 Contact values
@@ -549,8 +525,8 @@ DateFieldId ::: Iri
 TimeFieldId ::: Iri
 DateTimeFieldId ::: Iri
 ControlledTermFieldId ::: Iri
-SingleChoiceFieldId ::: Iri
-MultipleChoiceFieldId ::: Iri
+SingleValuedEnumFieldId ::: Iri
+MultiValuedEnumFieldId ::: Iri
 LinkFieldId ::: Iri
 EmailFieldId ::: Iri
 PhoneNumberFieldId ::: Iri
@@ -624,14 +600,14 @@ SchemaArtifactMetadata ::: object {
   altLabels?: array<MultilingualString>
   lifecycle: LifecycleMetadata
   annotations?: array<Annotation>
-  versioning: SchemaVersioning
+  versioning: SchemaArtifactVersioning
 }
   // altLabels and annotations SHOULD be omitted from the wire when empty
 ```
 
 The abstract grammar models `SchemaArtifactMetadata` as the
 composition `schema_artifact_metadata(ArtifactMetadata,
-SchemaVersioning)`. The wire form unwraps the inner `ArtifactMetadata`
+SchemaArtifactVersioning)`. The wire form unwraps the inner `ArtifactMetadata`
 into the outer object: every property of `ArtifactMetadata` appears
 directly alongside `versioning`. There is no `metadata.artifact`
 intermediate.
@@ -657,7 +633,7 @@ LifecycleMetadata ::: object {
 ### 5.3 Schema versioning
 
 ```
-SchemaVersioning ::: object {
+SchemaArtifactVersioning ::: object {
   version: string
   status: Status
   previousVersion?: string
@@ -673,9 +649,6 @@ PreviousVersion ::: Iri
 DerivedFrom ::: Iri
 
 Status ::: "draft" | "published"
-
-DraftStatus ::: "draft"
-PublishedStatus ::: "published"
 ```
 
 ### 5.4 Annotations
@@ -719,54 +692,16 @@ AnnotationStringValue ::: object {
 EmbeddedArtifactKey ::: string
   // matches the pattern [A-Za-z][A-Za-z0-9_-]*
   // unique within the containing Template (constraint enforced on Template)
-
-KeyIdentifier ::: string
-  // matches the AsciiIdentifier pattern
 ```
 
 ### 6.2 References
 
-References mirror the identifiers in §4: each `XxxFieldReference`,
-`TemplateReference`, and `PresentationComponentReference` encodes as a
-plain IRI, carried at the `artifactRef` slot of the enclosing
-embedding. The family is recovered from the `kind` discriminator on
-the enclosing `EmbeddedField`, `EmbeddedTemplate`, or
-`EmbeddedPresentationComponent`.
-
-```
-FieldReference ::: string
-
-TextFieldReference ::: Iri
-IntegerNumberFieldReference ::: Iri
-RealNumberFieldReference ::: Iri
-BooleanFieldReference ::: Iri
-DateFieldReference ::: Iri
-TimeFieldReference ::: Iri
-DateTimeFieldReference ::: Iri
-ControlledTermFieldReference ::: Iri
-SingleChoiceFieldReference ::: Iri
-MultipleChoiceFieldReference ::: Iri
-LinkFieldReference ::: Iri
-EmailFieldReference ::: Iri
-PhoneNumberFieldReference ::: Iri
-OrcidFieldReference ::: Iri
-RorFieldReference ::: Iri
-DoiFieldReference ::: Iri
-PubMedIdFieldReference ::: Iri
-RridFieldReference ::: Iri
-NihGrantIdFieldReference ::: Iri
-AttributeValueFieldReference ::: Iri
-
-TemplateReference ::: Iri
-PresentationComponentReference ::: Iri
-```
+References to reusable artifacts use the same identifier productions as the artifact's own identity (§4); the abstract grammar does not distinguish reference-typed productions from identity-typed ones. At the `artifactRef` slot of an `EmbeddedField`, `EmbeddedTemplate`, or `EmbeddedPresentationComponent`, the identifier is encoded as a plain IRI string. The family is recovered from the `kind` discriminator on the enclosing embedding.
 
 ### 6.3 Requirements
 
 ```
 ValueRequirement ::: "required" | "recommended" | "optional"
-  // the per-arm productions Required, Recommended, and Optional collapse
-  // to their string-literal alternative above
 ```
 
 ### 6.4 Cardinality
@@ -787,8 +722,6 @@ MaxCardinality ::: number
 
 ```
 Visibility ::: "visible" | "hidden"
-  // the per-arm productions Visible and Hidden collapse to their
-  // string-literal alternative above
 ```
 
 ### 6.6 Defaults
@@ -802,10 +735,9 @@ JSON encodes directly as the corresponding family's `Value`.
 A `defaultValue` slot is a singleton position: per the polymorphic-only
 kind rule (§1.5), the family is fixed by the enclosing
 `EmbeddedXxxField.kind` and the inner `kind` property is dropped on the
-wire and reconstructed at decode time. The two polymorphic `Value`
-unions — `DateValue` and `ChoiceValue` — retain their `kind`
-discriminators at this position because a kind tag is required to
-discriminate the union arms.
+wire and reconstructed at decode time. The one polymorphic `Value`
+union — `DateValue` — retains its `kind` discriminator at this position
+because a kind tag is required to discriminate the union arms.
 
 The wire form per family is therefore:
 
@@ -819,8 +751,8 @@ The wire form per family is therefore:
 | `EmbeddedTimeField` | `TimeValue` (kind dropped: `{ value }`) |
 | `EmbeddedDateTimeField` | `DateTimeValue` (kind dropped: `{ value }`) |
 | `EmbeddedControlledTermField` | `ControlledTermValue` (kind dropped) |
-| `EmbeddedSingleChoiceField` | `ChoiceValue` (kind retained) |
-| `EmbeddedMultipleChoiceField` | `ChoiceValue` (kind retained) |
+| `EmbeddedSingleValuedEnumField` | `EnumValue` (kind dropped: `{ value }`) |
+| `EmbeddedMultiValuedEnumField` | `array<EnumValue>` (each element: kind dropped — `{ value }`) |
 | `EmbeddedLinkField` | `LinkValue` (kind dropped) |
 | `EmbeddedEmailField` | `EmailValue` (kind dropped: `{ value }`) |
 | `EmbeddedPhoneNumberField` | `PhoneNumberValue` (kind dropped: `{ value }`) |
@@ -831,11 +763,16 @@ The wire form per family is therefore:
 | `EmbeddedRridField` | `RridValue` (kind dropped) |
 | `EmbeddedNihGrantIdField` | `NihGrantIdValue` (kind dropped) |
 
-**Spec-level defaults.** `TextFieldSpec` is the only `FieldSpec` that
-carries a `defaultValue` slot, and it follows the same
-singleton-position rule as the embedding-level defaults above (encodes
-as `TextValue` with kind dropped: `{ value, lang? }`). See §7 for the
-production.
+**Spec-level defaults.** Three `FieldSpec` productions carry
+spec-level default slots: `TextFieldSpec.defaultValue` (a single
+`TextValue`, kind dropped: `{ value, lang? }`),
+`SingleValuedEnumFieldSpec.defaultValue` (a single `Token` — encoded
+on the wire as a plain string carrying one of the spec's permissible
+`Token` values), and `MultiValuedEnumFieldSpec.defaultValues` (an
+array of `Token` — encoded as a JSON array of plain strings, possibly
+empty). The text default follows the singleton-position kind rule;
+the enum defaults are bare-string `Token` references and carry no
+`kind`. See §7 for the productions.
 
 ### 6.7 Label override
 
@@ -867,11 +804,11 @@ PropertyLabel ::: MultilingualString
 ```
 FieldSpec ::: TextFieldSpec | NumericFieldSpec | BooleanFieldSpec
             | TemporalFieldSpec
-            | ControlledTermFieldSpec | ChoiceFieldSpec | LinkFieldSpec
+            | ControlledTermFieldSpec | EnumFieldSpec | LinkFieldSpec
             | ContactFieldSpec | ExternalAuthorityFieldSpec
             | AttributeValueFieldSpec
   // discriminator: kind
-  // NumericFieldSpec, TemporalFieldSpec, ChoiceFieldSpec, ContactFieldSpec,
+  // NumericFieldSpec, TemporalFieldSpec, EnumFieldSpec, ContactFieldSpec,
   // and ExternalAuthorityFieldSpec are unions; their members supply
   // the kind discriminator directly
 
@@ -942,10 +879,6 @@ DateFieldSpec ::: object {
 
 DateValueType ::: "year" | "yearMonth" | "fullDate"
 
-YearValueType ::: "year"
-YearMonthValueType ::: "yearMonth"
-FullDateValueType ::: "fullDate"
-
 TimeFieldSpec ::: object {
   "kind": "TimeFieldSpec"
   timePrecision?: TimePrecision
@@ -955,14 +888,7 @@ TimeFieldSpec ::: object {
 
 TimePrecision ::: "hourMinute" | "hourMinuteSecond" | "hourMinuteSecondFraction"
 
-HourMinutePrecision ::: "hourMinute"
-HourMinuteSecondPrecision ::: "hourMinuteSecond"
-HourMinuteSecondFractionPrecision ::: "hourMinuteSecondFraction"
-
-TimezoneRequirement ::: "required" | "notRequired"
-
-TimezoneRequired ::: "required"
-TimezoneNotRequired ::: "notRequired"
+TimezoneRequirement ::: "timezoneRequired" | "timezoneNotRequired"
 
 DateTimeFieldSpec ::: object {
   "kind": "DateTimeFieldSpec"
@@ -974,54 +900,21 @@ DateTimeFieldSpec ::: object {
 DateTimeValueType ::: "dateHourMinute" | "dateHourMinuteSecond"
                     | "dateHourMinuteSecondFraction"
 
-DateHourMinuteValueType ::: "dateHourMinute"
-DateHourMinuteSecondValueType ::: "dateHourMinuteSecond"
-DateHourMinuteSecondFractionValueType ::: "dateHourMinuteSecondFraction"
-
 DateRenderingHint ::: object {
   componentOrder?: DateComponentOrder
 }
-  // grammar admits an optional DateFormat wrapping a DateComponentOrder;
-  // on the wire the wrapper collapses to the bare componentOrder property
-
-DateRenderingWidget ::: "datePicker"
-
-DatePickerRenderingWidget ::: "datePicker"
-  // grammar's DateRenderingHint carries a required DateRenderingWidget;
-  // since there is exactly one widget value, the widget is omitted on the
-  // wire and reconstructed at decode
-
-DateFormat ::: DateComponentOrder
-  // collapsed wrapper
 
 DateComponentOrder ::: "dayMonthYear" | "monthDayYear" | "yearMonthDay"
-
-DayMonthYearOrder ::: "dayMonthYear"
-MonthDayYearOrder ::: "monthDayYear"
-YearMonthDayOrder ::: "yearMonthDay"
 
 TimeRenderingHint ::: object {
   timeFormat?: TimeFormat
 }
 
-TimeRenderingWidget ::: "timePicker"
-
-TimePickerRenderingWidget ::: "timePicker"
-  // widget omitted on the wire (single value); reconstructed at decode
-
 DateTimeRenderingHint ::: object {
   timeFormat?: TimeFormat
 }
 
-DateTimeRenderingWidget ::: "dateTimePicker"
-
-DateTimePickerRenderingWidget ::: "dateTimePicker"
-  // widget omitted on the wire (single value); reconstructed at decode
-
 TimeFormat ::: "twelveHour" | "twentyFourHour"
-
-TwelveHourTimeFormat ::: "twelveHour"
-TwentyFourHourTimeFormat ::: "twentyFourHour"
 ```
 
 ### 7.2 Controlled term field spec
@@ -1033,65 +926,52 @@ ControlledTermFieldSpec ::: object {
 }
 ```
 
-### 7.3 Choice field specs
+### 7.3 Enum field specs
 
 ```
-ChoiceFieldSpec ::: SingleChoiceFieldSpec | MultipleChoiceFieldSpec
+EnumFieldSpec ::: SingleValuedEnumFieldSpec | MultiValuedEnumFieldSpec
   // discriminator: kind
 
-SingleChoiceFieldSpec ::: LiteralSingleChoiceFieldSpec
-                        | ControlledTermSingleChoiceFieldSpec
-  // discriminator: kind
-
-MultipleChoiceFieldSpec ::: LiteralMultipleChoiceFieldSpec
-                          | ControlledTermMultipleChoiceFieldSpec
-  // discriminator: kind
-
-LiteralSingleChoiceFieldSpec ::: object {
-  "kind": "LiteralSingleChoiceFieldSpec"
-  options: nonEmptyArray<LiteralChoiceOption>
-  renderingHint?: SingleChoiceRenderingHint
+SingleValuedEnumFieldSpec ::: object {
+  "kind": "SingleValuedEnumFieldSpec"
+  permissibleValues: nonEmptyArray<PermissibleValue>
+  defaultValue?: string
+  renderingHint?: SingleValuedEnumRenderingHint
 }
+  // defaultValue, when present, MUST equal the `value` of one of the
+  // permissibleValues entries
 
-ControlledTermSingleChoiceFieldSpec ::: object {
-  "kind": "ControlledTermSingleChoiceFieldSpec"
-  options: nonEmptyArray<ControlledTermChoiceOption>
-  renderingHint?: SingleChoiceRenderingHint
+MultiValuedEnumFieldSpec ::: object {
+  "kind": "MultiValuedEnumFieldSpec"
+  permissibleValues: nonEmptyArray<PermissibleValue>
+  defaultValues?: array<string>
+  renderingHint?: MultiValuedEnumRenderingHint
 }
+  // defaultValues, when present, MUST be a (possibly empty) array of
+  // strings each equal to the `value` of one of the permissibleValues
+  // entries; the array MUST NOT contain duplicates
 
-LiteralMultipleChoiceFieldSpec ::: object {
-  "kind": "LiteralMultipleChoiceFieldSpec"
-  options: nonEmptyArray<LiteralChoiceOption>
-  renderingHint?: MultipleChoiceRenderingHint
-}
-
-ControlledTermMultipleChoiceFieldSpec ::: object {
-  "kind": "ControlledTermMultipleChoiceFieldSpec"
-  options: nonEmptyArray<ControlledTermChoiceOption>
-  renderingHint?: MultipleChoiceRenderingHint
-}
-
-LiteralChoiceOption ::: object {
+PermissibleValue ::: object {
   value: string
-  lang?: string
-  datatype?: string
-  default?: true
+  label?: MultilingualString
+  description?: MultilingualString
+  meanings?: array<Meaning>
 }
-  // value is the option's lexical form
-  // lang and datatype are mutually exclusive: at most one is present
-  // lang, when present, MUST be a well-formed BCP 47 tag
-  // datatype, when present, MUST be a syntactically valid IRI
-  // default, when present, MUST be JSON true; omitted when not the default
+  // value carries the canonical Token of the permissible value and
+  // MUST be a non-empty Unicode string
+  // value MUST be unique within the enclosing spec's permissibleValues
+  // meanings, when present, is a (possibly empty) array of Meaning
+  // objects binding the token to ontology terms; SHOULD be omitted
+  // when empty
 
-ControlledTermChoiceOption ::: object {
-  value: ControlledTermValue
-  default?: true
+Meaning ::: object {
+  iri: string
+  label?: MultilingualString
 }
-  // value is encoded untagged at this singleton position
-  // (the kind property of ControlledTermValue is omitted here)
-
-DefaultOption ::: true
-  // collapses on the wire to a JSON boolean true on the parent option
+  // iri carries the TermIri of the bound ontology term
+  // label, when present, is the cached human-readable label of the
+  // bound term (distinct from the enclosing PermissibleValue's label,
+  // which is the label of the permissible value itself)
 ```
 
 ### 7.4 Other field specs
@@ -1152,17 +1032,15 @@ OntologyDisplayHint ::: object {
 }
   // at least one of acronym, name MUST be present
 
-OntologyDisplayHintContent ::: OntologyDisplayHint
-  // collapsed wrapper; the grammar's union of (acronym, name, both) is
-  // expressed here by the optional-property combination on OntologyDisplayHint
-
 BranchSource ::: object {
   "kind": "BranchSource"
   ontology: OntologyReference
   rootTermIri: string
-  rootTermLabel: MultilingualString
+  rootTermLabel?: MultilingualString
   maxTraversalDepth?: number
 }
+  // rootTermLabel SHOULD be present (captured at source-declaration time)
+  // but MAY be omitted when the term's display text is not available
 
 ClassSource ::: object {
   "kind": "ClassSource"
@@ -1171,10 +1049,12 @@ ClassSource ::: object {
 
 ControlledTermClass ::: object {
   term: string
-  label: MultilingualString
+  label?: MultilingualString
   ontology: OntologyReference
 }
   // term is a TermIri
+  // label SHOULD be present (captured at source-declaration time)
+  // but MAY be omitted when the term's display text is not available
 
 ValueSetSource ::: object {
   "kind": "ValueSetSource"
@@ -1197,8 +1077,8 @@ ValueSetIri ::: Iri
 ### 7.6 Rendering hints
 
 ```
-RenderingHint ::: TextRenderingHint | SingleChoiceRenderingHint
-                | MultipleChoiceRenderingHint | NumericRenderingHint
+RenderingHint ::: TextRenderingHint | SingleValuedEnumRenderingHint
+                | MultiValuedEnumRenderingHint | NumericRenderingHint
                 | BooleanRenderingHint
                 | DateRenderingHint | TimeRenderingHint | DateTimeRenderingHint
   // discriminator: position
@@ -1206,18 +1086,9 @@ RenderingHint ::: TextRenderingHint | SingleChoiceRenderingHint
 
 TextRenderingHint ::: "singleLine" | "multiLine"
 
-SingleLineTextRenderingHint ::: "singleLine"
-MultiLineTextRenderingHint ::: "multiLine"
+SingleValuedEnumRenderingHint ::: "radio" | "dropdown"
 
-SingleChoiceRenderingHint ::: "radio" | "singleSelectDropdown"
-
-RadioRenderingHint ::: "radio"
-SingleSelectDropdownRenderingHint ::: "singleSelectDropdown"
-
-MultipleChoiceRenderingHint ::: "checkbox" | "multiSelectDropdown"
-
-CheckboxRenderingHint ::: "checkbox"
-MultiSelectDropdownRenderingHint ::: "multiSelectDropdown"
+MultiValuedEnumRenderingHint ::: "checkbox" | "multiSelect"
 
 NumericRenderingHint ::: object {
   decimalPlaces?: number
@@ -1226,15 +1097,12 @@ NumericRenderingHint ::: object {
   // it is a presentation concern (display rounding); it does NOT
   // constrain the lexical form of submitted values
 
-BooleanRenderingHint ::: "checkbox" | "toggle"
-
-BooleanCheckboxRenderingHint ::: "checkbox"
-BooleanToggleRenderingHint ::: "toggle"
+BooleanRenderingHint ::: "checkbox" | "toggle" | "radio" | "dropdown"
 ```
 
 `DateRenderingHint`, `TimeRenderingHint`, `DateTimeRenderingHint`, and
 `NumericRenderingHint` are objects on the wire (each can carry
-configuration); the simpler text/choice/boolean hints are flat strings.
+configuration); the simpler text/enum/boolean hints are flat strings.
 
 ---
 
@@ -1243,7 +1111,8 @@ configuration); the simpler text/choice/boolean hints are flat strings.
 ```
 Field ::: TextField | NumericField | BooleanField
         | DateField | TimeField | DateTimeField
-        | ControlledTermField | SingleChoiceField | MultipleChoiceField
+        | ControlledTermField
+        | SingleValuedEnumField | MultiValuedEnumField
         | LinkField | EmailField | PhoneNumberField
         | OrcidField | RorField | DoiField | PubMedIdField
         | RridField | NihGrantIdField | AttributeValueField
@@ -1257,7 +1126,7 @@ TemporalField ::: DateField | TimeField | DateTimeField
   // discriminator: kind
   // a documented intermediate category; the wire form is just the variant
 
-ChoiceField ::: SingleChoiceField | MultipleChoiceField
+EnumField ::: SingleValuedEnumField | MultiValuedEnumField
   // discriminator: kind
 
 ContactField ::: EmailField | PhoneNumberField
@@ -1339,21 +1208,21 @@ ControlledTermField ::: object {
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
-SingleChoiceField ::: object {
-  "kind": "SingleChoiceField"
+SingleValuedEnumField ::: object {
+  "kind": "SingleValuedEnumField"
   id: string
   modelVersion: string
   metadata: SchemaArtifactMetadata
-  fieldSpec: SingleChoiceFieldSpec
+  fieldSpec: SingleValuedEnumFieldSpec
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
-MultipleChoiceField ::: object {
-  "kind": "MultipleChoiceField"
+MultiValuedEnumField ::: object {
+  "kind": "MultiValuedEnumField"
   id: string
   modelVersion: string
   metadata: SchemaArtifactMetadata
-  fieldSpec: MultipleChoiceFieldSpec
+  fieldSpec: MultiValuedEnumFieldSpec
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
@@ -1462,7 +1331,7 @@ EmbeddedField ::: EmbeddedTextField
                 | EmbeddedBooleanField
                 | EmbeddedDateField | EmbeddedTimeField | EmbeddedDateTimeField
                 | EmbeddedControlledTermField
-                | EmbeddedSingleChoiceField | EmbeddedMultipleChoiceField
+                | EmbeddedSingleValuedEnumField | EmbeddedMultiValuedEnumField
                 | EmbeddedLinkField
                 | EmbeddedEmailField | EmbeddedPhoneNumberField
                 | EmbeddedOrcidField | EmbeddedRorField | EmbeddedDoiField
@@ -1570,33 +1439,35 @@ EmbeddedControlledTermField ::: object {
   // defaultValue is at a singleton position; its kind property is omitted
   // on the wire (per the polymorphic-only kind rule, §1.5)
 
-EmbeddedSingleChoiceField ::: object {
-  "kind": "EmbeddedSingleChoiceField"
+EmbeddedSingleValuedEnumField ::: object {
+  "kind": "EmbeddedSingleValuedEnumField"
   key: string
   artifactRef: string
   valueRequirement?: ValueRequirement
-  cardinality?: Cardinality
   visibility?: Visibility
-  defaultValue?: ChoiceValue
+  defaultValue?: EnumValue
   labelOverride?: LabelOverride
   property?: Property
 }
-  // defaultValue is the polymorphic ChoiceValue; the kind discriminator
-  // is retained on the wire to discriminate the union arms
+  // single-valued enum embeddings carry no cardinality slot per
+  // grammar.md (single-valued enum is implicit, parallel to boolean)
+  // defaultValue is at a singleton position; its kind property is
+  // omitted on the wire (per the polymorphic-only kind rule, §1.5)
 
-EmbeddedMultipleChoiceField ::: object {
-  "kind": "EmbeddedMultipleChoiceField"
+EmbeddedMultiValuedEnumField ::: object {
+  "kind": "EmbeddedMultiValuedEnumField"
   key: string
   artifactRef: string
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
-  defaultValue?: ChoiceValue
+  defaultValue?: array<EnumValue>
   labelOverride?: LabelOverride
   property?: Property
 }
-  // defaultValue is the polymorphic ChoiceValue; the kind discriminator
-  // is retained on the wire to discriminate the union arms
+  // defaultValue is a (possibly empty) array of EnumValue entries;
+  // each element is encoded with kind dropped at this singleton-element
+  // position. The array MUST NOT contain duplicate `value` entries.
 
 EmbeddedLinkField ::: object {
   "kind": "EmbeddedLinkField"
@@ -1748,7 +1619,6 @@ EmbeddedPresentationComponent ::: object {
   key: string
   artifactRef: string
   visibility?: Visibility
-  labelOverride?: LabelOverride
 }
 ```
 
@@ -1777,8 +1647,13 @@ ImageComponent ::: object {
   modelVersion: string
   metadata: ArtifactMetadata
   image: string
+  label?: MultilingualString
+  description?: MultilingualString
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
+  // image is an Iri identifying the image resource
+  // label, when present, is short alt-text accessibility metadata
+  // description, when present, is longer accessibility-focused text
 
 YoutubeVideoComponent ::: object {
   "kind": "YoutubeVideoComponent"
@@ -1786,8 +1661,13 @@ YoutubeVideoComponent ::: object {
   modelVersion: string
   metadata: ArtifactMetadata
   video: string
+  label?: MultilingualString
+  description?: MultilingualString
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
+  // video is an Iri identifying the video resource
+  // label, when present, is short alt-text / caption-title accessibility metadata
+  // description, when present, is longer accessibility-focused text
 
 SectionBreakComponent ::: object {
   "kind": "SectionBreakComponent"
@@ -1806,8 +1686,6 @@ PageBreakComponent ::: object {
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
 HtmlContent ::: string
-ImageSource ::: Iri
-YoutubeVideoSource ::: Iri
 ```
 
 ---

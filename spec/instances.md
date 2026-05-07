@@ -33,7 +33,7 @@ The key identifies the embedding site within the containing `Template`, which al
 
 The permitted form of each contained value is determined by the `FieldSpec` of the referenced `Field`.
 
-For `ChoiceFieldSpec`, the kind of `ChoiceValue` is determined by the concrete field spec: a `LiteralSingleChoiceFieldSpec` or `LiteralMultipleChoiceFieldSpec` requires `LiteralChoiceValue`, while a `ControlledTermSingleChoiceFieldSpec` or `ControlledTermMultipleChoiceFieldSpec` requires `ControlledTermChoiceValue`. A conforming instance value must correspond to one of the declared options of the referenced field's choice field spec.
+For `EnumFieldSpec`, every contained value is an `EnumValue` carrying a `Token` that MUST equal the canonical `Token` of one of the referenced spec's `PermissibleValue` entries. A `SingleValuedEnumFieldSpec` permits exactly one such `EnumValue` per `FieldValue`; a `MultiValuedEnumFieldSpec` permits one or more, subject to the embedding's `Cardinality`.
 
 ## NestedTemplateInstance
 

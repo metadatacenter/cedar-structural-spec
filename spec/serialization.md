@@ -76,7 +76,7 @@ Property names within tagged objects MUST be `lowerCamelCase` translations of th
 
 JSON examples appear in fenced code blocks marked `json`. Examples are illustrative only; the normative content is the corresponding `wire-grammar.md` entry.
 
-Examples may use *placeholders* of the form `<ProductionName>` to denote the JSON encoding of a production at the surrounding position. A placeholder is resolved by replacing it with the encoding defined for that production in [`wire-grammar.md`](wire-grammar.md). The `*` and `+` suffixes (e.g. `<Annotation>*`, `<ChoiceValue>+`) denote sequences per §4.4 — zero-or-more and one-or-more respectively.
+Examples may use *placeholders* of the form `<ProductionName>` to denote the JSON encoding of a production at the surrounding position. A placeholder is resolved by replacing it with the encoding defined for that production in [`wire-grammar.md`](wire-grammar.md). The `*` and `+` suffixes (e.g. `<Annotation>*`, `<EnumValue>+`) denote sequences per §4.4 — zero-or-more and one-or-more respectively.
 
 ## 4. General Encoding Rules
 
@@ -159,7 +159,7 @@ The grammar uses constructor forms uniformly to define every production, includi
 ```ebnf
 Header ::= header( MultilingualString )
 NonNegativeInteger ::= non_negative_integer( IntegerLexicalForm )
-KeyIdentifier ::= key_identifier( AsciiIdentifier )
+EmbeddedArtifactKey ::= embedded_artifact_key( AsciiIdentifier )
 ```
 
 A literal translation would encode each such production as a tagged JSON object with a single payload property. This document does not require that. Instead, the wrapping principle applies:
@@ -170,7 +170,7 @@ A production carries information beyond its payload, and so MUST be encoded as a
 
 - **(a) Composite structure.** The production has more than one named component (e.g. `Cardinality`, `Property`, `LabelOverride`, every `Value` family).
 
-- **(b) Discriminated union membership.** The production participates in a union where alternatives must be distinguished at decode time (e.g. `Value`, every artifact's `kind`, the nineteen `Field` family variants). The discriminator is `"kind"` by default, with a small set of property-set-discriminated unions per §4.4.
+- **(b) Discriminated union membership.** The production participates in a union where alternatives must be distinguished at decode time (e.g. `Value`, every artifact's `kind`, the twenty `Field` family variants). The discriminator is `"kind"` by default, with a small set of property-set-discriminated unions per §4.4.
 
 - **(c) Lexical-form preservation.** The production carries lexical content whose preservation requires more than a JSON primitive can express (e.g. `LangString` carries a lexical form *and* a language tag; both must be present in the wire form).
 
@@ -181,8 +181,8 @@ The full list of productions that collapse this way is given in §1.7 of [`wire-
 - All `MultilingualString`-typed wrappers (`Header`, `Footer`, `Name`, `Description`, `PreferredLabel`, `AlternativeLabel`, `Label`, `PropertyLabel`, `OntologyName`, `RootTermLabel`, `ValueSetName`) flatten to a JSON array of `LangString` entries.
 - All single-`Iri` wrappers (artifact identifiers and references, `PropertyIri`, the typed external-authority IRIs, `OntologyIri`, etc.) flatten to a plain JSON string.
 - All single-`NonNegativeInteger` wrappers (`MinLength`, `MaxLength`, `MinCardinality`, `MaxCardinality`, `DecimalPlaces`, `MaxTraversalDepth`) flatten to a plain JSON number.
-- Plain-`string` wrappers (`Identifier`, `Notation`, `LinkLabel`, `OntologyAcronym`, `ValueSetIdentifier`, `HtmlContent`) flatten to a plain JSON string.
-- Enum-style productions (`Status`, `ValueRequirement`, `Visibility`, `DateValueType`, `TimePrecision`, `DateTimeValueType`, `TimezoneRequirement`, `DateComponentOrder`, `TimeFormat`, `TextRenderingHint`, `SingleChoiceRenderingHint`, `MultipleChoiceRenderingHint`, `BooleanRenderingHint`, `RealNumberDatatypeKind`) flatten to a JSON string drawn from a fixed set.
+- Plain-`string` wrappers (`Identifier`, `Notation`, `OntologyAcronym`, `ValueSetIdentifier`, `HtmlContent`) flatten to a plain JSON string.
+- Enum-style productions (`Status`, `ValueRequirement`, `Visibility`, `DateValueType`, `TimePrecision`, `DateTimeValueType`, `TimezoneRequirement`, `DateComponentOrder`, `TimeFormat`, `TextRenderingHint`, `SingleValuedEnumRenderingHint`, `MultiValuedEnumRenderingHint`, `BooleanRenderingHint`, `RealNumberDatatypeKind`) flatten to a JSON string drawn from a fixed set.
 
 ### 5.1 Lexical-form preservation
 
@@ -204,7 +204,7 @@ Every artifact identifier is encoded as a plain JSON string carrying the IRI. Th
 "https://example.org/fields/title"
 ```
 
-A `FieldId` (or `FieldReference`) appears only in two grammar positions: as `Field.id` and as `EmbeddedField.artifactRef`. Both surrounding constructs carry a `kind` discriminator that conveys the field family. The twenty permitted family-bearing `kind` values for `Field` variants are: `"TextField"`, `"IntegerNumberField"`, `"RealNumberField"`, `"BooleanField"`, `"DateField"`, `"TimeField"`, `"DateTimeField"`, `"ControlledTermField"`, `"SingleChoiceField"`, `"MultipleChoiceField"`, `"LinkField"`, `"EmailField"`, `"PhoneNumberField"`, `"OrcidField"`, `"RorField"`, `"DoiField"`, `"PubMedIdField"`, `"RridField"`, `"NihGrantIdField"`, or `"AttributeValueField"`. The corresponding `EmbeddedField` variants prefix `Embedded` (e.g. `"EmbeddedTextField"`). A conforming encoder MUST ensure that the IRI it places at a `FieldId` position belongs to a field of the family declared by the surrounding `kind`.
+A `FieldId` appears only in two grammar positions: as `Field.id` (the artifact's own identity) and as `EmbeddedField.artifactRef` (a reference to the embedded artifact). Both surrounding constructs carry a `kind` discriminator that conveys the field family. The twenty permitted family-bearing `kind` values for `Field` variants are: `"TextField"`, `"IntegerNumberField"`, `"RealNumberField"`, `"BooleanField"`, `"DateField"`, `"TimeField"`, `"DateTimeField"`, `"ControlledTermField"`, `"SingleValuedEnumField"`, `"MultiValuedEnumField"`, `"LinkField"`, `"EmailField"`, `"PhoneNumberField"`, `"OrcidField"`, `"RorField"`, `"DoiField"`, `"PubMedIdField"`, `"RridField"`, `"NihGrantIdField"`, or `"AttributeValueField"`. The corresponding `EmbeddedField` variants prefix `Embedded` (e.g. `"EmbeddedTextField"`). A conforming encoder MUST ensure that the IRI it places at a `FieldId` position belongs to a field of the family declared by the surrounding `kind`.
 
 ### 6.2 Multilingual strings
 
@@ -253,7 +253,7 @@ Each `Value` family is encoded as a tagged object that carries its content direc
 { "kind": "ControlledTermValue", "term": "http://example.org/term/1", "label": [{ "value": "Term 1", "lang": "en" }] }
 ```
 ```json
-{ "kind": "LiteralChoiceValue", "value": "Professor", "lang": "en" }
+{ "kind": "EnumValue", "value": "professor" }
 ```
 ```json
 { "kind": "LinkValue", "iri": "https://example.org/page" }
@@ -262,7 +262,7 @@ Each `Value` family is encoded as a tagged object that carries its content direc
 { "kind": "EmailValue", "value": "jane@example.org" }
 ```
 ```json
-{ "kind": "OrcidValue", "iri": "https://orcid.org/0000-0002-1825-0097", "label": [{ "value": "Jane Smith", "lang": "en" }] }
+{ "kind": "OrcidValue", "iri": "https://orcid.org/0000-0002-1825-0097", "label": [{ "value": "Josiah Carberry", "lang": "en" }] }
 ```
 ```json
 { "kind": "AttributeValue", "name": "https://example.org/p/color", "value": { "kind": "TextValue", "value": "blue" } }
@@ -270,7 +270,7 @@ Each `Value` family is encoded as a tagged object that carries its content direc
 
 ### 6.4 Metadata and annotations
 
-`LifecycleMetadata`, `SchemaVersioning`, `ArtifactMetadata`, and `SchemaArtifactMetadata` each appear at a fixed singleton position and are encoded as untagged JSON objects. The descriptive properties of an artifact (`name`, `description`, `identifier`, `preferredLabel`, `altLabels`) sit directly on `ArtifactMetadata` rather than under a `descriptiveMetadata` wrapper.
+`LifecycleMetadata`, `SchemaArtifactVersioning`, `ArtifactMetadata`, and `SchemaArtifactMetadata` each appear at a fixed singleton position and are encoded as untagged JSON objects. The descriptive properties of an artifact (`name`, `description`, `identifier`, `preferredLabel`, `altLabels`) sit directly on `ArtifactMetadata` rather than under a `descriptiveMetadata` wrapper.
 
 ```json
 {
@@ -337,7 +337,25 @@ Each concrete `FieldSpec` is encoded as a tagged object whose `"kind"` matches t
 { "kind": "DateFieldSpec", "dateValueType": "fullDate", "renderingHint": { "componentOrder": "dayMonthYear" } }
 ```
 ```json
-{ "kind": "LiteralSingleChoiceFieldSpec", "options": [{ "value": "Yes", "lang": "en", "default": true }] }
+{ "kind": "SingleValuedEnumFieldSpec",
+  "permissibleValues": [
+    { "value": "yes", "label": [{ "value": "Yes", "lang": "en" }] },
+    { "value": "no",  "label": [{ "value": "No",  "lang": "en" }] }
+  ],
+  "defaultValue": "yes",
+  "renderingHint": "radio"
+}
+```
+```json
+{ "kind": "MultiValuedEnumFieldSpec",
+  "permissibleValues": [
+    { "value": "active",  "label": [{ "value": "Active",  "lang": "en" }],
+      "meanings": ["http://example.org/active-1"] },
+    { "value": "retired", "label": [{ "value": "Retired", "lang": "en" }] }
+  ],
+  "defaultValues": [],
+  "renderingHint": "checkbox"
+}
 ```
 ```json
 { "kind": "ControlledTermFieldSpec", "sources": [
@@ -346,9 +364,9 @@ Each concrete `FieldSpec` is encoded as a tagged object whose `"kind"` matches t
 ] }
 ```
 
-The `default` property on choice options is encoded as JSON `true` when set; the property is omitted otherwise. An `OntologyDisplayHint` MUST carry at least one of `acronym` or `name` (a constraint enforced by `wire-grammar.md`).
+A `SingleValuedEnumFieldSpec`'s `defaultValue` is a single string `Token` matching one of the permissible values; a `MultiValuedEnumFieldSpec`'s `defaultValues` is a (possibly empty) array of such strings, with no duplicates. An `OntologyDisplayHint` MUST carry at least one of `acronym` or `name` (a constraint enforced by `wire-grammar.md`).
 
-The flat-string rendering hints (`TextRenderingHint`, `SingleChoiceRenderingHint`, `MultipleChoiceRenderingHint`, `BooleanRenderingHint`) appear directly as JSON enum strings; the object-shaped rendering hints (`NumericRenderingHint`, `DateRenderingHint`, `TimeRenderingHint`, `DateTimeRenderingHint`) are JSON objects with optional configuration slots.
+The flat-string rendering hints (`TextRenderingHint`, `SingleValuedEnumRenderingHint`, `MultiValuedEnumRenderingHint`, `BooleanRenderingHint`) appear directly as JSON enum strings; the object-shaped rendering hints (`NumericRenderingHint`, `DateRenderingHint`, `TimeRenderingHint`, `DateTimeRenderingHint`) are JSON objects with optional configuration slots.
 
 ### 6.7 Field artifacts and embedded artifacts
 
@@ -403,7 +421,9 @@ An `EmbeddedAttributeValueField` MUST NOT carry a `defaultValue` property.
 
 ### 6.8 Default values
 
-The optional `defaultValue` slot on each `EmbeddedXxxField` is encoded directly as the family-specific `Value` (see [`wire-grammar.md`](wire-grammar.md) §6.6 for the full table). There is no `DefaultValue` wrapper on the wire: a default value is the family's `Value` shape in place. The `defaultValue` slot is a singleton position; per [`wire-grammar.md`](wire-grammar.md) §1.5, the `kind` property is omitted from the encoded `Value` because the surrounding `EmbeddedXxxField.kind` already fixes the family. The two polymorphic `Value` unions — `DateValue` and `ChoiceValue` — retain their `kind` discriminator at this position because a kind tag is required to discriminate the union arms.
+The optional `defaultValue` slot on each `EmbeddedXxxField` is encoded directly as the family-specific `Value` (see [`wire-grammar.md`](wire-grammar.md) §6.6 for the full table). There is no `DefaultValue` wrapper on the wire: a default value is the family's `Value` shape in place. The `defaultValue` slot is a singleton position; per [`wire-grammar.md`](wire-grammar.md) §1.5, the `kind` property is omitted from the encoded `Value` because the surrounding `EmbeddedXxxField.kind` already fixes the family. The one polymorphic `Value` union — `DateValue` — retains its `kind` discriminator at this position because a kind tag is required to discriminate the union arms.
+
+`EmbeddedMultiValuedEnumField.defaultValue` is the only embedding-level default whose wire form is a JSON array rather than a single object: it carries an array of `EnumValue` entries (each with `kind` dropped). All other embedding-level defaults are single `Value` objects.
 
 Examples by family:
 
@@ -437,11 +457,11 @@ Examples by family:
   "label": [{ "value": "brain", "lang": "en" }]
 }
 
-// EmbeddedSingleChoiceField.defaultValue / EmbeddedMultipleChoiceField.defaultValue — ChoiceValue (polymorphic; kind retained)
-"defaultValue": { "kind": "LiteralChoiceValue", "value": "Yes", "lang": "en" }
-"defaultValue": { "kind": "ControlledTermChoiceValue", "value": {
-  "term": "http://example.org/term", "label": [{ "value": "Term", "lang": "en" }]
-}}
+// EmbeddedSingleValuedEnumField.defaultValue — single EnumValue (kind dropped)
+"defaultValue": { "value": "yes" }
+
+// EmbeddedMultiValuedEnumField.defaultValue — array of EnumValue (each kind dropped)
+"defaultValue": [{ "value": "active" }, { "value": "retired" }]
 
 // EmbeddedLinkField.defaultValue — LinkValue (kind dropped)
 "defaultValue": { "iri": "https://example.org", "label": "Example" }
@@ -462,9 +482,9 @@ Examples by family:
 // EmbeddedRridField.defaultValue / EmbeddedNihGrantIdField.defaultValue — analogous; kind dropped
 ```
 
-`TextFieldSpec.defaultValue` is also a singleton position and encodes as a `TextValue` with `kind` dropped (i.e. `{ value, lang? }`).
+`TextFieldSpec.defaultValue` is also a singleton position and encodes as a `TextValue` with `kind` dropped (i.e. `{ value, lang? }`). `SingleValuedEnumFieldSpec.defaultValue` encodes on the wire as a bare JSON string (the `Token` of the selected permissible value); `MultiValuedEnumFieldSpec.defaultValues` encodes as a JSON array of such bare strings.
 
-Multiple-choice embeddings carry a single `ChoiceValue` at `defaultValue`; supplying multiple defaults for a multiple-choice field is not modelled.
+Embedding-level defaults take precedence over the spec-level defaults when both are present, parallel to the `TextFieldSpec.defaultValue` precedence rule.
 
 ### 6.9 Templates
 

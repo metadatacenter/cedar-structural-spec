@@ -26,13 +26,13 @@ If an embedding defines minimum and maximum cardinality, the minimum cardinality
 
 `ValueRequirement` and `Cardinality` are orthogonal: `ValueRequirement` governs whether any values must be supplied at all; `Cardinality` governs the permitted count if values are supplied.
 
-If an embedding is marked `Required`, its minimum cardinality MUST be at least one. For `EmbeddedTemplate`, this means at least one `NestedTemplateInstance` keyed to that embedding MUST be present in the `TemplateInstance`.
+If an embedding is marked `"required"`, its minimum cardinality MUST be at least one. For `EmbeddedTemplate`, this means at least one `NestedTemplateInstance` keyed to that embedding MUST be present in the `TemplateInstance`.
 
-If an embedding is marked `Recommended`, absence of a value MUST NOT by itself cause conformance failure, though implementations MAY issue warnings or other authoring guidance.
+If an embedding is marked `"recommended"`, absence of a value MUST NOT by itself cause conformance failure, though implementations MAY issue warnings or other authoring guidance.
 
-If an embedding is marked `Optional`, absence of a value MUST NOT by itself cause conformance failure.
+If an embedding is marked `"optional"`, absence of a value MUST NOT by itself cause conformance failure.
 
-If values are present for a `Recommended` or `Optional` embedding, their count MUST satisfy the `Cardinality` constraints of that embedding.
+If values are present for a `"recommended"` or `"optional"` embedding, their count MUST satisfy the `Cardinality` constraints of that embedding.
 
 ### Cardinality Defaults and Multiplicity
 
@@ -46,7 +46,7 @@ An `EmbeddedField` is **multi-valued** if its effective maximum cardinality is g
 
 `Version` MUST conform to Semantic Versioning 2.0.0.
 
-`ModelVersion` MUST conform to Semantic Versioning 2.0.0. `ModelVersion` is a top-level component of every concrete `Artifact` (every `Template`, `TemplateInstance`, every `Field`, and every `PresentationComponent`); it is not a component of `SchemaVersioning`.
+`ModelVersion` MUST conform to Semantic Versioning 2.0.0. `ModelVersion` is a top-level component of every concrete `Artifact` (every `Template`, `TemplateInstance`, every `Field`, and every `PresentationComponent`); it is not a component of `SchemaArtifactVersioning`.
 
 `Status` MUST be either `draft` or `published`.
 
@@ -72,7 +72,7 @@ The contained values MUST follow the `FieldSpec`-to-`Value` correspondence defin
 - `TimeFieldSpec` values MUST be `TimeValue`
 - `DateTimeFieldSpec` values MUST be `DateTimeValue`
 - `ControlledTermFieldSpec` values MUST be `ControlledTermValue`
-- `ChoiceFieldSpec` values MUST be `ChoiceValue`
+- `EnumFieldSpec` values MUST be `EnumValue`
 - `LinkFieldSpec` values MUST be `LinkValue`
 - `EmailFieldSpec` values MUST be `EmailValue`
 - `PhoneNumberFieldSpec` values MUST be `PhoneNumberValue`
@@ -119,9 +119,9 @@ For boolean values:
 
 For date values:
 
-- `DateFieldSpec` with `YearValueType` MUST use `YearValue`, whose lexical form MUST match the pattern `YYYY`
-- `DateFieldSpec` with `YearMonthValueType` MUST use `YearMonthValue`, whose lexical form MUST match the pattern `YYYY-MM`
-- `DateFieldSpec` with `FullDateValueType` MUST use `FullDateValue`, whose lexical form MUST be a well-formed `xsd:date` lexical form
+- `DateFieldSpec` with `"year"` MUST use `YearValue`, whose lexical form MUST match the pattern `YYYY`
+- `DateFieldSpec` with `"yearMonth"` MUST use `YearMonthValue`, whose lexical form MUST match the pattern `YYYY-MM`
+- `DateFieldSpec` with `"fullDate"` MUST use `FullDateValue`, whose lexical form MUST be a well-formed `xsd:date` lexical form
 
 For time values:
 
@@ -133,16 +133,16 @@ For date-time values:
 - `DateTimeValue` MUST carry a well-formed `xsd:dateTime` lexical form
 - `DateTimeFieldSpec` values MUST conform to the stated `DateTimeValueType`
 
-For choice values:
+For enum values:
 
-- A `FieldValue` for a `LiteralSingleChoiceFieldSpec` or `LiteralMultipleChoiceFieldSpec` MUST contain `LiteralChoiceValue` constructs
-- A `FieldValue` for a `ControlledTermSingleChoiceFieldSpec` or `ControlledTermMultipleChoiceFieldSpec` MUST contain `ControlledTermChoiceValue` constructs
-- each contained `ChoiceValue` MUST match one of the declared options of the referenced field's choice field spec
-- a `LiteralChoiceValue` MUST carry at most one of `lang` and `datatype`
+- A `FieldValue` for a `SingleValuedEnumFieldSpec` MUST contain exactly one `EnumValue`
+- A `FieldValue` for a `MultiValuedEnumFieldSpec` MUST contain one or more `EnumValue` constructs (subject to the `Cardinality` of the embedding)
+- Each `EnumValue.value` MUST equal the canonical `Token` of one of the referenced spec's `PermissibleValue` entries
+- The `Token` strings of an `EnumFieldSpec`'s `PermissibleValue+` MUST be unique within that spec
+- `SingleValuedEnumFieldSpec.defaultValue`, if present, MUST equal the `Token` of one of its `PermissibleValue` entries
+- `MultiValuedEnumFieldSpec.defaultValues`, if present, MUST be a (possibly empty) list of `Token` values each equal to the `Token` of one of its `PermissibleValue` entries; the list MUST NOT contain duplicates
 
-A `LiteralChoiceValue` matches a `LiteralChoiceOption` if and only if their lexical forms compare equal character by character and their language-tag-or-datatype components agree: both omit `lang` and `datatype`, or both carry the same `lang`, or both carry the same `datatype` IRI.
-
-A `ControlledTermChoiceValue` matches a `ControlledTermChoiceOption` if and only if the `TermIri` of the `ControlledTermValue` carried by the value equals the `TermIri` of the `ControlledTermValue` carried by the option.
+An `EnumValue` matches a `PermissibleValue` if and only if the value's `Token` string equals the permissible value's `Token` string (compared character by character).
 
 For controlled-term values:
 
@@ -172,7 +172,9 @@ For embedding-level defaults:
 
 - `EmbeddedXxxField.defaultValue`, if present, MUST be the family-specific `Value` type as given in [grammar.md](grammar.md) §Defaults
 - a `defaultValue` MUST satisfy every well-formedness condition that a corresponding `FieldValue` would satisfy for the same `FieldSpec`
-- `EmbeddedSingleChoiceField.defaultValue`, if present, MUST be a single `ChoiceValue`
+- `EmbeddedSingleValuedEnumField.defaultValue`, if present, MUST be a single `EnumValue` whose `Token` equals the `Token` of one of the referenced spec's `PermissibleValue` entries
+- `EmbeddedMultiValuedEnumField.defaultValue`, if present, MUST be a (possibly empty) list of `EnumValue` constructs each whose `Token` equals the `Token` of one of the referenced spec's `PermissibleValue` entries; the list MUST NOT contain duplicates
+- when both an embedding-level `defaultValue` and a spec-level default are present, the embedding-level default takes precedence (parallel to `TextFieldSpec.defaultValue`)
 
 For multiplicity:
 
@@ -187,9 +189,9 @@ Any rendering hint used by the model MUST be compatible with the associated `Fie
 
 `TextRenderingHint` MUST be used only with `TextFieldSpec`.
 
-`SingleChoiceRenderingHint` MUST be used only with `SingleChoiceFieldSpec`.
+`SingleValuedEnumRenderingHint` MUST be used only with `SingleValuedEnumFieldSpec`.
 
-`MultipleChoiceRenderingHint` MUST be used only with `MultipleChoiceFieldSpec`.
+`MultiValuedEnumRenderingHint` MUST be used only with `MultiValuedEnumFieldSpec`.
 
 `NumericRenderingHint` MUST be used only with `IntegerNumberFieldSpec` or `RealNumberFieldSpec`.
 
@@ -247,7 +249,7 @@ Applies the [Versioning](#versioning) rules.
 1. Let `v` = `M.versioning_metadata.version`. Verify `v` is a well-formed Semantic Versioning 2.0.0 string.
 2. Let `s` = `M.versioning_metadata.status`. Verify `s ∈ { draft, published }`.
 
-When invoked with an `ArtifactMetadata` value (e.g. a `PresentationComponent`'s metadata), step 1 and step 2 are skipped: `ArtifactMetadata` does not carry `SchemaVersioning`.
+When invoked with an `ArtifactMetadata` value (e.g. a `PresentationComponent`'s metadata), step 1 and step 2 are skipped: `ArtifactMetadata` does not carry `SchemaArtifactVersioning`.
 
 ---
 
@@ -283,8 +285,8 @@ Applies the [Embedding References](#embedding-references) rules.
 6. If `E` is an `EmbeddedTimeField`: verify `E.artifactRef` is a `TimeFieldId` identifying an existing `TimeField`.
 7. If `E` is an `EmbeddedDateTimeField`: verify `E.artifactRef` is a `DateTimeFieldId` identifying an existing `DateTimeField`.
 8. If `E` is an `EmbeddedControlledTermField`: verify `E.artifactRef` is a `ControlledTermFieldId` identifying an existing `ControlledTermField`.
-9. If `E` is an `EmbeddedSingleChoiceField`: verify `E.artifactRef` is a `SingleChoiceFieldId` identifying an existing `SingleChoiceField`.
-10. If `E` is an `EmbeddedMultipleChoiceField`: verify `E.artifactRef` is a `MultipleChoiceFieldId` identifying an existing `MultipleChoiceField`.
+9. If `E` is an `EmbeddedSingleValuedEnumField`: verify `E.artifactRef` is a `SingleValuedEnumFieldId` identifying an existing `SingleValuedEnumField`.
+10. If `E` is an `EmbeddedMultiValuedEnumField`: verify `E.artifactRef` is a `MultiValuedEnumFieldId` identifying an existing `MultiValuedEnumField`.
 11. If `E` is an `EmbeddedLinkField`: verify `E.artifactRef` is a `LinkFieldId` identifying an existing `LinkField`.
 12. If `E` is an `EmbeddedEmailField`: verify `E.artifactRef` is an `EmailFieldId` identifying an existing `EmailField`.
 13. If `E` is an `EmbeddedPhoneNumberField`: verify `E.artifactRef` is a `PhoneNumberFieldId` identifying an existing `PhoneNumberField`.
@@ -307,8 +309,8 @@ Applies the [Cardinality Consistency](#cardinality-consistency) rules.
 1. Let `min` = `E.cardinality.min_cardinality` if `E.cardinality` is present, else `1`.
 2. Let `max` = `E.cardinality.max_cardinality` if `E.cardinality` is present, else `1`. If `max` is `UnboundedCardinality`, let `max = ∞`.
 3. Verify `min ≤ max`.
-4. Let `req` = `E.value_requirement` if present, else `Optional`.
-5. If `req = Required`: verify `min ≥ 1`.
+4. Let `req` = `E.value_requirement` if present, else `"optional"`.
+5. If `req = "required"`: verify `min ≥ 1`.
 
 ---
 
@@ -323,7 +325,7 @@ Dispatch on the kind of `FT`:
 - If `FT` is `TextFieldSpec`: run `validate_text_field_spec(FT)`.
 - If `FT` is `IntegerNumberFieldSpec`: run `validate_integer_number_field_spec(FT)`.
 - If `FT` is `RealNumberFieldSpec`: run `validate_real_number_field_spec(FT)`.
-- If `FT` is `SingleChoiceFieldSpec` or `MultipleChoiceFieldSpec`: run `validate_choice_field_spec(FT)`.
+- If `FT` is `SingleValuedEnumFieldSpec` or `MultiValuedEnumFieldSpec`: run `validate_enum_field_spec(FT)`.
 - All other field specs have no additional schema-level well-formedness checks beyond structural grammar conformance.
 
 ---
@@ -346,11 +348,16 @@ Dispatch on the kind of `FT`:
 
 ---
 
-##### `validate_choice_field_spec(FT: ChoiceFieldSpec)`
+##### `validate_enum_field_spec(FT: EnumFieldSpec)`
 
-1. For each option `O` in `FT.options`:
-   1. If `FT` is a `LiteralSingleChoiceFieldSpec` or `LiteralMultipleChoiceFieldSpec`: verify `O` carries a lexical form and at most one of `lang` / `datatype`.
-   2. If `FT` is a `ControlledTermSingleChoiceFieldSpec` or `ControlledTermMultipleChoiceFieldSpec`: verify `O` carries a `ControlledTermValue`.
+1. Let `tokens` = the sequence of `pv.value` values across all `pv` in `FT.permissible_values`.
+2. Verify all values in `tokens` are distinct: report a duplicate-token error for any pair sharing the same token string.
+3. For each `pv` in `FT.permissible_values`: verify `pv.value` is a non-empty Unicode string.
+4. For each `pv` in `FT.permissible_values`, for each `m` in `pv.meanings`: verify `m.iri` is a syntactically valid IRI.
+5. If `FT` is a `SingleValuedEnumFieldSpec` and `FT.default_value` is present: verify `FT.default_value` equals one of the entries in `tokens`.
+6. If `FT` is a `MultiValuedEnumFieldSpec` and `FT.default_values` is present:
+   1. Verify each entry equals one of the entries in `tokens`.
+   2. Verify all entries in `FT.default_values` are distinct.
 
 ---
 
@@ -360,9 +367,10 @@ Dispatch on the kind of `FT`:
 
 Let `FT` = the `FieldSpec` of the `Field` referenced by `E`.
 
-1. Verify `D` is of the family-specific `Value` type for `FT`: `TextValue` for `TextFieldSpec`, `IntegerNumberValue` for `IntegerNumberFieldSpec`, `RealNumberValue` for `RealNumberFieldSpec`, `BooleanValue` for `BooleanFieldSpec`, `DateValue` for `DateFieldSpec`, `TimeValue` for `TimeFieldSpec`, `DateTimeValue` for `DateTimeFieldSpec`, `ControlledTermValue` for `ControlledTermFieldSpec`, `ChoiceValue` for the choice field specs, `LinkValue` for `LinkFieldSpec`, `EmailValue` for `EmailFieldSpec`, `PhoneNumberValue` for `PhoneNumberFieldSpec`, and the corresponding external-authority `Value` types for the external-authority field specs. `AttributeValueFieldSpec` does not admit a default value.
+1. Verify `D` is of the family-specific `Value` type for `FT`: `TextValue` for `TextFieldSpec`, `IntegerNumberValue` for `IntegerNumberFieldSpec`, `RealNumberValue` for `RealNumberFieldSpec`, `BooleanValue` for `BooleanFieldSpec`, `DateValue` for `DateFieldSpec`, `TimeValue` for `TimeFieldSpec`, `DateTimeValue` for `DateTimeFieldSpec`, `ControlledTermValue` for `ControlledTermFieldSpec`, `EnumValue` for `SingleValuedEnumFieldSpec`, a sequence of `EnumValue` for `MultiValuedEnumFieldSpec`, `LinkValue` for `LinkFieldSpec`, `EmailValue` for `EmailFieldSpec`, `PhoneNumberValue` for `PhoneNumberFieldSpec`, and the corresponding external-authority `Value` types for the external-authority field specs. `AttributeValueFieldSpec` does not admit a default value.
 2. Apply the family-specific `validate_xxx_value(D, FT)` procedure to `D`. The default value MUST satisfy every constraint that a `FieldValue` carrying the same `Value` would satisfy.
-3. If `E` is an `EmbeddedSingleChoiceField`: verify `D` is a single `ChoiceValue` (not a sequence).
+3. If `E` is an `EmbeddedSingleValuedEnumField`: verify `D` is a single `EnumValue` (not a sequence).
+4. If `E` is an `EmbeddedMultiValuedEnumField`: verify `D` is a (possibly empty) sequence of `EnumValue` constructs and that no two entries share the same `Token` value.
 
 ---
 
@@ -375,8 +383,8 @@ Applies the [Rendering Hint Compatibility](#rendering-hint-compatibility) rules.
 Let `FT` = the `FieldSpec` of the `Field` referenced by `E`.
 
 1. If `E` carries a `TextRenderingHint`: verify `FT` is `TextFieldSpec`.
-2. If `E` carries a `SingleChoiceRenderingHint`: verify `FT` is `SingleChoiceFieldSpec`.
-3. If `E` carries a `MultipleChoiceRenderingHint`: verify `FT` is `MultipleChoiceFieldSpec`.
+2. If `E` carries a `SingleValuedEnumRenderingHint`: verify `FT` is `SingleValuedEnumFieldSpec`.
+3. If `E` carries a `MultiValuedEnumRenderingHint`: verify `FT` is `MultiValuedEnumFieldSpec`.
 4. If `E` carries a `NumericRenderingHint`: verify `FT` is `IntegerNumberFieldSpec` or `RealNumberFieldSpec`.
 5. If `E` carries a `DateRenderingHint`: verify `FT` is `DateFieldSpec`.
 6. If `E` carries a `TimeRenderingHint`: verify `FT` is `TimeFieldSpec`.
@@ -431,13 +439,13 @@ For each `EF` in `T.embedded_artifacts` where `EF` is an `EmbeddedField`:
 
 1. Let `eff_min` = `EF.cardinality.min_cardinality` if present, else `1`.
 2. Let `eff_max` = `EF.cardinality.max_cardinality` if present, else `1`. If `eff_max` is `UnboundedCardinality`, let `eff_max = ∞`.
-3. Let `req` = `EF.value_requirement` if present, else `Optional`.
+3. Let `req` = `EF.value_requirement` if present, else `"optional"`.
 4. Let `FV` = the `FieldValue` in `I` with key = `EF.key`, or `absent` if none exists.
-5. If `req = Required`:
+5. If `req = "required"`:
    1. Verify `FV ≠ absent`.
    2. Verify `count(FV.values) ≥ eff_min`.
    3. If `eff_max ≠ ∞`: verify `count(FV.values) ≤ eff_max`.
-6. If `req = Recommended` or `req = Optional`:
+6. If `req = "recommended"` or `req = "optional"`:
    1. If `FV ≠ absent`:
       1. Verify `count(FV.values) ≥ eff_min`.
       2. If `eff_max ≠ ∞`: verify `count(FV.values) ≤ eff_max`.
@@ -465,7 +473,7 @@ Dispatch on the kind of `FT`:
 - `TimeFieldSpec` → `validate_time_value(V, FT)`
 - `DateTimeFieldSpec` → `validate_datetime_value(V, FT)`
 - `ControlledTermFieldSpec` → `validate_controlled_term_value(V, FT)`
-- `SingleChoiceFieldSpec` or `MultipleChoiceFieldSpec` → `validate_choice_value(V, FT)`
+- `SingleValuedEnumFieldSpec` or `MultiValuedEnumFieldSpec` → `validate_enum_value(V, FT)`
 - `LinkFieldSpec` → `validate_link_value(V)`
 - `EmailFieldSpec` or `PhoneNumberFieldSpec` → `validate_contact_value(V)`
 - `OrcidFieldSpec`, `RorFieldSpec`, `DoiFieldSpec`, `PubMedIdFieldSpec`, `RridFieldSpec`, or `NihGrantIdFieldSpec` → `validate_external_authority_value(V, FT)`
@@ -508,30 +516,30 @@ Dispatch on the kind of `FT`:
 
 ##### `validate_date_value(V: DateValue, FT: DateFieldSpec)`
 
-1. If `FT.date_value_type = YearValueType`: verify `V` is a `YearValue` whose `value` matches `[0-9]{4}`.
-2. If `FT.date_value_type = YearMonthValueType`: verify `V` is a `YearMonthValue` whose `value` matches `[0-9]{4}-(0[1-9]|1[0-2])`.
-3. If `FT.date_value_type = FullDateValueType`: verify `V` is a `FullDateValue` whose `value` is a well-formed `xsd:date` lexical form.
+1. If `FT.date_value_type = "year"`: verify `V` is a `YearValue` whose `value` matches `[0-9]{4}`.
+2. If `FT.date_value_type = "yearMonth"`: verify `V` is a `YearMonthValue` whose `value` matches `[0-9]{4}-(0[1-9]|1[0-2])`.
+3. If `FT.date_value_type = "fullDate"`: verify `V` is a `FullDateValue` whose `value` is a well-formed `xsd:date` lexical form.
 
 ---
 
 ##### `validate_time_value(V: TimeValue, FT: TimeFieldSpec)`
 
 1. Let `t` = `V.value`.
-2. If `FT.time_precision = HourMinutePrecision`: verify `t` contains only hour and minute components (form `HH:MM`; no seconds or fractional seconds present).
-3. If `FT.time_precision = HourMinuteSecondPrecision`: verify `t` contains hour, minute, and second components (form `HH:MM:SS`; no fractional seconds present).
-4. If `FT.time_precision = HourMinuteSecondFractionPrecision`: verify `t` is a well-formed `xsd:time` lexical form; fractional seconds are permitted.
+2. If `FT.time_precision = "hourMinute"`: verify `t` contains only hour and minute components (form `HH:MM`; no seconds or fractional seconds present).
+3. If `FT.time_precision = "hourMinuteSecond"`: verify `t` contains hour, minute, and second components (form `HH:MM:SS`; no fractional seconds present).
+4. If `FT.time_precision = "hourMinuteSecondFraction"`: verify `t` is a well-formed `xsd:time` lexical form; fractional seconds are permitted.
 5. If `FT.time_precision` is absent: verify `t` is a well-formed `xsd:time` lexical form.
-6. If `FT.timezone_requirement = TimezoneRequired`: verify `t` includes a timezone designator.
+6. If `FT.timezone_requirement = "timezoneRequired"`: verify `t` includes a timezone designator.
 
 ---
 
 ##### `validate_datetime_value(V: DateTimeValue, FT: DateTimeFieldSpec)`
 
 1. Let `dt` = `V.value`.
-2. If `FT.datetime_value_type = DateHourMinuteValueType`: verify the time component of `dt` contains only hour and minute (form `…THH:MM`; no seconds present).
-3. If `FT.datetime_value_type = DateHourMinuteSecondValueType`: verify the time component contains hour, minute, and second (form `…THH:MM:SS`; no fractional seconds present).
-4. If `FT.datetime_value_type = DateHourMinuteSecondFractionValueType`: verify `dt` is a well-formed `xsd:dateTime` lexical form; fractional seconds are permitted.
-5. If `FT.timezone_requirement = TimezoneRequired`: verify `dt` includes a timezone designator.
+2. If `FT.datetime_value_type = "dateHourMinute"`: verify the time component of `dt` contains only hour and minute (form `…THH:MM`; no seconds present).
+3. If `FT.datetime_value_type = "dateHourMinuteSecond"`: verify the time component contains hour, minute, and second (form `…THH:MM:SS`; no fractional seconds present).
+4. If `FT.datetime_value_type = "dateHourMinuteSecondFraction"`: verify `dt` is a well-formed `xsd:dateTime` lexical form; fractional seconds are permitted.
+5. If `FT.timezone_requirement = "timezoneRequired"`: verify `dt` includes a timezone designator.
 
 ---
 
@@ -544,13 +552,10 @@ Note: validation of `V.term_iri` against `FT.controlled_term_sources` requires a
 
 ---
 
-##### `validate_choice_value(V: ChoiceValue, FT: ChoiceFieldSpec)`
+##### `validate_enum_value(V: EnumValue, FT: EnumFieldSpec)`
 
-1. Verify there exists an option `O` in `FT.options` such that `V` matches `O`:
-   1. If `V` is a `LiteralChoiceValue` and `O` is a `LiteralChoiceOption`: match iff their lexical forms are equal character by character AND their language-tag-or-datatype components agree (both omit `lang` and `datatype`, OR both carry the same `lang`, OR both carry the same `datatype` IRI).
-   2. If `V` is a `ControlledTermChoiceValue` and `O` is a `ControlledTermChoiceOption`: match iff `V.value.term_iri = O.value.term_iri`.
-   3. Otherwise: no match.
-2. If no such `O` exists: report error.
+1. Verify there exists a `pv` in `FT.permissible_values` such that `V.value = pv.value` (string equality, character by character).
+2. If no such `pv` exists: report error.
 
 ---
 
@@ -596,12 +601,12 @@ For each `ET` in `T.embedded_artifacts` where `ET` is an `EmbeddedTemplate`:
 
 1. Let `eff_min` = `ET.cardinality.min_cardinality` if present, else `1`.
 2. Let `eff_max` = `ET.cardinality.max_cardinality` if present, else `1`. If `eff_max` is `UnboundedCardinality`, let `eff_max = ∞`.
-3. Let `req` = `ET.value_requirement` if present, else `Optional`.
+3. Let `req` = `ET.value_requirement` if present, else `"optional"`.
 4. Let `n` = `count({ NTI | NTI ∈ I.instance_values, NTI is NestedTemplateInstance, NTI.key = ET.key })`.
-5. If `req = Required`:
+5. If `req = "required"`:
    1. Verify `n ≥ eff_min`.
    2. If `eff_max ≠ ∞`: verify `n ≤ eff_max`.
-6. If `req = Recommended` or `req = Optional`:
+6. If `req = "recommended"` or `req = "optional"`:
    1. If `n > 0`:
       1. Verify `n ≥ eff_min`.
       2. If `eff_max ≠ ∞`: verify `n ≤ eff_max`.

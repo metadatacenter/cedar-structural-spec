@@ -66,9 +66,9 @@ singleton positions: the surrounding property name fixes the production
 unambiguously, so no discriminator is carried on the wire (per the
 polymorphic-only `kind` rule, [`wire-grammar.md`](wire-grammar.md)
 §1.5). Examples: `Cardinality`, `Property`, `LabelOverride`,
-`LifecycleMetadata`, `SchemaVersioning`,
+`LifecycleMetadata`, `SchemaArtifactVersioning`,
 `Annotation`, `Unit`, `OntologyReference`, `OntologyDisplayHint`,
-`ControlledTermClass`, `LiteralChoiceOption`, `ControlledTermChoiceOption`.
+`ControlledTermClass`, `PermissibleValue`, `Meaning`.
 
 **TypeScript idiom.** A `readonly` interface plus a constructor
 function. No `kind` field on the interface.
@@ -138,7 +138,7 @@ comment at all (in which case `kind` is the default per
 production whose shape includes a `"kind": "MemberName"` literal
 property. Examples: `Value`, `FieldSpec`, `EmbeddedArtifact`,
 `ControlledTermSource`, `PresentationComponent`, `InstanceValue`,
-`SchemaArtifact`, `Artifact`, `ChoiceValue`,
+`SchemaArtifact`, `Artifact`,
 `ExternalAuthorityValue`, `DateValue`.
 
 **TypeScript idiom.** A discriminated (tagged) union of interfaces, all
@@ -440,9 +440,8 @@ For richer runtime validation, a Pydantic `BaseModel` wrapper or an
 
 **Validation guidance.** All branded primitives MUST enforce their
 syntactic constraints (RFC 3987 for IRI; BCP 47 for language tags; the
-ASCII pattern `[A-Za-z][A-Za-z0-9_-]*` for `EmbeddedArtifactKey` /
-`KeyIdentifier`; SemVer for `Version` / `ModelVersion`) at the
-constructor.
+ASCII pattern `[A-Za-z][A-Za-z0-9_-]*` for `EmbeddedArtifactKey`;
+SemVer for `Version` / `ModelVersion`) at the constructor.
 
 **Worked example: `Iri` and `FieldId`.** `Iri` wire form: `"https://example.org/x"`.
 `FieldId` wire form: also `"https://example.org/x"` — the family is
@@ -592,7 +591,7 @@ are drawn from a fixed set. All values are `lowerCamelCase` per
 `TimeFormat`, `TimePrecision`, `DateTimeValueType`,
 `TimezoneRequirement`, `RealNumberDatatypeKind` (three values), the
 flat-string rendering hints (`TextRenderingHint`,
-`SingleChoiceRenderingHint`, `MultipleChoiceRenderingHint`,
+`SingleValuedEnumRenderingHint`, `MultiValuedEnumRenderingHint`,
 `BooleanRenderingHint`).
 
 **TypeScript idiom.** A string-literal union. cedar-ts also exports a
@@ -754,26 +753,16 @@ helper if equality is meaningful at call sites.
 | Java       | `UpperCamelCase`    | `lowerCamelCase`                 | `SCREAMING_SNAKE_CASE`    |
 | Python     | `UpperCamelCase`    | `snake_case`                     | `SCREAMING_SNAKE_CASE`    |
 
-**Reserved-word collisions (Java).** As of the current model the only
-grammar property name that collides with a Java reserved word is
-`default`, used on `LiteralChoiceOption` and `ControlledTermChoiceOption`
-to mark the default option. (Verified by cross-referencing every
-property name in [`wire-grammar.md`](wire-grammar.md) against the
-full Java reserved-word list.)
-
-Two escape rules are recommended for `default`; either is acceptable
-but the field MUST round-trip through `@JsonProperty("default")`:
-
-1. Rename the Java field to a non-reserved synonym (`isDefault`) and
-   use `@JsonProperty("default")` to map back to the wire name. This
-   is the more common convention and reads well in `record`
-   accessors.
-2. Use a leading underscore (`_default`) and again use
-   `@JsonProperty("default")`. Less common but legal.
-
-The mapping is one-directional; the wire name (`default`) remains
-canonical. A future grammar property whose name collides with a Java
-reserved word follows the same pattern.
+**Reserved-word collisions (Java).** As of the current model no
+grammar property name collides with a Java reserved word. (Verified
+by cross-referencing every property name in
+[`wire-grammar.md`](wire-grammar.md) against the full Java
+reserved-word list.) A future grammar property whose name collides
+with a Java reserved word SHOULD be escaped by either renaming the
+Java field to a non-reserved synonym (e.g. `isFoo` for a wire `foo`)
+or using a leading underscore (`_foo`), in either case mapping back
+to the wire name via `@JsonProperty("foo")`. The wire name remains
+canonical.
 
 **Property naming (Python).** Pydantic models can use `Field(alias=
 'lowerCamelName')` together with `model_config = ConfigDict(
@@ -782,7 +771,7 @@ while preserving the wire's `lowerCamelCase`. This is the recommended
 pattern:
 
 ```python
-class SchemaVersioning(BaseModel):
+class SchemaArtifactVersioning(BaseModel):
     model_config = ConfigDict(populate_by_name=True, frozen=True)
     version: str
     status: Status
@@ -802,7 +791,7 @@ class TextField(BaseModel):
 `model_version` is a top-level field on every concrete artifact class
 (`Template`, `TemplateInstance`, every `XxxField`, and every
 `PresentationComponent` variant); it is no longer nested inside
-`SchemaVersioning`.
+`SchemaArtifactVersioning`.
 
 A binding MAY instead expose `lowerCamelCase` Python attribute names
 to avoid the alias layer; the alias approach is recommended for
@@ -828,7 +817,7 @@ High-level structure (the `src/` tree mirrors the grammar layering):
   `Literal` layer.
 - `identity.ts` — artifact identifiers (`FieldId`, `TemplateId`,
   `PresentationComponentId`, `TemplateInstanceId`).
-- `metadata/` — `LifecycleMetadata`, `SchemaVersioning`, `Annotation`.
+- `metadata/` — `LifecycleMetadata`, `SchemaArtifactVersioning`, `Annotation`.
 - `field-specs/` — `FieldSpec` family.
 - `fields.ts` — `Field` family.
 - `embedded/` — `EmbeddedField`, `EmbeddedTemplate`,

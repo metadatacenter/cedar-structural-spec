@@ -63,7 +63,7 @@ A conceptual overview of the model — describing the principal categories, thei
   - [Scalar Values](#scalar-values)
   - [Temporal Values](#temporal-values)
   - [Controlled Term Value](#controlled-term-value)
-  - [Choice Value](#choice-value)
+  - [Enum Value](#enum-value)
   - [Link Value](#link-value)
   - [Contact Values](#contact-values)
   - [External Authority Values](#external-authority-values)
@@ -219,7 +219,7 @@ Field ::= TextField
         | BooleanField
         | TemporalField
         | ControlledTermField
-        | ChoiceField
+        | EnumField
         | LinkField
         | ContactField
         | ExternalAuthorityField
@@ -232,8 +232,8 @@ TemporalField ::= DateField
                 | TimeField
                 | DateTimeField
 
-ChoiceField ::= SingleChoiceField
-              | MultipleChoiceField
+EnumField ::= SingleValuedEnumField
+            | MultiValuedEnumField
 
 ContactField ::= EmailField
                | PhoneNumberField
@@ -329,21 +329,21 @@ LinkField ::= link_field(
              )
 ```
 
-`SingleChoiceField` and `MultipleChoiceField` correspond to the `ChoiceField` abstract category and are the two concrete choice field variants. They differ in whether they permit exactly one or multiple simultaneous selections from a declared set of options. The permitted options are declared in the corresponding `ChoiceFieldSpec` and are validated against at the instance level.
+`SingleValuedEnumField` and `MultiValuedEnumField` correspond to the `EnumField` abstract category and are the two concrete enum field variants. They differ in whether they permit exactly one or multiple simultaneous selections from a declared set of permissible values. The permitted values are declared in the corresponding `EnumFieldSpec` and are validated against at the instance level.
 
 ```ebnf
-SingleChoiceField ::= single_choice_field(
-                         SingleChoiceFieldId
-                         ModelVersion
-                         SchemaArtifactMetadata
-                         SingleChoiceFieldSpec
-                       )
+SingleValuedEnumField ::= single_valued_enum_field(
+                            SingleValuedEnumFieldId
+                            ModelVersion
+                            SchemaArtifactMetadata
+                            SingleValuedEnumFieldSpec
+                          )
 
-MultipleChoiceField ::= multiple_choice_field(
-                           MultipleChoiceFieldId
+MultiValuedEnumField ::= multi_valued_enum_field(
+                           MultiValuedEnumFieldId
                            ModelVersion
                            SchemaArtifactMetadata
-                           MultipleChoiceFieldSpec
+                           MultiValuedEnumFieldSpec
                          )
 ```
 
@@ -443,8 +443,8 @@ EmbeddedField ::= EmbeddedTextField
                 | EmbeddedTimeField
                 | EmbeddedDateTimeField
                 | EmbeddedControlledTermField
-                | EmbeddedSingleChoiceField
-                | EmbeddedMultipleChoiceField
+                | EmbeddedSingleValuedEnumField
+                | EmbeddedMultiValuedEnumField
                 | EmbeddedLinkField
                 | EmbeddedEmailField
                 | EmbeddedPhoneNumberField
@@ -459,12 +459,12 @@ EmbeddedField ::= EmbeddedTextField
 
 Every concrete `EmbeddedField` variant follows the same structural pattern. Each carries: an `EmbeddedArtifactKey` uniquely identifying the embedding site within the containing `Template`; a typed field reference identifying the reusable `Field` being embedded; an optional `ValueRequirement` specifying whether a value is required, recommended, or optional; an optional `Cardinality` bounding the permitted number of values; an optional `Visibility` controlling whether the field is shown in rendered interfaces; an optional `defaultValue` providing an embedding-specific default whose type is the family-specific `Value` type (e.g. `TextValue` for `EmbeddedTextField`, `DateValue` for `EmbeddedDateField`); an optional `LabelOverride` allowing the template to override the field's label in this context; and an optional `Property` associating a semantic property IRI with the embedding site. The only variation across concrete `EmbeddedField` variants is the typed field reference and the typed default value, both of which match the value family of the referenced field.
 
-`EmbeddedBooleanField` is the one exception to this pattern: it omits the `[Cardinality]` slot. A boolean field is inherently single-valued — its `ValueRequirement` slot already distinguishes the meaningful states (required, recommended, optional). Multi-valued booleans are not expressible in this grammar.
+`EmbeddedBooleanField` and `EmbeddedSingleValuedEnumField` are the two exceptions to this pattern: each omits the `[Cardinality]` slot. A boolean field is inherently single-valued — its `ValueRequirement` slot already distinguishes the meaningful states (required, recommended, optional). A `SingleValuedEnumField` is similarly single-valued by construction; multi-valued enum embedding is expressed only through `EmbeddedMultiValuedEnumField`. `EmbeddedMultiValuedEnumField` further differs in that its embedding-level default is a sequence (`EnumValue*`) rather than a single optional value, parallel to how multi-valued enum instance values appear as a sequence in `FieldValue`.
 
 ```ebnf
 EmbeddedTextField ::= embedded_text_field(
                         EmbeddedArtifactKey
-                        TextFieldReference
+                        TextFieldId
                         [ValueRequirement]
                         [Cardinality]
                         [Visibility]
@@ -475,7 +475,7 @@ EmbeddedTextField ::= embedded_text_field(
 
 EmbeddedIntegerNumberField ::= embedded_integer_number_field(
                                  EmbeddedArtifactKey
-                                 IntegerNumberFieldReference
+                                 IntegerNumberFieldId
                                  [ValueRequirement]
                                  [Cardinality]
                                  [Visibility]
@@ -486,7 +486,7 @@ EmbeddedIntegerNumberField ::= embedded_integer_number_field(
 
 EmbeddedRealNumberField ::= embedded_real_number_field(
                               EmbeddedArtifactKey
-                              RealNumberFieldReference
+                              RealNumberFieldId
                               [ValueRequirement]
                               [Cardinality]
                               [Visibility]
@@ -497,7 +497,7 @@ EmbeddedRealNumberField ::= embedded_real_number_field(
 
 EmbeddedBooleanField ::= embedded_boolean_field(
                            EmbeddedArtifactKey
-                           BooleanFieldReference
+                           BooleanFieldId
                            [ValueRequirement]
                            [Visibility]
                            [BooleanValue]
@@ -507,7 +507,7 @@ EmbeddedBooleanField ::= embedded_boolean_field(
 
 EmbeddedDateField ::= embedded_date_field(
                         EmbeddedArtifactKey
-                        DateFieldReference
+                        DateFieldId
                         [ValueRequirement]
                         [Cardinality]
                         [Visibility]
@@ -518,7 +518,7 @@ EmbeddedDateField ::= embedded_date_field(
 
 EmbeddedTimeField ::= embedded_time_field(
                         EmbeddedArtifactKey
-                        TimeFieldReference
+                        TimeFieldId
                         [ValueRequirement]
                         [Cardinality]
                         [Visibility]
@@ -529,7 +529,7 @@ EmbeddedTimeField ::= embedded_time_field(
 
 EmbeddedDateTimeField ::= embedded_date_time_field(
                             EmbeddedArtifactKey
-                            DateTimeFieldReference
+                            DateTimeFieldId
                             [ValueRequirement]
                             [Cardinality]
                             [Visibility]
@@ -540,7 +540,7 @@ EmbeddedDateTimeField ::= embedded_date_time_field(
 
 EmbeddedControlledTermField ::= embedded_controlled_term_field(
                                   EmbeddedArtifactKey
-                                  ControlledTermFieldReference
+                                  ControlledTermFieldId
                                   [ValueRequirement]
                                   [Cardinality]
                                   [Visibility]
@@ -549,31 +549,30 @@ EmbeddedControlledTermField ::= embedded_controlled_term_field(
                                   [Property]
                                 )
 
-EmbeddedSingleChoiceField ::= embedded_single_choice_field(
-                                 EmbeddedArtifactKey
-                                 SingleChoiceFieldReference
-                                 [ValueRequirement]
-                                 [Cardinality]
-                                 [Visibility]
-                                 [ChoiceValue]
-                                 [LabelOverride]
-                                 [Property]
-                               )
+EmbeddedSingleValuedEnumField ::= embedded_single_valued_enum_field(
+                                    EmbeddedArtifactKey
+                                    SingleValuedEnumFieldId
+                                    [ValueRequirement]
+                                    [Visibility]
+                                    [EnumValue]
+                                    [LabelOverride]
+                                    [Property]
+                                  )
 
-EmbeddedMultipleChoiceField ::= embedded_multiple_choice_field(
+EmbeddedMultiValuedEnumField ::= embedded_multi_valued_enum_field(
                                    EmbeddedArtifactKey
-                                   MultipleChoiceFieldReference
+                                   MultiValuedEnumFieldId
                                    [ValueRequirement]
                                    [Cardinality]
                                    [Visibility]
-                                   [ChoiceValue]
+                                   EnumValue*
                                    [LabelOverride]
                                    [Property]
                                  )
 
 EmbeddedLinkField ::= embedded_link_field(
                         EmbeddedArtifactKey
-                        LinkFieldReference
+                        LinkFieldId
                         [ValueRequirement]
                         [Cardinality]
                         [Visibility]
@@ -584,7 +583,7 @@ EmbeddedLinkField ::= embedded_link_field(
 
 EmbeddedEmailField ::= embedded_email_field(
                          EmbeddedArtifactKey
-                         EmailFieldReference
+                         EmailFieldId
                          [ValueRequirement]
                          [Cardinality]
                          [Visibility]
@@ -595,7 +594,7 @@ EmbeddedEmailField ::= embedded_email_field(
 
 EmbeddedPhoneNumberField ::= embedded_phone_number_field(
                                EmbeddedArtifactKey
-                               PhoneNumberFieldReference
+                               PhoneNumberFieldId
                                [ValueRequirement]
                                [Cardinality]
                                [Visibility]
@@ -606,7 +605,7 @@ EmbeddedPhoneNumberField ::= embedded_phone_number_field(
 
 EmbeddedOrcidField ::= embedded_orcid_field(
                          EmbeddedArtifactKey
-                         OrcidFieldReference
+                         OrcidFieldId
                          [ValueRequirement]
                          [Cardinality]
                          [Visibility]
@@ -617,7 +616,7 @@ EmbeddedOrcidField ::= embedded_orcid_field(
 
 EmbeddedRorField ::= embedded_ror_field(
                        EmbeddedArtifactKey
-                       RorFieldReference
+                       RorFieldId
                        [ValueRequirement]
                        [Cardinality]
                        [Visibility]
@@ -628,7 +627,7 @@ EmbeddedRorField ::= embedded_ror_field(
 
 EmbeddedDoiField ::= embedded_doi_field(
                        EmbeddedArtifactKey
-                       DoiFieldReference
+                       DoiFieldId
                        [ValueRequirement]
                        [Cardinality]
                        [Visibility]
@@ -639,7 +638,7 @@ EmbeddedDoiField ::= embedded_doi_field(
 
 EmbeddedPubMedIdField ::= embedded_pub_med_id_field(
                             EmbeddedArtifactKey
-                            PubMedIdFieldReference
+                            PubMedIdFieldId
                             [ValueRequirement]
                             [Cardinality]
                             [Visibility]
@@ -650,7 +649,7 @@ EmbeddedPubMedIdField ::= embedded_pub_med_id_field(
 
 EmbeddedRridField ::= embedded_rrid_field(
                         EmbeddedArtifactKey
-                        RridFieldReference
+                        RridFieldId
                         [ValueRequirement]
                         [Cardinality]
                         [Visibility]
@@ -661,7 +660,7 @@ EmbeddedRridField ::= embedded_rrid_field(
 
 EmbeddedNihGrantIdField ::= embedded_nih_grant_id_field(
                                EmbeddedArtifactKey
-                               NihGrantIdFieldReference
+                               NihGrantIdFieldId
                                [ValueRequirement]
                                [Cardinality]
                                [Visibility]
@@ -672,7 +671,7 @@ EmbeddedNihGrantIdField ::= embedded_nih_grant_id_field(
 
 EmbeddedAttributeValueField ::= embedded_attribute_value_field(
                                   EmbeddedArtifactKey
-                                  AttributeValueFieldReference
+                                  AttributeValueFieldId
                                   [ValueRequirement]
                                   [Cardinality]
                                   [Visibility]
@@ -681,12 +680,12 @@ EmbeddedAttributeValueField ::= embedded_attribute_value_field(
                                 )
 ```
 
-`EmbeddedTemplate` and `EmbeddedPresentationComponent` follow a similar pattern to embedded fields but differ in what embedding properties they carry. `EmbeddedTemplate` supports cardinality to permit multiple nested instances of the referenced template, carries no typed default value, and carries an optional `Property` associating a semantic property IRI with the embedding site. `EmbeddedPresentationComponent` carries neither a value requirement, cardinality, default value, nor property, as it contributes no instance data and exists purely to contribute presentational structure.
+`EmbeddedTemplate` and `EmbeddedPresentationComponent` follow a similar pattern to embedded fields but differ in what embedding properties they carry. `EmbeddedTemplate` supports cardinality to permit multiple nested instances of the referenced template, carries no typed default value, and carries an optional `Property` associating a semantic property IRI with the embedding site. `EmbeddedPresentationComponent` carries neither a value requirement, cardinality, default value, label override, nor property, as it contributes no instance data and exists purely to contribute presentational structure. The only embedding-level property it carries is `Visibility`.
 
 ```ebnf
 EmbeddedTemplate ::= embedded_template(
                        EmbeddedArtifactKey
-                       TemplateReference
+                       TemplateId
                        [ValueRequirement]
                        [Cardinality]
                        [Visibility]
@@ -696,9 +695,8 @@ EmbeddedTemplate ::= embedded_template(
 
 EmbeddedPresentationComponent ::= embedded_presentation_component(
                                     EmbeddedArtifactKey
-                                    PresentationComponentReference
+                                    PresentationComponentId
                                     [Visibility]
-                                    [LabelOverride]
                                   )
 ```
 
@@ -706,7 +704,9 @@ EmbeddedPresentationComponent ::= embedded_presentation_component(
 
 Artifact identity defines the typed identifiers by which artifacts and artifact references are denoted in the model. These identity constructs are distinct from descriptive metadata, lifecycle metadata, versioning, and annotations.
 
-Each field kind has its own typed identifier rather than sharing a single generic `FieldId`. This provides strong typing: a `TextFieldReference` can only refer to a `TextFieldId`, a `DateFieldReference` can only refer to a `DateFieldId`, and so on, making it structurally impossible to embed a field of the wrong type. `TemplateId`, `PresentationComponentId`, and `TemplateInstanceId` follow the same pattern for the same reason.
+Each field kind has its own typed identifier rather than sharing a single generic `FieldId`. This provides strong typing: an `EmbeddedTextField` can only carry a `TextFieldId` at its `artifactRef` slot, an `EmbeddedDateField` can only carry a `DateFieldId`, and so on, making it structurally impossible to embed a field of the wrong type. `TemplateId`, `PresentationComponentId`, and `TemplateInstanceId` follow the same pattern for the same reason.
+
+Identifiers serve two roles: at the **definition site** of a reusable artifact (e.g. `Field.id`, `Template.id`) they permanently name the artifact; at the **embedding site** (e.g. `EmbeddedField.artifactRef`, `EmbeddedTemplate.artifactRef`) they reference the artifact being embedded. The same typed identifier production is used at both positions; the role distinction is conveyed by the surrounding production's component name.
 
 ```ebnf
 FieldId ::= TextFieldId
@@ -717,8 +717,8 @@ FieldId ::= TextFieldId
           | TimeFieldId
           | DateTimeFieldId
           | ControlledTermFieldId
-          | SingleChoiceFieldId
-          | MultipleChoiceFieldId
+          | SingleValuedEnumFieldId
+          | MultiValuedEnumFieldId
           | LinkFieldId
           | EmailFieldId
           | PhoneNumberFieldId
@@ -746,9 +746,9 @@ DateTimeFieldId ::= date_time_field_id( Iri )
 
 ControlledTermFieldId ::= controlled_term_field_id( Iri )
 
-SingleChoiceFieldId ::= single_choice_field_id( Iri )
+SingleValuedEnumFieldId ::= single_valued_enum_field_id( Iri )
 
-MultipleChoiceFieldId ::= multiple_choice_field_id( Iri )
+MultiValuedEnumFieldId ::= multi_valued_enum_field_id( Iri )
 
 LinkFieldId ::= link_field_id( Iri )
 
@@ -779,7 +779,7 @@ TemplateInstanceId ::= template_instance_id( Iri )
 
 All artifact identifier productions are IRI-valued. See [`Iri`](#core-iri-and-string-types).
 
-Concrete serializations need not preserve the per-family identifier distinctions drawn here. In the JSON wire encoding, every artifact identifier — whether a per-family `FieldId` variant such as `TextFieldId` or `SingleChoiceFieldId`, or one of the non-field identifiers `TemplateId`, `PresentationComponentId`, and `TemplateInstanceId` — is encoded as a bare IRI string with no per-family discriminator. The field family of a `FieldId` reference is recovered from the `kind` of the enclosing `Field` or `EmbeddedField`. See [`wire-grammar.md`](wire-grammar.md) §5 and [`serialization.md`](serialization.md).
+Concrete serializations need not preserve the per-family identifier distinctions drawn here. In the JSON wire encoding, every artifact identifier — whether a per-family `FieldId` variant such as `TextFieldId` or `SingleValuedEnumFieldId`, or one of the non-field identifiers `TemplateId`, `PresentationComponentId`, and `TemplateInstanceId` — is encoded as a bare IRI string with no per-family discriminator. The field family of a `FieldId` reference is recovered from the `kind` of the enclosing `Field` or `EmbeddedField`. See [`wire-grammar.md`](wire-grammar.md) §5 and [`serialization.md`](serialization.md).
 
 ## Artifact Metadata
 
@@ -792,7 +792,7 @@ This subsection identifies how the metadata categories are grouped at the artifa
 ```ebnf
 SchemaArtifactMetadata ::= schema_artifact_metadata(
                              ArtifactMetadata
-                             SchemaVersioning
+                             SchemaArtifactVersioning
                            )
 
 ArtifactMetadata ::= artifact_metadata(
@@ -857,10 +857,10 @@ See [`IsoDateTimeStamp`](#core-iri-and-string-types) and [`Iri`](#core-iri-and-s
 
 ### Schema Versioning
 
-`SchemaVersioning` identifies version-related metadata specific to reusable schema artifacts. It captures artifact version, publication status, and optional derivation links to earlier or source artifacts.
+`SchemaArtifactVersioning` identifies version-related metadata specific to reusable schema artifacts. It captures artifact version, publication status, and optional derivation links to earlier or source artifacts.
 
 ```ebnf
-SchemaVersioning ::= schema_versioning(
+SchemaArtifactVersioning ::= schema_artifact_versioning(
                        Version
                        Status
                        [PreviousVersion]
@@ -873,12 +873,7 @@ Version ::= version(
               SemanticVersion
             )
 
-Status ::= DraftStatus
-         | PublishedStatus
-
-DraftStatus ::= draft_status()
-
-PublishedStatus ::= published_status()
+Status ::= "draft" | "published"
 
 ModelVersion ::= model_version(
                    SemanticVersion
@@ -905,9 +900,9 @@ The combined meaning of these fields and their interaction with artifact identit
 
 The CEDAR versioning model rests on one guiding rule: **identity is per-version**. Every version of a `Field` or `Template` is itself a distinct `Artifact` with its own IRI. There is no separate "version-independent" identifier for the conceptual artifact; what holds successive versions together is the `PreviousVersion` link from each artifact to the one it replaces.
 
-**Identity and immutability.** Every reusable schema artifact (every `Field` and every `Template`) is identified by a single `SchemaArtifactId` (a `FieldId` or `TemplateId`). That IRI denotes one specific version: distinct versions of "the same" artifact are distinct artifacts in the model, each with its own IRI. A `published` artifact MUST be treated as immutable — once `Status` is `PublishedStatus`, the content addressed by its IRI MUST NOT change. A `draft` artifact MAY be edited in place while its `Status` remains `DraftStatus`. The transition from `draft` to `published` is one-way: an artifact whose `Status` is `PublishedStatus` MUST NOT transition back to `DraftStatus`.
+**Identity and immutability.** Every reusable schema artifact (every `Field` and every `Template`) is identified by a single `SchemaArtifactId` (a `FieldId` or `TemplateId`). That IRI denotes one specific version: distinct versions of "the same" artifact are distinct artifacts in the model, each with its own IRI. A `published` artifact MUST be treated as immutable — once `Status` is `"published"`, the content addressed by its IRI MUST NOT change. A `draft` artifact MAY be edited in place while its `Status` remains `"draft"`. The transition from `draft` to `published` is one-way: an artifact whose `Status` is `"published"` MUST NOT transition back to `"draft"`.
 
-**Creating a new version.** To produce a revised version of a published artifact, mint a new IRI, allocate a new artifact at that IRI with `Status` set to `DraftStatus`, and set `PreviousVersion` to the IRI of the artifact being revised. Editing happens on the new draft; once the new artifact is itself published, it joins the version chain and becomes immutable in turn. The published predecessor is unaffected by the existence of its successor: it remains addressable at its own IRI and continues to be a valid target for `TemplateInstance` references.
+**Creating a new version.** To produce a revised version of a published artifact, mint a new IRI, allocate a new artifact at that IRI with `Status` set to `"draft"`, and set `PreviousVersion` to the IRI of the artifact being revised. Editing happens on the new draft; once the new artifact is itself published, it joins the version chain and becomes immutable in turn. The published predecessor is unaffected by the existence of its successor: it remains addressable at its own IRI and continues to be a valid target for `TemplateInstance` references.
 
 **Version chains.** Successive versions of an artifact form a *version chain*: a sequence of distinct artifacts, each with its own IRI, linked by `PreviousVersion`. Artifact `B` is the immediate successor of artifact `A` when `B.previousVersion = A.id`. The first artifact in a chain MUST omit `PreviousVersion`. Every subsequent artifact in the chain MUST set `PreviousVersion` to the IRI of its immediate predecessor. A chain is therefore a singly-linked list of IRIs, traversable backwards from any version to the original.
 
@@ -963,16 +958,12 @@ The following nonterminals are intentionally left abstract. They define the stri
 
 ### Core IRI and String Types
 
-This subsection defines the fundamental IRI, string, and numeric leaf types that appear throughout the grammar. `Iri` is the base construct for all IRI-valued positions. `DatatypeIri` is a specialised IRI form used at the single position that admits a user-authored datatype (`LiteralChoiceValue.datatype` and the matching `LiteralChoiceOption.datatype`); `TermIri` is a specialised IRI form for controlled-vocabulary references. `LanguageTag` and `LexicalForm` are leaf string types used by `Value` constructs that carry localized or lexically-typed content. `IsoDateTimeStamp` carries ISO 8601 date-time values used in lifecycle metadata. `NonNegativeInteger` supports field-spec constraints.
+This subsection defines the fundamental IRI, string, and numeric leaf types that appear throughout the grammar. `Iri` is the base construct for all IRI-valued positions. `TermIri` is a specialised IRI form for controlled-vocabulary references. `LanguageTag` and `LexicalForm` are leaf string types used by `Value` constructs that carry localized or lexically-typed content. `IsoDateTimeStamp` carries ISO 8601 date-time values used in lifecycle metadata. `NonNegativeInteger` supports field-spec constraints.
 
 ```ebnf
 Iri ::= iri(
           IriString
         )
-
-DatatypeIri ::= datatype_iri(
-                  Iri
-                )
 
 TermIri ::= term_iri(
               Iri
@@ -997,9 +988,7 @@ NonNegativeInteger ::= non_negative_integer(
 
 `Iri` denotes an Internationalized Resource Identifier. It corresponds to the `xsd:anyURI` datatype; implementations MAY represent it as a plain string provided it is a syntactically valid IRI.
 
-`DatatypeIri` denotes an `Iri` that identifies an RDF datatype.
-
-`TermIri` denotes an `Iri` that identifies a term in a controlled vocabulary or ontology. It is used in `ControlledTermValue` and `ControlledTermClass`.
+`TermIri` denotes an `Iri` that identifies a term in a controlled vocabulary or ontology. It is used in `ControlledTermValue`, `ControlledTermClass`, and `Meaning`.
 
 `LanguageTag` denotes a well-formed BCP 47 language tag.
 
@@ -1056,7 +1045,7 @@ Value ::= TextValue
         | TimeValue
         | DateTimeValue
         | ControlledTermValue
-        | ChoiceValue
+        | EnumValue
         | LinkValue
         | EmailValue
         | PhoneNumberValue
@@ -1131,7 +1120,9 @@ DateTimeValue ::= date_time_value(
 
 ### Controlled Term Value
 
-A controlled term value identifies a term drawn from an ontology, branch, class set, or value set declared in the corresponding `ControlledTermFieldSpec`. It carries a `TermIri` identifying the term and a mandatory human-readable `Label`. `Notation` and `PreferredLabel` carry optional terminology metadata from the source ontology, such as a symbolic code or the ontology's own preferred label for the term.
+A controlled term value identifies a term drawn from an ontology, branch, class set, or value set declared in the corresponding `ControlledTermFieldSpec`. It carries a `TermIri` identifying the term, together with an optional human-readable `Label` and optional `Notation` and `PreferredLabel` terminology metadata from the source ontology. `Label` is the display label intended for end-user presentation; `Notation` is a symbolic code (typically a SKOS notation) bound to the term; `PreferredLabel` is the ontology's own preferred label for the term, distinct from the display `Label` that may have been customized for the surrounding context.
+
+A `ControlledTermValue` MAY omit `Label`: a consumer that has access to the source ontology can resolve the term's display label from the `TermIri`. Producers SHOULD include `Label` when it is known at the point of value construction so that downstream consumers without ontology access can render the value.
 
 ```ebnf
 Label ::= label(
@@ -1156,43 +1147,30 @@ ControlledTermValue ::= controlled_term_value(
 
 `Label` and `PreferredLabel` are [`MultilingualString`](#multilingual-strings) values: each carries one or more language-tagged localizations of the term's display label. `Notation` is a plain Unicode string: it is a technical symbolic code (typically a SKOS notation) rather than human-display text, and is therefore not multilingual.
 
-### Choice Value
+### Enum Value
 
-A choice value carries a selection from the options declared by a `ChoiceFieldSpec`. The form of the selection is determined by the kind of `ChoiceFieldSpec` the field carries: a field with a `LiteralSingleChoiceFieldSpec` or `LiteralMultipleChoiceFieldSpec` produces a `LiteralChoiceValue`, while a field with a `ControlledTermSingleChoiceFieldSpec` or `ControlledTermMultipleChoiceFieldSpec` produces a `ControlledTermChoiceValue`. A conforming instance value must correspond to one of the declared options of the referenced field's choice field spec.
+An enum value carries a selection from the permissible values declared by an `EnumFieldSpec`. Every enum value is identified by a `Token` — a non-empty Unicode string that serves as the canonical key of one of the enum spec's `PermissibleValue` entries. A conforming instance value MUST equal the `Token` of one of the referenced spec's permissible values.
 
 ```ebnf
-ChoiceValue ::= LiteralChoiceValue
-              | ControlledTermChoiceValue
-
-LiteralChoiceValue ::= literal_choice_value(
-                         LexicalForm
-                         [LanguageTag]
-                         [DatatypeIri]
-                       )
-
-ControlledTermChoiceValue ::= controlled_term_choice_value(
-                                ControlledTermValue
-                              )
+EnumValue ::= enum_value(
+                Token
+              )
 ```
 
-`LiteralChoiceValue` admits three shapes selected by which optional component is present: a plain text choice (`LexicalForm` only), a language-tagged text choice (`LexicalForm` + `LanguageTag`), or a typed-literal choice (`LexicalForm` + `DatatypeIri`). At most one of `LanguageTag` and `DatatypeIri` is present. A `LiteralChoiceValue` MUST correspond to one of the declared options of its referenced `LiteralChoiceFieldSpec`; the spec's options carry the same three shapes.
+`Token` is the leaf type used as the canonical key of an enum selection. It is defined in the [Field Specs](#field-specs) section alongside the related leaf productions (`PermissibleValue`, `Meaning`) used by `EnumFieldSpec`.
 
 ### Link Value
 
-A link value represents a hyperlink or URL-valued field. It carries an `Iri` identifying the linked resource and an optional `LinkLabel` providing a human-readable display label for the link.
+A link value represents a hyperlink or URL-valued field. It carries an `Iri` identifying the linked resource and an optional `Label` providing a human-readable display label for the link.
 
 ```ebnf
 LinkValue ::= link_value(
                 Iri
-                [LinkLabel]
-              )
-
-LinkLabel ::= link_label(
-                string
+                [Label]
               )
 ```
 
-`LinkLabel` is a plain Unicode string and is intentionally not a [`MultilingualString`](#multilingual-strings): a hyperlink's display label is treated as a single piece of presentational text bound to its target IRI rather than a localization set.
+`Label` is the same `MultilingualString`-valued production used by [`ControlledTermValue`](#controlled-term-value), [`PermissibleValue`](#field-specs), and the external-authority value types: a label is treated uniformly as a localizable display string. A hyperlink's display text MAY therefore carry one or more language-tagged localizations.
 
 ### Contact Values
 
@@ -1294,12 +1272,8 @@ An `EmbeddedArtifactKey` is the local identifier of an `EmbeddedArtifact` within
 
 ```ebnf
 EmbeddedArtifactKey ::= embedded_artifact_key(
-                          KeyIdentifier
+                          AsciiIdentifier
                         )
-
-KeyIdentifier ::= key_identifier(
-                    AsciiIdentifier
-                  )
 ```
 
 `EmbeddedArtifactKey` MUST match the pattern `[A-Za-z][A-Za-z0-9_-]*`: it MUST begin with an ASCII letter followed by zero or more ASCII letters, digits, underscores, or hyphens.
@@ -1308,88 +1282,15 @@ KeyIdentifier ::= key_identifier(
 
 `EmbeddedArtifactKey` is distinct from artifact identifiers such as `FieldId` and `TemplateId`. It identifies the embedding site within a template rather than the reusable artifact being referenced. The same reusable `Field` may be embedded more than once in a `Template` under different keys, and each key independently identifies that embedding site in both the template structure and any corresponding `TemplateInstance`.
 
-### References
-
-These productions identify the reusable artifact that is being included in the template. Each reference type is a typed alias for the corresponding artifact identifier — for example, `TextFieldReference` is structurally identical to `TextFieldId`. The typed reference forms exist for the same strong-typing reason as the typed identifiers: a `TextFieldReference` can only appear in an `EmbeddedTextField`, making it structurally impossible to embed a field of the wrong kind. The distinction between a reference and an identifier is one of role: an identifier permanently names a reusable artifact, while a reference expresses the intention to embed that artifact in a specific template context.
-
-```ebnf
-FieldReference ::= TextFieldReference
-                 | IntegerNumberFieldReference
-                 | RealNumberFieldReference
-                 | BooleanFieldReference
-                 | DateFieldReference
-                 | TimeFieldReference
-                 | DateTimeFieldReference
-                 | ControlledTermFieldReference
-                 | SingleChoiceFieldReference
-                 | MultipleChoiceFieldReference
-                 | LinkFieldReference
-                 | EmailFieldReference
-                 | PhoneNumberFieldReference
-                 | OrcidFieldReference
-                 | RorFieldReference
-                 | DoiFieldReference
-                 | PubMedIdFieldReference
-                 | RridFieldReference
-                 | NihGrantIdFieldReference
-                 | AttributeValueFieldReference
-
-TextFieldReference ::= TextFieldId
-
-IntegerNumberFieldReference ::= IntegerNumberFieldId
-
-RealNumberFieldReference ::= RealNumberFieldId
-
-BooleanFieldReference ::= BooleanFieldId
-
-DateFieldReference ::= DateFieldId
-
-TimeFieldReference ::= TimeFieldId
-
-DateTimeFieldReference ::= DateTimeFieldId
-
-ControlledTermFieldReference ::= ControlledTermFieldId
-
-SingleChoiceFieldReference ::= SingleChoiceFieldId
-
-MultipleChoiceFieldReference ::= MultipleChoiceFieldId
-
-LinkFieldReference ::= LinkFieldId
-
-EmailFieldReference ::= EmailFieldId
-
-PhoneNumberFieldReference ::= PhoneNumberFieldId
-
-OrcidFieldReference ::= OrcidFieldId
-
-RorFieldReference ::= RorFieldId
-
-DoiFieldReference ::= DoiFieldId
-
-PubMedIdFieldReference ::= PubMedIdFieldId
-
-RridFieldReference ::= RridFieldId
-
-NihGrantIdFieldReference ::= NihGrantIdFieldId
-
-AttributeValueFieldReference ::= AttributeValueFieldId
-
-TemplateReference ::= TemplateId
-
-PresentationComponentReference ::= PresentationComponentId
-```
-
 ### Requirements
 
 `ValueRequirement` identifies whether a value is required, recommended, or optional in the embedding context. `Required` means that a value must be supplied for conformance. `Recommended` and `Optional` are identical for conformance purposes: absence of a value MUST NOT cause conformance failure in either case. The distinction is one of authoring guidance only: implementations SHOULD encourage entry for `Recommended` fields and MAY issue warnings when such fields are left empty.
 
 ```ebnf
-ValueRequirement ::= Required
-                   | Recommended
-                   | Optional
+ValueRequirement ::= "required" | "recommended" | "optional"
 ```
 
-When `ValueRequirement` is absent from an `EmbeddedArtifact`, the default is `Optional`.
+When `ValueRequirement` is absent from an `EmbeddedArtifact`, the default is `"optional"`.
 
 ### Cardinality
 
@@ -1421,11 +1322,10 @@ When `Cardinality` is absent from an `EmbeddedArtifact`, the implied default is 
 `Visibility` determines whether the embedded artifact is shown in rendered interfaces. It is modeled as an embedding property rather than as a rendering hint because it applies to any kind of embedded artifact, not only to fields.
 
 ```ebnf
-Visibility ::= Visible
-             | Hidden
+Visibility ::= "visible" | "hidden"
 ```
 
-When `Visibility` is absent from an `EmbeddedArtifact`, the default is `Visible`.
+When `Visibility` is absent from an `EmbeddedArtifact`, the default is `"visible"`.
 
 ### Defaults
 
@@ -1441,8 +1341,8 @@ The optional `defaultValue` component of an `EmbeddedField` specifies the value 
 | `EmbeddedTimeField` | `TimeValue` |
 | `EmbeddedDateTimeField` | `DateTimeValue` |
 | `EmbeddedControlledTermField` | `ControlledTermValue` |
-| `EmbeddedSingleChoiceField` | `ChoiceValue` (polymorphic: `LiteralChoiceValue \| ControlledTermChoiceValue`) |
-| `EmbeddedMultipleChoiceField` | `ChoiceValue` |
+| `EmbeddedSingleValuedEnumField` | `EnumValue` (single) |
+| `EmbeddedMultiValuedEnumField` | `EnumValue*` (sequence) |
 | `EmbeddedLinkField` | `LinkValue` |
 | `EmbeddedEmailField` | `EmailValue` |
 | `EmbeddedPhoneNumberField` | `PhoneNumberValue` |
@@ -1454,7 +1354,9 @@ The optional `defaultValue` component of an `EmbeddedField` specifies the value 
 | `EmbeddedNihGrantIdField` | `NihGrantIdValue` |
 | `EmbeddedAttributeValueField` | (no default) |
 
-`TextFieldSpec` also carries an optional reusable field-level text default (a `TextValue` — see Field Specs). When both a field-level and an embedding-specific text default are present, the embedding-specific one takes precedence as it is more specific to the template context. All other default-value families appear only at the embedding level.
+`TextFieldSpec` also carries an optional reusable field-level text default (a `TextValue` — see Field Specs). When both a field-level and an embedding-specific text default are present, the embedding-specific one takes precedence as it is more specific to the template context.
+
+`SingleValuedEnumFieldSpec` and `MultiValuedEnumFieldSpec` likewise carry optional spec-level defaults — a single `Token` for the single-valued spec, a list of `Token` for the multi-valued spec. These are not `EnumValue` constructs but bare `Token` references to entries of the spec's `PermissibleValue+` list. As with text defaults, an embedding-level `defaultValue` (an `EnumValue` or sequence of `EnumValue` on the corresponding `EmbeddedField`) takes precedence over the spec-level default when both are present. All other default-value families appear only at the embedding level.
 
 ### Label Override
 
@@ -1505,7 +1407,7 @@ FieldSpec ::= TextFieldSpec
             | BooleanFieldSpec
             | TemporalFieldSpec
             | ControlledTermFieldSpec
-            | ChoiceFieldSpec
+            | EnumFieldSpec
             | LinkFieldSpec
             | ContactFieldSpec
             | ExternalAuthorityFieldSpec
@@ -1530,16 +1432,12 @@ IntegerNumberFieldSpec ::= integer_number_field_spec(
                            )
 
 RealNumberFieldSpec ::= real_number_field_spec(
-                          RealNumberDatatype
+                          RealNumberDatatypeKind
                           [Unit]
                           [RealNumberMinValue]
                           [RealNumberMaxValue]
                           [NumericRenderingHint]
                         )
-
-RealNumberDatatype ::= real_number_datatype(
-                         RealNumberDatatypeKind
-                       )
 
 Unit ::= unit(
            Iri
@@ -1586,48 +1484,36 @@ ControlledTermFieldSpec ::= controlled_term_field_spec(
                               ControlledTermSource+
                             )
 
-ChoiceFieldSpec ::= SingleChoiceFieldSpec
-                  | MultipleChoiceFieldSpec
+EnumFieldSpec ::= SingleValuedEnumFieldSpec
+                | MultiValuedEnumFieldSpec
 
-SingleChoiceFieldSpec ::= LiteralSingleChoiceFieldSpec
-                        | ControlledTermSingleChoiceFieldSpec
+SingleValuedEnumFieldSpec ::= single_valued_enum_field_spec(
+                                PermissibleValue+
+                                [Token]
+                                [SingleValuedEnumRenderingHint]
+                              )
 
-MultipleChoiceFieldSpec ::= LiteralMultipleChoiceFieldSpec
-                          | ControlledTermMultipleChoiceFieldSpec
+MultiValuedEnumFieldSpec ::= multi_valued_enum_field_spec(
+                               PermissibleValue+
+                               Token*
+                               [MultiValuedEnumRenderingHint]
+                             )
 
-LiteralSingleChoiceFieldSpec ::= literal_single_choice_field_spec(
-                                   LiteralChoiceOption+
-                                   [SingleChoiceRenderingHint]
-                                 )
+PermissibleValue ::= permissible_value(
+                       Token
+                       [Label]
+                       [Description]
+                       Meaning*
+                     )
 
-ControlledTermSingleChoiceFieldSpec ::= controlled_term_single_choice_field_spec(
-                                          ControlledTermChoiceOption+
-                                          [SingleChoiceRenderingHint]
-                                        )
+Token ::= token(
+            string
+          )
 
-LiteralMultipleChoiceFieldSpec ::= literal_multiple_choice_field_spec(
-                                     LiteralChoiceOption+
-                                     [MultipleChoiceRenderingHint]
-                                   )
-
-ControlledTermMultipleChoiceFieldSpec ::= controlled_term_multiple_choice_field_spec(
-                                            ControlledTermChoiceOption+
-                                            [MultipleChoiceRenderingHint]
-                                          )
-
-LiteralChoiceOption ::= literal_choice_option(
-                          LexicalForm
-                          [LanguageTag]
-                          [DatatypeIri]
-                          [DefaultOption]
-                        )
-
-ControlledTermChoiceOption ::= controlled_term_choice_option(
-                                 ControlledTermValue
-                                 [DefaultOption]
-                               )
-
-DefaultOption ::= default_option()
+Meaning ::= meaning(
+              TermIri
+              [Label]
+            )
 
 LinkFieldSpec ::= link_field_spec()
 
@@ -1668,9 +1554,11 @@ The current placement of `Unit` on `IntegerNumberFieldSpec` and `RealNumberField
 
 A `RealNumberFieldSpec` MAY use the family-shared `NumericRenderingHint`; if it carries a non-zero `decimalPlaces` rendering hint, the hint applies to display rounding only and does not constrain the lexical form of submitted values. `IntegerNumberFieldSpec` MAY also use `NumericRenderingHint`; a `decimalPlaces` value other than `0` on an integer field is harmless (display only) and SHOULD be omitted when not meaningful.
 
-`ChoiceFieldSpec` is refined along two independent dimensions: cardinality and value kind. The cardinality dimension distinguishes `SingleChoiceFieldSpec` — which permits exactly one selection — from `MultipleChoiceFieldSpec` — which permits one or more simultaneous selections. The value kind dimension distinguishes `LiteralSingleChoiceFieldSpec` and `LiteralMultipleChoiceFieldSpec`, whose options are plain string or typed literals, from `ControlledTermSingleChoiceFieldSpec` and `ControlledTermMultipleChoiceFieldSpec`, whose options are ontology-backed controlled terms carrying an IRI and a human-readable label. All options within a single choice field spec must be of the same kind: a literal choice field spec carries only `LiteralChoiceOption` entries, and a controlled term choice field spec carries only `ControlledTermChoiceOption` entries. This uniformity means that the value kind of a choice field is declared structurally rather than inferred by inspecting individual options.
+`EnumFieldSpec` is refined along a single dimension: cardinality. `SingleValuedEnumFieldSpec` permits exactly one selection; `MultiValuedEnumFieldSpec` permits zero or more simultaneous selections (subject to the embedding's `Cardinality`). The two specs share a common option model: every permissible value is a `PermissibleValue` carrying a canonical `Token` key together with optional human-readable `Label` and `Description` localizations and zero or more `Meaning` entries that bind the token to ontology terms. The `Token` strings of a spec's permissible values MUST be unique within that spec; the spec's `PermissibleValue+` is the closed set of values an instance may carry.
 
-`LiteralChoiceOption` and `ControlledTermChoiceOption` each carry an optional `DefaultOption`. When `DefaultOption` is present, the option is pre-selected when a new instance is created. This is a field-level default baked into the option definition itself; an embedding-level `defaultValue` (a `ChoiceValue`) on the corresponding `EmbeddedField` takes precedence when both are present.
+`SingleValuedEnumFieldSpec` carries an optional `[Token]` slot identifying the permissible value pre-selected when a new instance is created; `MultiValuedEnumFieldSpec` carries a `Token*` list with the same role. Each such default `Token` MUST equal the `Token` of one of the spec's `PermissibleValue+` entries. These are spec-level defaults baked into the field definition itself; an embedding-level `defaultValue` on the corresponding `EmbeddedField` takes precedence when both are present.
+
+A `Meaning` carried by a `PermissibleValue` binds the token to a term IRI in an external vocabulary or ontology. A permissible value MAY carry zero, one, or several `Meaning` entries. Each `Meaning` MAY additionally carry an optional `Label` recording the bound term's human-readable label (in the same way `ControlledTermValue.Label` caches the term's label inline) so that consumers without ontology access can render the bound term's display name. The `Meaning.Label` is the label of the bound *term*, distinct from the surrounding `PermissibleValue.Label` which is the display label of the permissible value itself. When the RDF projection is applied (see [`rdf-projection.md`](rdf-projection.md)), an `EnumValue` whose token matches a `PermissibleValue` carrying one or more `Meaning` entries projects as the corresponding term IRIs; an `EnumValue` whose matching permissible value carries no `Meaning` projects as a plain string literal.
 
 `ControlledTermSource` is defined in [Controlled Term Sources](#controlled-term-sources).
 
@@ -1684,15 +1572,7 @@ DateFieldSpec ::= date_field_spec(
                     [DateRenderingHint]
                   )
 
-DateValueType ::= YearValueType
-                | YearMonthValueType
-                | FullDateValueType
-
-YearValueType ::= year_value_type()
-
-YearMonthValueType ::= year_month_value_type()
-
-FullDateValueType ::= full_date_value_type()
+DateValueType ::= "year" | "yearMonth" | "fullDate"
 ```
 
 ```ebnf
@@ -1702,43 +1582,30 @@ TimeFieldSpec ::= time_field_spec(
                     [TimeRenderingHint]
                   )
 
-TimePrecision ::= HourMinutePrecision
-                | HourMinuteSecondPrecision
-                | HourMinuteSecondFractionPrecision
+TimePrecision ::= "hourMinute" | "hourMinuteSecond" | "hourMinuteSecondFraction"
 
-HourMinutePrecision ::= hour_minute_precision()
-
-HourMinuteSecondPrecision ::= hour_minute_second_precision()
-
-HourMinuteSecondFractionPrecision ::= hour_minute_second_fraction_precision()
-
-TimezoneRequirement ::= TimezoneRequired
-                      | TimezoneNotRequired
-
-TimezoneRequired ::= timezone_required()
-
-TimezoneNotRequired ::= timezone_not_required()
+TimezoneRequirement ::= "timezoneRequired" | "timezoneNotRequired"
 ```
 
 `TimePrecision` identifies the finest time precision permitted by a `TimeFieldSpec`.
 
-`HourMinutePrecision`, `HourMinuteSecondPrecision`, and `HourMinuteSecondFractionPrecision` identify time values constrained respectively to hour-and-minute precision, second precision, and fractional-second precision.
+`"hourMinute"`, `"hourMinuteSecond"`, and `"hourMinuteSecondFraction"` identify time values constrained respectively to hour-and-minute precision, second precision, and fractional-second precision.
 
 `TimezoneRequirement` identifies whether timezone information is required by the field spec.
 
 The declared `TimePrecision` determines the required lexical form of conforming `TimeValue` constructs. Finer components than the declared precision MUST be omitted entirely; zeroing them is not equivalent to omitting them. Specifically:
 
-- `HourMinutePrecision`: `TimeValue` MUST carry only hour and minute components (`HH:MM`).
-- `HourMinuteSecondPrecision`: `TimeValue` MUST carry hour, minute, and second components (`HH:MM:SS`), with no fractional seconds.
-- `HourMinuteSecondFractionPrecision`: `TimeValue` MAY carry a fractional seconds component.
+- `"hourMinute"`: `TimeValue` MUST carry only hour and minute components (`HH:MM`).
+- `"hourMinuteSecond"`: `TimeValue` MUST carry hour, minute, and second components (`HH:MM:SS`), with no fractional seconds.
+- `"hourMinuteSecondFraction"`: `TimeValue` MAY carry a fractional seconds component.
 
 When `TimePrecision` is absent from a `TimeFieldSpec`, no precision constraint applies and any well-formed `TimeValue` is conforming.
 
 The same strict-truncation rule applies to `DateTimeValueType` for `DateTimeValue` constructs:
 
-- `DateHourMinuteValueType`: the time component of `DateTimeValue` MUST carry only hour and minute (`YYYY-MM-DDTHH:MM`).
-- `DateHourMinuteSecondValueType`: the time component MUST carry hour, minute, and second (`YYYY-MM-DDTHH:MM:SS`), with no fractional seconds.
-- `DateHourMinuteSecondFractionValueType`: the time component MAY carry a fractional seconds component.
+- `"dateHourMinute"`: the time component of `DateTimeValue` MUST carry only hour and minute (`YYYY-MM-DDTHH:MM`).
+- `"dateHourMinuteSecond"`: the time component MUST carry hour, minute, and second (`YYYY-MM-DDTHH:MM:SS`), with no fractional seconds.
+- `"dateHourMinuteSecondFraction"`: the time component MAY carry a fractional seconds component.
 
 ```ebnf
 DateTimeFieldSpec ::= date_time_field_spec(
@@ -1747,72 +1614,30 @@ DateTimeFieldSpec ::= date_time_field_spec(
                         [DateTimeRenderingHint]
                       )
 
-DateTimeValueType ::= DateHourMinuteValueType
-                    | DateHourMinuteSecondValueType
-                    | DateHourMinuteSecondFractionValueType
-
-DateHourMinuteValueType ::= date_hour_minute_value_type()
-
-DateHourMinuteSecondValueType ::= date_hour_minute_second_value_type()
-
-DateHourMinuteSecondFractionValueType ::= date_hour_minute_second_fraction_value_type()
+DateTimeValueType ::= "dateHourMinute" | "dateHourMinuteSecond" | "dateHourMinuteSecondFraction"
 ```
 
 `DateTimeValueType` identifies the finest permitted date-time precision.
 
-`DateHourMinuteValueType`, `DateHourMinuteSecondValueType`, and `DateHourMinuteSecondFractionValueType` identify date-time values constrained respectively to minute precision, second precision, and fractional-second precision.
+`"dateHourMinute"`, `"dateHourMinuteSecond"`, and `"dateHourMinuteSecondFraction"` identify date-time values constrained respectively to minute precision, second precision, and fractional-second precision.
 
 ```ebnf
 DateRenderingHint ::= date_rendering_hint(
-                        DateRenderingWidget
-                        [DateFormat]
+                        [DateComponentOrder]
                       )
 
-DateRenderingWidget ::= DatePickerRenderingWidget
-
-DatePickerRenderingWidget ::= date_picker_rendering_widget()
-
-DateFormat ::= date_format(
-                 DateComponentOrder
-               )
-
-DateComponentOrder ::= DayMonthYearOrder
-                     | MonthDayYearOrder
-                     | YearMonthDayOrder
-
-DayMonthYearOrder ::= day_month_year_order()
-
-MonthDayYearOrder ::= month_day_year_order()
-
-YearMonthDayOrder ::= year_month_day_order()
+DateComponentOrder ::= "dayMonthYear" | "monthDayYear" | "yearMonthDay"
 
 TimeRenderingHint ::= time_rendering_hint(
-                        TimeRenderingWidget
                         [TimeFormat]
                       )
 
-TimeRenderingWidget ::= TimePickerRenderingWidget
-
-TimePickerRenderingWidget ::= time_picker_rendering_widget()
-
 DateTimeRenderingHint ::= date_time_rendering_hint(
-                            DateTimeRenderingWidget
                             [TimeFormat]
                           )
 
-DateTimeRenderingWidget ::= DateTimePickerRenderingWidget
-
-DateTimePickerRenderingWidget ::= date_time_picker_rendering_widget()
-
-TimeFormat ::= TwelveHourTimeFormat
-             | TwentyFourHourTimeFormat
-
-TwelveHourTimeFormat ::= twelve_hour_time_format()
-
-TwentyFourHourTimeFormat ::= twenty_four_hour_time_format()
+TimeFormat ::= "twelveHour" | "twentyFourHour"
 ```
-
-`DateFormat` identifies the ordering used to display or acquire date components.
 
 `DateComponentOrder` identifies whether a date is rendered or acquired in day-month-year, month-day-year, or year-month-day order.
 
@@ -1836,17 +1661,14 @@ OntologyReference ::= ontology_reference(
                       )
 
 OntologyDisplayHint ::= ontology_display_hint(
-                          OntologyDisplayHintContent
+                          [OntologyAcronym]
+                          [OntologyName]
                         )
-
-OntologyDisplayHintContent ::= OntologyAcronym
-                             | OntologyName
-                             | OntologyAcronym OntologyName
 
 BranchSource ::= branch_source(
                    OntologyReference
                    RootTermIri
-                   RootTermLabel
+                   [RootTermLabel]
                    [MaxTraversalDepth]
                  )
 
@@ -1856,7 +1678,7 @@ ClassSource ::= class_source(
 
 ControlledTermClass ::= controlled_term_class(
                           TermIri
-                          Label
+                          [Label]
                           OntologyReference
                         )
 
@@ -1909,42 +1731,31 @@ ValueSetIri ::= value_set_iri(
 
 `OntologyName`, `RootTermLabel`, and `ValueSetName` are human-readable display names and carry [`MultilingualString`](#multilingual-strings) values: each may be presented in one or more natural languages. `OntologyAcronym` and `ValueSetIdentifier` are technical short-form identifiers (e.g. an ontology acronym like `"NCIT"`, a value-set key) and remain plain Unicode strings.
 
-`MaxTraversalDepth` denotes a non-negative traversal-depth limit for branch-based controlled-term sources.
+`MaxTraversalDepth` denotes a non-negative traversal-depth limit for branch-based controlled-term sources. When `MaxTraversalDepth` is absent, no depth limit applies and any descendant of the root term is admissible. A value of zero restricts the source to the root term itself.
+
+When `OntologyDisplayHint` is present on an `OntologyReference`, at least one of its `OntologyAcronym` or `OntologyName` components MUST be present. A display hint with neither component is non-conforming.
+
+A `ControlledTermClass` SHOULD include a `Label`. The label is captured at the time the class is declared as a source, when the term's display text is typically known; consumers without ontology access rely on this label to render the class. Conforming producers MAY omit the label when it is not available, in which case downstream consumers must resolve the label from the term IRI by other means. The same recommendation applies to `BranchSource.RootTermLabel`: producers SHOULD include it when declaring a branch source.
 
 ### Rendering Hints
 
-A `RenderingHint` is an optional presentational instruction carried by a `FieldSpec` that tells a rendering implementation how to display the field. Rendering hints are strictly presentational: they do not affect the meaning, structure, or validation of field values. Each rendering hint is typed to a specific `FieldSpec` family, so only compatible hint-and-field-spec combinations are expressible. For example, a `TextRenderingHint` may only appear on a `TextFieldSpec`, and a `SingleChoiceRenderingHint` may only appear on a `SingleChoiceFieldSpec`. Note that temporal rendering hints (`DateRenderingHint`, `TimeRenderingHint`, and `DateTimeRenderingHint`) are defined alongside their respective field specs in the [Temporal Field Specs](#temporal-field-specs) subsection.
+A `RenderingHint` is an optional presentational instruction carried by a `FieldSpec` that tells a rendering implementation how to display the field. Rendering hints are strictly presentational: they do not affect the meaning, structure, or validation of field values. Each rendering hint is typed to a specific `FieldSpec` family, so only compatible hint-and-field-spec combinations are expressible. For example, a `TextRenderingHint` may only appear on a `TextFieldSpec`, and a `SingleValuedEnumRenderingHint` may only appear on a `SingleValuedEnumFieldSpec`. Note that temporal rendering hints (`DateRenderingHint`, `TimeRenderingHint`, and `DateTimeRenderingHint`) are defined alongside their respective field specs in the [Temporal Field Specs](#temporal-field-specs) subsection.
 
 ```ebnf
 RenderingHint ::= TextRenderingHint
-                | SingleChoiceRenderingHint
-                | MultipleChoiceRenderingHint
+                | SingleValuedEnumRenderingHint
+                | MultiValuedEnumRenderingHint
                 | NumericRenderingHint
                 | BooleanRenderingHint
                 | DateRenderingHint
                 | TimeRenderingHint
                 | DateTimeRenderingHint
 
-TextRenderingHint ::= SingleLineTextRenderingHint
-                    | MultiLineTextRenderingHint
+TextRenderingHint ::= "singleLine" | "multiLine"
 
-SingleLineTextRenderingHint ::= single_line_text_rendering_hint()
+SingleValuedEnumRenderingHint ::= "radio" | "dropdown"
 
-MultiLineTextRenderingHint ::= multi_line_text_rendering_hint()
-
-SingleChoiceRenderingHint ::= RadioRenderingHint
-                            | SingleSelectDropdownRenderingHint
-
-RadioRenderingHint ::= radio_rendering_hint()
-
-SingleSelectDropdownRenderingHint ::= single_select_dropdown_rendering_hint()
-
-MultipleChoiceRenderingHint ::= CheckboxRenderingHint
-                              | MultiSelectDropdownRenderingHint
-
-CheckboxRenderingHint ::= checkbox_rendering_hint()
-
-MultiSelectDropdownRenderingHint ::= multi_select_dropdown_rendering_hint()
+MultiValuedEnumRenderingHint ::= "checkbox" | "multiSelect"
 
 NumericRenderingHint ::= numeric_rendering_hint(
                            [DecimalPlaces]
@@ -1954,27 +1765,29 @@ DecimalPlaces ::= decimal_places(
                     NonNegativeInteger
                   )
 
-BooleanRenderingHint ::= BooleanCheckboxRenderingHint
-                       | BooleanToggleRenderingHint
-
-BooleanCheckboxRenderingHint ::= boolean_checkbox_rendering_hint()
-
-BooleanToggleRenderingHint ::= boolean_toggle_rendering_hint()
+BooleanRenderingHint ::= "checkbox" | "toggle" | "radio" | "dropdown"
 ```
 
-This specification draws a strict distinction between semantic structure and presentation. Semantic distinctions MUST be modeled in `FieldSpec` when they affect the meaning, cardinality, or value structure of a field. This includes distinctions such as single-choice versus multiple-choice, date versus time versus date-time, and permitted temporal precision. Purely presentational distinctions MUST NOT be modeled as separate field specs. Instead, distinctions such as single-line versus multi-line text entry, date component ordering, and 12-hour versus 24-hour time display MUST be expressed only through compatible typed rendering hints.
+This specification draws a strict distinction between semantic structure and presentation. Semantic distinctions MUST be modeled in `FieldSpec` when they affect the meaning, cardinality, or value structure of a field. This includes distinctions such as single-valued versus multi-valued enum, date versus time versus date-time, and permitted temporal precision. Purely presentational distinctions MUST NOT be modeled as separate field specs. Instead, distinctions such as single-line versus multi-line text entry, date component ordering, and 12-hour versus 24-hour time display MUST be expressed only through compatible typed rendering hints.
 
 Accordingly, `TextFieldSpec` is a single semantic field spec whose single-line and multi-line display forms are represented by `TextRenderingHint`.
 
 A `TextFieldSpec` MAY additionally define a default text value, minimum length, maximum length, and validating regular expression.
 
-Similarly, `ChoiceFieldSpec` distinguishes `SingleChoiceFieldSpec` from `MultipleChoiceFieldSpec` semantically, and further distinguishes literal-valued from controlled-term-valued options, while the rendering hint determines whether the UI uses radio buttons, checkboxes, or dropdown presentation. Typed rendering hints make incompatible combinations structurally invalid.
+Similarly, `EnumFieldSpec` distinguishes `SingleValuedEnumFieldSpec` from `MultiValuedEnumFieldSpec` semantically, while the rendering hint determines whether the UI uses radio buttons, dropdown, checkboxes, or multi-select presentation. Typed rendering hints make incompatible combinations structurally invalid.
 
 Temporal semantics are also split structurally: `DateFieldSpec`, `TimeFieldSpec`, and `DateTimeFieldSpec` are distinct semantic field specs, and each carries only the rendering hints and temporal options that are meaningful for that temporal category.
 
-The current rendering vocabulary is explicit but deliberately small: numeric fields use `NumericRenderingHint` (which carries an optional `DecimalPlaces` for display-time rounding); date fields use `DatePickerRenderingWidget`; time fields use `TimePickerRenderingWidget`; and date-time fields use `DateTimePickerRenderingWidget`.
+The current rendering vocabulary is explicit but deliberately small: numeric fields use `NumericRenderingHint` (which carries an optional `DecimalPlaces` for display-time rounding); date fields use `DateRenderingHint` (with optional `DateComponentOrder`); time fields use `TimeRenderingHint` (with optional `TimeFormat`); and date-time fields use `DateTimeRenderingHint` (also with optional `TimeFormat`).
 
 `DecimalPlaces` is a presentation concern, not a value-semantics constraint. Conforming consumers SHOULD use it to control display rounding and MAY use it as a UX-level input nicety (e.g., limiting the number of digits an end-user can type after the decimal point). It does not constrain the lexical form of a submitted `RealNumberValue`; conforming validators MUST NOT reject a value purely on grounds of decimal-places mismatch with the rendering hint. The slot is meaningful for `RealNumberFieldSpec`; on `IntegerNumberFieldSpec` it is harmless and conventionally omitted.
+
+`BooleanRenderingHint` admits four widget choices — `checkbox`, `toggle`, `radio`, and `dropdown` — distinguished by how they handle the **unset** state of a boolean field. A boolean field has three observable states at the UI: a value of `true`, a value of `false`, and *no value supplied* (the user has not yet asserted either). The four widget choices differ in whether they can faithfully represent the unset state:
+
+- `radio` (a Yes / No radio pair) and `dropdown` (a Yes / No dropdown with no initial selection) admit three observable states — Yes selected, No selected, and neither selected — and so faithfully represent the unset case.
+- `checkbox` and `toggle` admit only two observable states (`checked` / `unchecked`, or `on` / `off`) and so cannot distinguish *false* from *unset*. They SHOULD be used only when the field's `ValueRequirement` is `required` (so unset is not a valid resting state) or when the surrounding application is content to interpret unset as `false`.
+
+The unset state is structurally represented in the value model by *absence of a `FieldValue`* for the embedding's key, not by a third value within `BooleanValue`. `BooleanValue.value` carries `true | false` only.
 
 ## Presentation Components
 
@@ -2002,14 +1815,18 @@ ImageComponent ::= image_component(
                      PresentationComponentId
                      ModelVersion
                      ArtifactMetadata
-                     ImageSource
+                     Iri
+                     [Label]
+                     [Description]
                    )
 
 YoutubeVideoComponent ::= you_tube_video_component(
                             PresentationComponentId
                             ModelVersion
                             ArtifactMetadata
-                            YoutubeVideoSource
+                            Iri
+                            [Label]
+                            [Description]
                           )
 
 SectionBreakComponent ::= section_break_component(
@@ -2035,17 +1852,9 @@ HtmlContent ::= html_content(
 
 The permitted HTML feature set and any sanitization requirements are outside the scope of this abstract specification and SHOULD be defined by concrete serialization specifications that build on this model.
 
-```ebnf
-ImageSource ::= image_source(
-                  Iri
-                )
+The `Iri` slot on `ImageComponent` and `YoutubeVideoComponent` identifies the image or video resource referenced by the corresponding presentation component.
 
-YoutubeVideoSource ::= you_tube_video_source(
-                         Iri
-                       )
-```
-
-`ImageSource` and `YoutubeVideoSource` denote IRIs identifying the image or video resource used by the corresponding presentation component.
+`Label` and `Description` on `ImageComponent` and `YoutubeVideoComponent` carry accessibility metadata. `Label` is a short alternative-text label (the image's `alt` text or the video's caption title); `Description` is a longer textual description for screen readers and other assistive technologies. Both are [`MultilingualString`](#multilingual-strings) values, allowing localized accessibility text. Conforming producers SHOULD provide a `Label` for every `ImageComponent` and `YoutubeVideoComponent` that conveys meaningful content; decorative images MAY omit the label to indicate that no alternative text is needed.
 
 ## Field Spec And Value Correspondence
 
@@ -2065,10 +1874,8 @@ The table below gives the complete correspondence. The Field Family column ident
 | `TemporalField` | `TimeFieldSpec` | `TimeValue` |
 | `TemporalField` | `DateTimeFieldSpec` | `DateTimeValue` |
 | | `ControlledTermFieldSpec` | `ControlledTermValue` |
-| `ChoiceField` | `LiteralSingleChoiceFieldSpec` | `LiteralChoiceValue` |
-| `ChoiceField` | `LiteralMultipleChoiceFieldSpec` | `LiteralChoiceValue` |
-| `ChoiceField` | `ControlledTermSingleChoiceFieldSpec` | `ControlledTermChoiceValue` |
-| `ChoiceField` | `ControlledTermMultipleChoiceFieldSpec` | `ControlledTermChoiceValue` |
+| `EnumField` | `SingleValuedEnumFieldSpec` | `EnumValue` |
+| `EnumField` | `MultiValuedEnumFieldSpec` | `EnumValue` |
 | | `LinkFieldSpec` | `LinkValue` |
 | `ContactField` | `EmailFieldSpec` | `EmailValue` |
 | `ContactField` | `PhoneNumberFieldSpec` | `PhoneNumberValue` |
@@ -2080,7 +1887,7 @@ The table below gives the complete correspondence. The Field Family column ident
 | `ExternalAuthorityField` | `NihGrantIdFieldSpec` | `NihGrantIdValue` |
 | | `AttributeValueFieldSpec` | `AttributeValue` |
 
-The four concrete choice field specs map to two value kinds. `LiteralSingleChoiceFieldSpec` and `LiteralMultipleChoiceFieldSpec` both require `LiteralChoiceValue` in instances; `ControlledTermSingleChoiceFieldSpec` and `ControlledTermMultipleChoiceFieldSpec` both require `ControlledTermChoiceValue`. The cardinality distinction — single versus multiple — is not visible in the value type itself but in the count of values permitted per `FieldValue`: a `SingleChoiceFieldSpec` permits exactly one `ChoiceValue`, while a `MultipleChoiceFieldSpec` permits one or more. This cardinality constraint is enforced at validation rather than through distinct value types.
+The two concrete enum field specs share a single value type, `EnumValue`. The cardinality distinction — single versus multiple — is not visible in the value type itself but in the count of values permitted per `FieldValue`: a `SingleValuedEnumFieldSpec` permits exactly one `EnumValue`, while a `MultiValuedEnumFieldSpec` permits one or more (subject to the embedding's `Cardinality`). This cardinality constraint is enforced at validation rather than through distinct value types.
 
 ## Instances
 
@@ -2095,7 +1902,7 @@ TemplateInstance ::= template_instance(
                        TemplateInstanceId
                        ModelVersion
                        ArtifactMetadata
-                       TemplateReference
+                       TemplateId
                        InstanceValue*
                      )
 
@@ -2113,7 +1920,7 @@ NestedTemplateInstance ::= nested_template_instance(
                            )
 ```
 
-`TemplateReference` is the persistent schema link that ties a `TemplateInstance` to the `Template` it was created from. It is the basis for all validation and interpretation of instance content: the `EmbeddedArtifactKey` values in `FieldValue` and `NestedTemplateInstance` constructs are only meaningful in relation to the embedded artifacts of that specific template.
+`TemplateId` is the persistent schema link that ties a `TemplateInstance` to the `Template` it was created from. It is the basis for all validation and interpretation of instance content: the `EmbeddedArtifactKey` values in `FieldValue` and `NestedTemplateInstance` constructs are only meaningful in relation to the embedded artifacts of that specific template.
 
 Each `FieldValue`'s `EmbeddedArtifactKey` MUST identify an `EmbeddedField` in the referenced `Template`. Each `NestedTemplateInstance`'s `EmbeddedArtifactKey` MUST identify an `EmbeddedTemplate`. An `EmbeddedArtifactKey` that identifies an `EmbeddedPresentationComponent` MUST NOT appear as the key of any `InstanceValue`. The full instance alignment constraints are specified in `spec/validation.md`.
 

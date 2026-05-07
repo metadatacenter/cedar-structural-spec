@@ -20,8 +20,9 @@ The projection uses the following IRI prefixes:
 | `rdf:` | `http://www.w3.org/1999/02/22-rdf-syntax-ns#` |
 | `rdfs:` | `http://www.w3.org/2000/01/rdf-schema#` |
 | `skos:` | `http://www.w3.org/2004/02/skos-core#` |
+| `dc:` | `http://purl.org/dc/terms/` |
 
-No CEDAR-specific RDF vocabulary is introduced; the projection uses only RDF, RDFS, SKOS, and XSD terms.
+No CEDAR-specific RDF vocabulary is introduced; the projection uses only RDF, RDFS, SKOS, XSD, and Dublin Core terms.
 
 ## Per-variant projection
 
@@ -72,7 +73,7 @@ For `RealNumberValue`, the `<datatype>` placeholder is the lexical name of the c
 | `RridValue { iri, label }` | `<iri>` | if `label` present: `<iri> rdfs:label "label"` |
 | `NihGrantIdValue { iri, label }` | `<iri>` | if `label` present: `<iri> rdfs:label "label"` |
 
-The `label` is projected as an `rdfs:label` literal. If `label` is a `MultilingualString` carrying multiple localizations, each localization produces a separate `rdfs:label` triple. If `label` is a plain string (as on `LinkValue`), it produces a single `rdfs:label "label"^^xsd:string` triple.
+The `label` is a `MultilingualString` on every IRI-bearing value. Each localization produces a separate `rdfs:label` triple. A label with no localizations (a single `und`-tagged entry) produces a single `rdfs:label "label"@und` triple.
 
 ### Controlled-term values
 
@@ -86,15 +87,16 @@ The `label` is projected as an `rdfs:label` literal. If `label` is a `Multilingu
 
 The accompanying-triple count is therefore variable: zero (no optional slots), one, two, or more (when label or preferred label carry several localizations).
 
-### Choice values
+### Enum values
 
-A choice value projects exactly as the option it carries:
+An enum value's RDF projection requires the surrounding `EnumFieldSpec` context: the value carries a bare `Token`, and the spec's `PermissibleValue+` list supplies the per-token `Label`, `Description`, and `Meaning` metadata that the projection draws on. This is the only `Value` whose RDF lift cannot be determined from the value alone.
 
-- `LiteralChoiceValue { value, lang?, datatype? }` projects under the `TextValue` / `IntegerNumberValue` / `RealNumberValue` rules above, selected by which optional slots are present:
-  - if `datatype` present ⇒ project as the corresponding numeric variant (`xsd:integer` if datatype is `integer`; `xsd:decimal`/`xsd:float`/`xsd:double` otherwise),
-  - if `lang` present ⇒ project as `TextValue` with lang,
-  - otherwise ⇒ project as `TextValue` without lang.
-- `ControlledTermChoiceValue { term, label?, notation?, preferredLabel? }` projects as `ControlledTermValue` with the same slots.
+- `EnumValue { value: T }` projects as follows:
+  1. Look up `T` in the referenced `EnumFieldSpec`'s `PermissibleValue` entries to obtain the matching `pv`.
+  2. If `pv` carries one or more `Meaning` entries, project as one RDF IRI node per `Meaning` — i.e. an enum value with `n` meanings projects to `n` IRI nodes. Each IRI node carries `rdfs:label` triples drawn from the matching `Meaning`'s own `label` (one triple per localization in the `MultilingualString`); if the `Meaning` carries no `label`, `rdfs:label` triples are drawn from the enclosing `pv.label` instead, providing a fallback display label when the bound term's own label is not cached. `dc:description` triples are drawn from `pv.description` (one per localization). When this rule yields more than one RDF term, the surrounding statement that targets the enum value is duplicated once per term.
+  3. If `pv` carries no `Meaning`, project as `"T"^^xsd:string`. The accompanying `rdfs:label` and `dc:description` triples are not emitted in this case (the value is a bare lexical token).
+
+A conforming RDF emitter MUST therefore have access to the `EnumFieldSpec` of the surrounding `EmbeddedField` when projecting an `EnumValue`. RDF emitters that lift CEDAR data without schema context cannot project enum values faithfully.
 
 ### Attribute value
 

@@ -36,7 +36,7 @@ flowchart TD
     subgraph S5["§5 · Metadata"]
         ESAM["encode_schema_artifact_metadata"]
         EAM["encode_artifact_metadata"]
-        ESV["encode_schema_versioning"]
+        ESV["encode_schema_artifact_versioning"]
         ESAM --> EAM
         ESAM --> ESV
     end
@@ -134,7 +134,7 @@ Dot notation is used on grammar constructs, e.g. `T.schema_artifact_metadata` or
 
 **Helper Functions**
 
-- `key(E)` — the ASCII identifier string of `E`'s `EmbeddedArtifactKey`; defined as `E.embedded_artifact_key.key_identifier.ascii_identifier`
+- `key(E)` — the ASCII identifier string of `E`'s `EmbeddedArtifactKey`; defined as `E.embedded_artifact_key.ascii_identifier`
 - `iri(I)` — the IRI string of an `Iri` construct; defined as `I.iri_string`
 - `merge(a, b, ...)` — merge JSON objects left-to-right; later objects take precedence on key conflicts
 - `if P then k: v` — include key `k` with value `v` only when predicate `P` holds; otherwise omit
@@ -169,7 +169,7 @@ This section traces a minimal template and a corresponding instance through the 
 | Name | `"Sample Record"` |
 | Description | `"A minimal metadata template for biological samples"` |
 | Version | `1.0.0` |
-| Status | `DraftStatus` |
+| Status | `"draft"` |
 | Model version | `1.6.0` |
 | Created / modified | `2024-01-15T10:00:00Z` by `https://orcid.example.org/0000-0001-2345-6789` |
 
@@ -177,7 +177,7 @@ Two embedded fields:
 
 | Key | Property IRI | ValueRequirement | FieldSpec |
 |---|---|---|---|
-| `title` | `https://schema.org/name` | `Required` | `TextFieldSpec` (single line) |
+| `title` | `https://schema.org/name` | `"required"` | `TextFieldSpec` (single line) |
 | `count` | `https://example.org/sampleCount` | `Optional` | `IntegerNumberFieldSpec` |
 
 **Instance — "Sample 42"**
@@ -239,7 +239,7 @@ Two embedded fields:
     "count": { /* encode_embedded_field_schema — see Section 3.3 */ }
   },
 
-  // encode_template_required — fixed keys plus "title" (the only Required field)
+  // encode_template_required — fixed keys plus "title" (the only required field)
   "required": [
     "@context", "@id", "schema:isBasedOn", "schema:name",
     "schema:description", "pav:createdOn", "pav:createdBy",
@@ -269,7 +269,7 @@ Two embedded fields:
 
 Both fields are single-valued ([`is_multi`](#2-conventions) = false), so `encode_embedded_field_schema` returns the field object directly with no array wrapper.
 
-**`title` field** — `encode_text_field_spec` applies `STRING_VALUE_SHAPE`. `encode_embedding_constraints` sets `requiredValue: true` (Required). `encode_text_rendering_hint` returns `"textfield"` (absent hint defaults to single-line).
+**`title` field** — `encode_text_field_spec` applies `STRING_VALUE_SHAPE`. `encode_embedding_constraints` sets `requiredValue: true` (the embedding is `"required"`). `encode_text_rendering_hint` returns `"textfield"` (absent hint defaults to single-line).
 
 ```javascript
 {
@@ -387,16 +387,16 @@ Both fields are single-valued ([`is_multi`](#2-conventions) = false), so `encode
 
 ### `encode_schema_artifact_metadata(M: SchemaArtifactMetadata) → Object`
 
-CTM 1.6.0 schema artifacts (templates and fields) carry both human-readable metadata and versioning information at the top level of their JSON object. This function combines both concerns by delegating to `encode_artifact_metadata` for names and timestamps and to `encode_schema_versioning` for version and status, then merging the results into a single flat object.
+CTM 1.6.0 schema artifacts (templates and fields) carry both human-readable metadata and versioning information at the top level of their JSON object. This function combines both concerns by delegating to `encode_artifact_metadata` for names and timestamps and to `encode_schema_artifact_versioning` for version and status, then merging the results into a single flat object.
 
 ```javascript
 merge(
   encode_artifact_metadata(M.artifact_metadata),
-  encode_schema_versioning(M.schema_versioning)
+  encode_schema_artifact_versioning(M.schema_artifact_versioning)
 )
 ```
 
-**Calls:** [`encode_artifact_metadata`](#encode_artifact_metadatam-artifactmetadata--object), [`encode_schema_versioning`](#encode_schema_versioningv-schemaversioning--object)
+**Calls:** [`encode_artifact_metadata`](#encode_artifact_metadatam-artifactmetadata--object), [`encode_schema_artifact_versioning`](#encode_schema_artifact_versioningv-schemaversioning--object)
 
 ---
 
@@ -447,7 +447,7 @@ Returns a JSON object with the following keys:
 
 ---
 
-### `encode_schema_versioning(V: SchemaVersioning) → Object`
+### `encode_schema_artifact_versioning(V: SchemaArtifactVersioning) → Object`
 
 Encodes the version number, publication status, and schema format version of a schema artifact. Optional `pav:previousVersion` and `pav:derivedFrom` links are included only when the Structural Model carries them.
 
@@ -473,8 +473,8 @@ Returns the string corresponding to the `Status` kind:
 
 | `Status` kind | Returns |
 |---|---|
-| `DraftStatus` | `"bibo:draft"` |
-| `PublishedStatus` | `"bibo:published"` |
+| `"draft"` | `"bibo:draft"` |
+| `"published"` | `"bibo:published"` |
 
 ---
 
@@ -487,7 +487,7 @@ The top-level template object is the root of a CTM 1.6.0 template document. It i
 A key characteristic of this encoding is that information about each embedded field is **spread across multiple top-level keys** — it does not appear under a single nested key. For each embedded field `E` referencing a field `F`:
 
 - `"properties"` receives an entry at `key(E)` containing the full field schema (value shape, constraints, and UI hints) produced by `encode_embedded_field_schema`.
-- `"required"` receives `key(E)` if the embedding's value requirement is `Required`.
+- `"required"` receives `key(E)` if the embedding's value requirement is `"required"`.
 - `"_ui"` receives `key(E)` in its `"order"` array (and optionally in `"propertyLabels"`), derived from the embedding itself.
 - `"@context"` receives `key(E)` mapped to the field's property IRI, if the embedding carries a `Property`.
 
@@ -582,12 +582,12 @@ merge(
 
 ### `encode_template_required(T: Template) → Array`
 
-Builds the `required` array for the template's JSON Schema. The fixed instance-metadata keys are always required. In addition, any data-bearing embedded artifact whose effective `ValueRequirement` is `Required` contributes its key to this array.
+Builds the `required` array for the template's JSON Schema. The fixed instance-metadata keys are always required. In addition, any data-bearing embedded artifact whose effective `ValueRequirement` is `"required"` contributes its key to this array.
 
 ```javascript
 let required_embs = [ E in T.embedded_artifacts
                     | (E is EmbeddedField or E is EmbeddedTemplate)
-                      and effective value_requirement of E is Required ]
+                      and effective value_requirement of E is "required" ]
 
 [ "@context", "@id", "schema:isBasedOn", "schema:name",
   "schema:description", "pav:createdOn", "pav:createdBy",
@@ -743,17 +743,17 @@ merge(
 
 ### `encode_presentation_component_ui(PC: PresentationComponent) → Object`
 
-Returns the `_ui` object for a static field. All component kinds carry `"inputType"` and `"_content"`. `YoutubeVideoComponent` additionally carries `"_size"` when dimensions are present.
+Returns the `_ui` object for a static field. All component kinds carry `"inputType"` and `"_content"`.
 
 | `PresentationComponent` kind | `"inputType"` | `"_content"` |
 |---|---|---|
 | `PageBreakComponent` | `"page-break"` | `null` |
 | `SectionBreakComponent` | `"section-break"` | `null` |
 | `RichTextComponent` | `"richtext"` | `PC.html_content.unicode_string` |
-| `ImageComponent` | `"image"` | `iri(PC.image_source)` |
-| `YoutubeVideoComponent` | `"youtube"` | `PC.video_identifier.unicode_string` |
+| `ImageComponent` | `"image"` | `iri(PC.iri)` |
+| `YoutubeVideoComponent` | `"youtube"` | `iri(PC.iri)` |
 
-For `YoutubeVideoComponent`, if `PC.size` is present, also merge `{ "_size": { "width": PC.size.width, "height": PC.size.height } }` into the result.
+`ImageComponent.label`, `ImageComponent.description`, `YoutubeVideoComponent.label`, and `YoutubeVideoComponent.description` accessibility metadata are not surfaced in CTM 1.6.0 output (the legacy form has no slot for them). See Section 14, Known Gaps.
 
 ---
 
@@ -812,7 +812,7 @@ The placeholders mean:
 
 - **`<ui-extras>`** — additional keys to merge into `_ui` beyond the base `hidden` flag. At minimum, every field spec adds `"inputType"` here. Temporal fields also add `"temporalGranularity"` and similar hints.
 
-Field specs that do not follow this skeleton (multiple choice and attribute-value) are noted explicitly in their entries.
+Field specs that do not follow this skeleton (multi-valued enum and attribute-value) are noted explicitly in their entries.
 
 **Value Shapes**
 
@@ -853,10 +853,10 @@ Returns `{ "requiredValue": V }` where `V` depends on the effective value requir
 
 | Effective `ValueRequirement` | `"requiredValue"` |
 |---|---|
-| `Required` | `true` |
-| `Recommended` or `Optional` | `false` |
+| `"required"` | `true` |
+| `"recommended"` or `"optional"` | `false` |
 
-> **Caution:** The `Recommended` and `Optional` distinctions from the Structural Model are both encoded as `"requiredValue": false` and are therefore indistinguishable in CTM 1.6.0 output. This is not a JSON Schema concept — `"requiredValue"` is a CEDAR tooling hint only. The JSON Schema `"required"` array (produced by `encode_template_required`) separately handles enforcement, and it too only distinguishes `Required` from everything else. The `Recommended`/`Optional` distinction is entirely lost in this encoding.
+> **Caution:** The `"recommended"` and `"optional"` distinctions from the Structural Model are both encoded as `"requiredValue": false` and are therefore indistinguishable in CTM 1.6.0 output. This is not a JSON Schema concept — `"requiredValue"` is a CEDAR tooling hint only. The JSON Schema `"required"` array (produced by `encode_template_required`) separately handles enforcement, and it too only distinguishes `"required"` from everything else. The `"recommended"`/`"optional"` distinction is entirely lost in this encoding.
 
 ### `encode_embedding_ui(E: EmbeddedField) → Object`
 
@@ -864,7 +864,7 @@ Returns a JSON object with the following keys:
 
 | Key | Value | Condition |
 |---|---|---|
-| `"hidden"` | `true` | Only when `E.visibility = Hidden`; omit otherwise |
+| `"hidden"` | `true` | Only when `E.visibility = "hidden"`; omit otherwise |
 
 ---
 
@@ -891,12 +891,12 @@ Text fields accept free-form string input. The rendering hint determines whether
 
 ### `encode_text_rendering_hint(hint: TextRenderingHint or absent) → String`
 
-Returns the string corresponding to the hint kind:
+Returns the string corresponding to the hint value:
 
-| `TextRenderingHint` kind | Returns |
+| `TextRenderingHint` value | Returns |
 |---|---|
-| `SingleLineTextRenderingHint` or absent | `"textfield"` |
-| `MultiLineTextRenderingHint` | `"textarea"` |
+| `"singleLine"` or absent | `"textfield"` |
+| `"multiLine"` | `"textarea"` |
 
 ---
 
@@ -978,9 +978,9 @@ Returns the XSD datatype string for the `DateValueType` kind:
 
 | `DateValueType` kind | Returns |
 |---|---|
-| `YearValueType` | `"xsd:gYear"` |
-| `YearMonthValueType` | `"xsd:gYearMonth"` |
-| `FullDateValueType` | `"xsd:date"` |
+| `"year"` | `"xsd:gYear"` |
+| `"yearMonth"` | `"xsd:gYearMonth"` |
+| `"fullDate"` | `"xsd:date"` |
 
 ### `encode_date_granularity(DVT: DateValueType) → String`
 
@@ -988,9 +988,9 @@ Returns the `temporalGranularity` string for the `DateValueType` kind:
 
 | `DateValueType` kind | Returns |
 |---|---|
-| `YearValueType` | `"year"` |
-| `YearMonthValueType` | `"month"` |
-| `FullDateValueType` | `"day"` |
+| `"year"` | `"year"` |
+| `"yearMonth"` | `"month"` |
+| `"fullDate"` | `"day"` |
 
 ### `encode_date_format(DF: DateComponentOrder) → String`
 
@@ -998,9 +998,9 @@ Returns the `dateFormat` string for the `DateComponentOrder` kind:
 
 | `DateComponentOrder` kind | Returns |
 |---|---|
-| `DayMonthYearOrder` | `"D/M/YYYY"` |
-| `MonthDayYearOrder` | `"M/D/YYYY"` |
-| `YearMonthDayOrder` | `"YYYY/M/D"` |
+| `"dayMonthYear"` | `"D/M/YYYY"` |
+| `"monthDayYear"` | `"M/D/YYYY"` |
+| `"yearMonthDay"` | `"YYYY/M/D"` |
 
 ---
 
@@ -1018,10 +1018,10 @@ Time fields always use the `xsd:time` datatype. The `temporalGranularity` and op
 |---|---|---|
 | `"inputType"` | `"temporal"` | Always present |
 | `"temporalGranularity"` | `encode_time_precision(FT.time_precision)` | Always present |
-| `"timezoneEnabled"` | `true` | Only when `FT.timezone_requirement = TimezoneRequired` |
-| `"timezoneEnabled"` | `false` | Only when `FT.timezone_requirement = TimezoneNotRequired` |
-| `"inputTimeFormat"` | `"12h"` | Only when `FT.time_rendering_hint.time_format = TwelveHourTimeFormat` |
-| `"inputTimeFormat"` | `"24h"` | Only when `FT.time_rendering_hint.time_format = TwentyFourHourTimeFormat` |
+| `"timezoneEnabled"` | `true` | Only when `FT.timezone_requirement = "timezoneRequired"` |
+| `"timezoneEnabled"` | `false` | Only when `FT.timezone_requirement = "timezoneNotRequired"` |
+| `"inputTimeFormat"` | `"12h"` | Only when `FT.time_rendering_hint.time_format = "twelveHour"` |
+| `"inputTimeFormat"` | `"24h"` | Only when `FT.time_rendering_hint.time_format = "twentyFourHour"` |
 
 **Calls:** [`encode_embedding_constraints`](#encode_embedding_constraintse-embeddedfield--object), [`encode_embedding_ui`](#encode_embedding_uie-embeddedfield--object), [`encode_time_precision`](#encode_time_precisiontp-timeprecision-or-absent--string)
 
@@ -1031,9 +1031,9 @@ Returns the `temporalGranularity` string for the `TimePrecision` kind:
 
 | `TimePrecision` kind | Returns |
 |---|---|
-| `HourMinutePrecision` | `"minute"` |
-| `HourMinuteSecondPrecision` | `"second"` |
-| `HourMinuteSecondFractionPrecision` | `"decimalSecond"` |
+| `"hourMinute"` | `"minute"` |
+| `"hourMinuteSecond"` | `"second"` |
+| `"hourMinuteSecondFraction"` | `"decimalSecond"` |
 | absent | `"decimalSecond"` |
 
 ---
@@ -1052,10 +1052,10 @@ Date-time fields always use the `xsd:dateTime` datatype. They follow the same pa
 |---|---|---|
 | `"inputType"` | `"temporal"` | Always present |
 | `"temporalGranularity"` | `encode_datetime_value_type(FT.datetime_value_type)` | Always present |
-| `"timezoneEnabled"` | `true` | Only when `FT.timezone_requirement = TimezoneRequired` |
-| `"timezoneEnabled"` | `false` | Only when `FT.timezone_requirement = TimezoneNotRequired` |
-| `"inputTimeFormat"` | `"12h"` | Only when `FT.date_time_rendering_hint.time_format = TwelveHourTimeFormat` |
-| `"inputTimeFormat"` | `"24h"` | Only when `FT.date_time_rendering_hint.time_format = TwentyFourHourTimeFormat` |
+| `"timezoneEnabled"` | `true` | Only when `FT.timezone_requirement = "timezoneRequired"` |
+| `"timezoneEnabled"` | `false` | Only when `FT.timezone_requirement = "timezoneNotRequired"` |
+| `"inputTimeFormat"` | `"12h"` | Only when `FT.date_time_rendering_hint.time_format = "twelveHour"` |
+| `"inputTimeFormat"` | `"24h"` | Only when `FT.date_time_rendering_hint.time_format = "twentyFourHour"` |
 
 **Calls:** [`encode_embedding_constraints`](#encode_embedding_constraintse-embeddedfield--object), [`encode_embedding_ui`](#encode_embedding_uie-embeddedfield--object), [`encode_datetime_value_type`](#encode_datetime_value_typedvt-datetimevaluetype--string)
 
@@ -1065,15 +1065,15 @@ Returns the `temporalGranularity` string for the `DateTimeValueType` kind:
 
 | `DateTimeValueType` kind | Returns |
 |---|---|
-| `DateHourMinuteValueType` | `"minute"` |
-| `DateHourMinuteSecondValueType` | `"second"` |
-| `DateHourMinuteSecondFractionValueType` | `"decimalSecond"` |
+| `"dateHourMinute"` | `"minute"` |
+| `"dateHourMinuteSecond"` | `"second"` |
+| `"dateHourMinuteSecondFraction"` | `"decimalSecond"` |
 
 ---
 
 ### `encode_controlled_term_field_spec(FT: ControlledTermFieldSpec, E: EmbeddedField) → Object`
 
-Controlled term fields constrain values to terms drawn from ontologies, branches of ontologies, named classes, or value sets. The four `_valueConstraints` list keys (`ontologies`, `branches`, `classes`, `valueSets`) are always present, each holding an array that is empty when no sources of that kind are configured. The `multipleChoice: false` flag distinguishes this from multi-select choice fields.
+Controlled term fields constrain values to terms drawn from ontologies, branches of ontologies, named classes, or value sets. The four `_valueConstraints` list keys (`ontologies`, `branches`, `classes`, `valueSets`) are always present, each holding an array that is empty when no sources of that kind are configured. The `multipleChoice: false` flag distinguishes this from multi-valued enum fields.
 
 **Value shape:** `IRI_VALUE_SHAPE` | **Required:** `[]`
 
@@ -1137,59 +1137,52 @@ Returns a JSON object with the following keys:
 
 ---
 
-### `encode_single_choice_field_spec(FT: SingleChoiceFieldSpec, E: EmbeddedField) → Object`
+### `encode_single_valued_enum_field_spec(FT: SingleValuedEnumFieldSpec, E: EmbeddedField) → Object`
 
-`SingleChoiceFieldSpec` is either a `LiteralSingleChoiceFieldSpec` or a `ControlledTermSingleChoiceFieldSpec`. The kind of `FT` determines the value shape and the option encoding function: literal-form fields use `STRING_VALUE_SHAPE` and encode options with `encode_literal_choice_option`; controlled-term-form fields replace `"@value"` with `"@id"` in the value shape and encode options with `encode_controlled_term_choice_option`. Because the value kind is declared structurally on the field spec itself, no inspection of individual options is needed.
+`SingleValuedEnumFieldSpec` declares a closed list of `PermissibleValue` entries. CTM 1.6.0 has no native equivalent for the Structural Model's enum-with-meanings construct: this encoder maps the spec into the legacy `"literals"` list, using each permissible value's canonical `Token` as the legacy literal label. Per-value `Label`, `Description`, and `Meaning` metadata is dropped (see Section 14, Known Gaps). The `multipleChoice: false` flag distinguishes this from the multi-valued enum case.
 
-**Value shape:** `STRING_VALUE_SHAPE` (literal-form); for controlled-term-form replace `"@value"` with `"@id": { "type": "string", "format": "uri" }` | **Required:** `[]`
+**Value shape:** `STRING_VALUE_SHAPE` | **Required:** `[]`
 
 **`_valueConstraints` extras:**
 
 | Key | Value | Condition |
 |---|---|---|
 | `"multipleChoice"` | `false` | Always present |
-| `"literals"` | `[ encode_literal_choice_option(O) for each O in FT.options ]` | `LiteralSingleChoiceFieldSpec` |
-| `"literals"` | `[ encode_controlled_term_choice_option(O) for each O in FT.options ]` | `ControlledTermSingleChoiceFieldSpec` |
+| `"literals"` | `[ encode_permissible_value(PV) for each PV in FT.permissible_values ]` | Always present |
+| `"defaultValue"` | `FT.default_value.token.string` | Omit if absent |
 
-**`_ui` extras:** `{ "inputType": encode_single_choice_rendering_hint(FT.single_choice_rendering_hint) }`
+**`_ui` extras:** `{ "inputType": encode_single_valued_enum_rendering_hint(FT.rendering_hint) }`
 
-**Calls:** [`encode_embedding_constraints`](#encode_embedding_constraintse-embeddedfield--object), [`encode_embedding_ui`](#encode_embedding_uie-embeddedfield--object), [`encode_single_choice_rendering_hint`](#encode_single_choice_rendering_hinthint-singlechoicerenderinghint-or-absent--string), [`encode_literal_choice_option`](#encode_literal_choice_optiono-literalchoiceoption--object), [`encode_controlled_term_choice_option`](#encode_controlled_term_choice_optiono-controlledtermchoiceoption--object)
+**Calls:** [`encode_embedding_constraints`](#encode_embedding_constraintse-embeddedfield--object), [`encode_embedding_ui`](#encode_embedding_uie-embeddedfield--object), [`encode_single_valued_enum_rendering_hint`](#encode_single_valued_enum_rendering_hinthint-singlevaluedenumrenderinghint-or-absent--string), [`encode_permissible_value`](#encode_permissible_valuepv-permissiblevalue--object)
 
-### `encode_single_choice_rendering_hint(hint: SingleChoiceRenderingHint or absent) → String`
+### `encode_single_valued_enum_rendering_hint(hint: SingleValuedEnumRenderingHint or absent) → String`
 
-Returns the `inputType` string for the hint kind:
+Returns the `inputType` string for the hint value:
 
-| `SingleChoiceRenderingHint` kind | Returns |
+| `SingleValuedEnumRenderingHint` value | Returns |
 |---|---|
-| `RadioRenderingHint` or absent | `"radio"` |
-| `SingleSelectDropdownRenderingHint` | `"list"` |
+| `"radio"` or absent | `"radio"` |
+| `"dropdown"` | `"list"` |
 
-### `encode_literal_choice_option(O: LiteralChoiceOption) → Object`
+### `encode_permissible_value(PV: PermissibleValue) → Object`
 
-Encodes a single option from a `LiteralSingleChoiceFieldSpec` or `LiteralMultipleChoiceFieldSpec`. The option value is always a `Literal`; use its lexical form as the label string.
+Encodes a single `PermissibleValue` from a `SingleValuedEnumFieldSpec` or `MultiValuedEnumFieldSpec` as a CTM 1.6.0 `literals`-array entry. The legacy entry carries a single label string; the encoder uses the permissible value's `Token` as that label. The `Token` is the canonical wire-form key in the Structural Model and remains the value submitted in instances.
 
-| Key | Value | Condition |
-|---|---|---|
-| `"label"` | lexical form of `O.literal` | Always present |
-| `"selectedByDefault"` | `true` | Omit if `O.default_option` absent |
-
-### `encode_controlled_term_choice_option(O: ControlledTermChoiceOption) → Object`
-
-Encodes a single option from a `ControlledTermSingleChoiceFieldSpec` or `ControlledTermMultipleChoiceFieldSpec`. The option value is always a `ControlledTermValue`; encode its IRI and label.
+`PermissibleValue.label` and `PermissibleValue.description` localizations are dropped — CTM 1.6.0 has no slot for them on a literals entry. `PermissibleValue.meanings` is also dropped: CTM 1.6.0 literal options carry no ontology binding. See Section 14, Known Gaps.
 
 | Key | Value | Condition |
 |---|---|---|
-| `"@id"` | `iri(O.controlled_term_value.term_iri)` | Always present |
-| `"rdfs:label"` | `O.controlled_term_value.label.unicode_string` | Omit if `label` absent |
-| `"selectedByDefault"` | `true` | Omit if `O.default_option` absent |
+| `"label"` | `PV.token.string` | Always present |
+
+`selectedByDefault` is no longer encoded per option. The Structural Model represents enum defaults at the spec level (`SingleValuedEnumFieldSpec.defaultValue` / `MultiValuedEnumFieldSpec.defaultValues`); these are emitted via `defaultValue` / `defaultValues` keys in `_valueConstraints` rather than as per-option flags. CTM 1.6.0 tooling support for those keys is not guaranteed (see Section 14).
 
 ---
 
-### `encode_multiple_choice_field_spec(FT: MultipleChoiceFieldSpec, E: EmbeddedField) → Object`
+### `encode_multi_valued_enum_field_spec(FT: MultiValuedEnumFieldSpec, E: EmbeddedField) → Object`
 
-Multiple choice fields allow instances to carry zero or more selected options, so the value schema is wrapped in a JSON Schema array with `minItems: 0`. This field spec does not follow the standard skeleton. The `multipleChoice: true` flag distinguishes this from single-choice fields.
+Multi-valued enum fields allow instances to carry zero or more selected permissible values, so the value schema is wrapped in a JSON Schema array with `minItems: 0`. This field spec does not follow the standard skeleton. The `multipleChoice: true` flag distinguishes this from single-valued enum fields.
 
-As with `encode_single_choice_field_spec`, the kind of `FT` — `LiteralMultipleChoiceFieldSpec` or `ControlledTermMultipleChoiceFieldSpec` — determines the item value shape and the option encoding function directly. No inspection of individual options is needed.
+As with `encode_single_valued_enum_field_spec`, per-value `Label`, `Description`, and `Meaning` metadata is dropped at the legacy `literals` entries (see Section 14).
 
 This field spec does not follow the standard skeleton. It wraps the value schema in an array:
 
@@ -1208,28 +1201,26 @@ This field spec does not follow the standard skeleton. It wraps the value schema
 }
 ```
 
-For `ControlledTermMultipleChoiceFieldSpec`, replace `"@value"` in `items.properties` with `"@id": { "type": "string", "format": "uri" }`.
-
 **`_valueConstraints` extras:**
 
 | Key | Value | Condition |
 |---|---|---|
 | `"multipleChoice"` | `true` | Always present |
-| `"literals"` | `[ encode_literal_choice_option(O) for each O in FT.options ]` | `LiteralMultipleChoiceFieldSpec` |
-| `"literals"` | `[ encode_controlled_term_choice_option(O) for each O in FT.options ]` | `ControlledTermMultipleChoiceFieldSpec` |
+| `"literals"` | `[ encode_permissible_value(PV) for each PV in FT.permissible_values ]` | Always present |
+| `"defaultValues"` | `[ T.string for each T in FT.default_values ]` | Omit if absent or empty |
 
-**`_ui` extras:** `{ "inputType": encode_multiple_choice_rendering_hint(FT.multiple_choice_rendering_hint) }`
+**`_ui` extras:** `{ "inputType": encode_multi_valued_enum_rendering_hint(FT.rendering_hint) }`
 
-**Calls:** [`encode_embedding_constraints`](#encode_embedding_constraintse-embeddedfield--object), [`encode_embedding_ui`](#encode_embedding_uie-embeddedfield--object), [`encode_multiple_choice_rendering_hint`](#encode_multiple_choice_rendering_hinthint-multiplechoicerenderinghint-or-absent--string), [`encode_literal_choice_option`](#encode_literal_choice_optiono-literalchoiceoption--object), [`encode_controlled_term_choice_option`](#encode_controlled_term_choice_optiono-controlledtermchoiceoption--object)
+**Calls:** [`encode_embedding_constraints`](#encode_embedding_constraintse-embeddedfield--object), [`encode_embedding_ui`](#encode_embedding_uie-embeddedfield--object), [`encode_multi_valued_enum_rendering_hint`](#encode_multi_valued_enum_rendering_hinthint-multivaluedenumrenderinghint-or-absent--string), [`encode_permissible_value`](#encode_permissible_valuepv-permissiblevalue--object)
 
-### `encode_multiple_choice_rendering_hint(hint: MultipleChoiceRenderingHint or absent) → String`
+### `encode_multi_valued_enum_rendering_hint(hint: MultiValuedEnumRenderingHint or absent) → String`
 
-Returns the `inputType` string for the hint kind:
+Returns the `inputType` string for the hint value:
 
-| `MultipleChoiceRenderingHint` kind | Returns |
+| `MultiValuedEnumRenderingHint` value | Returns |
 |---|---|
-| `CheckboxRenderingHint` or absent | `"checkbox"` |
-| `MultiSelectDropdownRenderingHint` | `"list"` |
+| `"checkbox"` or absent | `"checkbox"` |
+| `"multiSelect"` | `"list"` |
 
 ---
 
@@ -1369,14 +1360,14 @@ Dispatches to the encoding function for the `Value` kind:
 | `TimeValue` | `encode_time_value(V)` |
 | `DateTimeValue` | `encode_datetime_value(V)` |
 | `ControlledTermValue` | `encode_controlled_term_value(V)` |
-| `ChoiceValue` | `encode_choice_value(V)` |
+| `EnumValue` | `encode_enum_value(V)` |
 | `LinkValue` | `encode_link_value(V)` |
 | `EmailValue` | `encode_email_value(V)` |
 | `PhoneNumberValue` | `encode_phone_number_value(V)` |
 | `ExternalAuthorityValue` | `encode_external_authority_value(V)` |
 | `AttributeValue` | `encode_attribute_value(V)` |
 
-**Calls:** [`encode_text_value`](#encode_text_valuev-textvalue--object), [`encode_integer_number_value`](#encode_integer_number_valuev-integernumbervalue--object), [`encode_real_number_value`](#encode_real_number_valuev-realnumbervalue--object), `encode_boolean_value`, [`encode_date_value`](#encode_date_valuev-datevalue--object), [`encode_time_value`](#encode_time_valuev-timevalue--object), [`encode_datetime_value`](#encode_datetime_valuev-datetimevalue--object), [`encode_controlled_term_value`](#encode_controlled_term_valuev-controlledtermvalue--object), [`encode_choice_value`](#encode_choice_valuev-choicevalue--object), [`encode_link_value`](#encode_link_valuev-linkvalue--object), [`encode_email_value`](#encode_email_valuev-emailvalue--object), [`encode_phone_number_value`](#encode_phone_number_valuev-phonenumbervalue--object), [`encode_external_authority_value`](#encode_external_authority_valuev-externalauthorityvalue--object), [`encode_attribute_value`](#encode_attribute_valuev-attributevalue--object)
+**Calls:** [`encode_text_value`](#encode_text_valuev-textvalue--object), [`encode_integer_number_value`](#encode_integer_number_valuev-integernumbervalue--object), [`encode_real_number_value`](#encode_real_number_valuev-realnumbervalue--object), `encode_boolean_value`, [`encode_date_value`](#encode_date_valuev-datevalue--object), [`encode_time_value`](#encode_time_valuev-timevalue--object), [`encode_datetime_value`](#encode_datetime_valuev-datetimevalue--object), [`encode_controlled_term_value`](#encode_controlled_term_valuev-controlledtermvalue--object), [`encode_enum_value`](#encode_enum_valuev-enumvalue--object), [`encode_link_value`](#encode_link_valuev-linkvalue--object), [`encode_email_value`](#encode_email_valuev-emailvalue--object), [`encode_phone_number_value`](#encode_phone_number_valuev-phonenumbervalue--object), [`encode_external_authority_value`](#encode_external_authority_valuev-externalauthorityvalue--object), [`encode_attribute_value`](#encode_attribute_valuev-attributevalue--object)
 
 ---
 
@@ -1460,16 +1451,17 @@ Returns a JSON object with the following keys:
 
 ---
 
-### `encode_choice_value(V: ChoiceValue) → Object`
+### `encode_enum_value(V: EnumValue) → Object`
 
-Dispatches on the concrete kind of `V`:
+Encodes an `EnumValue` as a CTM 1.6.0 string-shaped JSON-LD value. The `Token` carried by the `EnumValue` is emitted under `"@value"`. CTM 1.6.0 has no native concept of an enum value distinct from a string literal — the legacy form treats the submitted token as a plain string, with conformance to the spec's permissible-value list enforced at the schema layer (the `literals` array under `_valueConstraints`).
 
-| `V` kind | Returns |
-|---|---|
-| `LiteralChoiceValue` | `encode_text_value(as TextValue wrapping V.literal)` |
-| `ControlledTermChoiceValue` | `encode_controlled_term_value(V.controlled_term_value)` |
+```javascript
+{ "@value": V.token.string }
+```
 
-**Calls:** [`encode_text_value`](#encode_text_valuev-textvalue--object), [`encode_controlled_term_value`](#encode_controlled_term_valuev-controlledtermvalue--object)
+Per-value `Meaning` bindings carried by the source spec are not surfaced at the instance: the legacy wire form has no slot for them. Consumers that need ontology meanings MUST consult the source `EnumFieldSpec`.
+
+**Calls:** none.
 
 ---
 
@@ -1480,7 +1472,9 @@ Returns a JSON object with the following keys:
 | Key | Value | Condition |
 |---|---|---|
 | `"@id"` | `iri(V.iri)` | Always present |
-| `"rdfs:label"` | `V.link_label.unicode_string` | Omit if `V.link_label` absent |
+| `"rdfs:label"` | first localization of `V.label` (lexical form only) | Omit if `V.label` absent |
+
+CTM 1.6.0's `rdfs:label` slot accepts a single string only. When `V.label` is a multi-localization `MultilingualString`, the first entry is emitted; remaining localizations are dropped. See Section 14, Known Gaps.
 
 ---
 
@@ -1626,7 +1620,7 @@ Implementations SHOULD confirm that annotation IRI keys are valid within the CTM
 
 3. **`AlternativeLabel*` on `DescriptiveMetadata`** — No CTM 1.6.0 equivalent; omitted.
 
-4. **`DefaultOption` on `LiteralChoiceOption` and `ControlledTermChoiceOption`** — CTM 1.6.0 has no standardised `selectedByDefault` key in the `literals` array. `encode_literal_choice_option` and `encode_controlled_term_choice_option` include `"selectedByDefault": true` as a custom extension when a default is set. Support in CTM 1.6.0 tooling is not guaranteed.
+4. **`PermissibleValue` metadata** — CTM 1.6.0 `literals`-array entries carry only a single `label` string, with no slot for per-value `Description`, ontology `Meaning` bindings, or multilingual `Label` localizations. `encode_permissible_value` drops all of these and emits the value's canonical `Token` as the legacy `label`. Spec-level enum defaults (`SingleValuedEnumFieldSpec.defaultValue` and `MultiValuedEnumFieldSpec.defaultValues`) are emitted as `defaultValue` / `defaultValues` keys under `_valueConstraints`; CTM 1.6.0 tooling support for those keys is not guaranteed. The legacy `selectedByDefault` per-option flag is no longer produced — the Structural Model now represents enum defaults exclusively at the spec level. Embedding-level defaults (`EmbeddedSingleValuedEnumField.defaultValue` / `EmbeddedMultiValuedEnumField.defaultValue`) have no CTM 1.6.0 equivalent and are dropped.
 
 5. **Default values for link, email, phone number, and external authority field specs** — CTM 1.6.0 `_valueConstraints.defaultValue` is primarily defined for text fields. Default value encoding for `LinkDefaultValue`, `EmailDefaultValue`, `PhoneNumberDefaultValue`, and external authority defaults is implementation-defined.
 
@@ -1639,3 +1633,5 @@ Implementations SHOULD confirm that annotation IRI keys are valid within the CTM
 9. **Language-tagged text values** — CTM 1.6.0 does not model language-tagged strings explicitly. The `@language` key is included in the encoded value object as a JSON-LD extension; support in CTM 1.6.0 tooling is not guaranteed.
 
 10. **External authority `inputType` values** — The `inputType` string values for ORCID, ROR, DOI, PubMed, RRID, and NIH Grant fields are not standardised in the published CTM 1.6.0 specification and SHOULD be confirmed against the deployed implementation.
+
+11. **`ImageComponent` and `YoutubeVideoComponent` accessibility metadata** — The `label` (alt text / caption title) and `description` (longer accessibility text) slots on `ImageComponent` and `YoutubeVideoComponent` have no CTM 1.6.0 equivalent and are dropped. Conforming consumers that require accessibility metadata MUST work with the Structural Model wire form rather than the CTM 1.6.0 mapping.

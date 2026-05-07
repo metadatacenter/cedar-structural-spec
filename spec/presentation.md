@@ -22,7 +22,7 @@ These constructs replace the older practice of treating static presentation cons
 
 Presentation constructs appear in a `Template` only through `EmbeddedPresentationComponent`.
 
-An `EmbeddedPresentationComponent` carries embedding-specific properties such as `EmbeddedArtifactKey`, visibility, and label override where applicable.
+An `EmbeddedPresentationComponent` carries an `EmbeddedArtifactKey` and an optional `Visibility`. It does not carry a value requirement, cardinality, default value, label override, or property: it contributes no instance data and exists purely to contribute presentational structure.
 
 `RichTextComponent` carries reusable HTML content.
 
