@@ -1,0 +1,42 @@
+[book]
+title = "CEDAR Template Model Specification"
+authors = ["Matthew Horridge"]
+description = "Abstract structural model for the CEDAR Template Model"
+src = "spec"
+language = "en"
+
+[output.html]
+default-theme = "light"
+preferred-dark-theme = "navy"
+git-repository-url = "https://github.com/metadatacenter/cedar-structural-spec"
+edit-url-template = "https://github.com/metadatacenter/cedar-structural-spec/edit/main/{path}"
+site-url = "/"
+additional-css = ["theme/cedar.css"]
+
+[output.html.fold]
+enable = true
+level = 1
+
+[output.html.search]
+enable = true
+limit-results = 30
+teaser-word-count = 30
+use-boolean-and = true
+boost-title = 2
+boost-hierarchy = 1
+boost-paragraph = 1
+expand = true
+heading-split-level = 3
+
+[output.html.print]
+enable = true
+
+[output.html.playground]
+editable = false
+runnable = false
+
+[preprocessor.index]
+
+[preprocessor.ebnf-xref]
+command = "node tools/mdbook-ebnf-xref/index.js"
+before = ["links"]

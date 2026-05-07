@@ -1,0 +1,137 @@
+/* Cedar spec — small visual tweaks on top of mdBook's default theme. */
+
+/* EBNF / wire-grammar code blocks — keep at the default font size
+   (mdBook shrinks <pre><code> by default, which makes productions hard
+   to read), with a slightly tighter line height. */
+pre code {
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+/* Spec tables — left-align by default, slightly tighter cell padding. */
+.content table th,
+.content table td {
+  text-align: left;
+  padding: 0.4rem 0.7rem;
+}
+
+/* Blockquotes (used for spec notes / advisories) — make them stand out
+   without dominating. */
+.content blockquote {
+  border-left: 4px solid #0d8a8a;
+  background: rgba(13, 138, 138, 0.06);
+  padding: 0.6rem 1rem;
+}
+
+/* Make in-text production-name `code spans` slightly more emphatic. */
+.content p code,
+.content li code,
+.content td code {
+  background: rgba(0, 0, 0, 0.05);
+  padding: 0.05rem 0.3rem;
+  border-radius: 3px;
+}
+
+/* ---------- EBNF block rendering (mdbook-ebnf-xref output) ---------- */
+
+pre.ebnf {
+  background: var(--quote-bg, #f6f7f6);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 4px;
+  padding: 0.8rem 1rem;
+  overflow-x: auto;
+  font-size: 1.4rem;
+}
+
+pre.ebnf code {
+  font-family: var(--mono-font, "Source Code Pro", Consolas, monospace);
+  font-size: 1.4rem;
+  line-height: 1.55;
+  background: transparent;
+  padding: 0;
+}
+
+/* LHS (definition) — anchor target. Slightly heavier weight. */
+.ebnf-def {
+  color: #0d6f6f;
+  font-weight: 600;
+  text-decoration: none;
+}
+.ebnf-def:hover {
+  text-decoration: underline;
+}
+
+/* RHS reference — clickable link to the definition. */
+.ebnf-ref {
+  color: #0d6f6f;
+  text-decoration: none;
+  border-bottom: 1px dotted rgba(13, 111, 111, 0.5);
+}
+.ebnf-ref:hover {
+  border-bottom-style: solid;
+}
+
+/* Identifiers we couldn't resolve — render plain so dangling refs are
+   visible during authoring. */
+.ebnf-ident {
+  color: #b03030;
+}
+
+/* Operators (::= and :::) — subdued. */
+.ebnf-op {
+  color: #888;
+}
+
+/* Metasymbols ( | * + ? ) — accent. */
+.ebnf-meta {
+  color: #b66a00;
+  font-weight: 600;
+}
+
+/* Punctuation ( ( ) [ ] { } < > , ; : = ) — keep neutral. */
+.ebnf-punct {
+  color: #555;
+}
+
+/* Constructor forms / wire-grammar primitives (lower_snake_case). */
+.ebnf-ctor {
+  color: #2a4d8f;
+}
+
+/* String literals. */
+.ebnf-string {
+  color: #4a7a2a;
+}
+
+/* Inline EBNF comments ( //... ). */
+.ebnf-comment {
+  color: #888;
+  font-style: italic;
+}
+
+/* Dark theme adjustments. */
+.navy pre.ebnf,
+.coal pre.ebnf,
+.ayu pre.ebnf {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+.navy .ebnf-def, .coal .ebnf-def, .ayu .ebnf-def,
+.navy .ebnf-ref, .coal .ebnf-ref, .ayu .ebnf-ref {
+  color: #6dd3d3;
+}
+.navy .ebnf-ref, .coal .ebnf-ref, .ayu .ebnf-ref {
+  border-bottom-color: rgba(109, 211, 211, 0.5);
+}
+.navy .ebnf-ctor, .coal .ebnf-ctor, .ayu .ebnf-ctor {
+  color: #8aa9d9;
+}
+.navy .ebnf-string, .coal .ebnf-string, .ayu .ebnf-string {
+  color: #a8c97a;
+}
+.navy .ebnf-meta, .coal .ebnf-meta, .ayu .ebnf-meta {
+  color: #d8a157;
+}
+.navy .ebnf-ident, .coal .ebnf-ident, .ayu .ebnf-ident {
+  color: #e07b7b;
+}
