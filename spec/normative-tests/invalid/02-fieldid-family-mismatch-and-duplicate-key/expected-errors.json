@@ -1,0 +1,14 @@
+[
+  {
+    "category": "structural",
+    "path": "/members/1/artifactRef",
+    "production": "EmbeddedDateField",
+    "messageRegex": "artifactRef.*belongs to.*TextField|FieldId family.*mismatch|family.*does not match"
+  },
+  {
+    "category": "structural",
+    "path": "/members/1/key",
+    "production": "Template",
+    "messageRegex": "duplicate.*EmbeddedArtifact\\.key|key.*not unique|EmbeddedArtifact\\.key.*duplicate"
+  }
+]

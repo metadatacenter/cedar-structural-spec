@@ -1,0 +1,8 @@
+[
+  {
+    "category": "wireShape",
+    "path": "/values/0/values/0",
+    "production": "Value",
+    "messageRegex": "kind.*MysteryValue.*not.*recognised|kind.*MysteryValue.*not.*Value variant"
+  }
+]

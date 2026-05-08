@@ -1,0 +1,54 @@
+{
+  "kind": "TemplateInstance",
+  "id": "https://example.org/instances/observation-42",
+  "modelVersion": "2.0.0",
+  "metadata": {
+    "name": [{ "value": "Observation #42", "lang": "en" }],
+    "lifecycle": {
+      "createdOn": "2026-04-15T10:22:00Z",
+      "createdBy": "https://example.org/users/alice",
+      "modifiedOn": "2026-04-15T10:22:00Z",
+      "modifiedBy": "https://example.org/users/alice"
+    }
+  },
+  "templateRef": "https://example.org/templates/patient-observation",
+  "values": [
+    {
+      "kind": "FieldValue",
+      "key": "severity",
+      "values": [
+        { "kind": "EnumValue", "value": "severe" }
+      ]
+    },
+    {
+      "kind": "FieldValue",
+      "key": "observed",
+      "values": [
+        { "kind": "FullDateValue", "value": "2026-04-14" }
+      ]
+    },
+    {
+      "kind": "FieldValue",
+      "key": "occurrences",
+      "values": [
+        { "kind": "IntegerNumberValue", "value": "3" }
+      ]
+    },
+    {
+      "kind": "FieldValue",
+      "key": "diagnosis",
+      "values": [
+        {
+          "kind": "ControlledTermValue",
+          "term": "https://www.snomed.org/snomed-ct/concept/22298006",
+          "label": [{ "value": "Myocardial infarction", "lang": "en" }]
+        },
+        {
+          "kind": "ControlledTermValue",
+          "term": "https://www.snomed.org/snomed-ct/concept/49601007",
+          "label": [{ "value": "Disorder of cardiovascular system", "lang": "en" }]
+        }
+      ]
+    }
+  ]
+}

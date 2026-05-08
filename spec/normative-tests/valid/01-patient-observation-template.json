@@ -1,0 +1,116 @@
+{
+  "kind": "Template",
+  "id": "https://example.org/templates/patient-observation",
+  "modelVersion": "2.0.0",
+  "metadata": {
+    "name": [
+      { "value": "Patient observation", "lang": "en" },
+      { "value": "Beobachtung des Patienten", "lang": "de" }
+    ],
+    "description": [
+      { "value": "A single observation made about a patient.", "lang": "en" }
+    ],
+    "preferredLabel": [
+      { "value": "Observation", "lang": "en" }
+    ],
+    "altLabels": [
+      [{ "value": "Clinical observation", "lang": "en" }],
+      [{ "value": "Patient note", "lang": "en" }]
+    ],
+    "lifecycle": {
+      "createdOn": "2026-01-15T09:30:00Z",
+      "createdBy": "https://example.org/users/alice",
+      "modifiedOn": "2026-04-02T16:12:00Z",
+      "modifiedBy": "https://example.org/users/bob"
+    },
+    "versioning": {
+      "version": "1.2.0",
+      "status": "published",
+      "previousVersion": "https://example.org/templates/patient-observation/v/1.1.0"
+    },
+    "annotations": [
+      {
+        "property": "https://purl.org/dc/terms/license",
+        "body": {
+          "kind": "AnnotationIriValue",
+          "iri": "https://creativecommons.org/licenses/by/4.0/"
+        }
+      },
+      {
+        "property": "https://schema.org/keywords",
+        "body": {
+          "kind": "AnnotationStringValue",
+          "value": "patient,observation,clinical",
+          "lang": "en"
+        }
+      }
+    ]
+  },
+  "header": [{ "value": "Record one observation per submission.", "lang": "en" }],
+  "members": [
+    {
+      "kind": "EmbeddedTextField",
+      "key": "comment",
+      "artifactRef": "https://example.org/fields/comment",
+      "valueRequirement": "recommended",
+      "cardinality": { "min": 0, "max": 1 },
+      "visibility": "visible",
+      "labelOverride": {
+        "label": [{ "value": "Free-text comment", "lang": "en" }],
+        "altLabels": []
+      },
+      "property": {
+        "iri": "https://schema.org/comment"
+      }
+    },
+    {
+      "kind": "EmbeddedSingleValuedEnumField",
+      "key": "severity",
+      "artifactRef": "https://example.org/fields/severity",
+      "valueRequirement": "required",
+      "visibility": "visible",
+      "defaultValue": { "value": "moderate" },
+      "property": {
+        "iri": "https://example.org/ontology/severity"
+      }
+    },
+    {
+      "kind": "EmbeddedDateField",
+      "key": "observed",
+      "artifactRef": "https://example.org/fields/observed",
+      "valueRequirement": "required",
+      "cardinality": { "min": 1, "max": 1 },
+      "visibility": "visible",
+      "defaultValue": {
+        "kind": "FullDateValue",
+        "value": "2026-01-01"
+      },
+      "property": {
+        "iri": "https://schema.org/observationDate"
+      }
+    },
+    {
+      "kind": "EmbeddedIntegerNumberField",
+      "key": "occurrences",
+      "artifactRef": "https://example.org/fields/occurrences",
+      "valueRequirement": "optional",
+      "cardinality": { "min": 0, "max": 1 },
+      "visibility": "visible",
+      "defaultValue": { "value": "1" },
+      "property": {
+        "iri": "https://example.org/ontology/occurrenceCount"
+      }
+    },
+    {
+      "kind": "EmbeddedControlledTermField",
+      "key": "diagnosis",
+      "artifactRef": "https://example.org/fields/diagnosis",
+      "valueRequirement": "required",
+      "cardinality": { "min": 1 },
+      "visibility": "visible",
+      "property": {
+        "iri": "https://example.org/ontology/diagnosis"
+      }
+    }
+  ]
+}

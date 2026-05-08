@@ -1,0 +1,24 @@
+{
+  "kind": "TemplateInstance",
+  "id": "https://example.org/instances/i1",
+  "modelVersion": "2.0.0",
+  "metadata": {
+    "name": [{ "value": "x", "lang": "en" }],
+    "lifecycle": {
+      "createdOn": "2026-04-15T10:22:00Z",
+      "createdBy": "https://example.org/u",
+      "modifiedOn": "2026-04-15T10:22:00Z",
+      "modifiedBy": "https://example.org/u"
+    }
+  },
+  "templateRef": "https://example.org/templates/patient-observation",
+  "values": [
+    {
+      "kind": "FieldValue",
+      "key": "severity",
+      "values": [
+        { "kind": "MysteryValue", "value": "severe" }
+      ]
+    }
+  ]
+}

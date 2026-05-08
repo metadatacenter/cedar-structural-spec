@@ -551,72 +551,195 @@ Two conforming JSON documents that differ only in JSON object property order or 
 
 ## 8. Examples
 
-### 8.1 A minimal `Template`
+This section walks through one fully-elaborated example end-to-end —
+a realistic `Template`, a `TemplateInstance` that conforms to it, a
+round-trip equality check, and two known-bad inputs that exercise the
+error model from §9. The goal is to give implementers a concrete
+fixture they can decode-and-encode against, and to make every cross-
+section reference (the polymorphic-only kind rule, wrapping
+principle, defaultValue kind-drop, structural-invariant constraints)
+visible at one position in the wire form.
 
-The `name` property below is a `MultilingualString` (§6.2): an array of `{value, lang}` entries, one per language. A single-language artifact uses a single-element array. The same shape applies to `description`, `preferredLabel`, each entry of `altLabels`, the `Template`'s `header` and `footer`, controlled-term labels, unit labels, and any other human-display text.
+The JSON in this section is **embedded from machine-readable test
+fixtures** under
+[`spec/normative-tests/`](normative-tests/README.md). A binding
+SHOULD treat that directory as a cross-language acceptance suite:
+every binding MUST decode every file under `valid/`, encode the
+result back to JSON, and verify §7 round-trip equivalence; every
+binding MUST decode every file under `invalid/<case>/input.json`
+and report at least the errors listed in
+`invalid/<case>/expected-errors.json`. The test fixtures are the
+authoritative source — this section embeds them via mdBook
+`{{#include}}` so the rendered prose and the test data cannot
+drift apart.
 
-```json
-{
-  "kind": "Template",
-  "id": "https://example.org/templates/empty",
-  "modelVersion": "2.0.0",
-  "metadata": {
-    "name": [{ "value": "Empty", "lang": "en" }],
-    "lifecycle": {
-      "createdOn": "2024-01-01T00:00:00Z",
-      "createdBy": "https://example.org/u",
-      "modifiedOn": "2024-01-01T00:00:00Z",
-      "modifiedBy": "https://example.org/u"
-    },
-    "versioning": {
-      "version": "1.0.0",
-      "status": "draft"
-    }
-  },
-  "members": []
-}
-```
+The example is deliberately compact rather than minimal: every wire
+shape this spec defines that is reachable from a `Template` appears
+at least once. The companion `TemplateInstance` exercises every value
+shape that is reachable from a `FieldValue`. Smaller variations
+(empty `members`, no annotations, single-language `name`) are
+straightforward subsets of the larger artifact and are not
+separately illustrated.
 
-### 8.2 A `Template` with one embedded text field
+### 8.1 A `Template` exercising the principal wire shapes
 
-```json
-{
-  "kind": "Template",
-  "id": "https://example.org/templates/note",
-  "modelVersion": "2.0.0",
-  "metadata": { "name": "...", "lifecycle": "...", "versioning": "..." },
-  "members": [
-    {
-      "kind": "EmbeddedTextField",
-      "key": "title",
-      "artifactRef": "https://example.org/fields/title",
-      "valueRequirement": "required",
-      "property": { "iri": "https://schema.org/name" }
-    }
-  ]
-}
-```
-
-### 8.3 A `TemplateInstance` for the above template
+The `Template` below describes a single **patient observation**: an
+identifier, a free-text comment, a single-valued enum severity, a
+date observed, an integer-valued count of repeated occurrences (with
+unit and bounds), and a controlled-term diagnosis. It carries
+multi-language `name` and `description`, a versioned lifecycle, and
+two annotations on the metadata.
 
 ```json
-{
-  "kind": "TemplateInstance",
-  "id": "https://example.org/instances/i1",
-  "modelVersion": "2.0.0",
-  "metadata": { "name": "...", "lifecycle": "...", "annotations": [] },
-  "templateRef": "https://example.org/templates/note",
-  "values": [
-    {
-      "kind": "FieldValue",
-      "key": "title",
-      "values": [
-        { "kind": "TextValue", "value": "First Note" }
-      ]
-    }
-  ]
-}
+{{#include normative-tests/valid/01-patient-observation-template.json}}
 ```
+
+A few things in the above artifact are worth highlighting because
+they exercise specific rules:
+
+- **`metadata` flattening.** `SchemaArtifactMetadata`'s
+  `ArtifactMetadata` properties (`name`, `description`,
+  `preferredLabel`, `altLabels`, `lifecycle`, `annotations`) and its
+  `versioning` slot all sit at the same level on the wire, with no
+  inner `artifact` or `descriptive` wrapper (per §6.4 / wire-grammar
+  §5.1).
+- **Multilingual content.** `name` and `description` are
+  `MultilingualString` arrays. Each `altLabels` element is itself a
+  `MultilingualString`, so `altLabels` is an array of arrays. Two of
+  the language-tagged entries on `name` exercise the unique-lang-tag
+  invariant (§9.1 category 3).
+- **`AnnotationValue` polymorphism.** `Annotation.body` is a
+  `discriminator: kind` union with `AnnotationStringValue` and
+  `AnnotationIriValue` arms; the wire form carries the discriminator
+  per §1.5 of `wire-grammar.md`.
+- **`defaultValue` kind-drop.** On `EmbeddedSingleValuedEnumField`
+  and `EmbeddedIntegerNumberField`, the `defaultValue` is a plain
+  object with **no** `kind` property — `{ "value": "moderate" }`
+  and `{ "value": "1" }` respectively. The enclosing
+  `EmbeddedXxxField.kind` already pins the value family, so the
+  inner `kind` is dropped per the polymorphic-only kind rule. On
+  `EmbeddedDateField` the `defaultValue` *retains* `"kind":
+  "FullDateValue"` because `DateValue` is itself a polymorphic
+  union; the inner kind is required to discriminate the arm.
+- **Identifier IRIs.** Every `artifactRef` is an IRI string that
+  belongs to a field of the family declared by the surrounding
+  `kind` (§6.1, §9.1 category 3). A conforming encoder verifies this
+  before emit; a conforming decoder reports a structural-invariant
+  error if it does not.
+- **`Cardinality` ranges.** `comment` admits zero or one (`min: 0,
+  max: 1`); `observed` requires exactly one; `occurrences` is
+  optional with at most one; `diagnosis` requires at least one with
+  no upper bound (`max` omitted, meaning unbounded). `Cardinality`
+  appears at singleton positions only and never carries `kind` per
+  §1.5.
+
+### 8.2 A `TemplateInstance` for the above `Template`
+
+The instance below conforms to the `Template` of §8.1: it carries one
+value per required and present optional `EmbeddedField`, omits the
+optional `comment`, and carries two `diagnosis` terms (since
+`diagnosis` admits `min: 1` with unbounded `max`).
+
+```json
+{{#include normative-tests/valid/02-patient-observation-instance.json}}
+```
+
+Notes:
+
+- **Instance metadata.** `TemplateInstance.metadata` is
+  `ArtifactMetadata` (no `versioning`), since instances do not carry
+  schema versioning — the schema's version is fixed by `templateRef`.
+- **`FieldValue.values` is non-empty.** Per the abstract grammar's
+  `Value+` constraint, every `FieldValue` carries at least one value;
+  absence of a value for a key is represented by **omitting the
+  `FieldValue` entry entirely** (the `comment` key here). This is the
+  reason `valueRequirement` is enforced at instance-validation time
+  rather than wire-shape time: the wire grammar does not require a
+  `FieldValue` for every `EmbeddedField`.
+- **`FieldValue.values[*]` carries `kind`.** The values inside
+  `FieldValue.values` are members of the `Value` polymorphic union;
+  every entry carries its `kind` discriminator (per §1.5 of
+  `wire-grammar.md`). Contrast with `EmbeddedXxxField.defaultValue`
+  in §8.1 above, where the family is already fixed by the embedding's
+  `kind` and the inner kind is dropped.
+
+### 8.3 Round-tripping
+
+Decoding the §8.1 `Template` JSON and re-encoding the resulting
+in-memory value MUST produce a JSON document that is equal to the
+input under §7's equivalence (object property order and whitespace
+are not significant). A binding's round-trip test SHOULD therefore:
+
+1. Parse the input to a JSON tree and to its in-memory model
+   representation.
+2. Re-encode the in-memory representation to JSON.
+3. Compare the two JSON trees property-set-equally (recursive set
+   equality on object members, sequence equality on arrays).
+
+A binding MAY canonicalise property order on encode (e.g. always emit
+`kind` first, then required fields in grammar order, then optionals
+alphabetically); the canonical form is not normative under §7 — only
+its decode-equivalence to the input is.
+
+### 8.4 Known-bad inputs
+
+The two inputs below exercise the §9 error model. Each is presented
+with the expected reported errors per §9.3 (the four required
+fields). A conforming decoder operating in collected mode (the
+default per §9.4) MUST report all the listed errors before raising
+or returning.
+
+**Input 1 — wire-shape error (unknown `kind` discriminator).**
+
+```json
+{{#include normative-tests/invalid/01-unknown-kind/input.json}}
+```
+
+Expected error report:
+
+| category | path | production | message |
+|---|---|---|---|
+| `wireShape` | `/values/0/values/0` | `Value` | `kind: "MysteryValue" is not a recognised Value variant` |
+
+The decoder MUST NOT silently substitute a default variant or treat
+the input as a generic object (§9.5).
+
+**Input 2 — structural-invariant error (FieldId family mismatch and
+duplicate embedded-artifact key).** This input has *two* errors at
+distinct positions; both must be reported. The same IRI
+`https://example.org/fields/foo` is used as `artifactRef` from
+*two* embeddings whose `kind`s declare different field families —
+once as a `TextField`, once as a `DateField`. A single field
+identifier cannot belong to two field families, so one of the two
+references must be wrong; conformance requires the binding to
+detect and report this without consulting an external registry.
+
+```json
+{{#include normative-tests/invalid/02-fieldid-family-mismatch-and-duplicate-key/input.json}}
+```
+
+Expected error report (collected mode):
+
+| category | path | production | message |
+|---|---|---|---|
+| `structural` | `/members/1/artifactRef` | `EmbeddedDateField` | `artifactRef "https://example.org/fields/foo" is also referenced at /members/0/artifactRef as a TextField; a FieldId cannot belong to two field families` |
+| `structural` | `/members/1/key` | `Template` | `EmbeddedArtifact.key "duplicate" is not unique within the enclosing Template (also at /members/0/key)` |
+
+The duplicate-key error is reported against the *second* occurrence,
+not the first; the first occurrence's path is included in the
+`message` for traceability. The family-mismatch error is reported
+against the *second* occurrence by the same convention.
+
+A binding may also surface additional implementation-specific fields
+(error code, original JSON value, etc.); the four columns above are
+the required minimum per §9.3. The expected errors live as a JSON
+file alongside the input under
+[`spec/normative-tests/invalid/02-fieldid-family-mismatch-and-duplicate-key/expected-errors.json`](normative-tests/invalid/02-fieldid-family-mismatch-and-duplicate-key/expected-errors.json),
+where the `messageRegex` field gives the regex a binding's
+reported `message` MUST match (literal equality is not required —
+wording is informational, the regex pins the substantive content).
+The same convention applies to the §8.4 first input and to all
+future invalid fixtures.
 
 ## 9. Errors
 
