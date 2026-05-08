@@ -1,0 +1,74 @@
+{
+  "kind": "SingleValuedEnumField",
+  "id": "https://example.org/fields/single-valued-enum-1",
+  "modelVersion": "2.0.0",
+  "metadata": {
+    "name": [
+      {
+        "value": "Test",
+        "lang": "en"
+      }
+    ],
+    "lifecycle": {
+      "createdOn": "2026-01-15T09:30:00Z",
+      "createdBy": "https://example.org/users/alice",
+      "modifiedOn": "2026-01-15T09:30:00Z",
+      "modifiedBy": "https://example.org/users/alice"
+    },
+    "versioning": {
+      "version": "1.0.0",
+      "status": "draft"
+    }
+  },
+  "fieldSpec": {
+    "kind": "SingleValuedEnumFieldSpec",
+    "permissibleValues": [
+      {
+        "value": "mild",
+        "label": [
+          {
+            "value": "Mild",
+            "lang": "en"
+          }
+        ],
+        "description": [
+          {
+            "value": "Symptoms are mild.",
+            "lang": "en"
+          }
+        ],
+        "meanings": [
+          {
+            "iri": "https://www.snomed.org/snomed-ct/concept/255604002",
+            "label": [
+              {
+                "value": "Mild",
+                "lang": "en"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "value": "moderate",
+        "label": [
+          {
+            "value": "Moderate",
+            "lang": "en"
+          }
+        ]
+      },
+      {
+        "value": "severe",
+        "label": [
+          {
+            "value": "Severe",
+            "lang": "en"
+          }
+        ]
+      }
+    ],
+    "defaultValue": "moderate",
+    "renderingHint": "dropdown"
+  }
+}

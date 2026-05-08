@@ -17,60 +17,16 @@ against the original; every binding MUST decode every file under
 
 ```
 normative-tests/
-├── README.md                         # this file
+├── README.md                              # this file
 ├── valid/
-│   ├── 01-patient-observation-template.json    # mega-fixture (5 families)
-│   ├── 02-patient-observation-instance.json    # instance for 01
-│   ├── 03-text-template.json   ↘
-│   ├── 04-text-instance.json    ⎫
-│   ├── 05-integer-number-template.json
-│   ├── 06-integer-number-instance.json
-│   ├── 07-real-number-decimal-template.json   # datatype: decimal
-│   ├── 08-real-number-decimal-instance.json
-│   ├── 09-real-number-double-template.json    # datatype: double, INF
-│   ├── 10-real-number-double-instance.json
-│   ├── 11-boolean-template.json                # NO cardinality (deviation)
-│   ├── 12-boolean-instance.json
-│   ├── 13-date-template.json                   # FullDateValue arm
-│   ├── 14-date-instance.json
-│   ├── 15-date-year-template.json              # YearValue arm
-│   ├── 16-date-year-instance.json
-│   ├── 17-date-year-month-template.json        # YearMonthValue arm
-│   ├── 18-date-year-month-instance.json
-│   ├── 19-time-template.json
-│   ├── 20-time-instance.json
-│   ├── 21-date-time-template.json
-│   ├── 22-date-time-instance.json
-│   ├── 23-controlled-term-template.json
-│   ├── 24-controlled-term-instance.json
-│   ├── 25-single-valued-enum-template.json     # NO cardinality (deviation)
-│   ├── 26-single-valued-enum-instance.json
-│   ├── 27-multi-valued-enum-template.json      # array<EnumValue> default (deviation)
-│   ├── 28-multi-valued-enum-instance.json
-│   ├── 29-link-template.json
-│   ├── 30-link-instance.json
-│   ├── 31-email-template.json
-│   ├── 32-email-instance.json
-│   ├── 33-phone-number-template.json
-│   ├── 34-phone-number-instance.json
-│   ├── 35-orcid-template.json                  ⎫
-│   ├── 36-orcid-instance.json                  │
-│   ├── 37-ror-template.json                    │
-│   ├── 38-ror-instance.json                    │
-│   ├── 39-doi-template.json                    │  six external-authority families
-│   ├── 40-doi-instance.json                    │
-│   ├── 41-pubmedid-template.json               │
-│   ├── 42-pubmedid-instance.json               │
-│   ├── 43-rrid-template.json                   │
-│   ├── 44-rrid-instance.json                   │
-│   ├── 45-nih-grant-id-template.json           │
-│   ├── 46-nih-grant-id-instance.json           ⎭
-│   ├── 47-attribute-value-template.json        # NO defaultValue (deviation)
-│   └── 48-attribute-value-instance.json
+│   ├── 01-02   mega-fixtures (Template + Instance, 5 families)
+│   ├── 03-48   per-family Template + Instance pairs (the embedding surface)
+│   ├── 49-72   per-family Field artifacts (the artifact + FieldSpec surface)
+│   └── 73-77   presentation components
 └── invalid/
     ├── 01-unknown-kind/
-    │   ├── input.json                # the malformed wire form
-    │   └── expected-errors.json      # the errors a conforming decoder MUST report
+    │   ├── input.json
+    │   └── expected-errors.json
     └── 02-fieldid-family-mismatch-and-duplicate-key/
         ├── input.json
         └── expected-errors.json
@@ -78,24 +34,75 @@ normative-tests/
 
 ## Fixture coverage
 
-`01` and `02` are the **mega-fixtures** referenced from
-`serialization.md` §8 — a single Template (and conforming Instance)
-that exercises five field families plus full-fat metadata,
-annotations, and varied cardinalities.
+The valid suite is layered into four groups, each addressing a
+different part of the wire surface:
 
-`03` through `48` are the **per-family fixtures** — one minimal
-Template + Instance pair for every concrete `XxxField` family
-(twenty in total, plus extra fixtures for the `RealNumberValue`
-datatype variants and the three `DateValue` arms). Each per-family
-fixture is the *minimum* that exercises the family's distinctive
-shape: the `EmbeddedXxxField.kind`, the `Value` arm, the per-family
-typed identifier slot, and any deviations from the standard
-embedded-field template (no-`cardinality` slots on Boolean and
-SingleValuedEnum, array-shaped `defaultValue` on
-MultiValuedEnum, no-`defaultValue` slot on AttributeValue). A
-binding that round-trips every per-family fixture has demonstrated
-correct mapping for every family-bearing wire shape this spec
-defines.
+**`01`–`02` Mega-fixtures.** A single `Template` and a conforming
+`TemplateInstance` exercising five field families (text, single-
+valued enum, date, integer, controlled-term) together with full-fat
+metadata, multilingual labels, two annotations on metadata
+(string-bodied and IRI-bodied), header content, varied cardinalities,
+and the three flavours of `defaultValue` (kind-dropped, kind-retained
+on a polymorphic union, bare-token). Referenced from
+`serialization.md` §8.
+
+**`03`–`48` Per-embedded-family fixtures.** One minimal Template +
+Instance pair for every concrete `EmbeddedXxxField` family (20
+families). Each pair exercises:
+
+- the per-family `EmbeddedXxxField.kind`
+- the per-family typed identifier slot (`artifactRef`)
+- the per-family `Value` arm at `FieldValue.values[*]`
+- the four §9 deviations from the standard embedded-field template:
+  - `EmbeddedBooleanField` and `EmbeddedSingleValuedEnumField` omit
+    `cardinality`
+  - `EmbeddedMultiValuedEnumField` carries `array<EnumValue>` for
+    `defaultValue`
+  - `EmbeddedAttributeValueField` omits `defaultValue`
+
+Extra fixtures are included for the two `RealNumberValue` `datatype`
+variants (`decimal`, `double`) and for two of the three `DateValue`
+arms (`YearValue`, `YearMonthValue` — the third, `FullDateValue`, is
+covered by `13-date`).
+
+**`49`–`72` Per-family Field artifacts.** One `Field` artifact JSON
+per family, exercising every slot of its `XxxFieldSpec` at least once
+across the suite. This complements the embedding surface above; a
+binding's encoder/decoder must handle both. Notable fixtures within
+this group:
+
+- `49-text-field`: minLength, maxLength, validationRegex, default-
+  Value, renderingHint, all populated.
+- `50-integer-number-field`: unit (with label), minValue, maxValue,
+  numericRenderingHint with decimalPlaces.
+- `51-real-number-decimal-field` / `52-real-number-double-field`:
+  the two `RealNumberDatatypeKind` variants with appropriate
+  `minValue` / `maxValue` lexical forms (including `INF`/`-INF` for
+  the `double` datatype).
+- `57`–`60`: the four `ControlledTermSource` discriminator variants
+  (`OntologySource`, `BranchSource`, `ClassSource`, `ValueSetSource`).
+- `61-single-valued-enum-field`: `permissibleValues` with all four
+  optional component slots populated (`label`, `description`,
+  `meanings`); `defaultValue` and `dropdown` rendering hint.
+- `62-multi-valued-enum-field`: `defaultValues` array with two
+  pre-selected tokens.
+- `66`–`71`: the six external-authority `XxxFieldSpec` shapes (each
+  is currently empty per the wire grammar — they all share
+  `{ "kind": "<Family>FieldSpec" }` — but each is included so a
+  binding's discriminator dispatch is exercised over every kind it
+  must recognise).
+
+**`73`–`77` Presentation components.** One JSON document per concrete
+`XxxComponent` kind: `RichTextComponent` (with `html` content),
+`ImageComponent` (with `image` IRI, `label`, `description`),
+`YoutubeVideoComponent` (with `video` IRI, `label`),
+`SectionBreakComponent`, `PageBreakComponent`. Presentation
+components carry `ArtifactMetadata` (not `SchemaArtifactMetadata`),
+and the metadata fixtures here exercise that distinction.
+
+A binding that round-trips every fixture in groups 1–4 has
+demonstrated correct mapping for every reachable wire production
+this specification defines.
 
 ## `valid/` semantics
 

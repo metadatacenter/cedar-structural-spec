@@ -1,0 +1,32 @@
+{
+  "kind": "ImageComponent",
+  "id": "https://example.org/components/image-1",
+  "modelVersion": "2.0.0",
+  "metadata": {
+    "name": [
+      {
+        "value": "Test",
+        "lang": "en"
+      }
+    ],
+    "lifecycle": {
+      "createdOn": "2026-01-15T09:30:00Z",
+      "createdBy": "https://example.org/users/alice",
+      "modifiedOn": "2026-01-15T09:30:00Z",
+      "modifiedBy": "https://example.org/users/alice"
+    }
+  },
+  "image": "https://example.org/assets/diagram.png",
+  "label": [
+    {
+      "value": "Field-anatomy diagram",
+      "lang": "en"
+    }
+  ],
+  "description": [
+    {
+      "value": "Schematic of the field structure.",
+      "lang": "en"
+    }
+  ]
+}
