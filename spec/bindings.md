@@ -276,13 +276,29 @@ interface.
 
 ### 2.3 Position-discriminated union
 
-**What it is.** A wire production written as `T ::: A | B | …` with
-`// discriminator: position`. The variant is determined entirely by
-*the enclosing property and surrounding context*; the encoded object
-itself carries no discriminator. The principal example is `RenderingHint`
-inside the various `FieldSpec` families: each `FieldSpec` family fixes
-which `RenderingHint` variant is permitted at its `renderingHint` slot,
-so the rendering hint encodes without a `kind` tag.
+**What it is.** A wire production written as `T ::: A | B | …` *and
+explicitly declared* `// discriminator: position` in the wire
+grammar. The variant is determined entirely by the enclosing property
+and surrounding context; the encoded object itself carries no
+discriminator. The principal example is `RenderingHint` inside the
+various `FieldSpec` families: each `FieldSpec` family fixes which
+`RenderingHint` variant is permitted at its `renderingHint` slot, so
+the rendering hint encodes without a `kind` tag.
+
+> **Note: position-discriminated vs. positionally-determinate.** A
+> position-discriminated union (this section) is one the wire grammar
+> *declares* with `// discriminator: position`, and whose members
+> therefore carry no `kind` on the wire. This is distinct from the
+> larger class of unions whose *use sites* happen to be positionally
+> determinate but which the wire grammar declares with the default
+> `discriminator: kind`. The umbrella `FieldSpec` union is a good
+> example of the latter: every actual use site (`XxxField.fieldSpec`)
+> is typed with the per-family concrete production (`TextFieldSpec`,
+> `IntegerNumberFieldSpec`, …) so the variant could in principle be
+> recovered positionally, but `FieldSpec` is `discriminator: kind` so
+> every member still carries `"kind"` on the wire per the kind rule
+> (§1.5). Use this section only for productions explicitly flagged
+> `// discriminator: position`.
 
 Bindings can usually realise each use site as a single concrete
 class, since the position fixes the variant. There is no need for a
