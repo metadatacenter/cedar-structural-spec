@@ -21,6 +21,10 @@
     }
   },
   "fieldSpec": {
-    "kind": "EmailFieldSpec"
+    "kind": "EmailFieldSpec",
+    "defaultValue": {
+      "kind": "EmailValue",
+      "value": "default@example.org"
+    }
   }
 }

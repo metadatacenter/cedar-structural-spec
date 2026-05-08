@@ -22,6 +22,16 @@
   },
   "fieldSpec": {
     "kind": "ControlledTermFieldSpec",
+    "defaultValue": {
+      "kind": "ControlledTermValue",
+      "term": "https://www.snomed.org/snomed-ct/concept/22298006",
+      "label": [
+        {
+          "value": "Myocardial infarction",
+          "lang": "en"
+        }
+      ]
+    },
     "sources": [
       {
         "kind": "OntologySource",

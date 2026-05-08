@@ -1373,34 +1373,52 @@ When `Visibility` is absent from an `EmbeddedArtifact`, the default is `"visible
 
 ### Defaults
 
-The optional `defaultValue` component of an `EmbeddedField` specifies the value to be pre-populated for that embedding when no explicit value has been supplied by the user. The `defaultValue` slot is typed family-by-family with the family-specific `Value` type that the embedded field accepts. The per-family typing is given by the table below and appears directly in each `EmbeddedXxxField` production above.
+A *default value* is a value used to pre-populate a field at instance-creation time when no explicit value has yet been supplied by the user. Defaults exist at two layers:
 
-| Embedded field | `defaultValue` type |
-|---|---|
-| `EmbeddedTextField` | `TextValue` |
-| `EmbeddedIntegerNumberField` | `IntegerNumberValue` |
-| `EmbeddedRealNumberField` | `RealNumberValue` |
-| `EmbeddedBooleanField` | `BooleanValue` |
-| `EmbeddedDateField` | `DateValue` (polymorphic: `YearValue \| YearMonthValue \| FullDateValue`) |
-| `EmbeddedTimeField` | `TimeValue` |
-| `EmbeddedDateTimeField` | `DateTimeValue` |
-| `EmbeddedControlledTermField` | `ControlledTermValue` |
-| `EmbeddedSingleValuedEnumField` | `EnumValue` (single) |
-| `EmbeddedMultiValuedEnumField` | `EnumValue*` (sequence) |
-| `EmbeddedLinkField` | `LinkValue` |
-| `EmbeddedEmailField` | `EmailValue` |
-| `EmbeddedPhoneNumberField` | `PhoneNumberValue` |
-| `EmbeddedOrcidField` | `OrcidValue` |
-| `EmbeddedRorField` | `RorValue` |
-| `EmbeddedDoiField` | `DoiValue` |
-| `EmbeddedPubMedIdField` | `PubMedIdValue` |
-| `EmbeddedRridField` | `RridValue` |
-| `EmbeddedNihGrantIdField` | `NihGrantIdValue` |
-| `EmbeddedAttributeValueField` | (no default) |
+- A **field-level default** lives on the reusable `Field`'s `FieldSpec`. It is set when the field is authored and is shared by every Template that embeds the field.
+- An **embedding-level default** lives on the `EmbeddedXxxField` inside a Template. It overrides the field-level default for embeddings within that one Template.
 
-`TextFieldSpec` also carries an optional reusable field-level text default (a `TextValue` — see Field Specs). When both a field-level and an embedding-specific text default are present, the embedding-specific one takes precedence as it is more specific to the template context.
+Every concrete field family carries an optional default at both layers, with one exception: `AttributeValueField` carries no default at either layer (an `AttributeValue` instance is a per-instance pairing of an attribute name and a value, and a default is not meaningful).
 
-`SingleValuedEnumFieldSpec` and `MultiValuedEnumFieldSpec` likewise carry optional spec-level defaults — a single `Token` for the single-valued spec, a list of `Token` for the multi-valued spec. These are not `EnumValue` constructs but bare `Token` references to entries of the spec's `PermissibleValue+` list. As with text defaults, an embedding-level `defaultValue` (an `EnumValue` or sequence of `EnumValue` on the corresponding `EmbeddedField`) takes precedence over the spec-level default when both are present. All other default-value families appear only at the embedding level.
+The two default-value types match: at each layer the slot is typed with the family-specific `Value` type. The per-family typing is:
+
+| Family | Field-level slot (on `XxxFieldSpec`) | Embedding-level slot (on `EmbeddedXxxField`) |
+|---|---|---|
+| Text | `[TextValue]` | `[TextValue]` |
+| IntegerNumber | `[IntegerNumberValue]` | `[IntegerNumberValue]` |
+| RealNumber | `[RealNumberValue]` | `[RealNumberValue]` |
+| Boolean | `[BooleanValue]` | `[BooleanValue]` |
+| Date | `[DateValue]` | `[DateValue]` (polymorphic: `YearValue \| YearMonthValue \| FullDateValue`) |
+| Time | `[TimeValue]` | `[TimeValue]` |
+| DateTime | `[DateTimeValue]` | `[DateTimeValue]` |
+| ControlledTerm | `[ControlledTermValue]` | `[ControlledTermValue]` |
+| SingleValuedEnum | `[Token]` (a reference to one of the spec's `PermissibleValue+` entries) | `[EnumValue]` |
+| MultiValuedEnum | `Token*` (zero or more references to the spec's `PermissibleValue+` entries) | `[EnumValue*]` (zero or more) |
+| Link | `[LinkValue]` | `[LinkValue]` |
+| Email | `[EmailValue]` | `[EmailValue]` |
+| PhoneNumber | `[PhoneNumberValue]` | `[PhoneNumberValue]` |
+| Orcid | `[OrcidValue]` | `[OrcidValue]` |
+| Ror | `[RorValue]` | `[RorValue]` |
+| Doi | `[DoiValue]` | `[DoiValue]` |
+| PubMedId | `[PubMedIdValue]` | `[PubMedIdValue]` |
+| Rrid | `[RridValue]` | `[RridValue]` |
+| NihGrantId | `[NihGrantIdValue]` | `[NihGrantIdValue]` |
+| AttributeValue | (no default) | (no default) |
+
+The enum families are the one shape divergence between the two layers: the field-level slot is a bare `Token` (or `Token*`) that references one of the spec's permissible-value tokens, whereas the embedding-level slot is a full `EnumValue` (or `EnumValue*`). The two are semantically equivalent — every default token MUST equal the `Token` of one of the spec's `PermissibleValue+` entries — but the structural shape differs.
+
+**Precedence and absence semantics.** Both layers are independent and optional. The four cases:
+
+| Field-level | Embedding-level | Effective default |
+|---|---|---|
+| absent | absent | none — the field has no default |
+| present | absent | the field-level default |
+| absent | present | the embedding-level default |
+| present | present | the embedding-level default (it overrides the field-level default) |
+
+There is no mechanism for an embedding to *unset* a field-level default. An embedding that wishes to override a field-level default with no default at all is not expressible in this version of the model.
+
+**Defaults are UI/UX initialisation only.** A default value's sole role is to seed an instance's value at creation time, so that a user-facing form can pre-fill the corresponding input. Defaults do not appear in the wire form of `TemplateInstance` artifacts and do not affect the [RDF projection](rdf-projection.md). When an instance is created and the user accepts the default without modification, the resulting `FieldValue` carries the default value as if the user had typed it in by hand; from the instance's perspective the default and a user-supplied identical value are indistinguishable. When an instance is created and the user does not supply a value (and the field is not required), the corresponding `FieldValue` is omitted entirely — the default does not appear by virtue of having existed.
 
 ### Label Override
 
@@ -1469,6 +1487,7 @@ TextFieldSpec ::= text_field_spec(
                   )
 
 IntegerNumberFieldSpec ::= integer_number_field_spec(
+                             [IntegerNumberValue]
                              [Unit]
                              [IntegerNumberMinValue]
                              [IntegerNumberMaxValue]
@@ -1477,6 +1496,7 @@ IntegerNumberFieldSpec ::= integer_number_field_spec(
 
 RealNumberFieldSpec ::= real_number_field_spec(
                           RealNumberDatatypeKind
+                          [RealNumberValue]
                           [Unit]
                           [RealNumberMinValue]
                           [RealNumberMaxValue]
@@ -1517,6 +1537,7 @@ RealNumberMaxValue ::= real_number_max_value(
                        )
 
 BooleanFieldSpec ::= boolean_field_spec(
+                       [BooleanValue]
                        [BooleanRenderingHint]
                      )
 
@@ -1525,6 +1546,7 @@ TemporalFieldSpec ::= DateFieldSpec
                     | DateTimeFieldSpec
 
 ControlledTermFieldSpec ::= controlled_term_field_spec(
+                              [ControlledTermValue]
                               ControlledTermSource+
                             )
 
@@ -1559,14 +1581,20 @@ Meaning ::= meaning(
               [Label]
             )
 
-LinkFieldSpec ::= link_field_spec()
+LinkFieldSpec ::= link_field_spec(
+                    [LinkValue]
+                  )
 
 ContactFieldSpec ::= EmailFieldSpec
                    | PhoneNumberFieldSpec
 
-EmailFieldSpec ::= email_field_spec()
+EmailFieldSpec ::= email_field_spec(
+                     [EmailValue]
+                   )
 
-PhoneNumberFieldSpec ::= phone_number_field_spec()
+PhoneNumberFieldSpec ::= phone_number_field_spec(
+                           [PhoneNumberValue]
+                         )
 
 ExternalAuthorityFieldSpec ::= OrcidFieldSpec
                              | RorFieldSpec
@@ -1575,17 +1603,29 @@ ExternalAuthorityFieldSpec ::= OrcidFieldSpec
                              | RridFieldSpec
                              | NihGrantIdFieldSpec
 
-OrcidFieldSpec ::= orcid_field_spec()
+OrcidFieldSpec ::= orcid_field_spec(
+                     [OrcidValue]
+                   )
 
-RorFieldSpec ::= ror_field_spec()
+RorFieldSpec ::= ror_field_spec(
+                   [RorValue]
+                 )
 
-DoiFieldSpec ::= doi_field_spec()
+DoiFieldSpec ::= doi_field_spec(
+                   [DoiValue]
+                 )
 
-PubMedIdFieldSpec ::= pub_med_id_field_spec()
+PubMedIdFieldSpec ::= pub_med_id_field_spec(
+                        [PubMedIdValue]
+                      )
 
-RridFieldSpec ::= rrid_field_spec()
+RridFieldSpec ::= rrid_field_spec(
+                    [RridValue]
+                  )
 
-NihGrantIdFieldSpec ::= nih_grant_id_field_spec()
+NihGrantIdFieldSpec ::= nih_grant_id_field_spec(
+                          [NihGrantIdValue]
+                        )
 
 AttributeValueFieldSpec ::= attribute_value_field_spec()
 ```
@@ -1600,7 +1640,7 @@ A `RealNumberFieldSpec` MAY use the family-shared `NumericRenderingHint`; if it 
 
 `EnumFieldSpec` is refined along a single dimension: cardinality. `SingleValuedEnumFieldSpec` permits exactly one selection; `MultiValuedEnumFieldSpec` permits zero or more simultaneous selections (subject to the embedding's `Cardinality`). The two specs share a common option model: every permissible value is a `PermissibleValue` carrying a canonical `Token` key together with optional human-readable `Label` and `Description` localizations and zero or more `Meaning` entries that bind the token to ontology terms. The `Token` strings of a spec's permissible values MUST be unique within that spec; the spec's `PermissibleValue+` is the closed set of values an instance may carry.
 
-`SingleValuedEnumFieldSpec` carries an optional `[Token]` slot identifying the permissible value pre-selected when a new instance is created; `MultiValuedEnumFieldSpec` carries a `Token*` list with the same role. Each such default `Token` MUST equal the `Token` of one of the spec's `PermissibleValue+` entries. These are spec-level defaults baked into the field definition itself; an embedding-level `defaultValue` on the corresponding `EmbeddedField` takes precedence when both are present.
+The two enum specs each carry a field-level default per the [Defaults](#defaults) section: `SingleValuedEnumFieldSpec` an optional `[Token]`, `MultiValuedEnumFieldSpec` a (possibly empty) `Token*`. Every default `Token` MUST equal the `Token` of one of the spec's `PermissibleValue+` entries; for `MultiValuedEnumFieldSpec` the `Token*` list MUST NOT contain duplicates.
 
 A `Meaning` carried by a `PermissibleValue` binds the token to a term IRI in an external vocabulary or ontology. A permissible value MAY carry zero, one, or several `Meaning` entries. Each `Meaning` MAY additionally carry an optional `Label` recording the bound term's human-readable label (in the same way `ControlledTermValue.Label` caches the term's label inline) so that consumers without ontology access can render the bound term's display name. The `Meaning.Label` is the label of the bound *term*, distinct from the surrounding `PermissibleValue.Label` which is the display label of the permissible value itself. When the RDF projection is applied (see [`rdf-projection.md`](rdf-projection.md)), an `EnumValue` whose token matches a `PermissibleValue` carrying one or more `Meaning` entries projects as the corresponding term IRIs; an `EnumValue` whose matching permissible value carries no `Meaning` projects as a plain string literal.
 
@@ -1613,6 +1653,7 @@ A `Meaning` carried by a `PermissibleValue` binds the token to a term IRI in an 
 ```ebnf
 DateFieldSpec ::= date_field_spec(
                     DateValueType
+                    [DateValue]
                     [DateRenderingHint]
                   )
 
@@ -1621,6 +1662,7 @@ DateValueType ::= "year" | "yearMonth" | "fullDate"
 
 ```ebnf
 TimeFieldSpec ::= time_field_spec(
+                    [TimeValue]
                     [TimePrecision]
                     [TimezoneRequirement]
                     [TimeRenderingHint]
@@ -1654,6 +1696,7 @@ The same strict-truncation rule applies to `DateTimeValueType` for `DateTimeValu
 ```ebnf
 DateTimeFieldSpec ::= date_time_field_spec(
                         DateTimeValueType
+                        [DateTimeValue]
                         [TimezoneRequirement]
                         [DateTimeRenderingHint]
                       )

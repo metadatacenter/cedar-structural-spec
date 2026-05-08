@@ -22,6 +22,10 @@
   },
   "fieldSpec": {
     "kind": "BooleanFieldSpec",
+    "defaultValue": {
+      "kind": "BooleanValue",
+      "value": false
+    },
     "renderingHint": "checkbox"
   }
 }

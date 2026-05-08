@@ -21,6 +21,16 @@
     }
   },
   "fieldSpec": {
-    "kind": "LinkFieldSpec"
+    "kind": "LinkFieldSpec",
+    "defaultValue": {
+      "kind": "LinkValue",
+      "iri": "https://example.org/default-link",
+      "label": [
+        {
+          "value": "Default link",
+          "lang": "en"
+        }
+      ]
+    }
   }
 }

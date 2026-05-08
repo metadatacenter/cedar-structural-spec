@@ -23,6 +23,11 @@
   "fieldSpec": {
     "kind": "RealNumberFieldSpec",
     "datatype": "double",
+    "defaultValue": {
+      "kind": "RealNumberValue",
+      "value": "0.0",
+      "datatype": "double"
+    },
     "minValue": {
       "kind": "RealNumberValue",
       "value": "-INF",

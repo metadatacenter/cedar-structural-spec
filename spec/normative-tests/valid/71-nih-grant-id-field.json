@@ -21,6 +21,10 @@
     }
   },
   "fieldSpec": {
-    "kind": "NihGrantIdFieldSpec"
+    "kind": "NihGrantIdFieldSpec",
+    "defaultValue": {
+      "kind": "NihGrantIdValue",
+      "iri": "https://reporter.nih.gov/project/0000000"
+    }
   }
 }

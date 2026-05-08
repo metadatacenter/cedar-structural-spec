@@ -22,6 +22,10 @@
   },
   "fieldSpec": {
     "kind": "TimeFieldSpec",
+    "defaultValue": {
+      "kind": "TimeValue",
+      "value": "09:00:00"
+    },
     "timePrecision": "hourMinuteSecond",
     "timezoneRequirement": "withTimezone",
     "renderingHint": {

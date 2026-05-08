@@ -22,6 +22,10 @@
   },
   "fieldSpec": {
     "kind": "IntegerNumberFieldSpec",
+    "defaultValue": {
+      "kind": "IntegerNumberValue",
+      "value": "10"
+    },
     "unit": {
       "iri": "http://qudt.org/vocab/unit/M",
       "label": [

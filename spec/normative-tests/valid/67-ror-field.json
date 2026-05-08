@@ -21,6 +21,10 @@
     }
   },
   "fieldSpec": {
-    "kind": "RorFieldSpec"
+    "kind": "RorFieldSpec",
+    "defaultValue": {
+      "kind": "RorValue",
+      "iri": "https://ror.org/00000000a"
+    }
   }
 }

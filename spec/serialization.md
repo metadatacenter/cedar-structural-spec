@@ -318,7 +318,7 @@ The `AnnotationValue` variant family is open to extension: future revisions of t
 
 ### 6.6 Field specs
 
-Each concrete `FieldSpec` is encoded as a tagged object whose `"kind"` matches the spec's grammar production name. Optional configuration properties are omitted when absent.
+Each concrete `FieldSpec` is encoded as a tagged object whose `"kind"` matches the spec's grammar production name. Optional configuration properties are omitted when absent. Every `XxxFieldSpec` (except `AttributeValueFieldSpec`) carries an optional `defaultValue` slot whose type matches the family's `Value`; see §6.8 for the per-family table and the precedence rule against an embedding-level `defaultValue` on the corresponding `EmbeddedXxxField`.
 
 ```json
 { "kind": "TextFieldSpec", "minLength": 1, "maxLength": 200, "renderingHint": "singleLine" }
@@ -414,75 +414,94 @@ An `EmbeddedAttributeValueField` MUST NOT carry a `defaultValue` property.
 
 ### 6.8 Default values
 
-The optional `defaultValue` slot on each `EmbeddedXxxField` is encoded directly as the family-specific `Value` (see [`wire-grammar.md`](wire-grammar.md) §6.5 for the full table). There is no `DefaultValue` wrapper on the wire: a default value is the family's `Value` shape in place. Every `Value` is a member of the `Value` polymorphic union, so per the kind rule ([`wire-grammar.md`](wire-grammar.md) §1.5) every `defaultValue` carries a `kind` discriminator — even though the surrounding `EmbeddedXxxField.kind` already fixes the family. The discriminator is structurally redundant at this slot but is retained for uniformity with `Value`'s appearance at polymorphic positions (e.g. `FieldValue.values[*]`).
+A default value is a value used to pre-populate a field at instance-creation time when no explicit value has yet been supplied by the user. Defaults exist at two layers:
 
-`EmbeddedMultiValuedEnumField.defaultValue` is the only embedding-level default whose wire form is a JSON array rather than a single object: it carries an array of `EnumValue` entries, each tagged with `"kind": "EnumValue"`. All other embedding-level defaults are single tagged `Value` objects.
+- **Field-level defaults**, on the reusable `Field`'s `FieldSpec` (`XxxFieldSpec.defaultValue`), shared by every Template that embeds the field.
+- **Embedding-level defaults**, on the `EmbeddedXxxField` inside a Template (`EmbeddedXxxField.defaultValue`), specific to that one embedding.
 
-Examples by family:
+Every concrete field family carries an optional default at both layers, with one exception: `AttributeValueField` carries no default at either layer (an `AttributeValue` is a per-instance pairing of a name and a value, and a default is not meaningful).
+
+**Defaults are UI/UX initialisation only.** A default's sole role is to seed an instance's value at creation time. Defaults do not appear in the wire form of `TemplateInstance` artifacts and do not affect the [RDF projection](rdf-projection.md). When an instance is created and the user accepts the default without modification, the resulting `FieldValue` carries the default value as if the user had typed it in by hand; from the instance's perspective the default and a user-supplied identical value are indistinguishable. When an instance is created and the user does not supply a value (and the field is not required), the corresponding `FieldValue` is omitted entirely — the default does not appear by virtue of having existed.
+
+**Wire form.** Both layers use the same `Value`-typed wire shape: there is no `DefaultValue` wrapper. Every `Value` is a member of the `Value` polymorphic union, so per the kind rule ([`wire-grammar.md`](wire-grammar.md) §1.5) every `defaultValue` carries a `kind` discriminator — at both layers, regardless of whether the enclosing context already pins the family. The discriminator is structurally redundant at slots whose enclosing `XxxFieldSpec.kind` or `EmbeddedXxxField.kind` already determines the family, but is retained for uniformity with `Value`'s appearance at the polymorphic positions where the kind genuinely discriminates (e.g. `FieldValue.values[*]` in instances).
+
+`EmbeddedMultiValuedEnumField.defaultValue` is the only embedding-level default whose wire form is a JSON array rather than a single object: it carries an array of tagged `EnumValue` entries.
+
+The two enum specs are the one shape divergence between layers: their **field-level** slots use bare `Token` strings (or arrays thereof) rather than `EnumValue` objects, since `Token` is not a polymorphic-union member.
+
+- `SingleValuedEnumFieldSpec.defaultValue?: Token` — a bare JSON string equal to the `value` of one of the spec's permissible-value entries.
+- `MultiValuedEnumFieldSpec.defaultValues?: array<Token>` — a (possibly empty) JSON array of such strings; MUST NOT contain duplicates.
+
+The corresponding **embedding-level** slots (`EmbeddedSingleValuedEnumField.defaultValue: EnumValue` and `EmbeddedMultiValuedEnumField.defaultValue: array<EnumValue>`) wrap these as full `EnumValue` objects.
+
+Examples by family (the same shape applies at both `XxxFieldSpec.defaultValue` and `EmbeddedXxxField.defaultValue` unless noted):
 
 ```json
-// EmbeddedTextField.defaultValue — TextValue
+// TextValue (field-level on TextFieldSpec, embedding-level on EmbeddedTextField)
 "defaultValue": { "kind": "TextValue", "value": "Stanford University" }
 "defaultValue": { "kind": "TextValue", "value": "Bonjour", "lang": "fr" }
 
-// EmbeddedIntegerNumberField.defaultValue — IntegerNumberValue
+// IntegerNumberValue
 "defaultValue": { "kind": "IntegerNumberValue", "value": "42" }
 
-// EmbeddedRealNumberField.defaultValue — RealNumberValue
+// RealNumberValue
 "defaultValue": { "kind": "RealNumberValue", "value": "3.14", "datatype": "decimal" }
 
-// EmbeddedBooleanField.defaultValue — BooleanValue
+// BooleanValue
 "defaultValue": { "kind": "BooleanValue", "value": true }
 
-// EmbeddedDateField.defaultValue — DateValue arm (kind discriminates the arm)
+// DateValue (kind discriminates the arm; the arm MUST be consistent with the spec's dateValueType)
 "defaultValue": { "kind": "FullDateValue", "value": "2024-06-15" }
 "defaultValue": { "kind": "YearValue", "value": "2024" }
 
-// EmbeddedTimeField.defaultValue — TimeValue
+// TimeValue
 "defaultValue": { "kind": "TimeValue", "value": "10:30:00" }
 
-// EmbeddedDateTimeField.defaultValue — DateTimeValue
+// DateTimeValue
 "defaultValue": { "kind": "DateTimeValue", "value": "2024-06-15T10:30:00Z" }
 
-// EmbeddedControlledTermField.defaultValue — ControlledTermValue
+// ControlledTermValue
 "defaultValue": {
   "kind": "ControlledTermValue",
   "term": "http://purl.obolibrary.org/obo/UBERON_0000955",
   "label": [{ "value": "brain", "lang": "en" }]
 }
 
-// EmbeddedSingleValuedEnumField.defaultValue — single EnumValue
+// EnumValue — embedding-level form (EmbeddedSingleValuedEnumField.defaultValue)
 "defaultValue": { "kind": "EnumValue", "value": "yes" }
 
-// EmbeddedMultiValuedEnumField.defaultValue — array of tagged EnumValue
+// Token — field-level form (SingleValuedEnumFieldSpec.defaultValue)
+"defaultValue": "yes"
+
+// array<EnumValue> — embedding-level form (EmbeddedMultiValuedEnumField.defaultValue)
 "defaultValue": [
   { "kind": "EnumValue", "value": "active" },
   { "kind": "EnumValue", "value": "retired" }
 ]
 
-// EmbeddedLinkField.defaultValue — LinkValue
+// array<Token> — field-level form (MultiValuedEnumFieldSpec.defaultValues)
+"defaultValues": ["active", "retired"]
+
+// LinkValue
 "defaultValue": { "kind": "LinkValue", "iri": "https://example.org", "label": [{ "value": "Example", "lang": "en" }] }
 
-// EmbeddedEmailField.defaultValue — EmailValue
+// EmailValue
 "defaultValue": { "kind": "EmailValue", "value": "jane@example.org" }
 
-// EmbeddedPhoneNumberField.defaultValue — PhoneNumberValue
+// PhoneNumberValue
 "defaultValue": { "kind": "PhoneNumberValue", "value": "+1-650-555-0123" }
 
-// EmbeddedOrcidField.defaultValue — OrcidValue
+// OrcidValue
 "defaultValue": {
   "kind": "OrcidValue",
   "iri": "https://orcid.org/0000-0002-1825-0097",
   "label": [{ "value": "Josiah Carberry", "lang": "en" }]
 }
 
-// EmbeddedRorField.defaultValue / EmbeddedDoiField.defaultValue / EmbeddedPubMedIdField.defaultValue
-// EmbeddedRridField.defaultValue / EmbeddedNihGrantIdField.defaultValue — analogous, each tagged with its family's kind
+// RorValue / DoiValue / PubMedIdValue / RridValue / NihGrantIdValue — analogous, each tagged with its family's kind
 ```
 
-`TextFieldSpec.defaultValue` is a `TextValue` and follows the same rule — it carries `"kind": "TextValue"` on the wire. `SingleValuedEnumFieldSpec.defaultValue` encodes as a bare JSON string (the `Token` of the selected permissible value, since `Token` is not a polymorphic-union member); `MultiValuedEnumFieldSpec.defaultValues` encodes as a JSON array of such bare strings.
-
-Embedding-level defaults take precedence over the spec-level defaults when both are present, parallel to the `TextFieldSpec.defaultValue` precedence rule.
+**Precedence.** When both a field-level default (on the referenced `Field`'s `FieldSpec`) and an embedding-level default (on the `EmbeddedXxxField`) are present for the same field, the embedding-level default wins. When only one is present, that one applies. When neither is present, the field has no default. There is no mechanism for an embedding to *unset* a field-level default; an embedding wishing to override with a different default supplies its own `defaultValue`, but cannot say "no default here." See `grammar.md` §Defaults for the full table.
 
 ### 6.9 Templates
 

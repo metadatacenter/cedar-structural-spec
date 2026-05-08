@@ -828,17 +828,19 @@ Visibility ::: "visible" | "hidden"
 
 ### 6.5 Defaults
 
-The optional `defaultValue` slot on each `EmbeddedXxxField` is typed
-family-by-family with the family's `Value` type (see `grammar.md`
-§Defaults for the full table). There is no `DefaultValue` union and no
-per-family `XxxDefaultValue` wrapper on the wire: the `defaultValue`
-JSON encodes directly as the corresponding family's `Value`.
+Defaults are specified at two layers, with parallel typing per
+family. See `grammar.md` §Defaults for the abstract grammar's full
+treatment, including precedence and the UI/UX-only semantics; this
+section gives the wire form.
 
-Per the kind rule (§1.5), every `Value` family is a member of the
-`Value` discriminator-`kind` union, so every `defaultValue` carries a
-`kind` discriminator on the wire — even at this singleton position
-where the enclosing `EmbeddedXxxField.kind` would suffice to fix the
-family. The wire form per family is:
+**Embedding-level defaults.** The optional `defaultValue` slot on
+each `EmbeddedXxxField` is typed family-by-family with the family's
+`Value` type. There is no `DefaultValue` union and no per-family
+`XxxDefaultValue` wrapper on the wire: the `defaultValue` JSON
+encodes directly as the corresponding family's `Value`. Per the
+kind rule (§1.5), every `Value` family is a member of the `Value`
+discriminator-`kind` union, so every embedding-level `defaultValue`
+carries a `kind` discriminator on the wire.
 
 | Embedded field | `defaultValue` wire form |
 |---|---|
@@ -864,15 +866,44 @@ family. The wire form per family is:
 
 `EmbeddedAttributeValueField` has no `defaultValue` slot (per §9).
 
-**Spec-level defaults.** Three `FieldSpec` productions carry
-spec-level default slots: `TextFieldSpec.defaultValue` (a single
-`TextValue`, encoded with its `kind` per the rule above),
-`SingleValuedEnumFieldSpec.defaultValue` (a single `Token` — encoded
-on the wire as a plain string carrying one of the spec's permissible
-`Token` values, since `Token` is not a polymorphic-union member),
-and `MultiValuedEnumFieldSpec.defaultValues` (an array of `Token` —
-encoded as a JSON array of plain strings, possibly empty). See §7
-for the productions.
+**Field-level defaults.** Every `XxxFieldSpec` (with one exception)
+carries an optional `defaultValue` slot whose type matches its
+embedding-level counterpart. The two layers are independent: a
+field MAY ship with a field-level default and a Template embedding
+that field MAY override that default with an embedding-level
+`defaultValue` (see `grammar.md` §Defaults for the full precedence
+rule). The wire shapes are identical to the embedding-level table
+above, with the following per-family details:
+
+- `TextFieldSpec.defaultValue?: TextValue`
+- `IntegerNumberFieldSpec.defaultValue?: IntegerNumberValue`
+- `RealNumberFieldSpec.defaultValue?: RealNumberValue`
+- `BooleanFieldSpec.defaultValue?: BooleanValue`
+- `DateFieldSpec.defaultValue?: DateValue` (the arm MUST be consistent with `dateValueType`)
+- `TimeFieldSpec.defaultValue?: TimeValue`
+- `DateTimeFieldSpec.defaultValue?: DateTimeValue`
+- `ControlledTermFieldSpec.defaultValue?: ControlledTermValue`
+- `LinkFieldSpec.defaultValue?: LinkValue`
+- `EmailFieldSpec.defaultValue?: EmailValue`
+- `PhoneNumberFieldSpec.defaultValue?: PhoneNumberValue`
+- `OrcidFieldSpec.defaultValue?: OrcidValue`
+- `RorFieldSpec.defaultValue?: RorValue`
+- `DoiFieldSpec.defaultValue?: DoiValue`
+- `PubMedIdFieldSpec.defaultValue?: PubMedIdValue`
+- `RridFieldSpec.defaultValue?: RridValue`
+- `NihGrantIdFieldSpec.defaultValue?: NihGrantIdValue`
+
+The two enum specs are the one shape divergence: their field-level
+slots use bare `Token` (or array of `Token`) rather than `EnumValue`:
+
+- `SingleValuedEnumFieldSpec.defaultValue?: Token` — a JSON string
+  equal to the `value` of one of the spec's permissible-value
+  entries.
+- `MultiValuedEnumFieldSpec.defaultValues?: array<Token>` — a
+  (possibly empty) JSON array of such strings; MUST NOT contain
+  duplicates.
+
+`AttributeValueFieldSpec` carries no field-level default.
 
 ### 6.6 Label override
 
@@ -925,11 +956,11 @@ TextFieldSpec ::: object {
 }
   // defaultValue, when present, encodes as a tagged TextValue per
   // the kind rule (§1.5): `{ "kind": "TextValue", "value": ..., "lang"?: ... }`.
-  // TextFieldSpec is the only FieldSpec that carries a defaultValue
-  // slot (see §6.5).
+  // See §6.5 for default-value semantics across all field families.
 
 IntegerNumberFieldSpec ::: object {
   "kind": "IntegerNumberFieldSpec"
+  defaultValue?: IntegerNumberValue
   unit?: Unit
   minValue?: IntegerNumberMinValue
   maxValue?: IntegerNumberMaxValue
@@ -939,6 +970,7 @@ IntegerNumberFieldSpec ::: object {
 RealNumberFieldSpec ::: object {
   "kind": "RealNumberFieldSpec"
   datatype: RealNumberDatatypeKind
+  defaultValue?: RealNumberValue
   unit?: Unit
   minValue?: RealNumberMinValue
   maxValue?: RealNumberMaxValue
@@ -947,6 +979,7 @@ RealNumberFieldSpec ::: object {
 
 BooleanFieldSpec ::: object {
   "kind": "BooleanFieldSpec"
+  defaultValue?: BooleanValue
   renderingHint?: BooleanRenderingHint
 }
 
@@ -974,13 +1007,17 @@ TemporalFieldSpec ::: DateFieldSpec | TimeFieldSpec | DateTimeFieldSpec
 DateFieldSpec ::: object {
   "kind": "DateFieldSpec"
   dateValueType: DateValueType
+  defaultValue?: DateValue
   renderingHint?: DateRenderingHint
 }
+  // defaultValue, when present, MUST be a DateValue arm consistent
+  // with dateValueType (e.g. dateValueType "year" admits only YearValue).
 
 DateValueType ::: "year" | "yearMonth" | "fullDate"
 
 TimeFieldSpec ::: object {
   "kind": "TimeFieldSpec"
+  defaultValue?: TimeValue
   timePrecision?: TimePrecision
   timezoneRequirement?: TimezoneRequirement
   renderingHint?: TimeRenderingHint
@@ -993,6 +1030,7 @@ TimezoneRequirement ::: "timezoneRequired" | "timezoneNotRequired"
 DateTimeFieldSpec ::: object {
   "kind": "DateTimeFieldSpec"
   dateTimeValueType: DateTimeValueType
+  defaultValue?: DateTimeValue
   timezoneRequirement?: TimezoneRequirement
   renderingHint?: DateTimeRenderingHint
 }
@@ -1022,8 +1060,11 @@ TimeFormat ::: "twelveHour" | "twentyFourHour"
 ```
 ControlledTermFieldSpec ::: object {
   "kind": "ControlledTermFieldSpec"
+  defaultValue?: ControlledTermValue
   sources: nonEmptyArray<ControlledTermSource>
 }
+  // defaultValue.term, when present, SHOULD belong to one of the
+  // declared sources, but the structural model does not enforce this
 ```
 
 ### 7.3 Enum field specs
@@ -1083,6 +1124,7 @@ Meaning ::: object {
 ```
 LinkFieldSpec ::: object {
   "kind": "LinkFieldSpec"
+  defaultValue?: LinkValue
 }
 
 ContactFieldSpec ::: EmailFieldSpec | PhoneNumberFieldSpec
@@ -1090,10 +1132,12 @@ ContactFieldSpec ::: EmailFieldSpec | PhoneNumberFieldSpec
 
 EmailFieldSpec ::: object {
   "kind": "EmailFieldSpec"
+  defaultValue?: EmailValue
 }
 
 PhoneNumberFieldSpec ::: object {
   "kind": "PhoneNumberFieldSpec"
+  defaultValue?: PhoneNumberValue
 }
 
 ExternalAuthorityFieldSpec ::: OrcidFieldSpec | RorFieldSpec | DoiFieldSpec
@@ -1101,16 +1145,42 @@ ExternalAuthorityFieldSpec ::: OrcidFieldSpec | RorFieldSpec | DoiFieldSpec
                              | NihGrantIdFieldSpec
   // discriminator: kind
 
-OrcidFieldSpec ::: object { "kind": "OrcidFieldSpec" }
-RorFieldSpec ::: object { "kind": "RorFieldSpec" }
-DoiFieldSpec ::: object { "kind": "DoiFieldSpec" }
-PubMedIdFieldSpec ::: object { "kind": "PubMedIdFieldSpec" }
-RridFieldSpec ::: object { "kind": "RridFieldSpec" }
-NihGrantIdFieldSpec ::: object { "kind": "NihGrantIdFieldSpec" }
+OrcidFieldSpec ::: object {
+  "kind": "OrcidFieldSpec"
+  defaultValue?: OrcidValue
+}
+
+RorFieldSpec ::: object {
+  "kind": "RorFieldSpec"
+  defaultValue?: RorValue
+}
+
+DoiFieldSpec ::: object {
+  "kind": "DoiFieldSpec"
+  defaultValue?: DoiValue
+}
+
+PubMedIdFieldSpec ::: object {
+  "kind": "PubMedIdFieldSpec"
+  defaultValue?: PubMedIdValue
+}
+
+RridFieldSpec ::: object {
+  "kind": "RridFieldSpec"
+  defaultValue?: RridValue
+}
+
+NihGrantIdFieldSpec ::: object {
+  "kind": "NihGrantIdFieldSpec"
+  defaultValue?: NihGrantIdValue
+}
 
 AttributeValueFieldSpec ::: object {
   "kind": "AttributeValueFieldSpec"
 }
+  // AttributeValueFieldSpec carries no defaultValue; an AttributeValue
+  // is a per-instance pairing of a name and a value, and a default is
+  // not meaningful here (see grammar.md §Defaults).
 ```
 
 ### 7.5 Controlled term sources
@@ -2133,20 +2203,23 @@ the union of the inner `ArtifactMetadata` properties plus
 4. `[TextRenderingHint]` → `renderingHint?`
 
 **`IntegerNumberFieldSpec`** (`integer_number_field_spec`):
-0. `[Unit]` → `unit?`
-1. `[IntegerNumberMinValue]` → `minValue?`
-2. `[IntegerNumberMaxValue]` → `maxValue?`
-3. `[NumericRenderingHint]` → `renderingHint?`
+0. `[IntegerNumberValue]` → `defaultValue?`
+1. `[Unit]` → `unit?`
+2. `[IntegerNumberMinValue]` → `minValue?`
+3. `[IntegerNumberMaxValue]` → `maxValue?`
+4. `[NumericRenderingHint]` → `renderingHint?`
 
 **`RealNumberFieldSpec`** (`real_number_field_spec`):
 0. `RealNumberDatatypeKind` → `datatype`
-1. `[Unit]` → `unit?`
-2. `[RealNumberMinValue]` → `minValue?`
-3. `[RealNumberMaxValue]` → `maxValue?`
-4. `[NumericRenderingHint]` → `renderingHint?`
+1. `[RealNumberValue]` → `defaultValue?`
+2. `[Unit]` → `unit?`
+3. `[RealNumberMinValue]` → `minValue?`
+4. `[RealNumberMaxValue]` → `maxValue?`
+5. `[NumericRenderingHint]` → `renderingHint?`
 
 **`BooleanFieldSpec`** (`boolean_field_spec`):
-0. `[BooleanRenderingHint]` → `renderingHint?`
+0. `[BooleanValue]` → `defaultValue?`
+1. `[BooleanRenderingHint]` → `renderingHint?`
 
 **`Unit`** (`unit`):
 0. `Iri` → `iri`
@@ -2154,20 +2227,24 @@ the union of the inner `ArtifactMetadata` properties plus
 
 **`DateFieldSpec`** (`date_field_spec`):
 0. `DateValueType` → `dateValueType`
-1. `[DateRenderingHint]` → `renderingHint?`
+1. `[DateValue]` → `defaultValue?`
+2. `[DateRenderingHint]` → `renderingHint?`
 
 **`TimeFieldSpec`** (`time_field_spec`):
-0. `[TimePrecision]` → `timePrecision?`
-1. `[TimezoneRequirement]` → `timezoneRequirement?`
-2. `[TimeRenderingHint]` → `renderingHint?`
+0. `[TimeValue]` → `defaultValue?`
+1. `[TimePrecision]` → `timePrecision?`
+2. `[TimezoneRequirement]` → `timezoneRequirement?`
+3. `[TimeRenderingHint]` → `renderingHint?`
 
 **`DateTimeFieldSpec`** (`date_time_field_spec`):
 0. `DateTimeValueType` → `dateTimeValueType`
-1. `[TimezoneRequirement]` → `timezoneRequirement?`
-2. `[DateTimeRenderingHint]` → `renderingHint?`
+1. `[DateTimeValue]` → `defaultValue?`
+2. `[TimezoneRequirement]` → `timezoneRequirement?`
+3. `[DateTimeRenderingHint]` → `renderingHint?`
 
 **`ControlledTermFieldSpec`** (`controlled_term_field_spec`):
-0. `ControlledTermSource+` → `sources`
+0. `[ControlledTermValue]` → `defaultValue?`
+1. `ControlledTermSource+` → `sources`
 
 **`SingleValuedEnumFieldSpec`** (`single_valued_enum_field_spec`):
 0. `PermissibleValue+` → `permissibleValues`
@@ -2200,6 +2277,35 @@ the union of the inner `ArtifactMetadata` properties plus
 
 **`NumericRenderingHint`** (`numeric_rendering_hint`):
 0. `[DecimalPlaces]` → `decimalPlaces?`
+
+**`LinkFieldSpec`** (`link_field_spec`):
+0. `[LinkValue]` → `defaultValue?`
+
+**`EmailFieldSpec`** (`email_field_spec`):
+0. `[EmailValue]` → `defaultValue?`
+
+**`PhoneNumberFieldSpec`** (`phone_number_field_spec`):
+0. `[PhoneNumberValue]` → `defaultValue?`
+
+**`OrcidFieldSpec`** (`orcid_field_spec`):
+0. `[OrcidValue]` → `defaultValue?`
+
+**`RorFieldSpec`** (`ror_field_spec`):
+0. `[RorValue]` → `defaultValue?`
+
+**`DoiFieldSpec`** (`doi_field_spec`):
+0. `[DoiValue]` → `defaultValue?`
+
+**`PubMedIdFieldSpec`** (`pub_med_id_field_spec`):
+0. `[PubMedIdValue]` → `defaultValue?`
+
+**`RridFieldSpec`** (`rrid_field_spec`):
+0. `[RridValue]` → `defaultValue?`
+
+**`NihGrantIdFieldSpec`** (`nih_grant_id_field_spec`):
+0. `[NihGrantIdValue]` → `defaultValue?`
+
+`AttributeValueFieldSpec` carries no components and has no entry here.
 
 ### 14.9 Controlled term sources
 

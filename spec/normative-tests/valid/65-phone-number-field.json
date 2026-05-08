@@ -21,6 +21,10 @@
     }
   },
   "fieldSpec": {
-    "kind": "PhoneNumberFieldSpec"
+    "kind": "PhoneNumberFieldSpec",
+    "defaultValue": {
+      "kind": "PhoneNumberValue",
+      "value": "+1-555-0100"
+    }
   }
 }

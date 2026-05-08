@@ -21,6 +21,10 @@
     }
   },
   "fieldSpec": {
-    "kind": "RridFieldSpec"
+    "kind": "RridFieldSpec",
+    "defaultValue": {
+      "kind": "RridValue",
+      "iri": "https://scicrunch.org/resolver/RRID:AB_0000000"
+    }
   }
 }

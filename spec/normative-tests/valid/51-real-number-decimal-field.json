@@ -23,6 +23,11 @@
   "fieldSpec": {
     "kind": "RealNumberFieldSpec",
     "datatype": "decimal",
+    "defaultValue": {
+      "kind": "RealNumberValue",
+      "value": "1.0",
+      "datatype": "decimal"
+    },
     "unit": {
       "iri": "http://qudt.org/vocab/unit/PERCENT",
       "label": [

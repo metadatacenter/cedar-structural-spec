@@ -21,6 +21,10 @@
     }
   },
   "fieldSpec": {
-    "kind": "DoiFieldSpec"
+    "kind": "DoiFieldSpec",
+    "defaultValue": {
+      "kind": "DoiValue",
+      "iri": "https://doi.org/10.0000/example"
+    }
   }
 }

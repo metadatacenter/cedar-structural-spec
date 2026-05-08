@@ -23,6 +23,10 @@
   "fieldSpec": {
     "kind": "DateFieldSpec",
     "dateValueType": "fullDate",
+    "defaultValue": {
+      "kind": "FullDateValue",
+      "value": "2026-01-01"
+    },
     "renderingHint": {
       "componentOrder": "dayMonthYear"
     }

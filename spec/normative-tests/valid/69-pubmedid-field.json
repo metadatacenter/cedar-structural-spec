@@ -21,6 +21,10 @@
     }
   },
   "fieldSpec": {
-    "kind": "PubMedIdFieldSpec"
+    "kind": "PubMedIdFieldSpec",
+    "defaultValue": {
+      "kind": "PubMedIdValue",
+      "iri": "https://www.ncbi.nlm.nih.gov/pubmed/0"
+    }
   }
 }

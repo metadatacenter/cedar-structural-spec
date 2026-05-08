@@ -21,6 +21,16 @@
     }
   },
   "fieldSpec": {
-    "kind": "OrcidFieldSpec"
+    "kind": "OrcidFieldSpec",
+    "defaultValue": {
+      "kind": "OrcidValue",
+      "iri": "https://orcid.org/0000-0000-0000-0000",
+      "label": [
+        {
+          "value": "Default Author",
+          "lang": "en"
+        }
+      ]
+    }
   }
 }
