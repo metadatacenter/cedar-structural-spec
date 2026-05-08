@@ -1,0 +1,8 @@
+[
+  {
+    "category": "lexical",
+    "path": "/metadata/lifecycle/createdOn",
+    "production": "LifecycleMetadata",
+    "messageRegex": "Iso8601DateTimeLexicalForm|ISO ?8601|XSD dateTime|date.?time.*invalid|not.*date.?time|missing.*time"
+  }
+]

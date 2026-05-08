@@ -1,0 +1,8 @@
+[
+  {
+    "category": "structural",
+    "path": "/fieldSpec/sources/0/ontology/displayHint",
+    "production": "OntologyDisplayHint",
+    "messageRegex": "OntologyDisplayHint.*at least one|at least one of (acronym|name)|acronym.*or.*name|displayHint.*neither.*acronym.*name|empty.*displayHint"
+  }
+]

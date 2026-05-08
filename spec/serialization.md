@@ -857,10 +857,18 @@ Three categories of error are recognised:
 2. **Lexical error.** A wire value is well-formed JSON of the right
    shape, but its lexical content does not match the production's
    lexical category. Examples:
-   - A `LanguageTag` string that is not a valid BCP 47 tag.
-   - An `Iri` string that is not a syntactically valid RFC 3987 IRI.
+   - A `LanguageTag` string that is not a valid BCP 47 tag (per
+     RFC 5646).
+   - An `Iri` string that is not a syntactically valid absolute IRI
+     (per RFC 3987).
+   - An `EmbeddedArtifactKey` that does not match
+     `^[A-Za-z][A-Za-z0-9_-]*$`.
    - A `LexicalForm` integer string with a leading zero, leading sign,
-     or non-decimal digit (per §5.1).
+     or non-decimal digit (per `grammar.md` §Primitive String Types).
+   - A `SemanticVersion` string that does not conform to Semantic
+     Versioning 2.0.0.
+   - An `Iso8601DateTimeLexicalForm` string outside the XSD
+     `dateTime` extended form.
 3. **Structural-invariant error.** The shape and lexical content are
    each individually valid, but a constraint that crosses positions is
    violated. Examples:
@@ -870,6 +878,19 @@ Three categories of error are recognised:
      field of a different family than the enclosing `kind` declares.
    - `Cardinality.min > Cardinality.max`.
    - An `OntologyDisplayHint` carries neither `acronym` nor `name`.
+   - Two `LangString.lang` tags within the same `MultilingualString`
+     are equal under case-folded comparison.
+   - Two `PermissibleValue.value` tokens within the same enum spec are
+     equal.
+   - A `MultiValuedEnumFieldSpec.defaultValues` array contains two
+     `EnumValue` entries with the same `value`.
+   - A field-level or embedding-level `defaultValue` `Token` does
+     not equal any `PermissibleValue.value` of the spec.
+   - A `DateFieldSpec.defaultValue` arm is inconsistent with the
+     spec's `dateValueType` (e.g. `dateValueType: "year"` paired
+     with a `FullDateValue` default).
+   - A `SchemaArtifactVersioning` carrying both `previousVersion`
+     and `derivedFrom` with the same IRI.
 
 A single malformed input may produce errors in more than one category
 at distinct positions. An encoder reports the same three categories

@@ -35,7 +35,14 @@ normative-tests/
     ├── 09-ascii-identifier-with-space/                 # lexical (AsciiIdentifier)
     ├── 10-cardinality-min-greater-than-max/            # structural
     ├── 11-duplicate-lang-tag/                          # structural
-    └── 12-default-not-in-permissible-values/           # structural
+    ├── 12-default-not-in-permissible-values/           # structural
+    ├── 13-ontology-display-hint-empty/                 # structural (at-least-one-of)
+    ├── 14-permissible-value-token-not-unique/          # structural (uniqueness)
+    ├── 15-multi-valued-enum-default-duplicate/         # structural (uniqueness)
+    ├── 16-date-field-default-arm-mismatch/             # structural (cross-slot consistency)
+    ├── 17-previous-version-equals-derived-from/        # structural (cross-slot exclusion)
+    ├── 18-invalid-semantic-version/                    # lexical (SemanticVersion)
+    └── 19-invalid-iso8601-datetime/                    # lexical (Iso8601DateTimeLexicalForm)
         # each subdirectory contains input.json + expected-errors.json
 ```
 

@@ -1,0 +1,8 @@
+[
+  {
+    "category": "structural",
+    "path": "/fieldSpec/defaultValues/1/value",
+    "production": "MultiValuedEnumFieldSpec",
+    "messageRegex": "defaultValues.*duplicate|duplicate.*defaultValues|defaultValues.*not unique|asthma.*duplicate|EnumValue\\.value.*duplicate"
+  }
+]

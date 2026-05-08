@@ -1,0 +1,8 @@
+[
+  {
+    "category": "structural",
+    "path": "/fieldSpec/permissibleValues/2/value",
+    "production": "SingleValuedEnumFieldSpec",
+    "messageRegex": "PermissibleValue\\.value.*not unique|duplicate.*PermissibleValue|PermissibleValue.*value.*duplicate|moderate.*duplicate|Token.*not unique"
+  }
+]

@@ -1,0 +1,27 @@
+{
+  "kind": "MultiValuedEnumField",
+  "id": "https://example.org/fields/conditions-1",
+  "modelVersion": "2.0.0",
+  "metadata": {
+    "name": [{ "value": "Conditions", "lang": "en" }],
+    "lifecycle": {
+      "createdOn": "2026-01-15T09:30:00Z",
+      "createdBy": "https://example.org/u",
+      "modifiedOn": "2026-01-15T09:30:00Z",
+      "modifiedBy": "https://example.org/u"
+    },
+    "versioning": { "version": "1.0.0", "status": "draft" }
+  },
+  "fieldSpec": {
+    "kind": "MultiValuedEnumFieldSpec",
+    "permissibleValues": [
+      { "value": "asthma", "label": [{ "value": "Asthma", "lang": "en" }] },
+      { "value": "diabetes", "label": [{ "value": "Diabetes", "lang": "en" }] },
+      { "value": "hypertension", "label": [{ "value": "Hypertension", "lang": "en" }] }
+    ],
+    "defaultValues": [
+      { "kind": "EnumValue", "value": "asthma" },
+      { "kind": "EnumValue", "value": "asthma" }
+    ]
+  }
+}

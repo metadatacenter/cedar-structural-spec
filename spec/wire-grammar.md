@@ -749,6 +749,10 @@ SchemaArtifactVersioning ::: object {
   derivedFrom?: DerivedFrom
 }
   // version is a SemanticVersion lexical form
+  // when both previousVersion and derivedFrom are present, they MUST
+  // NOT carry the same IRI (per grammar.md §Schema Artifact
+  // Versioning); succession and derivation are mutually exclusive at
+  // any single point
 
 Version ::: string
 ModelVersion ::: string

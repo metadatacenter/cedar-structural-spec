@@ -1,0 +1,8 @@
+[
+  {
+    "category": "structural",
+    "path": "/fieldSpec/defaultValue",
+    "production": "DateFieldSpec",
+    "messageRegex": "defaultValue.*(arm|kind|consistent).*dateValueType|dateValueType.*year.*(FullDateValue|admits)|FullDateValue.*incompatible|YearValue.*expected"
+  }
+]
