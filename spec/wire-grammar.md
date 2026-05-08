@@ -98,31 +98,31 @@ Constraints are normative.
 
 ### 1.5 The polymorphic-only kind rule
 
-`kind: "X"` appears on a wire object only when that object is a member
-of a discriminated union encoded with `discriminator: kind`. At
-singleton positions (where the enclosing property name fixes the
-production unambiguously), the production is encoded as a plain
-`object { … }` with no `kind` property. This applies to productions
-such as `Cardinality`, `Property`, `LabelOverride`,
-`SchemaArtifactMetadata`, `ArtifactMetadata`, `LifecycleMetadata`,
-`SchemaArtifactVersioning`, `Annotation`, `Unit`, `OntologyReference`,
-`OntologyDisplayHint`, `ControlledTermClass`, `PermissibleValue`,
-`Meaning`, and the temporal `RenderingHint` variants.
+**Terms.** Three terms are used throughout this spec for related but
+distinct positional concepts:
 
-The rule also applies at the `EmbeddedXxxField.defaultValue` slot: when
-that slot is typed as a kind-tagged `Value` production
-(`ControlledTermValue`, `EnumValue`, `LinkValue`, or one of the six
-external-authority value types: `OrcidValue`, `RorValue`, `DoiValue`,
-`PubMedIdValue`, `RridValue`, `NihGrantIdValue`), the family is fixed
-by the enclosing `EmbeddedXxxField.kind`, so the inner `kind` property
-is dropped on the wire and reconstructed at decode time. Where the
-`defaultValue` slot is itself a polymorphic union (`DateValue`), the
-inner `kind` is retained as it is required to discriminate the union
-arms.
+- **Singleton position** — a property slot in a wire object where the
+  abstract grammar admits exactly one production (e.g.
+  `EmbeddedField.cardinality` is a singleton position whose only
+  admissible production is `Cardinality`).
+- **Singleton-only production** — an abstract production that appears
+  *only* at singleton positions and is never a member of a
+  `discriminator: kind` union (e.g. `Cardinality`, `Annotation`,
+  `LabelOverride`).
+- **Singleton element position** — an element of an array-typed slot
+  where the family of every element is fixed by the enclosing context
+  (e.g. each `EnumValue` inside `EmbeddedMultiValuedEnumField.defaultValue:
+  array<EnumValue>`). The polymorphic-only kind rule applies elementwise.
+
+**Rule.** A wire object carries a `"kind": "X"` property if and only if
+it is a member of a `discriminator: kind` union. Otherwise — at any
+*singleton position* (or singleton element position), where the
+surrounding context already fixes the production — the object is
+encoded as a plain `object { … }` with no `kind` property.
 
 **Worked examples.** Three cases illustrate the rule.
 
-*Case 1 — kind dropped (singleton position, family fixed).*
+*Case 1 — `kind` dropped at a singleton position (family fixed).*
 `ControlledTermValue` is a kind-tagged production. As a member of the
 `Value` union (which uses `discriminator: kind`), it carries its
 `kind`:
@@ -151,12 +151,12 @@ fixes the value family. The inner `kind` is dropped:
 }
 ```
 
-*Case 2 — kind retained (singleton position, slot still polymorphic).*
-`DateValue` is *itself* a discriminated union of `YearValue`,
-`YearMonthValue`, and `FullDateValue`. When it appears at the
-`defaultValue` slot of an `EmbeddedDateField`, the enclosing embedding
-fixes that the value is a `DateValue` — but does not fix which arm.
-The inner `kind` is therefore retained:
+*Case 2 — `kind` retained (slot is still polymorphic).* `DateValue` is
+*itself* a discriminated union of `YearValue`, `YearMonthValue`, and
+`FullDateValue`. When it appears at the `defaultValue` slot of an
+`EmbeddedDateField`, the enclosing embedding fixes that the value is a
+`DateValue` — but does not fix which arm. The inner `kind` is therefore
+retained:
 
 ```json
 {
@@ -184,11 +184,32 @@ singleton positions (e.g. `EmbeddedField.cardinality`,
 }
 ```
 
-The polymorphic-only rule constrains the **wire form**, not the
-**in-memory form** of any host-language binding. Bindings MAY carry
-synthetic `kind` (or any other) discriminator fields on their
-in-memory representations of singleton-position productions for
-runtime introspection, type-guard ergonomics, or debugging. Such
+**Where the rule applies in this spec.** Two settings, both following
+directly from the rule.
+
+1. **Singleton-only productions.** Productions that never appear in any
+   `discriminator: kind` union — `Cardinality`, `Property`,
+   `LabelOverride`, `SchemaArtifactMetadata`, `ArtifactMetadata`,
+   `LifecycleMetadata`, `SchemaArtifactVersioning`, `Annotation`,
+   `Unit`, `OntologyReference`, `OntologyDisplayHint`,
+   `ControlledTermClass`, `PermissibleValue`, `Meaning`, and the
+   temporal `RenderingHint` variants — never carry `kind` on the wire.
+
+2. **The `EmbeddedXxxField.defaultValue` slot.** When the slot is typed
+   as a kind-tagged `Value` production (`ControlledTermValue`,
+   `EnumValue`, `LinkValue`, or one of the six external-authority value
+   types: `OrcidValue`, `RorValue`, `DoiValue`, `PubMedIdValue`,
+   `RridValue`, `NihGrantIdValue`), the family is already fixed by the
+   enclosing `EmbeddedXxxField.kind`, so the inner `kind` is dropped
+   (Case 1). Where the slot is itself a polymorphic union — `DateValue`
+   on `EmbeddedDateField` — the inner `kind` is retained because it is
+   required to discriminate the union arms (Case 2).
+
+**Wire vs. in-memory.** The polymorphic-only rule constrains the
+**wire form**, not the **in-memory form** of any host-language binding.
+Bindings MAY carry synthetic `kind` (or any other) discriminator fields
+on their in-memory representations of singleton-position productions
+for runtime introspection, type-guard ergonomics, or debugging. Such
 synthetic discriminators MUST be stripped at encode and reconstructed
 at decode if the binding chooses to expose them; they MUST NOT appear
 on the wire. (See [`bindings.md`](bindings.md) §2.1 for examples.)
@@ -196,9 +217,10 @@ on the wire. (See [`bindings.md`](bindings.md) §2.1 for examples.)
 ### 1.6 Collapsed wrappers
 
 A *typed singleton wrapper* is an abstract grammar production whose
-constructor form has exactly one component, where that component is
-itself either a primitive lexical category (string, number, boolean)
-or another typed singleton wrapper. For example:
+constructor form has exactly one component. The inner component may
+be a primitive lexical category (string, number, boolean), another
+typed singleton wrapper, or a composite production such as
+`MultilingualString`. For example:
 
 ```ebnf
 Iri        ::= iri(IriString)
@@ -206,8 +228,8 @@ TemplateId ::= template_id(IriString)
 Label      ::= label(MultilingualString)
 ```
 
-In the abstract grammar these productions exist to give a primitive
-value a *role* — `Iri` is a syntactically valid IRI, `TemplateId` is
+In the abstract grammar these productions exist to give a value a
+*role* — `Iri` is a syntactically valid IRI, `TemplateId` is
 specifically the identifier of a template, `Label` is a label rather
 than an arbitrary multilingual string. The abstract grammar treats
 these roles as distinct types so that, e.g., a `TemplateId` cannot
@@ -218,11 +240,11 @@ On the wire, however, this typed-role information is recovered from
 the surrounding context (the property name and the abstract grammar
 production at that slot). The wrapper therefore collapses to its inner
 type at encode time and disappears from the JSON, leaving only the
-underlying primitive value. The wire grammar still names the wrapper
-production where the abstract grammar does, so that slot types in
-composite productions remain isomorphic to the abstract grammar's
-component types — but the wrapper's wire form `:::` is whatever JSON
-primitive (or already-collapsed production) it carries.
+inner value (a primitive, an array, or whichever shape the inner type
+encodes to). The wire grammar still names the wrapper production where
+the abstract grammar does, so that slot types in composite productions
+remain isomorphic to the abstract grammar's component types — but the
+wrapper's wire form `:::` is the wire form of whatever it carries.
 
 The wrappers fall into four groups by inner type:
 
@@ -239,9 +261,12 @@ The wrappers fall into four groups by inner type:
   `Version`, `ModelVersion`, `CreatedOn`, `ModifiedOn`.
 - **Numbers**: `NonNegativeInteger`, `MinCardinality`, `MaxCardinality`,
   `MinLength`, `MaxLength`, `DecimalPlaces`, `MaxTraversalDepth`.
-- **MultilingualString-typed**: `Name`, `Description`, `PreferredLabel`,
-  `AlternativeLabel`, `Label`, `PropertyLabel`, `OntologyName`,
-  `ValueSetName`, `RootTermLabel`, `Header`, `Footer`.
+- **MultilingualString-typed** (the inner type is itself a composite,
+  encoded as a `nonEmptyArray<LangString>` per the `MultilingualString`
+  wire production; the wrapper carries no additional wire shape):
+  `Name`, `Description`, `PreferredLabel`, `AlternativeLabel`, `Label`,
+  `PropertyLabel`, `OntologyName`, `ValueSetName`, `RootTermLabel`,
+  `Header`, `Footer`.
 
 `Version` and `ModelVersion` carry SemanticVersion 2.0.0 lexical
 strings. `CreatedOn` and `ModifiedOn` carry ISO 8601 date-time
@@ -606,11 +631,18 @@ AttributeValue ::: object {
 
 ## 4. Identifiers (artifact)
 
-Each artifact identifier wire-encodes as a plain string IRI; the
-abstract grammar's branding is not visible on the wire.
+Each artifact identifier wire-encodes as an `Iri` (which itself
+collapses to a plain string IRI per §1.6); the abstract grammar's
+typed-role distinction is not visible on the wire.
+
+`FieldId` is the umbrella union of the twenty typed
+`XxxFieldId` families per `grammar.md`; on the wire its encoding is
+just the encoding of whichever family member is at the slot position,
+which in every case is `Iri`. The wire grammar therefore lists `FieldId
+::: Iri` alongside each typed family for consistency.
 
 ```
-FieldId ::: string
+FieldId ::: Iri
 TextFieldId ::: Iri
 IntegerNumberFieldId ::: Iri
 RealNumberFieldId ::: Iri
@@ -691,8 +723,18 @@ ArtifactMetadata ::: object {
 ```
 
 `SchemaArtifactMetadata` is the wire form used by reusable schema
-artifacts. It is the flat union of `ArtifactMetadata`'s properties
-plus a `versioning` slot — there is no inner `artifact` wrapper.
+artifacts. The abstract grammar models it as the composition
+`schema_artifact_metadata(ArtifactMetadata, SchemaArtifactVersioning)`,
+but on the wire the inner `ArtifactMetadata` is unwrapped: every
+property of `ArtifactMetadata` appears directly on the outer object,
+alongside the additional `versioning` slot. There is no
+`metadata.artifact` intermediate. Equivalently:
+
+> `SchemaArtifactMetadata` = `ArtifactMetadata` + `{ versioning: SchemaArtifactVersioning }`,
+> with the `ArtifactMetadata` properties merged at the same level as
+> `versioning`.
+
+For completeness, the full wire form:
 
 ```
 SchemaArtifactMetadata ::: object {
@@ -707,13 +749,6 @@ SchemaArtifactMetadata ::: object {
 }
   // altLabels and annotations SHOULD be omitted from the wire when empty
 ```
-
-The abstract grammar models `SchemaArtifactMetadata` as the
-composition `schema_artifact_metadata(ArtifactMetadata,
-SchemaArtifactVersioning)`. The wire form unwraps the inner `ArtifactMetadata`
-into the outer object: every property of `ArtifactMetadata` appears
-directly alongside `versioning`. There is no `metadata.artifact`
-intermediate.
 
 ### 5.2 Lifecycle metadata
 
@@ -1180,6 +1215,17 @@ source productions for slot-type reference.
 
 ### 7.6 Rendering hints
 
+The `RenderingHint` union is heterogeneous: text/enum/boolean hints
+encode as flat strings, while `DateRenderingHint`, `TimeRenderingHint`,
+`DateTimeRenderingHint`, and `NumericRenderingHint` encode as objects
+that can carry configuration. Because some members are strings (which
+cannot carry a `"kind"` property), the union uses
+`discriminator: position` (§1.3): the decoder identifies the variant
+from the enclosing `FieldSpec`'s family — e.g. the value at
+`TextFieldSpec.renderingHint` is decoded as a `TextRenderingHint`, the
+value at `SingleValuedEnumFieldSpec.renderingHint` as a
+`SingleValuedEnumRenderingHint`, and so on.
+
 ```
 RenderingHint ::: TextRenderingHint | SingleValuedEnumRenderingHint
                 | MultiValuedEnumRenderingHint | NumericRenderingHint
@@ -1203,10 +1249,6 @@ NumericRenderingHint ::: object {
 
 BooleanRenderingHint ::: "checkbox" | "toggle" | "radio" | "dropdown"
 ```
-
-`DateRenderingHint`, `TimeRenderingHint`, `DateTimeRenderingHint`, and
-`NumericRenderingHint` are objects on the wire (each can carry
-configuration); the simpler text/enum/boolean hints are flat strings.
 
 ---
 
@@ -1425,6 +1467,24 @@ AttributeValueField ::: object {
 
 ## 9. Embedded artifacts
 
+Most embedded-field productions follow the same eight-property template
+— `kind`, `key`, `artifactRef`, `valueRequirement?`, `cardinality?`,
+`visibility?`, `defaultValue?`, `labelOverride?`, `property?` — with
+the per-family typing applied at `artifactRef` and `defaultValue`.
+Four families deviate from this template; the deviations are listed
+here so an implementer can scan them in one place rather than spotting
+them inside the per-family productions below.
+
+| Family | Deviation |
+|---|---|
+| `EmbeddedBooleanField` | omits `cardinality` (booleans are inherently single-valued) |
+| `EmbeddedSingleValuedEnumField` | omits `cardinality` (single-valued is implicit, parallel to boolean) |
+| `EmbeddedMultiValuedEnumField` | `defaultValue?: array<EnumValue>` rather than a singular `Value` (multi-valued enum admits a list of pre-selected tokens) |
+| `EmbeddedAttributeValueField` | omits `defaultValue` (attribute-value fields have no spec-level default) |
+
+`EmbeddedTemplate` and `EmbeddedPresentationComponent` follow their own
+shapes; see the per-production definitions later in this section.
+
 ```
 EmbeddedArtifact ::: EmbeddedField | EmbeddedTemplate
                    | EmbeddedPresentationComponent
@@ -1570,8 +1630,9 @@ EmbeddedMultiValuedEnumField ::: object {
   property?: Property
 }
   // defaultValue is a (possibly empty) array of EnumValue entries;
-  // each element is encoded with kind dropped at this singleton-element
-  // position. The array MUST NOT contain duplicate `value` entries.
+  // each element is at a singleton element position (§1.5) — its kind
+  // property is dropped on the wire. The array MUST NOT contain
+  // duplicate `value` entries.
 
 EmbeddedLinkField ::: object {
   "kind": "EmbeddedLinkField"
@@ -1889,6 +1950,15 @@ property-name mapping and are not listed.
 
 Conventions:
 
+- Each entry leads with the abstract production name in **bold** and,
+  in parentheses, the corresponding `lower_snake_case` constructor
+  form's name from `grammar.md` — e.g. **`Template`** (`template`),
+  **`YoutubeVideoComponent`** (`you_tube_video_component`). The
+  parenthesised name is informational, included so a reader cross-
+  referencing this section against `grammar.md` can match `::=`
+  productions to entries here without manually re-deriving the
+  snake_case form. It does not appear on the wire and has no
+  normative effect.
 - Component order follows `grammar.md`. Component-index numbering is
   zero-based.
 - Optional `[X]` and repeated `X*` / `X+` components are noted
