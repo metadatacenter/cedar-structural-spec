@@ -28,6 +28,7 @@
       "valueRequirement": "required",
       "visibility": "visible",
       "defaultValue": {
+        "kind": "EnumValue",
         "value": "moderate"
       },
       "property": {

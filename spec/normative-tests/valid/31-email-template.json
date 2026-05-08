@@ -32,6 +32,7 @@
       },
       "visibility": "visible",
       "defaultValue": {
+        "kind": "EmailValue",
         "value": "default@example.org"
       },
       "property": {

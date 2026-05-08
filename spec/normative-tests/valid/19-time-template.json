@@ -32,6 +32,7 @@
       },
       "visibility": "visible",
       "defaultValue": {
+        "kind": "TimeValue",
         "value": "09:00:00"
       },
       "property": {

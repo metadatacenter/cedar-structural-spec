@@ -32,6 +32,7 @@
       },
       "visibility": "visible",
       "defaultValue": {
+        "kind": "RealNumberValue",
         "value": "0.0",
         "datatype": "decimal"
       },

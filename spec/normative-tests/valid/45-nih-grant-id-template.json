@@ -32,6 +32,7 @@
       },
       "visibility": "visible",
       "defaultValue": {
+        "kind": "NihGrantIdValue",
         "iri": "https://reporter.nih.gov/project/0000000"
       },
       "property": {

@@ -32,6 +32,7 @@
       },
       "visibility": "visible",
       "defaultValue": {
+        "kind": "TextValue",
         "value": "default text"
       },
       "property": {

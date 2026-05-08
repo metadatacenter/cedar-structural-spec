@@ -24,10 +24,12 @@
     "kind": "RealNumberFieldSpec",
     "datatype": "double",
     "minValue": {
+      "kind": "RealNumberValue",
       "value": "-INF",
       "datatype": "double"
     },
     "maxValue": {
+      "kind": "RealNumberValue",
       "value": "INF",
       "datatype": "double"
     }

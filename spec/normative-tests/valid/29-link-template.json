@@ -32,6 +32,7 @@
       },
       "visibility": "visible",
       "defaultValue": {
+        "kind": "LinkValue",
         "iri": "https://example.org/default-link"
       },
       "property": {

@@ -32,6 +32,7 @@
       },
       "visibility": "visible",
       "defaultValue": {
+        "kind": "DoiValue",
         "iri": "https://doi.org/10.0000/example"
       },
       "property": {

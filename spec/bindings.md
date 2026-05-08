@@ -79,14 +79,15 @@ the wire grammar. For every category we give:
 ### 2.1 Plain object production
 
 **What it is.** A wire production written as `T ::: object { ... }`
-with no `"kind": "..."` literal property. These productions occupy
-singleton positions: the surrounding property name fixes the production
-unambiguously, so no discriminator is carried on the wire (per the
-polymorphic-only `kind` rule, [`wire-grammar.md`](wire-grammar.md)
-§1.5). Examples: `Cardinality`, `Property`, `LabelOverride`,
-`LifecycleMetadata`, `SchemaArtifactVersioning`,
-`Annotation`, `Unit`, `OntologyReference`, `OntologyDisplayHint`,
-`ControlledTermClass`, `PermissibleValue`, `Meaning`.
+with no `"kind": "..."` literal property. These are the
+*singleton-only productions* of the wire grammar — productions that
+never appear as alternatives in any `discriminator: kind` union, and
+therefore never carry `kind` on the wire (per the kind rule,
+[`wire-grammar.md`](wire-grammar.md) §1.5). Examples: `Cardinality`,
+`Property`, `LabelOverride`, `LifecycleMetadata`,
+`SchemaArtifactVersioning`, `Annotation`, `Unit`, `OntologyReference`,
+`OntologyDisplayHint`, `ControlledTermClass`, `PermissibleValue`,
+`Meaning`.
 
 **TypeScript idiom.** A `readonly` interface plus a constructor
 function. No `kind` field on the interface.

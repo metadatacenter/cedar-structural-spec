@@ -28,6 +28,7 @@
       "valueRequirement": "required",
       "visibility": "visible",
       "defaultValue": {
+        "kind": "BooleanValue",
         "value": false
       },
       "property": {

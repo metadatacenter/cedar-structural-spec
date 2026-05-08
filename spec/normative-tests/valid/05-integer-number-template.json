@@ -32,6 +32,7 @@
       },
       "visibility": "visible",
       "defaultValue": {
+        "kind": "IntegerNumberValue",
         "value": "0"
       },
       "property": {

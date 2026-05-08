@@ -32,6 +32,7 @@
       },
       "visibility": "visible",
       "defaultValue": {
+        "kind": "PhoneNumberValue",
         "value": "+1-555-0100"
       },
       "property": {

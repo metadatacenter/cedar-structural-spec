@@ -32,6 +32,7 @@
       },
       "visibility": "visible",
       "defaultValue": {
+        "kind": "RorValue",
         "iri": "https://ror.org/00000000a"
       },
       "property": {

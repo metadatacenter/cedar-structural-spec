@@ -32,9 +32,11 @@
       ]
     },
     "minValue": {
+      "kind": "IntegerNumberValue",
       "value": "0"
     },
     "maxValue": {
+      "kind": "IntegerNumberValue",
       "value": "1000"
     },
     "renderingHint": {

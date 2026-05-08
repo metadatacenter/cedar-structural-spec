@@ -82,11 +82,11 @@ Examples may use *placeholders* of the form `<ProductionName>` to denote the JSO
 
 ### 4.1 Tagged and untagged objects
 
-JSON objects in the wire format are either *tagged* — carrying a `"kind"` property — or *untagged* — without `"kind"`. Whether an object is tagged is determined by the position it occupies in the document; see §4.5 for the rule.
+JSON objects in the wire format are either *tagged* — carrying a `"kind"` property — or *untagged* — without `"kind"`. Whether an object is tagged is determined by its production: every member of a `discriminator: kind` union is tagged at every position; every other production is untagged at every position. See §4.4 for the rule.
 
 When an object is tagged, the value of `"kind"` MUST be the production name from [`grammar.md`](grammar.md), transcribed in `UpperCamelCase` exactly as the grammar names it. For example, `"TextValue"` for the `TextValue` production. The grammar's `lower_snake_case` constructor forms (e.g. `text_value(...)`) describe abstract composition and do not appear on the wire.
 
-A conforming implementation MUST reject any object whose tagged-or-untagged status does not match the position it occupies (per §4.5), whose `"kind"` value (when tagged) does not match any production known to the implementation, or whose other properties do not match the wire-grammar entry for the named production.
+A conforming implementation MUST reject any object whose tagged-or-untagged status does not match its production (per §4.4), whose `"kind"` value (when tagged) does not match any production known to the implementation, or whose other properties do not match the wire-grammar entry for the named production.
 
 ### 4.2 Optional components
 
@@ -106,13 +106,13 @@ The order of elements in the JSON array MUST match the order of components in th
 
 ### 4.4 Discriminator placement
 
-A JSON object's discriminator presence depends on the position it occupies in the document.
+A JSON object's discriminator presence depends on its **production**, not on the position it occupies in the document. Per [`wire-grammar.md`](wire-grammar.md) §1.5, every production is either a member of some `discriminator: kind` union or it is not, and the encoding follows uniformly:
 
-**Polymorphic positions** — those at which the grammar admits a union of productions, e.g. `EmbeddedArtifact ::= EmbeddedField | EmbeddedTemplate | EmbeddedPresentationComponent` — MUST encode each alternative as a tagged JSON object carrying `"kind"` per §4.1. The document root is itself a polymorphic position (any artifact may appear there); a JSON document at the root therefore carries `"kind"`.
+**Polymorphic-union members** — productions that appear as alternatives in a `discriminator: kind` union (e.g. `Value`, `FieldSpec`, `Annotation.body: AnnotationValue`, `EmbeddedField`, `EmbeddedArtifact`, every `Field` family, every `Value` family) — MUST encode as a tagged JSON object carrying `"kind": "<ProductionName>"`. The discriminator is present even when the surrounding context (the enclosing object's `kind` and property name) would already determine the family — for example, `EmbeddedTextField.defaultValue` carries `"kind": "TextValue"` even though `EmbeddedTextField.kind` already pins the family. Uniformity of the rule is preferred over the small wire-size saving.
 
-**Singleton positions** — those at which the grammar admits exactly one production — MUST encode that production as an untagged JSON object whose properties correspond to the production's components. The enclosing object's property name, together with the grammar, fully determines the production at this position; a `"kind"` property MUST NOT appear.
+**Singleton-only productions** — productions that never appear as members of any `discriminator: kind` union (`Cardinality`, `Property`, `LabelOverride`, `SchemaArtifactMetadata`, `ArtifactMetadata`, `LifecycleMetadata`, `SchemaArtifactVersioning`, `Annotation`, `Unit`, `OntologyReference`, `OntologyDisplayHint`, `ControlledTermClass`, `PermissibleValue`, `Meaning`, and the temporal `RenderingHint` object variants) — MUST encode as untagged JSON objects whose properties correspond to the production's components. A `"kind"` property MUST NOT appear.
 
-This rule applies recursively: an untagged object at a singleton position whose own components include further composite objects follows the same rule for each of those components.
+The rule applies recursively: a tagged object whose own components include further composite objects follows the same rule for each of those components, with the encoding determined by each inner production's own discriminator-union membership.
 
 #### Position-discriminated unions
 
@@ -199,7 +199,7 @@ The IRI placed at a `FieldId` position MUST belong to a field of the family decl
 
 ### 6.2 Multilingual strings
 
-A `MultilingualString` is encoded as a non-empty JSON array of untagged `LangString` objects. There is no `kind` discriminator: `MultilingualString` appears only at singleton positions, and `LangString` appears only as an entry of a `MultilingualString` array.
+A `MultilingualString` is encoded as a non-empty JSON array of untagged `LangString` objects. Neither `MultilingualString` nor `LangString` is a member of any `discriminator: kind` union (per §4.4), so neither carries a `kind` discriminator on the wire.
 
 ```json
 [{ "value": "Hello", "lang": "en" }, { "value": "Bonjour", "lang": "fr" }]
@@ -261,7 +261,7 @@ Each `Value` family is encoded as a tagged object that carries its content direc
 
 ### 6.4 Metadata and annotations
 
-`LifecycleMetadata`, `SchemaArtifactVersioning`, `ArtifactMetadata`, and `SchemaArtifactMetadata` each appear at a fixed singleton position and are encoded as untagged JSON objects. The descriptive properties of an artifact (`name`, `description`, `identifier`, `preferredLabel`, `altLabels`) sit directly on `ArtifactMetadata` rather than under a `descriptiveMetadata` wrapper.
+`LifecycleMetadata`, `SchemaArtifactVersioning`, `ArtifactMetadata`, and `SchemaArtifactMetadata` are singleton-only productions (never members of any `discriminator: kind` union per §4.4), so they encode as untagged JSON objects. The descriptive properties of an artifact (`name`, `description`, `identifier`, `preferredLabel`, `altLabels`) sit directly on `ArtifactMetadata` rather than under a `descriptiveMetadata` wrapper.
 
 ```json
 {
@@ -301,7 +301,7 @@ The `AnnotationValue` variant family is open to extension: future revisions of t
 
 ### 6.5 Embedded artifact properties
 
-`Cardinality`, `Property`, `LabelOverride`, and `Unit` are untagged JSON objects (singleton positions). `EmbeddedArtifactKey` flattens to a plain JSON string. `ValueRequirement` and `Visibility` flatten to JSON enum strings.
+`Cardinality`, `Property`, `LabelOverride`, and `Unit` are singleton-only productions (per §4.4) and encode as untagged JSON objects. `EmbeddedArtifactKey` flattens to a plain JSON string. `ValueRequirement` and `Visibility` flatten to JSON enum strings.
 
 ```json
 { "min": 0, "max": 5 }
@@ -414,68 +414,73 @@ An `EmbeddedAttributeValueField` MUST NOT carry a `defaultValue` property.
 
 ### 6.8 Default values
 
-The optional `defaultValue` slot on each `EmbeddedXxxField` is encoded directly as the family-specific `Value` (see [`wire-grammar.md`](wire-grammar.md) §6.5 for the full table). There is no `DefaultValue` wrapper on the wire: a default value is the family's `Value` shape in place. The `defaultValue` slot is a singleton position; per [`wire-grammar.md`](wire-grammar.md) §1.5, the `kind` property is omitted from the encoded `Value` because the surrounding `EmbeddedXxxField.kind` already fixes the family. The one polymorphic `Value` union — `DateValue` — retains its `kind` discriminator at this position because a kind tag is required to discriminate the union arms.
+The optional `defaultValue` slot on each `EmbeddedXxxField` is encoded directly as the family-specific `Value` (see [`wire-grammar.md`](wire-grammar.md) §6.5 for the full table). There is no `DefaultValue` wrapper on the wire: a default value is the family's `Value` shape in place. Every `Value` is a member of the `Value` polymorphic union, so per the kind rule ([`wire-grammar.md`](wire-grammar.md) §1.5) every `defaultValue` carries a `kind` discriminator — even though the surrounding `EmbeddedXxxField.kind` already fixes the family. The discriminator is structurally redundant at this slot but is retained for uniformity with `Value`'s appearance at polymorphic positions (e.g. `FieldValue.values[*]`).
 
-`EmbeddedMultiValuedEnumField.defaultValue` is the only embedding-level default whose wire form is a JSON array rather than a single object: it carries an array of `EnumValue` entries (each with `kind` dropped). All other embedding-level defaults are single `Value` objects.
+`EmbeddedMultiValuedEnumField.defaultValue` is the only embedding-level default whose wire form is a JSON array rather than a single object: it carries an array of `EnumValue` entries, each tagged with `"kind": "EnumValue"`. All other embedding-level defaults are single tagged `Value` objects.
 
 Examples by family:
 
 ```json
-// EmbeddedTextField.defaultValue — TextValue (kind dropped)
-"defaultValue": { "value": "Stanford University" }
-"defaultValue": { "value": "Bonjour", "lang": "fr" }
+// EmbeddedTextField.defaultValue — TextValue
+"defaultValue": { "kind": "TextValue", "value": "Stanford University" }
+"defaultValue": { "kind": "TextValue", "value": "Bonjour", "lang": "fr" }
 
-// EmbeddedIntegerNumberField.defaultValue — IntegerNumberValue (kind dropped)
-"defaultValue": { "value": "42" }
+// EmbeddedIntegerNumberField.defaultValue — IntegerNumberValue
+"defaultValue": { "kind": "IntegerNumberValue", "value": "42" }
 
-// EmbeddedRealNumberField.defaultValue — RealNumberValue (kind dropped)
-"defaultValue": { "value": "3.14", "datatype": "decimal" }
+// EmbeddedRealNumberField.defaultValue — RealNumberValue
+"defaultValue": { "kind": "RealNumberValue", "value": "3.14", "datatype": "decimal" }
 
-// EmbeddedBooleanField.defaultValue — BooleanValue (kind dropped)
-"defaultValue": { "value": true }
+// EmbeddedBooleanField.defaultValue — BooleanValue
+"defaultValue": { "kind": "BooleanValue", "value": true }
 
-// EmbeddedDateField.defaultValue — DateValue (polymorphic; kind retained)
+// EmbeddedDateField.defaultValue — DateValue arm (kind discriminates the arm)
 "defaultValue": { "kind": "FullDateValue", "value": "2024-06-15" }
 "defaultValue": { "kind": "YearValue", "value": "2024" }
 
-// EmbeddedTimeField.defaultValue — TimeValue (kind dropped)
-"defaultValue": { "value": "10:30:00" }
+// EmbeddedTimeField.defaultValue — TimeValue
+"defaultValue": { "kind": "TimeValue", "value": "10:30:00" }
 
-// EmbeddedDateTimeField.defaultValue — DateTimeValue (kind dropped)
-"defaultValue": { "value": "2024-06-15T10:30:00Z" }
+// EmbeddedDateTimeField.defaultValue — DateTimeValue
+"defaultValue": { "kind": "DateTimeValue", "value": "2024-06-15T10:30:00Z" }
 
-// EmbeddedControlledTermField.defaultValue — ControlledTermValue (kind dropped)
+// EmbeddedControlledTermField.defaultValue — ControlledTermValue
 "defaultValue": {
+  "kind": "ControlledTermValue",
   "term": "http://purl.obolibrary.org/obo/UBERON_0000955",
   "label": [{ "value": "brain", "lang": "en" }]
 }
 
-// EmbeddedSingleValuedEnumField.defaultValue — single EnumValue (kind dropped)
-"defaultValue": { "value": "yes" }
+// EmbeddedSingleValuedEnumField.defaultValue — single EnumValue
+"defaultValue": { "kind": "EnumValue", "value": "yes" }
 
-// EmbeddedMultiValuedEnumField.defaultValue — array of EnumValue (each kind dropped)
-"defaultValue": [{ "value": "active" }, { "value": "retired" }]
+// EmbeddedMultiValuedEnumField.defaultValue — array of tagged EnumValue
+"defaultValue": [
+  { "kind": "EnumValue", "value": "active" },
+  { "kind": "EnumValue", "value": "retired" }
+]
 
-// EmbeddedLinkField.defaultValue — LinkValue (kind dropped)
-"defaultValue": { "iri": "https://example.org", "label": "Example" }
+// EmbeddedLinkField.defaultValue — LinkValue
+"defaultValue": { "kind": "LinkValue", "iri": "https://example.org", "label": [{ "value": "Example", "lang": "en" }] }
 
-// EmbeddedEmailField.defaultValue — EmailValue (kind dropped)
-"defaultValue": { "value": "jane@example.org" }
+// EmbeddedEmailField.defaultValue — EmailValue
+"defaultValue": { "kind": "EmailValue", "value": "jane@example.org" }
 
-// EmbeddedPhoneNumberField.defaultValue — PhoneNumberValue (kind dropped)
-"defaultValue": { "value": "+1-650-555-0123" }
+// EmbeddedPhoneNumberField.defaultValue — PhoneNumberValue
+"defaultValue": { "kind": "PhoneNumberValue", "value": "+1-650-555-0123" }
 
-// EmbeddedOrcidField.defaultValue — OrcidValue (kind dropped)
+// EmbeddedOrcidField.defaultValue — OrcidValue
 "defaultValue": {
+  "kind": "OrcidValue",
   "iri": "https://orcid.org/0000-0002-1825-0097",
   "label": [{ "value": "Josiah Carberry", "lang": "en" }]
 }
 
 // EmbeddedRorField.defaultValue / EmbeddedDoiField.defaultValue / EmbeddedPubMedIdField.defaultValue
-// EmbeddedRridField.defaultValue / EmbeddedNihGrantIdField.defaultValue — analogous; kind dropped
+// EmbeddedRridField.defaultValue / EmbeddedNihGrantIdField.defaultValue — analogous, each tagged with its family's kind
 ```
 
-`TextFieldSpec.defaultValue` is also a singleton position and encodes as a `TextValue` with `kind` dropped (i.e. `{ value, lang? }`). `SingleValuedEnumFieldSpec.defaultValue` encodes on the wire as a bare JSON string (the `Token` of the selected permissible value); `MultiValuedEnumFieldSpec.defaultValues` encodes as a JSON array of such bare strings.
+`TextFieldSpec.defaultValue` is a `TextValue` and follows the same rule — it carries `"kind": "TextValue"` on the wire. `SingleValuedEnumFieldSpec.defaultValue` encodes as a bare JSON string (the `Token` of the selected permissible value, since `Token` is not a polymorphic-union member); `MultiValuedEnumFieldSpec.defaultValues` encodes as a JSON array of such bare strings.
 
 Embedding-level defaults take precedence over the spec-level defaults when both are present, parallel to the `TextFieldSpec.defaultValue` precedence rule.
 
@@ -556,9 +561,9 @@ a realistic `Template`, a `TemplateInstance` that conforms to it, a
 round-trip equality check, and two known-bad inputs that exercise the
 error model from §9. The goal is to give implementers a concrete
 fixture they can decode-and-encode against, and to make every cross-
-section reference (the polymorphic-only kind rule, wrapping
-principle, defaultValue kind-drop, structural-invariant constraints)
-visible at one position in the wire form.
+section reference (the kind rule, wrapping principle,
+structural-invariant constraints) visible at one position in the
+wire form.
 
 The JSON in this section is **embedded from machine-readable test
 fixtures** under
@@ -612,15 +617,18 @@ they exercise specific rules:
   `discriminator: kind` union with `AnnotationStringValue` and
   `AnnotationIriValue` arms; the wire form carries the discriminator
   per §1.5 of `wire-grammar.md`.
-- **`defaultValue` kind-drop.** On `EmbeddedSingleValuedEnumField`
-  and `EmbeddedIntegerNumberField`, the `defaultValue` is a plain
-  object with **no** `kind` property — `{ "value": "moderate" }`
-  and `{ "value": "1" }` respectively. The enclosing
-  `EmbeddedXxxField.kind` already pins the value family, so the
-  inner `kind` is dropped per the polymorphic-only kind rule. On
-  `EmbeddedDateField` the `defaultValue` *retains* `"kind":
-  "FullDateValue"` because `DateValue` is itself a polymorphic
-  union; the inner kind is required to discriminate the arm.
+- **`defaultValue` kind discriminators.** Every `defaultValue` on
+  every `EmbeddedXxxField` carries a `kind` discriminator per the
+  rule in [`wire-grammar.md`](wire-grammar.md) §1.5 — for example
+  `{ "kind": "EnumValue", "value": "moderate" }` on
+  `EmbeddedSingleValuedEnumField`, `{ "kind": "IntegerNumberValue",
+  "value": "1" }` on `EmbeddedIntegerNumberField`, and `{ "kind":
+  "FullDateValue", "value": "2026-01-01" }` on `EmbeddedDateField`.
+  The discriminator is structurally redundant at slots whose
+  enclosing `EmbeddedXxxField.kind` already fixes the family
+  (everywhere except `EmbeddedDateField`), but is retained for
+  uniformity with `Value`'s appearance at polymorphic positions
+  such as `FieldValue.values[*]` in instances.
 - **Identifier IRIs.** Every `artifactRef` is an IRI string that
   belongs to a field of the family declared by the surrounding
   `kind` (§6.1, §9.1 category 3). A conforming encoder verifies this
@@ -633,69 +641,67 @@ they exercise specific rules:
   appears at singleton positions only and never carries `kind` per
   §1.5.
 
-### 8.2 `defaultValue` kind-drop, side-by-side
+### 8.2 `kind` discriminators, two examples
 
-The polymorphic-only kind rule from §1.5 of `wire-grammar.md`
-applies elementwise to every `EmbeddedXxxField.defaultValue` slot,
-but its observable effect on the wire differs depending on whether
-the slot's type is itself polymorphic. Two concrete cases below make
-the contrast unmissable.
+Per the kind rule (§1.5 of `wire-grammar.md`), every member of a
+`discriminator: kind` union carries `"kind"` on the wire — at every
+position. Two examples illustrate.
 
-*Case A — kind dropped.* `EmbeddedTextField.defaultValue?: TextValue`.
-`TextValue` is a single concrete production: there are no
-alternative arms to discriminate, and the enclosing
-`EmbeddedTextField.kind` already fixes the family. The inner `kind`
-is therefore omitted on the wire:
+*Example 1 — `Value` at a polymorphic position.* In a
+`TemplateInstance`, the `FieldValue.values` slot is a
+`nonEmptyArray<Value>`. The decoder uses the array element's `kind`
+to pick the union arm:
 
 ```json
 {
-  "kind": "EmbeddedTextField",
-  "key": "comment",
-  "artifactRef": "https://example.org/fields/comment",
-  "defaultValue": { "value": "Initial comment", "lang": "en" }
+  "kind": "FieldValue",
+  "key": "severity",
+  "values": [ { "kind": "EnumValue", "value": "severe" } ]
 }
 ```
 
-The same pattern applies to every non-polymorphic-default family —
-`EmbeddedIntegerNumberField` (default is a kind-stripped
-`IntegerNumberValue`), `EmbeddedSingleValuedEnumField` (kind-stripped
-`EnumValue`), `EmbeddedLinkField`, `EmbeddedOrcidField`, and so on
-through the twenty-family roster.
-
-*Case B — kind retained.* `EmbeddedDateField.defaultValue?: DateValue`.
-`DateValue` is *itself* a polymorphic union (`YearValue` |
-`YearMonthValue` | `FullDateValue`). The enclosing
-`EmbeddedDateField.kind` fixes that the value is a `DateValue`, but
-not which arm. The inner `kind` is therefore required to
-discriminate the arm and MUST be retained:
+*Example 2 — `Value` at a singleton position.* In an
+`EmbeddedSingleValuedEnumField`, the `defaultValue` slot's type is
+the single concrete `EnumValue` production: the enclosing
+`EmbeddedSingleValuedEnumField.kind` already determines the family.
+The `kind` discriminator is therefore *structurally redundant* at
+this slot — but is still emitted, because `EnumValue` is a member of
+the `Value` polymorphic union and the rule is uniform across
+positions:
 
 ```json
 {
-  "kind": "EmbeddedDateField",
-  "key": "observed",
-  "artifactRef": "https://example.org/fields/observed",
-  "defaultValue": { "kind": "FullDateValue", "value": "2026-01-01" }
+  "kind": "EmbeddedSingleValuedEnumField",
+  "key": "severity",
+  "artifactRef": "https://example.org/fields/severity",
+  "defaultValue": { "kind": "EnumValue", "value": "moderate" }
 }
 ```
 
-A `defaultValue` of `{ "kind": "YearValue", "value": "2026" }` or
-`{ "kind": "YearMonthValue", "value": "2026-04" }` is equally valid
-at this slot; the inner `kind` is what tells the decoder which
-arm to construct.
+The same pattern applies at every other singleton-`Value` slot:
+`EmbeddedTextField.defaultValue` carries `"kind": "TextValue"`,
+`EmbeddedIntegerNumberField.defaultValue` carries `"kind":
+"IntegerNumberValue"`, `IntegerNumberFieldSpec.minValue` carries
+`"kind": "IntegerNumberValue"`, and so on. The wire-size cost is
+small (one extra short property per `Value` object) and the
+simplification at the spec level is that there is exactly one
+encoding rule for `Value`, applicable everywhere.
 
-*Decision rule.* For every `EmbeddedXxxField` family, look up the
-`defaultValue` slot's declared production in `wire-grammar.md`:
+`EmbeddedMultiValuedEnumField.defaultValue` is the array case: each
+element of the array is itself a tagged `EnumValue`:
 
-- If it is a single concrete production (`TextValue`, `EnumValue`,
-  `LinkValue`, etc.) — drop the inner `kind`.
-- If it is itself a polymorphic union (currently only `DateValue`
-  on `EmbeddedDateField`) — retain the inner `kind`.
+```json
+"defaultValue": [
+  { "kind": "EnumValue", "value": "active" },
+  { "kind": "EnumValue", "value": "retired" }
+]
+```
 
-`EmbeddedMultiValuedEnumField` is a slight third case: its
-`defaultValue?: array<EnumValue>` carries an *array* of kind-stripped
-`EnumValue` objects (`[ { "value": "a" }, { "value": "b" } ]`),
-since each array element is at a singleton element position whose
-family is fixed.
+By contrast, `Cardinality`, `Annotation`, `LabelOverride`, `Property`,
+and the other singleton-only productions enumerated in §1.5 are
+**not** members of any `discriminator: kind` union, so they never
+carry `"kind"` regardless of position. `Cardinality` is always
+`{ "min": …, "max"?: … }`; never `{ "kind": "Cardinality", … }`.
 
 ### 8.3 A `TemplateInstance` for the above `Template`
 
@@ -723,9 +729,11 @@ Notes:
 - **`FieldValue.values[*]` carries `kind`.** The values inside
   `FieldValue.values` are members of the `Value` polymorphic union;
   every entry carries its `kind` discriminator (per §1.5 of
-  `wire-grammar.md`). Contrast with `EmbeddedXxxField.defaultValue`
-  in §8.1 above, where the family is already fixed by the embedding's
-  `kind` and the inner kind is dropped.
+  `wire-grammar.md`). The same `kind`-bearing shape appears at every
+  other `Value` slot — `EmbeddedXxxField.defaultValue` in the
+  template above, `TextFieldSpec.defaultValue` on a standalone
+  `TextField`, the `IntegerNumberFieldSpec.minValue`/`maxValue`
+  bounds — because the rule is uniform across positions.
 
 ### 8.4 Round-tripping
 

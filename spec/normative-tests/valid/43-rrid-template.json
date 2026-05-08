@@ -32,6 +32,7 @@
       },
       "visibility": "visible",
       "defaultValue": {
+        "kind": "RridValue",
         "iri": "https://scicrunch.org/resolver/RRID:AB_0000000"
       },
       "property": {

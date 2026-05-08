@@ -32,9 +32,11 @@
       "visibility": "visible",
       "defaultValue": [
         {
+          "kind": "EnumValue",
           "value": "preselected"
         },
         {
+          "kind": "EnumValue",
           "value": "alsoPreselected"
         }
       ],
