@@ -1,0 +1,32 @@
+{
+  "kind": "TemplateInstance",
+  "id": "https://example.org/instances/date-year-1",
+  "modelVersion": "2.0.0",
+  "metadata": {
+    "name": [
+      {
+        "value": "Test instance",
+        "lang": "en"
+      }
+    ],
+    "lifecycle": {
+      "createdOn": "2026-04-15T10:22:00Z",
+      "createdBy": "https://example.org/users/alice",
+      "modifiedOn": "2026-04-15T10:22:00Z",
+      "modifiedBy": "https://example.org/users/alice"
+    }
+  },
+  "templateRef": "https://example.org/templates/date-year",
+  "values": [
+    {
+      "kind": "FieldValue",
+      "key": "field1",
+      "values": [
+        {
+          "kind": "YearValue",
+          "value": "2027"
+        }
+      ]
+    }
+  ]
+}

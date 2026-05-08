@@ -19,8 +19,54 @@ against the original; every binding MUST decode every file under
 normative-tests/
 ├── README.md                         # this file
 ├── valid/
-│   ├── 01-patient-observation-template.json
-│   └── 02-patient-observation-instance.json
+│   ├── 01-patient-observation-template.json    # mega-fixture (5 families)
+│   ├── 02-patient-observation-instance.json    # instance for 01
+│   ├── 03-text-template.json   ↘
+│   ├── 04-text-instance.json    ⎫
+│   ├── 05-integer-number-template.json
+│   ├── 06-integer-number-instance.json
+│   ├── 07-real-number-decimal-template.json   # datatype: decimal
+│   ├── 08-real-number-decimal-instance.json
+│   ├── 09-real-number-double-template.json    # datatype: double, INF
+│   ├── 10-real-number-double-instance.json
+│   ├── 11-boolean-template.json                # NO cardinality (deviation)
+│   ├── 12-boolean-instance.json
+│   ├── 13-date-template.json                   # FullDateValue arm
+│   ├── 14-date-instance.json
+│   ├── 15-date-year-template.json              # YearValue arm
+│   ├── 16-date-year-instance.json
+│   ├── 17-date-year-month-template.json        # YearMonthValue arm
+│   ├── 18-date-year-month-instance.json
+│   ├── 19-time-template.json
+│   ├── 20-time-instance.json
+│   ├── 21-date-time-template.json
+│   ├── 22-date-time-instance.json
+│   ├── 23-controlled-term-template.json
+│   ├── 24-controlled-term-instance.json
+│   ├── 25-single-valued-enum-template.json     # NO cardinality (deviation)
+│   ├── 26-single-valued-enum-instance.json
+│   ├── 27-multi-valued-enum-template.json      # array<EnumValue> default (deviation)
+│   ├── 28-multi-valued-enum-instance.json
+│   ├── 29-link-template.json
+│   ├── 30-link-instance.json
+│   ├── 31-email-template.json
+│   ├── 32-email-instance.json
+│   ├── 33-phone-number-template.json
+│   ├── 34-phone-number-instance.json
+│   ├── 35-orcid-template.json                  ⎫
+│   ├── 36-orcid-instance.json                  │
+│   ├── 37-ror-template.json                    │
+│   ├── 38-ror-instance.json                    │
+│   ├── 39-doi-template.json                    │  six external-authority families
+│   ├── 40-doi-instance.json                    │
+│   ├── 41-pubmedid-template.json               │
+│   ├── 42-pubmedid-instance.json               │
+│   ├── 43-rrid-template.json                   │
+│   ├── 44-rrid-instance.json                   │
+│   ├── 45-nih-grant-id-template.json           │
+│   ├── 46-nih-grant-id-instance.json           ⎭
+│   ├── 47-attribute-value-template.json        # NO defaultValue (deviation)
+│   └── 48-attribute-value-instance.json
 └── invalid/
     ├── 01-unknown-kind/
     │   ├── input.json                # the malformed wire form
@@ -29,6 +75,27 @@ normative-tests/
         ├── input.json
         └── expected-errors.json
 ```
+
+## Fixture coverage
+
+`01` and `02` are the **mega-fixtures** referenced from
+`serialization.md` §8 — a single Template (and conforming Instance)
+that exercises five field families plus full-fat metadata,
+annotations, and varied cardinalities.
+
+`03` through `48` are the **per-family fixtures** — one minimal
+Template + Instance pair for every concrete `XxxField` family
+(twenty in total, plus extra fixtures for the `RealNumberValue`
+datatype variants and the three `DateValue` arms). Each per-family
+fixture is the *minimum* that exercises the family's distinctive
+shape: the `EmbeddedXxxField.kind`, the `Value` arm, the per-family
+typed identifier slot, and any deviations from the standard
+embedded-field template (no-`cardinality` slots on Boolean and
+SingleValuedEnum, array-shaped `defaultValue` on
+MultiValuedEnum, no-`defaultValue` slot on AttributeValue). A
+binding that round-trips every per-family fixture has demonstrated
+correct mapping for every family-bearing wire shape this spec
+defines.
 
 ## `valid/` semantics
 

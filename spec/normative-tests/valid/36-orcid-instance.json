@@ -1,0 +1,38 @@
+{
+  "kind": "TemplateInstance",
+  "id": "https://example.org/instances/orcid-1",
+  "modelVersion": "2.0.0",
+  "metadata": {
+    "name": [
+      {
+        "value": "Test instance",
+        "lang": "en"
+      }
+    ],
+    "lifecycle": {
+      "createdOn": "2026-04-15T10:22:00Z",
+      "createdBy": "https://example.org/users/alice",
+      "modifiedOn": "2026-04-15T10:22:00Z",
+      "modifiedBy": "https://example.org/users/alice"
+    }
+  },
+  "templateRef": "https://example.org/templates/orcid",
+  "values": [
+    {
+      "kind": "FieldValue",
+      "key": "field1",
+      "values": [
+        {
+          "kind": "OrcidValue",
+          "iri": "https://orcid.org/0000-0002-1825-0097",
+          "label": [
+            {
+              "value": "Josiah Carberry",
+              "lang": "en"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
