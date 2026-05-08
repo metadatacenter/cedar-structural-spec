@@ -633,7 +633,71 @@ they exercise specific rules:
   appears at singleton positions only and never carries `kind` per
   §1.5.
 
-### 8.2 A `TemplateInstance` for the above `Template`
+### 8.2 `defaultValue` kind-drop, side-by-side
+
+The polymorphic-only kind rule from §1.5 of `wire-grammar.md`
+applies elementwise to every `EmbeddedXxxField.defaultValue` slot,
+but its observable effect on the wire differs depending on whether
+the slot's type is itself polymorphic. Two concrete cases below make
+the contrast unmissable.
+
+*Case A — kind dropped.* `EmbeddedTextField.defaultValue?: TextValue`.
+`TextValue` is a single concrete production: there are no
+alternative arms to discriminate, and the enclosing
+`EmbeddedTextField.kind` already fixes the family. The inner `kind`
+is therefore omitted on the wire:
+
+```json
+{
+  "kind": "EmbeddedTextField",
+  "key": "comment",
+  "artifactRef": "https://example.org/fields/comment",
+  "defaultValue": { "value": "Initial comment", "lang": "en" }
+}
+```
+
+The same pattern applies to every non-polymorphic-default family —
+`EmbeddedIntegerNumberField` (default is a kind-stripped
+`IntegerNumberValue`), `EmbeddedSingleValuedEnumField` (kind-stripped
+`EnumValue`), `EmbeddedLinkField`, `EmbeddedOrcidField`, and so on
+through the twenty-family roster.
+
+*Case B — kind retained.* `EmbeddedDateField.defaultValue?: DateValue`.
+`DateValue` is *itself* a polymorphic union (`YearValue` |
+`YearMonthValue` | `FullDateValue`). The enclosing
+`EmbeddedDateField.kind` fixes that the value is a `DateValue`, but
+not which arm. The inner `kind` is therefore required to
+discriminate the arm and MUST be retained:
+
+```json
+{
+  "kind": "EmbeddedDateField",
+  "key": "observed",
+  "artifactRef": "https://example.org/fields/observed",
+  "defaultValue": { "kind": "FullDateValue", "value": "2026-01-01" }
+}
+```
+
+A `defaultValue` of `{ "kind": "YearValue", "value": "2026" }` or
+`{ "kind": "YearMonthValue", "value": "2026-04" }` is equally valid
+at this slot; the inner `kind` is what tells the decoder which
+arm to construct.
+
+*Decision rule.* For every `EmbeddedXxxField` family, look up the
+`defaultValue` slot's declared production in `wire-grammar.md`:
+
+- If it is a single concrete production (`TextValue`, `EnumValue`,
+  `LinkValue`, etc.) — drop the inner `kind`.
+- If it is itself a polymorphic union (currently only `DateValue`
+  on `EmbeddedDateField`) — retain the inner `kind`.
+
+`EmbeddedMultiValuedEnumField` is a slight third case: its
+`defaultValue?: array<EnumValue>` carries an *array* of kind-stripped
+`EnumValue` objects (`[ { "value": "a" }, { "value": "b" } ]`),
+since each array element is at a singleton element position whose
+family is fixed.
+
+### 8.3 A `TemplateInstance` for the above `Template`
 
 The instance below conforms to the `Template` of §8.1: it carries one
 value per required and present optional `EmbeddedField`, omits the
@@ -663,7 +727,7 @@ Notes:
   in §8.1 above, where the family is already fixed by the embedding's
   `kind` and the inner kind is dropped.
 
-### 8.3 Round-tripping
+### 8.4 Round-tripping
 
 Decoding the §8.1 `Template` JSON and re-encoding the resulting
 in-memory value MUST produce a JSON document that is equal to the
@@ -681,7 +745,7 @@ A binding MAY canonicalise property order on encode (e.g. always emit
 alphabetically); the canonical form is not normative under §7 — only
 its decode-equivalence to the input is.
 
-### 8.4 Known-bad inputs
+### 8.5 Known-bad inputs
 
 The two inputs below exercise the §9 error model. Each is presented
 with the expected reported errors per §9.3 (the four required
@@ -738,7 +802,7 @@ file alongside the input under
 where the `messageRegex` field gives the regex a binding's
 reported `message` MUST match (literal equality is not required —
 wording is informational, the regex pins the substantive content).
-The same convention applies to the §8.4 first input and to all
+The same convention applies to the §8.5 first input and to all
 future invalid fixtures.
 
 ## 9. Errors
