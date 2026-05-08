@@ -122,17 +122,17 @@ Implementations MUST NOT rely on JSON property ordering to discriminate alternat
 
 ### 4.5 String values
 
-Strings are JSON strings encoded in UTF-8. Lexical-form strings (e.g. the `value` property of a `TextValue`) MUST be transmitted in Unicode Normalization Form C (NFC). A conforming implementation SHOULD normalize on encode.
+Strings are JSON strings encoded in UTF-8. Lexical-form strings (e.g. the `value` property of a `TextValue`) MUST be transmitted in Unicode Normalization Form C (NFC). A conforming encoder MUST emit NFC. A conforming decoder receiving non-NFC input handles it per §9.6.
 
 ### 4.6 Number values
 
-Integer-valued grammar productions (e.g. `NonNegativeInteger`) are encoded as JSON numbers without a fractional part or exponent. Implementations MUST encode integer values that fit within JSON Number's safe integer range without loss; values outside that range MUST be encoded as strings (see §5.2 below for the cases this applies to).
+Integer-valued grammar productions (e.g. `NonNegativeInteger`) are encoded as JSON numbers without a fractional part or exponent. Implementations MUST encode integer values that fit within JSON Number's safe integer range (the integers in the closed interval `[−(2^53 − 1), 2^53 − 1]`) without loss. Values outside that range fall under §5.1 below — the wire grammar permits a JSON-string fallback, but implementations MAY refuse to encode out-of-range values since no current use site exercises this case.
 
 Decimal-valued grammar productions are encoded as JSON numbers in standard decimal notation per RFC 8259.
 
 ### 4.7 Implementation freedom
 
-A conforming implementation MAY add JSON properties beyond those defined here for non-normative purposes (annotations, hashes, signatures, etc.), provided those properties begin with `_` or `$` to avoid collision with future normative additions. Decoders MUST ignore such properties.
+A conforming implementation MAY add JSON properties beyond those defined here for non-normative purposes (annotations, hashes, signatures, etc.), provided those properties begin with `_` or `$` to avoid collision with future normative additions. Decoders MUST ignore such properties. Decoders encountering a property whose name does *not* begin with `_` or `$` and is not declared by the production at the position MUST report a wire-shape error per §9.5.
 
 A conforming implementation MAY emit JSON object properties in any order; the wire format is order-independent at the object level.
 
@@ -170,11 +170,16 @@ The full list of productions that collapse this way is given in §1.6 of [`wire-
 
 ### 5.1 Lexical-form preservation
 
-Two narrow cases require encoded values that exceed JSON-primitive expressiveness:
-
-- **Big integers.** `NonNegativeInteger` values that exceed JSON Number's safe integer range (`2^53 − 1`) MUST be encoded as JSON strings rather than numbers. A decoder MUST accept both forms. In practice this case does not arise for the model's current use sites (length bounds, cardinality bounds, traversal depths, numeric precision); implementations MAY refuse to encode an out-of-range value.
-
-- **Leading-zero lexical forms.** Where the abstract grammar admits lexical forms whose leading zeros carry semantic information (none currently do), implementations MUST encode such values as strings. This does not apply to integer-valued productions, which carry mathematical values rather than lexical forms.
+**Big integers.** `NonNegativeInteger` values that exceed JSON Number's
+safe integer range (the magnitude bound `2^53 − 1`) MAY be encoded as
+JSON strings rather than numbers. A decoder MUST accept both forms.
+In practice this case does not arise for the model's current use
+sites (length bounds, cardinality bounds, traversal depths, numeric
+precision are all small); implementations MAY refuse to encode an
+out-of-range value rather than fall back to the string form. If a
+future use site introduces values that routinely exceed the safe
+range, this section will be revisited to make the string fallback a
+MUST.
 
 ## 6. Per-Production Encoding (Examples)
 
@@ -188,7 +193,9 @@ Every artifact identifier is encoded as a plain JSON string carrying the IRI. Th
 "https://example.org/fields/title"
 ```
 
-A `FieldId` appears only in two grammar positions: as `Field.id` (the artifact's own identity) and as `EmbeddedField.artifactRef` (a reference to the embedded artifact). Both surrounding constructs carry a `kind` discriminator that conveys the field family. The twenty permitted family-bearing `kind` values for `Field` variants are: `"TextField"`, `"IntegerNumberField"`, `"RealNumberField"`, `"BooleanField"`, `"DateField"`, `"TimeField"`, `"DateTimeField"`, `"ControlledTermField"`, `"SingleValuedEnumField"`, `"MultiValuedEnumField"`, `"LinkField"`, `"EmailField"`, `"PhoneNumberField"`, `"OrcidField"`, `"RorField"`, `"DoiField"`, `"PubMedIdField"`, `"RridField"`, `"NihGrantIdField"`, or `"AttributeValueField"`. The corresponding `EmbeddedField` variants prefix `Embedded` (e.g. `"EmbeddedTextField"`). A conforming encoder MUST ensure that the IRI it places at a `FieldId` position belongs to a field of the family declared by the surrounding `kind`.
+A `FieldId` appears only in two grammar positions: as `Field.id` (the artifact's own identity) and as `EmbeddedField.artifactRef` (a reference to the embedded artifact). Both surrounding constructs carry a `kind` discriminator that conveys the field family. The twenty permitted family-bearing `kind` values for `Field` variants are: `"TextField"`, `"IntegerNumberField"`, `"RealNumberField"`, `"BooleanField"`, `"DateField"`, `"TimeField"`, `"DateTimeField"`, `"ControlledTermField"`, `"SingleValuedEnumField"`, `"MultiValuedEnumField"`, `"LinkField"`, `"EmailField"`, `"PhoneNumberField"`, `"OrcidField"`, `"RorField"`, `"DoiField"`, `"PubMedIdField"`, `"RridField"`, `"NihGrantIdField"`, or `"AttributeValueField"`. The corresponding `EmbeddedField` variants prefix `Embedded` (e.g. `"EmbeddedTextField"`).
+
+The IRI placed at a `FieldId` position MUST belong to a field of the family declared by the surrounding `kind`. This is a structural-invariant constraint (per §9.1 category 3); a conforming encoder enforces it before emitting the wire form, and a conforming decoder reports a structural error against `path` if it is violated.
 
 ### 6.2 Multilingual strings
 
@@ -611,7 +618,154 @@ The `name` property below is a `MultilingualString` (§6.2): an array of `{value
 }
 ```
 
-## 9. Reserved Property Names
+## 9. Errors
+
+This section specifies the **error model** for conforming
+encoders and decoders: the categories of error each side reports, the
+common shape of an error, and the policy on fail-fast vs collected
+reporting. The intent is cross-binding parity — a TS, Java, and Python
+binding given the same malformed input report the *same set of errors*
+at the *same wire-form locations*, even if they surface those errors
+through different host-language exception types.
+
+The error model defined here is normative: the binding contract
+covers not only what is encoded and decoded, but how failures are
+reported.
+
+### 9.1 Error categories
+
+Three categories of error are recognised:
+
+1. **Wire-shape error.** The JSON does not match the wire production
+   that should appear at the position. Examples:
+   - A property whose declared type is `string` is encoded as a JSON
+     number.
+   - A polymorphic union slot carries a `kind` that is not one of the
+     declared variants.
+   - A required property is missing, or a property is present that is
+     not declared by the production at the position (excluding
+     `_`/`$`-prefixed extension properties per §4.7).
+   - A `nonEmptyArray<X>` slot carries `[]`.
+2. **Lexical error.** A wire value is well-formed JSON of the right
+   shape, but its lexical content does not match the production's
+   lexical category. Examples:
+   - A `LanguageTag` string that is not a valid BCP 47 tag.
+   - An `Iri` string that is not a syntactically valid RFC 3987 IRI.
+   - A `LexicalForm` integer string with a leading zero, leading sign,
+     or non-decimal digit (per §5.1).
+3. **Structural-invariant error.** The shape and lexical content are
+   each individually valid, but a constraint that crosses positions is
+   violated. Examples:
+   - Two `EmbeddedArtifact.key` values within the same `Template` are
+     equal.
+   - The IRI placed at an `EmbeddedField.artifactRef` belongs to a
+     field of a different family than the enclosing `kind` declares.
+   - `Cardinality.min > Cardinality.max`.
+   - An `OntologyDisplayHint` carries neither `acronym` nor `name`.
+
+A single malformed input may produce errors in more than one category
+at distinct positions. An encoder reports the same three categories
+when given an in-memory value that does not satisfy them.
+
+### 9.2 Error path
+
+Every error MUST carry a **path** that locates it within the wire
+form. The path is a JSON Pointer per RFC 6901 (a slash-prefixed
+sequence of decoded property names and decimal array indices),
+relative to the *root of the wire document being decoded or encoded*.
+For example:
+
+- `""` — the document root.
+- `"/members/3/defaultValue"` — the `defaultValue` property of the
+  fourth element of the root-level `members` array.
+- `"/metadata/annotations/0/body/value"` — the `value` property of
+  the body of the first annotation in the root metadata.
+
+The decoder MUST report the path that names the *innermost* property
+or array index where the error was detected, not a parent. An encoder
+reports the path the property *would have occupied* in the wire form
+the encoder is producing.
+
+When a wire-shape error refers to an array index that has not yet
+been written (e.g. a `nonEmptyArray<X>` violation reported on `[]`),
+the path names the array property itself, with no trailing index.
+
+### 9.3 Error report shape
+
+The minimum information an error MUST carry is:
+
+| Field | Type | Description |
+|---|---|---|
+| `category` | one of `"wireShape"`, `"lexical"`, `"structural"` | the §9.1 category |
+| `path` | string | a JSON Pointer per §9.2 |
+| `production` | string | the wire grammar production at `path` (e.g. `"Cardinality"`, `"LangString"`, `"EmbeddedTextField"`) |
+| `message` | string | a human-readable explanation |
+
+Bindings MAY carry additional fields — for example a machine-readable
+error code, the offending JSON value, or a chain of nested causes —
+but the four fields above are the lower bound on what every binding
+MUST surface.
+
+The host-language form is binding-specific:
+
+- **TypeScript.** A class extending `CedarConstructionError` (or a
+  sibling `CedarDecodeError` / `CedarEncodeError` if the binding
+  prefers per-direction types). Properties are surfaced as instance
+  fields.
+- **Java.** A subclass of `RuntimeException` (e.g.
+  `CedarDecodeException`, `CedarEncodeException`). The four required
+  fields appear as record components or accessor methods.
+- **Python.** A subclass of `Exception` carrying the four fields as
+  attributes.
+
+### 9.4 Fail-fast vs collected reporting
+
+The default reporting mode is **collected**: a decoder or encoder
+MUST attempt to validate the entire input and report every error it
+finds before raising or returning. The thrown error type is therefore
+a *collection* of one or more individual errors; bindings idiomatic in
+single-error exceptions SHOULD wrap the collection in a single
+top-level exception whose message summarises the count and whose
+fields carry the list.
+
+Bindings MAY additionally expose a *fail-fast* mode that raises on
+the first error encountered. Fail-fast mode is a performance and UX
+convenience for interactive use; the wire-form contract itself is
+defined in terms of the collected mode.
+
+A decoder operating in collected mode MUST NOT short-circuit on a
+wire-shape error within an array element: each element is independent
+and must be checked. It MAY short-circuit if continuing past a
+wire-shape error would require the decoder to fabricate values
+(e.g. the property type is a polymorphic union and the `kind`
+discriminator is absent or unrecognised; in this case the decoder
+cannot know which arm's properties to validate).
+
+### 9.5 Decoder strictness for unknown discriminators
+
+When a `discriminator: kind` union encounters a `kind` value that is
+not one of the declared variants, the decoder MUST report a
+wire-shape error and MUST NOT silently substitute a default variant or
+treat the input as a generic object. An unknown `kind` is a clear
+breaking-change indicator (per §11) and the decoder is in no position
+to recover.
+
+When a property whose name is not declared by the production at the
+position is present, the decoder MUST report a wire-shape error,
+unless the property name begins with `_` or `$` (per §4.7), in which
+case the decoder MUST ignore it.
+
+### 9.6 NFC normalisation
+
+A decoder receiving a string that is not in Unicode NFC SHOULD
+normalise it to NFC silently and continue, recording the
+non-normalisation as a non-fatal warning if the binding's API supports
+warnings. A decoder MAY instead raise a wire-shape error; this is
+implementation freedom. Encoders MUST emit NFC strings (per §4.5).
+
+---
+
+## 10. Reserved Property Names
 
 The property name `kind` is reserved by this specification at all object-level positions. Implementations MUST NOT reuse this name for non-normative purposes.
 
@@ -619,13 +773,13 @@ The property name prefixes `_` and `$` are reserved for implementation-specific 
 
 All other property names are scoped to their containing tagged object's production and have no global meaning.
 
-## 10. Versioning
+## 11. Versioning
 
 This document defines version 1.0 of the JSON serialization. The version of the wire format itself is not encoded in conforming JSON documents; it is the responsibility of the surrounding storage or transport layer (file path conventions, MIME parameters, registry metadata, etc.) to communicate which version of this specification a document conforms to.
 
 A future revision of this document MAY add new productions or new tagged-object kinds without a version bump, provided existing conforming documents remain conforming. A revision that changes the encoding of an existing production, removes a production, or changes the meaning of a property MUST bump the version.
 
-## 11. Open Questions
+## 12. Open Questions
 
 - Should this document define an explicit version-discrimination property (e.g. `"$schema"`) at the root of every conforming document, parallel to the JSON Schema convention?
 - Should the wrapping principle in §5 be made into a normative algorithm rather than a checklist of properties?

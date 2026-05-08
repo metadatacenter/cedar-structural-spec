@@ -951,14 +951,54 @@ The following productions define the primitive leaf types used throughout this g
 
 ### Primitive String Types
 
-The following nonterminals are intentionally left abstract. They define the string-valued leaf types referenced by the productions in this section and are not themselves model-level constructs.
+The following nonterminals are the string-valued leaf types
+referenced by the productions in this section. Each is pinned to a
+specific external specification or regular expression so that
+implementations can validate inputs unambiguously.
 
-- `SemanticVersion` denotes a Semantic Versioning 2.0.0 lexical form and MUST conform to the Semantic Versioning 2.0.0 specification as defined at [semver.org](https://semver.org/).
-- `IriString` denotes the lexical form of an IRI.
-- `Bcp47Tag` denotes a well-formed BCP 47 language tag.
-- `Iso8601DateTimeLexicalForm` denotes an ISO 8601 date-time lexical form.
-- `AsciiIdentifier` denotes an identifier matching the pattern `[A-Za-z][A-Za-z0-9_-]*`: it begins with an ASCII letter followed by zero or more ASCII letters, digits, underscores, or hyphens.
-- `IntegerLexicalForm` denotes a base-10 integer lexical form.
+- **`SemanticVersion`** — a Semantic Versioning 2.0.0 string. MUST
+  conform to the Semantic Versioning 2.0.0 specification at
+  [semver.org](https://semver.org/), specifically the regular
+  expression in the SemVer FAQ
+  ([https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string](https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string)).
+  Examples: `1.0.0`, `2.0.0-alpha.1`, `1.0.0+build.7`.
+- **`IriString`** — the lexical form of an IRI as defined by
+  [RFC 3987](https://www.rfc-editor.org/rfc/rfc3987) §2.2 (the `IRI`
+  production). The IRI MUST be absolute (carry a scheme); relative
+  IRIs are not permitted at any wire-form position. Implementations
+  SHOULD use the RFC 3987 `IRI` ABNF; a permissive practical regex
+  is `^[A-Za-z][A-Za-z0-9+.\-]*:[^\s<>"]+$` but this is not
+  sufficient for full conformance.
+- **`Bcp47Tag`** — a well-formed BCP 47 language tag per
+  [RFC 5646](https://www.rfc-editor.org/rfc/rfc5646), specifically the
+  `Language-Tag` production. Implementations SHOULD validate against
+  the IANA Language Subtag Registry; a syntactic-only check
+  (well-formedness without registry lookup) is acceptable as a
+  baseline. Examples: `en`, `en-US`, `zh-Hant-TW`, `de-CH-1901`.
+- **`Iso8601DateTimeLexicalForm`** — an ISO 8601 *combined date-and-time*
+  string in the **extended** format with full date and full time, with
+  or without a UTC offset. The accepted shapes are:
+  - `YYYY-MM-DDTHH:MM:SS` (no offset)
+  - `YYYY-MM-DDTHH:MM:SS.sss` (fractional seconds, 1–9 digits)
+  - `YYYY-MM-DDTHH:MM:SSZ` (UTC)
+  - `YYYY-MM-DDTHH:MM:SS±HH:MM` (offset)
+  - the same shapes with `.sss` fractional seconds combined with the
+    timezone form.
+
+  This corresponds to the XSD `dateTime` lexical form
+  ([XSD 1.1 §3.3.7](https://www.w3.org/TR/xmlschema11-2/#dateTime)).
+  Examples: `2026-05-08T14:30:00Z`, `2026-05-08T14:30:00.123-07:00`.
+- **`AsciiIdentifier`** — a string matching the regular expression
+  `^[A-Za-z][A-Za-z0-9_-]*$`: an ASCII letter followed by zero or
+  more ASCII letters, digits, underscores, or hyphens. Length is
+  unbounded. Examples: `topic`, `field-1`, `Member_42`.
+- **`IntegerLexicalForm`** — a base-10 signed integer literal
+  matching the regular expression `^-?(0|[1-9][0-9]*)$`: an optional
+  leading minus sign followed by either `0` or a non-zero digit and
+  zero or more digits. Leading zeros and a leading `+` are not
+  permitted. Magnitude is unbounded. The using context may further
+  restrict the sign — `NonNegativeInteger` rejects values with a
+  leading minus sign; signed bounds productions accept it.
 
 ### Core IRI and String Types
 
