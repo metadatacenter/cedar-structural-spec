@@ -195,12 +195,36 @@ on the wire. (See [`bindings.md`](bindings.md) §2.1 for examples.)
 
 ### 1.6 Collapsed wrappers
 
-The grammar's typed singleton wrappers collapse on the wire to their
-inner primitive. The wire grammar names them where the abstract grammar
-does, but their type is whatever JSON primitive (or already-collapsed
-production) they carry.
+A *typed singleton wrapper* is an abstract grammar production whose
+constructor form has exactly one component, where that component is
+itself either a primitive lexical category (string, number, boolean)
+or another typed singleton wrapper. For example:
 
-The wrappers fall into five groups by inner type:
+```ebnf
+Iri        ::= iri(IriString)
+TemplateId ::= template_id(IriString)
+Label      ::= label(MultilingualString)
+```
+
+In the abstract grammar these productions exist to give a primitive
+value a *role* — `Iri` is a syntactically valid IRI, `TemplateId` is
+specifically the identifier of a template, `Label` is a label rather
+than an arbitrary multilingual string. The abstract grammar treats
+these roles as distinct types so that, e.g., a `TemplateId` cannot
+be substituted for a `FieldId` even though both reduce to a string at
+the wire level.
+
+On the wire, however, this typed-role information is recovered from
+the surrounding context (the property name and the abstract grammar
+production at that slot). The wrapper therefore collapses to its inner
+type at encode time and disappears from the JSON, leaving only the
+underlying primitive value. The wire grammar still names the wrapper
+production where the abstract grammar does, so that slot types in
+composite productions remain isomorphic to the abstract grammar's
+component types — but the wrapper's wire form `:::` is whatever JSON
+primitive (or already-collapsed production) it carries.
+
+The wrappers fall into four groups by inner type:
 
 - **IRI-typed** (`string`, syntactically valid IRI per RFC 3987):
   `Iri`, `TermIri`, every `XxxFieldId`, `TemplateId`,
