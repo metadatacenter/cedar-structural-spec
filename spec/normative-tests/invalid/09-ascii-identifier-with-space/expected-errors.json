@@ -1,0 +1,8 @@
+[
+  {
+    "category": "lexical",
+    "path": "/members/0/key",
+    "production": "EmbeddedTextField",
+    "messageRegex": "AsciiIdentifier|ASCII identifier|EmbeddedArtifactKey.*pattern|invalid.*key|key.*invalid|\\[A-Za-z\\]"
+  }
+]

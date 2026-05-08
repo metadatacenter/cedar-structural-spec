@@ -24,12 +24,19 @@ normative-tests/
 │   ├── 49-72   per-family Field artifacts (the artifact + FieldSpec surface)
 │   └── 73-77   presentation components
 └── invalid/
-    ├── 01-unknown-kind/
-    │   ├── input.json
-    │   └── expected-errors.json
-    └── 02-fieldid-family-mismatch-and-duplicate-key/
-        ├── input.json
-        └── expected-errors.json
+    ├── 01-unknown-kind/                                # wireShape (§9.5)
+    ├── 02-fieldid-family-mismatch-and-duplicate-key/   # structural (×2)
+    ├── 03-required-property-missing/                   # wireShape
+    ├── 04-unknown-property/                            # wireShape (§9.5)
+    ├── 05-empty-non-empty-array/                       # wireShape
+    ├── 06-invalid-iri/                                 # lexical (RFC 3987)
+    ├── 07-invalid-bcp47-tag/                           # lexical (RFC 5646)
+    ├── 08-integer-lexical-leading-zero/                # lexical (IntegerLexicalForm)
+    ├── 09-ascii-identifier-with-space/                 # lexical (AsciiIdentifier)
+    ├── 10-cardinality-min-greater-than-max/            # structural
+    ├── 11-duplicate-lang-tag/                          # structural
+    └── 12-default-not-in-permissible-values/           # structural
+        # each subdirectory contains input.json + expected-errors.json
 ```
 
 ## Fixture coverage

@@ -1,0 +1,8 @@
+[
+  {
+    "category": "wireShape",
+    "path": "/members/0/cardinality",
+    "production": "Cardinality",
+    "messageRegex": "(missing|required).*\\bmin\\b|\\bmin\\b.*(missing|required)"
+  }
+]

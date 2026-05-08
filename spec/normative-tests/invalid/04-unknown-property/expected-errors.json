@@ -1,0 +1,8 @@
+[
+  {
+    "category": "wireShape",
+    "path": "/members/0/cardinality/step",
+    "production": "Cardinality",
+    "messageRegex": "unknown.*property.*\\bstep\\b|\\bstep\\b.*not (declared|recognised|recognized|expected)"
+  }
+]

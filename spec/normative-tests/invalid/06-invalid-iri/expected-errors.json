@@ -1,0 +1,8 @@
+[
+  {
+    "category": "lexical",
+    "path": "/id",
+    "production": "TemplateId",
+    "messageRegex": "invalid.*IRI|not (a |a valid )?(IRI|RFC 3987)|IRI.*invalid|missing.*scheme"
+  }
+]

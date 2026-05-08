@@ -1,0 +1,8 @@
+[
+  {
+    "category": "lexical",
+    "path": "/values/0/values/0/value",
+    "production": "IntegerNumberValue",
+    "messageRegex": "leading\\s?zero|integer.*lexical|not.*integer|invalid.*integer"
+  }
+]

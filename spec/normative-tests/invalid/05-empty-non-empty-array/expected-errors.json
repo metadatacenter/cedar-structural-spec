@@ -1,0 +1,8 @@
+[
+  {
+    "category": "wireShape",
+    "path": "/metadata/name",
+    "production": "MultilingualString",
+    "messageRegex": "(non-?empty|nonEmpty).*array|empty array|MUST.*non-?empty|at least one"
+  }
+]
