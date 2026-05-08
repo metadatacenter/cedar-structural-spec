@@ -52,8 +52,14 @@
       }
     ],
     "defaultValues": [
-      "asthma",
-      "hypertension"
+      {
+        "kind": "EnumValue",
+        "value": "asthma"
+      },
+      {
+        "kind": "EnumValue",
+        "value": "hypertension"
+      }
     ],
     "renderingHint": "checkbox"
   }

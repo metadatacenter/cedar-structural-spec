@@ -335,7 +335,7 @@ Each concrete `FieldSpec` is encoded as a tagged object whose `"kind"` matches t
     { "value": "yes", "label": [{ "value": "Yes", "lang": "en" }] },
     { "value": "no",  "label": [{ "value": "No",  "lang": "en" }] }
   ],
-  "defaultValue": "yes",
+  "defaultValue": { "kind": "EnumValue", "value": "yes" },
   "renderingHint": "radio"
 }
 ```
@@ -357,7 +357,7 @@ Each concrete `FieldSpec` is encoded as a tagged object whose `"kind"` matches t
 ] }
 ```
 
-A `SingleValuedEnumFieldSpec`'s `defaultValue` is a single string `Token` matching one of the permissible values; a `MultiValuedEnumFieldSpec`'s `defaultValues` is a (possibly empty) array of such strings, with no duplicates. An `OntologyDisplayHint` MUST carry at least one of `acronym` or `name` (a constraint enforced by `wire-grammar.md`).
+A `SingleValuedEnumFieldSpec`'s `defaultValue` is a single tagged `EnumValue` whose `value` matches one of the permissible values' tokens; a `MultiValuedEnumFieldSpec`'s `defaultValues` is a (possibly empty) array of such tagged `EnumValue` entries, with no duplicate `value` entries. An `OntologyDisplayHint` MUST carry at least one of `acronym` or `name` (a constraint enforced by `wire-grammar.md`).
 
 The flat-string rendering hints (`TextRenderingHint`, `SingleValuedEnumRenderingHint`, `MultiValuedEnumRenderingHint`, `BooleanRenderingHint`) appear directly as JSON enum strings; the object-shaped rendering hints (`NumericRenderingHint`, `DateRenderingHint`, `TimeRenderingHint`, `DateTimeRenderingHint`) are JSON objects with optional configuration slots.
 
@@ -425,16 +425,16 @@ Every concrete field family carries an optional default at both layers, with one
 
 **Wire form.** Both layers use the same `Value`-typed wire shape: there is no `DefaultValue` wrapper. Every `Value` is a member of the `Value` polymorphic union, so per the kind rule ([`wire-grammar.md`](wire-grammar.md) §1.5) every `defaultValue` carries a `kind` discriminator — at both layers, regardless of whether the enclosing context already pins the family. The discriminator is structurally redundant at slots whose enclosing `XxxFieldSpec.kind` or `EmbeddedXxxField.kind` already determines the family, but is retained for uniformity with `Value`'s appearance at the polymorphic positions where the kind genuinely discriminates (e.g. `FieldValue.values[*]` in instances).
 
-`EmbeddedMultiValuedEnumField.defaultValue` is the only embedding-level default whose wire form is a JSON array rather than a single object: it carries an array of tagged `EnumValue` entries.
+`MultiValuedEnumFieldSpec.defaultValues` and `EmbeddedMultiValuedEnumField.defaultValue` are the two slots whose wire form is a JSON array rather than a single object: each carries an array of tagged `EnumValue` entries.
 
-The two enum specs are the one shape divergence between layers: their **field-level** slots use bare `Token` strings (or arrays thereof) rather than `EnumValue` objects, since `Token` is not a polymorphic-union member.
+For the enum families specifically, the structural-invariant constraint that the default reference one of the spec's permissibleValues applies to the inner `value` (the `Token`):
 
-- `SingleValuedEnumFieldSpec.defaultValue?: Token` — a bare JSON string equal to the `value` of one of the spec's permissible-value entries.
-- `MultiValuedEnumFieldSpec.defaultValues?: array<Token>` — a (possibly empty) JSON array of such strings; MUST NOT contain duplicates.
+- `SingleValuedEnumFieldSpec.defaultValue?: EnumValue` — a tagged `EnumValue` whose `value` MUST equal the `Token` of one of the spec's permissible-value entries.
+- `MultiValuedEnumFieldSpec.defaultValues?: array<EnumValue>` — a (possibly empty) JSON array of tagged `EnumValue` entries; each entry's `value` MUST equal the `Token` of one of the spec's permissible-value entries, and the array MUST NOT contain duplicate `value` entries.
 
-The corresponding **embedding-level** slots (`EmbeddedSingleValuedEnumField.defaultValue: EnumValue` and `EmbeddedMultiValuedEnumField.defaultValue: array<EnumValue>`) wrap these as full `EnumValue` objects.
+The same constraint applies at the corresponding embedding-level slots (`EmbeddedSingleValuedEnumField.defaultValue` and `EmbeddedMultiValuedEnumField.defaultValue`).
 
-Examples by family (the same shape applies at both `XxxFieldSpec.defaultValue` and `EmbeddedXxxField.defaultValue` unless noted):
+Examples by family — at every layer (field-level on `XxxFieldSpec.defaultValue`, embedding-level on `EmbeddedXxxField.defaultValue`) the wire shape is identical:
 
 ```json
 // TextValue (field-level on TextFieldSpec, embedding-level on EmbeddedTextField)
@@ -467,20 +467,14 @@ Examples by family (the same shape applies at both `XxxFieldSpec.defaultValue` a
   "label": [{ "value": "brain", "lang": "en" }]
 }
 
-// EnumValue — embedding-level form (EmbeddedSingleValuedEnumField.defaultValue)
+// EnumValue (single) — both layers use the same shape
 "defaultValue": { "kind": "EnumValue", "value": "yes" }
 
-// Token — field-level form (SingleValuedEnumFieldSpec.defaultValue)
-"defaultValue": "yes"
-
-// array<EnumValue> — embedding-level form (EmbeddedMultiValuedEnumField.defaultValue)
-"defaultValue": [
+// array<EnumValue> — both layers use the same shape; MultiValuedEnumFieldSpec calls the slot defaultValues
+"defaultValues": [
   { "kind": "EnumValue", "value": "active" },
   { "kind": "EnumValue", "value": "retired" }
 ]
-
-// array<Token> — field-level form (MultiValuedEnumFieldSpec.defaultValues)
-"defaultValues": ["active", "retired"]
 
 // LinkValue
 "defaultValue": { "kind": "LinkValue", "iri": "https://example.org", "label": [{ "value": "Example", "lang": "en" }] }

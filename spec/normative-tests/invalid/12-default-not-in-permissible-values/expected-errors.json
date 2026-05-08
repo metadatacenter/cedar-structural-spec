@@ -1,8 +1,8 @@
 [
   {
     "category": "structural",
-    "path": "/fieldSpec/defaultValue",
+    "path": "/fieldSpec/defaultValue/value",
     "production": "SingleValuedEnumFieldSpec",
-    "messageRegex": "defaultValue.*(not|must).*permissibleValues|default.*not.*in.*permissibleValues|default.*token.*not.*permissible"
+    "messageRegex": "defaultValue.*(not|must).*permissibleValues|default.*not.*in.*permissibleValues|default.*token.*not.*permissible|EnumValue\\.value.*not.*permissible|extreme.*not.*permissible"
   }
 ]

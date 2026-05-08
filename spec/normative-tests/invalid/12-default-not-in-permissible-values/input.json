@@ -19,6 +19,6 @@
       { "value": "moderate", "label": [{ "value": "Moderate", "lang": "en" }] },
       { "value": "severe", "label": [{ "value": "Severe", "lang": "en" }] }
     ],
-    "defaultValue": "extreme"
+    "defaultValue": { "kind": "EnumValue", "value": "extreme" }
   }
 }

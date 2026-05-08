@@ -893,15 +893,14 @@ above, with the following per-family details:
 - `RridFieldSpec.defaultValue?: RridValue`
 - `NihGrantIdFieldSpec.defaultValue?: NihGrantIdValue`
 
-The two enum specs are the one shape divergence: their field-level
-slots use bare `Token` (or array of `Token`) rather than `EnumValue`:
-
-- `SingleValuedEnumFieldSpec.defaultValue?: Token` — a JSON string
-  equal to the `value` of one of the spec's permissible-value
-  entries.
-- `MultiValuedEnumFieldSpec.defaultValues?: array<Token>` — a
-  (possibly empty) JSON array of such strings; MUST NOT contain
-  duplicates.
+- `SingleValuedEnumFieldSpec.defaultValue?: EnumValue` — a tagged
+  `EnumValue` whose `value` MUST equal the `Token` of one of the
+  spec's permissible-value entries.
+- `MultiValuedEnumFieldSpec.defaultValues?: array<EnumValue>` — a
+  (possibly empty) JSON array of tagged `EnumValue` entries; each
+  `value` MUST equal the `Token` of one of the spec's
+  permissible-value entries, and the array MUST NOT contain
+  duplicate `value` entries.
 
 `AttributeValueFieldSpec` carries no field-level default.
 
@@ -1076,21 +1075,22 @@ EnumFieldSpec ::: SingleValuedEnumFieldSpec | MultiValuedEnumFieldSpec
 SingleValuedEnumFieldSpec ::: object {
   "kind": "SingleValuedEnumFieldSpec"
   permissibleValues: nonEmptyArray<PermissibleValue>
-  defaultValue?: Token
+  defaultValue?: EnumValue
   renderingHint?: SingleValuedEnumRenderingHint
 }
-  // defaultValue, when present, MUST equal the `value` of one of the
-  // permissibleValues entries
+  // defaultValue.value, when present, MUST equal the `value` of one
+  // of the permissibleValues entries
 
 MultiValuedEnumFieldSpec ::: object {
   "kind": "MultiValuedEnumFieldSpec"
   permissibleValues: nonEmptyArray<PermissibleValue>
-  defaultValues?: array<Token>
+  defaultValues?: array<EnumValue>
   renderingHint?: MultiValuedEnumRenderingHint
 }
-  // defaultValues, when present, MUST be a (possibly empty) array of
-  // Token values each equal to the `value` of one of the
-  // permissibleValues entries; the array MUST NOT contain duplicates
+  // defaultValues, when present, is a (possibly empty) array of
+  // EnumValue entries; each defaultValues[i].value MUST equal the
+  // `value` of one of the permissibleValues entries; the array MUST
+  // NOT contain duplicate `value` entries
 
 PermissibleValue ::: object {
   value: Token
@@ -2248,12 +2248,12 @@ the union of the inner `ArtifactMetadata` properties plus
 
 **`SingleValuedEnumFieldSpec`** (`single_valued_enum_field_spec`):
 0. `PermissibleValue+` → `permissibleValues`
-1. `[Token]` → `defaultValue?`
+1. `[EnumValue]` → `defaultValue?`
 2. `[SingleValuedEnumRenderingHint]` → `renderingHint?`
 
 **`MultiValuedEnumFieldSpec`** (`multi_valued_enum_field_spec`):
 0. `PermissibleValue+` → `permissibleValues`
-1. `Token*` → `defaultValues?` (SHOULD-omitted when empty per §1.7 rule 4)
+1. `EnumValue*` → `defaultValues?` (SHOULD-omitted when empty per §1.7 rule 4)
 2. `[MultiValuedEnumRenderingHint]` → `renderingHint?`
 
 **`PermissibleValue`** (`permissible_value`):

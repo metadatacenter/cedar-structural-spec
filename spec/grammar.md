@@ -1392,8 +1392,8 @@ The two default-value types match: at each layer the slot is typed with the fami
 | Time | `[TimeValue]` | `[TimeValue]` |
 | DateTime | `[DateTimeValue]` | `[DateTimeValue]` |
 | ControlledTerm | `[ControlledTermValue]` | `[ControlledTermValue]` |
-| SingleValuedEnum | `[Token]` (a reference to one of the spec's `PermissibleValue+` entries) | `[EnumValue]` |
-| MultiValuedEnum | `Token*` (zero or more references to the spec's `PermissibleValue+` entries) | `[EnumValue*]` (zero or more) |
+| SingleValuedEnum | `[EnumValue]` | `[EnumValue]` |
+| MultiValuedEnum | `[EnumValue*]` (zero or more) | `[EnumValue*]` (zero or more) |
 | Link | `[LinkValue]` | `[LinkValue]` |
 | Email | `[EmailValue]` | `[EmailValue]` |
 | PhoneNumber | `[PhoneNumberValue]` | `[PhoneNumberValue]` |
@@ -1405,7 +1405,7 @@ The two default-value types match: at each layer the slot is typed with the fami
 | NihGrantId | `[NihGrantIdValue]` | `[NihGrantIdValue]` |
 | AttributeValue | (no default) | (no default) |
 
-The enum families are the one shape divergence between the two layers: the field-level slot is a bare `Token` (or `Token*`) that references one of the spec's permissible-value tokens, whereas the embedding-level slot is a full `EnumValue` (or `EnumValue*`). The two are semantically equivalent — every default token MUST equal the `Token` of one of the spec's `PermissibleValue+` entries — but the structural shape differs.
+The shape is uniform across layers: every default at every layer is the family's `Value` type. For the enum families this means the field-level default is an `EnumValue` (or sequence of `EnumValue`) — the same kind-tagged object form that appears at the embedding level. The `Token` carried inside each default `EnumValue` MUST equal the `Token` of one of the spec's `PermissibleValue+` entries; for `MultiValuedEnumFieldSpec` the sequence MUST NOT contain duplicate tokens.
 
 **Precedence and absence semantics.** Both layers are independent and optional. The four cases:
 
@@ -1555,13 +1555,13 @@ EnumFieldSpec ::= SingleValuedEnumFieldSpec
 
 SingleValuedEnumFieldSpec ::= single_valued_enum_field_spec(
                                 PermissibleValue+
-                                [Token]
+                                [EnumValue]
                                 [SingleValuedEnumRenderingHint]
                               )
 
 MultiValuedEnumFieldSpec ::= multi_valued_enum_field_spec(
                                PermissibleValue+
-                               Token*
+                               EnumValue*
                                [MultiValuedEnumRenderingHint]
                              )
 
@@ -1640,7 +1640,7 @@ A `RealNumberFieldSpec` MAY use the family-shared `NumericRenderingHint`; if it 
 
 `EnumFieldSpec` is refined along a single dimension: cardinality. `SingleValuedEnumFieldSpec` permits exactly one selection; `MultiValuedEnumFieldSpec` permits zero or more simultaneous selections (subject to the embedding's `Cardinality`). The two specs share a common option model: every permissible value is a `PermissibleValue` carrying a canonical `Token` key together with optional human-readable `Label` and `Description` localizations and zero or more `Meaning` entries that bind the token to ontology terms. The `Token` strings of a spec's permissible values MUST be unique within that spec; the spec's `PermissibleValue+` is the closed set of values an instance may carry.
 
-The two enum specs each carry a field-level default per the [Defaults](#defaults) section: `SingleValuedEnumFieldSpec` an optional `[Token]`, `MultiValuedEnumFieldSpec` a (possibly empty) `Token*`. Every default `Token` MUST equal the `Token` of one of the spec's `PermissibleValue+` entries; for `MultiValuedEnumFieldSpec` the `Token*` list MUST NOT contain duplicates.
+The two enum specs each carry a field-level default per the [Defaults](#defaults) section: `SingleValuedEnumFieldSpec` an optional `[EnumValue]`, `MultiValuedEnumFieldSpec` a (possibly empty) `EnumValue*`. The `Token` carried inside each default `EnumValue` MUST equal the `Token` of one of the spec's `PermissibleValue+` entries; for `MultiValuedEnumFieldSpec` the sequence MUST NOT contain duplicate tokens.
 
 A `Meaning` carried by a `PermissibleValue` binds the token to a term IRI in an external vocabulary or ontology. A permissible value MAY carry zero, one, or several `Meaning` entries. Each `Meaning` MAY additionally carry an optional `Label` recording the bound term's human-readable label (in the same way `ControlledTermValue.Label` caches the term's label inline) so that consumers without ontology access can render the bound term's display name. The `Meaning.Label` is the label of the bound *term*, distinct from the surrounding `PermissibleValue.Label` which is the display label of the permissible value itself. When the RDF projection is applied (see [`rdf-projection.md`](rdf-projection.md)), an `EnumValue` whose token matches a `PermissibleValue` carrying one or more `Meaning` entries projects as the corresponding term IRIs; an `EnumValue` whose matching permissible value carries no `Meaning` projects as a plain string literal.
 
