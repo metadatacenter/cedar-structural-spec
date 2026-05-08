@@ -195,7 +195,7 @@ on the wire. (See [`bindings.md`](bindings.md) §2.1 for examples.)
 
 ### 1.6 Collapsed wrappers
 
-The grammar's branded singleton wrappers collapse on the wire to their
+The grammar's typed singleton wrappers collapse on the wire to their
 inner primitive. The wire grammar names them where the abstract grammar
 does, but their type is whatever JSON primitive (or already-collapsed
 production) they carry.

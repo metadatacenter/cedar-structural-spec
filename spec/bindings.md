@@ -282,7 +282,7 @@ Wire: `{"kind":"DateFieldSpec","dateValueType":"fullDate","renderingHint":{"comp
 no `kind` tag appears on the inner object since the position fixes
 the variant.
 
-### 2.4 Branded primitive
+### 2.4 Typed primitive wrapper
 
 **What it is.** A wire production written as `T ::: string` (or
 `number`) where `T` names a specialised role for the primitive — `Iri`,
@@ -292,16 +292,18 @@ abstract grammar they are typed roles whose constraints (IRI
 well-formedness, BCP 47, ASCII identifier shape) MUST be enforced at
 decode time.
 
-The trade-off: branded types catch role mismatches (passing a
+The trade-off: typed wrappers catch role mismatches (passing a
 `TemplateId` where a `FieldId` is expected) at compile time, at the
 cost of some construction friction. Plain strings are ergonomic but
 cede that protection to runtime checks. Bindings MAY choose either
-end of this spectrum; cedar-ts brands strongly.
+end of this spectrum; cedar-ts wraps strongly.
 
 **TypeScript idiom.** Either a structural object wrapper carrying
-`kind` (cedar-ts's choice for `Iri`, `FieldId`, etc.) or a brand type
-via `string & { readonly __brand: 'Iri' }`. The wrapper costs one
-allocation per identifier but gives full structural typing in IDEs.
+`kind` (cedar-ts's choice for `Iri`, `FieldId`, etc.) or a TypeScript
+*branded type* via `string & { readonly __brand: 'Iri' }`. The
+structural wrapper costs one allocation per identifier but gives full
+structural typing in IDEs; the brand type costs nothing at runtime but
+enforces the role only at compile time.
 
 ```typescript
 // cedar-ts: structural wrapper
@@ -352,7 +354,7 @@ For richer runtime validation, a Pydantic `BaseModel` wrapper or an
 `Annotated[str, AfterValidator(...)]` form is also fine; the
 `NewType` form is the lightest.
 
-**Validation guidance.** All branded primitives MUST enforce their
+**Validation guidance.** All typed primitive wrappers MUST enforce their
 syntactic constraints (RFC 3987 for IRI; BCP 47 for language tags; the
 ASCII pattern `[A-Za-z][A-Za-z0-9_-]*` for `EmbeddedArtifactKey`;
 SemVer for `Version` / `ModelVersion`) at the constructor.
@@ -723,7 +725,7 @@ any TypeScript-specific idiom not covered explicitly in this document.
 
 High-level structure (the `src/` tree mirrors the grammar layering):
 
-- `leaves/` — primitive validators and branded leaves (`Iri`,
+- `leaves/` — primitive validators and typed leaves (`Iri`,
   `LanguageTag`, `IsoDateTimeStamp`, ASCII-id, BCP 47, SemVer, integer).
 - `multilingual.ts` — `MultilingualString` and `LangString`.
 - `values/` — the `Value` family. Each `Value` variant carries its
@@ -808,7 +810,7 @@ quickly classify it:
 
 | `wire-grammar.md` shape                                                           | Category                                |
 |-----------------------------------------------------------------------------------|-----------------------------------------|
-| `T ::: string` / `number` / `boolean` / `null`                                    | Primitive (or branded primitive — §2.4) |
+| `T ::: string` / `number` / `boolean` / `null`                                    | Primitive (or typed primitive wrapper — §2.4) |
 | `T ::: array<X>`                                                                  | Repeated component (§2.8)               |
 | `T ::: nonEmptyArray<X>`                                                          | Repeated component (§2.8); §2.5 for `MultilingualString` specifically |
 | `T ::: object { … }` with no `"kind": "..."` literal property                     | Plain object production (§2.1)          |
