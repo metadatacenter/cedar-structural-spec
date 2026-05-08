@@ -37,7 +37,7 @@ the wire round-trip and the construction-time invariants.
 
 The reference TypeScript implementation is
 [cedar-ts](https://github.com/metadatacenter/cedar-ts) (npm package
-`@metadatacenter/cedar-model`); see §4. For idioms not covered
+`@metadatacenter/cedar-model`); see §5. For idioms not covered
 explicitly here, cedar-ts is the source of truth on the TS side.
 
 ---
@@ -57,6 +57,24 @@ the wire grammar. For every category we give:
   associated constraints;
 - a small worked example translating the same abstract production three
   ways.
+
+> **Reading note: Jackson-annotation density.** The Java idioms in this
+> section annotate every record component explicitly with
+> `@JsonProperty(...)` and every mapping constructor with
+> `@JsonCreator`. The intent is unambiguous wire-to-Java mapping that
+> does not depend on parameter-name reflection (the `-parameters`
+> compiler flag) or on positional binding. A real binding MAY rely on
+> Jackson defaults — e.g. record component name introspection plus
+> implicit canonical-constructor binding — and elide most of these
+> annotations; the explicit form here is the lower bound on what the
+> binding contract requires, not the only style permitted.
+>
+> **Forward references.** §2 mentions cedar-ts module names
+> (`leaves/`, `embedded/`, etc.) and a few productions
+> (`EmbeddedArtifact`, `Template.members`) before they are introduced
+> in detail. The cedar-ts module layout is in §5; the productions
+> themselves are defined in [`grammar.md`](grammar.md) and
+> [`wire-grammar.md`](wire-grammar.md).
 
 ### 2.1 Plain object production
 
@@ -233,19 +251,27 @@ narrowing predicate (`value.kind === 'TextValue'` / `instanceof TextValue`
 / `isinstance(v, TextValue)`) returns true.
 
 **Java note: nested sealed interfaces and Jackson dispatch tables.**
-Where a sealed union permits another sealed union as a member (for
-example, `EmbeddedArtifact permits EmbeddedField,
-EmbeddedPresentationComponent`, with `EmbeddedField` itself sealed
-over the 20 family records), prefer a **flat dispatch table** at
-the outer interface — enumerate all leaf concrete records directly
-in the outer's `@JsonSubTypes`, not the intermediate sealed
-interface. Nested-`@JsonTypeInfo` delegation through an intermediate
+Where a sealed union permits another sealed union as a member, the
+outer union's `@JsonSubTypes` SHOULD enumerate all *leaf* concrete
+records directly — a **flat dispatch table** — rather than delegating
+to the intermediate sealed interface.
+
+*Rationale.* Nested-`@JsonTypeInfo` delegation through an intermediate
 sealed interface is fragile in Jackson 2.x: the resolver re-enters
 the deserializer chain at the inner interface, which can fight with
 `@JsonTypeName` on the leaves and produce spurious failures. The
-wire form already requires `kind` to be one of the leaf names
-(never an intermediate-group name), so a flat dispatch table is
-correct by construction.
+wire form already requires `kind` to be one of the leaf names (never
+an intermediate-group name), so a flat dispatch table is correct by
+construction.
+
+*Example.* `EmbeddedArtifact` is a sealed union over `EmbeddedField`
+and `EmbeddedPresentationComponent`, with `EmbeddedField` itself
+sealed over the 20 family records (`EmbeddedTextField`,
+`EmbeddedIntegerNumberField`, etc.). The Jackson registration on
+`EmbeddedArtifact` should list every leaf record (all 20
+`EmbeddedXxxField` records plus every `EmbeddedXxxComponent`
+record) in `@JsonSubTypes`, not the intermediate `EmbeddedField`
+interface.
 
 ### 2.3 Position-discriminated union
 
@@ -298,28 +324,37 @@ cost of some construction friction. Plain strings are ergonomic but
 cede that protection to runtime checks. Bindings MAY choose either
 end of this spectrum; cedar-ts wraps strongly.
 
-**TypeScript idiom.** Either a structural object wrapper carrying
-`kind` (cedar-ts's choice for `Iri`, `FieldId`, etc.) or a TypeScript
-*branded type* via `string & { readonly __brand: 'Iri' }`. The
-structural wrapper costs one allocation per identifier but gives full
-structural typing in IDEs; the brand type costs nothing at runtime but
-enforces the role only at compile time.
+**TypeScript idiom.** Two patterns are in common use: a structural
+object wrapper carrying `kind`, and a TypeScript *branded type*
+(a compile-time-only role tag added to a primitive via a phantom
+`__brand` property of a string-literal type — the value is still a
+plain string at runtime, but the type system treats `Iri` and a
+generic `string` as distinct types). The structural wrapper costs one
+allocation per identifier but gives full structural typing in IDEs;
+the branded type costs nothing at runtime but enforces the role only
+at compile time. cedar-ts uses Option A.
+
+*Option A — structural wrapper.* The cedar-ts choice for `Iri`,
+`FieldId`, and the typed-id families:
 
 ```typescript
-// cedar-ts: structural wrapper
 export interface Iri { readonly kind: 'Iri'; readonly value: string; }
 export function iri(value: string): Iri {
   return { kind: 'Iri', value: parseIriString(value) };
 }
+```
 
-// Lighter alternative:
+cedar-ts's `FieldId` family uses this form with a per-family `kind`
+discriminant so the twenty families remain distinguishable in the type
+system.
+
+*Option B — branded type.* A lighter alternative; the value is a bare
+string at runtime, the type system enforces the role at compile time:
+
+```typescript
 export type Iri = string & { readonly __brand: 'Iri' };
 export function iri(value: string): Iri { /* validate */ return value as Iri; }
 ```
-
-cedar-ts's `FieldId` family uses the structural-wrapper form with a
-per-family `kind` discriminant so the twenty families remain
-distinguishable in the type system.
 
 **Java idiom.** A dedicated value record:
 
@@ -367,16 +402,24 @@ use site.
 
 ### 2.5 `MultilingualString`
 
-**What it is.** A wire production `MultilingualString :::
-nonEmptyArray<LangString>` with the inline constraint that lang tags
-MUST be unique within the array (case-folded, [`wire-grammar.md`](wire-grammar.md)
-§2.2). Distinct from a single language-tagged `TextValue` (a single
-tagged object carrying `kind`, `value`, and `lang`); a
-`MultilingualString` is an *array* of one or more `{value, lang}`
-localizations of the *same* conceptual string.
+**What it is.** A `MultilingualString` is an array of one or more
+`{value, lang}` localizations of the same conceptual string — for
+example, the English, French, and German labels for one field. The
+wire production is `MultilingualString ::: nonEmptyArray<LangString>`,
+with two invariants:
 
-The (value, lang) pattern recurs across all three target languages and
-deserves its own section because the non-empty-and-unique-lang
+- The array MUST be non-empty.
+- Lang tags MUST be unique within the array (case-folded, see
+  [`wire-grammar.md`](wire-grammar.md) §2.2).
+
+A `MultilingualString` is *distinct* from a single language-tagged
+`TextValue`. A `TextValue` is one tagged object carrying `kind`,
+`value`, and `lang` — a single localized string. A
+`MultilingualString` is an array of localizations of the same
+conceptual string. The two are not interchangeable.
+
+The `(value, lang)` pattern recurs across all three target languages
+and deserves its own section because the non-empty-and-unique-lang
 invariants need explicit support.
 
 **TypeScript idiom.** A `readonly` array alias plus a constructor that
@@ -583,13 +626,27 @@ For non-empty, use `Field(min_length=1)` or a `model_validator`.
 ### 2.9 Constraints
 
 **What it is.** Inline `//`-comments on `wire-grammar.md` productions
-declare constraints not expressible in the type expression: BCP 47
-well-formedness, ASCII-id patterns, uniqueness across collection
-positions (e.g. `EmbeddedArtifact` keys within a `Template`),
-at-least-one-of (e.g. `OntologyDisplayHint` requires at least one of
-`acronym` or `name`), value-relationships (e.g. the IRI placed at a
-field's `id` MUST belong to a field of the same family as the enclosing
-`kind`), and similar.
+declare constraints not expressible in the type expression. The
+constraint kinds in current use are:
+
+- **Lexical-form well-formedness.** Values matching a syntactic
+  category — e.g. BCP 47 language tags, the ASCII identifier pattern
+  `[A-Za-z][A-Za-z0-9_-]*` for `EmbeddedArtifactKey`, RFC 3987 IRIs,
+  SemVer for `Version` / `ModelVersion`, ISO 8601 date-time stamps.
+- **Uniqueness across a collection.** Distinctness of an entry's
+  identifying property within an array or set — e.g.
+  `EmbeddedArtifact.key` values must be unique within a `Template`,
+  `LangString.lang` tags must be unique within a `MultilingualString`,
+  `PermissibleValue.value` tokens must be unique within an enum spec.
+- **At-least-one-of.** A production with all-optional components
+  requires at least one to be present — e.g. `OntologyDisplayHint`
+  requires at least one of `acronym` or `name`.
+- **Value relationships across slots.** A value at one slot must agree
+  with another slot — e.g. the IRI placed at a field's `id` MUST
+  belong to a field of the same family as the enclosing `kind`.
+- **Numeric ordering.** Where a production carries paired bounds, the
+  lower bound must not exceed the upper — e.g. `Cardinality.min ≤
+  Cardinality.max`.
 
 Bindings SHOULD validate at construction time and throw a
 binding-specific exception type. A constructed instance is then always
@@ -597,14 +654,21 @@ valid; downstream code may rely on the construction guarantee.
 
 Recommend one canonical exception class per binding:
 
-- TypeScript: `CedarConstructionError` (cedar-ts already defines this).
-- Java: `CedarConstructionException extends RuntimeException`.
-- Python: `class CedarConstructionError(Exception)`.
-
 ```typescript
 export class CedarConstructionError extends Error {
   constructor(message: string) { super(message); this.name = 'CedarConstructionError'; }
 }
+```
+
+```java
+public class CedarConstructionException extends RuntimeException {
+  public CedarConstructionException(String message) { super(message); }
+}
+```
+
+```python
+class CedarConstructionError(Exception):
+    pass
 ```
 
 **Validation guidance.** Validate eagerly at construction. Lazy
@@ -614,14 +678,17 @@ heap. Where validation depends on a wider context (e.g., embedded-key
 uniqueness depends on the whole `Template.members` array), perform
 the check in the enclosing constructor.
 
-### 2.10 Idempotent / widening constructors
+### 2.10 Widening constructors
 
 **What it is.** An ergonomic pattern in which a constructor accepts a
 broader set of input shapes than its return type: `iri()` accepts
 `Iri | string`; `multilingualString()` accepts `string | LangString |
 { [lang]: string } | LangString[]`; `property()` accepts `string | Iri
 | PropertyInit`. The widened constructor narrows to the canonical wire
-shape, validating along the way.
+shape, validating along the way. When the input is already in
+canonical form the constructor SHOULD return it unchanged (so e.g.
+`iri(iri(s))` is well-defined and equivalent to `iri(s)`); this lets
+callers chain widening constructors without redundancy concerns.
 
 This is *recommended-but-not-required*. A binding's *narrow* (canonical)
 constructor — taking exactly the wire-grammar shape — MUST exist;
@@ -716,7 +783,65 @@ PEP 8 conformance on the Python surface.
 
 ---
 
-## 4. The Reference TypeScript Binding
+## 4. Codebase Organisation
+
+Bindings SHOULD organise the source tree so that **everything specific
+to a single field family lives together**. A field family is the
+twenty-way grouping introduced in `grammar.md` §3.2: `TextField`,
+`IntegerNumberField`, `RealNumberField`, `BooleanField`, `DateField`,
+`TimeField`, `DateTimeField`, `ControlledTermField`,
+`SingleValuedEnumField`, `MultiValuedEnumField`, `LinkField`,
+`EmailField`, `PhoneNumberField`, `OrcidField`, `RorField`, `DoiField`,
+`PubMedIdField`, `RridField`, `NihGrantIdField`, and
+`AttributeValueField`.
+
+The "everything specific to a family" set comprises, at minimum, the
+family's:
+
+- typed identifier (`TextFieldId`, etc.)
+- field artifact type (`TextField`, etc.)
+- field spec type (`TextFieldSpec`, etc.)
+- embedded field artifact type (`EmbeddedTextField`, etc.)
+- per-family value type (`TextValue`, etc.)
+- any per-family rendering hint (`TextRenderingHint`, etc.)
+- per-family construction helpers (widening constructors, type
+  guards, JSON adapters, validators)
+
+Per-language convention:
+
+- **TypeScript.** A single file per family — `text-field.ts`,
+  `integer-number-field.ts`, `controlled-term-field.ts`, etc. — that
+  exports every type and helper in the list above. Cross-family
+  abstractions (the `Field` union, the `EmbeddedField` union,
+  cross-cutting helpers) live in their own files and re-export from
+  the per-family files where appropriate.
+- **Java.** A single package per family — `package
+  org.example.cedar.field.text`, `org.example.cedar.field.integer`,
+  `org.example.cedar.field.controlledterm`, etc. — containing the
+  family's records, sealed interface members, type-info annotations,
+  and per-family helpers. The umbrella `Field` sealed interface and
+  cross-family abstractions live in a parent package
+  (`org.example.cedar.field`).
+- **Python.** A single module per family —
+  `cedar/field/text_field.py`, etc. — paralleling the TypeScript
+  layout.
+
+The motivation is locality: any change to a field family — adding a
+constraint, renaming a property, introducing a new rendering hint —
+should touch one file (TS, Python) or one package (Java), not many.
+This also makes it straightforward for a reader to trace a wire
+property like `defaultValue` from its appearance in a
+`SingleValuedEnumFieldSpec` block to the family's `EnumValue` type
+without navigating across the codebase.
+
+Bindings MAY group cross-family abstractions (the `Field` union, the
+`EmbeddedField` union, the `Value` union, `Cardinality`,
+`SchemaArtifactMetadata`, etc.) however they like; only family-
+specific code is constrained by this guideline.
+
+---
+
+## 5. The Reference TypeScript Binding
 
 The reference TypeScript implementation is
 [cedar-ts](https://github.com/metadatacenter/cedar-ts), published as
@@ -761,14 +886,19 @@ Conventions adopted by cedar-ts (already documented in §2 above):
 
 ---
 
-## 5. Open Issues per Language
+## 6. Open Issues per Language
 
 **Java.**
 
-- `record` types cannot have generic type parameters with bounded
-  variance the same way regular classes can. For `NonEmptyList<T>`
-  -style helpers used as a `MultilingualString` substrate, prefer
-  plain final classes or sealed interfaces.
+- For `NonEmptyList<T>`-style helper types used as a
+  `MultilingualString` substrate (or anywhere a non-empty
+  collection invariant must be enforced), prefer a plain final
+  class or sealed interface over a `record`. Records lock the
+  component layout into the canonical constructor signature, which
+  constrains the API for static factories (`NonEmptyList.of(t)`,
+  `NonEmptyList.of(t1, t2, …)`), varargs construction, and any
+  desire to implement `List<T>` directly — all easier on a final
+  class.
 - Records cannot be `null`-rejected at the canonical constructor in a
   way Jackson respects without extra annotations; combining
   `@JsonInclude(NON_NULL)` with explicit checks in the canonical
@@ -802,7 +932,7 @@ Conventions adopted by cedar-ts (already documented in §2 above):
 
 ---
 
-## 6. Reading `wire-grammar.md` as a Binding Implementer
+## 7. Reading `wire-grammar.md` as a Binding Implementer
 
 A short cheat-sheet that maps `wire-grammar.md` notation to the
 meta-categories above, so an implementer encountering a production can
@@ -826,7 +956,7 @@ enforce at construction (§2.9).
 
 ---
 
-## 7. Cross-References
+## 8. Cross-References
 
 - Abstract grammar: [`grammar.md`](grammar.md)
 - JSON wire shapes: [`wire-grammar.md`](wire-grammar.md)
