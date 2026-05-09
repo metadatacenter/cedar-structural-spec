@@ -14,11 +14,15 @@ A `SchemaArtifact` is a reusable artifact that defines schema structure. `Templa
 
 A `Template` is the central container of the model. It specifies an ordered arrangement of `EmbeddedArtifact` constructs and defines the schema that `TemplateInstance` constructs must conform to.
 
-A `Field` is an abstract category refined into typed concrete variants — `TextField`, `IntegerNumberField`, `RealNumberField`, `BooleanField`, `DateField`, `TimeField`, `DateTimeField`, `ControlledTermField`, `SingleValuedEnumField`, `MultiValuedEnumField`, `LinkField`, `EmailField`, `PhoneNumberField`, the external authority fields, and `AttributeValueField`. Each concrete field carries a matching `FieldSpec` that specifies its value semantics and configuration. The field artifact carries identity, metadata, and lifecycle information; the `FieldSpec` carries value rules and rendering properties. `IntegerNumberField` and `RealNumberField` together form the `NumericField` abstract category; `DateField`, `TimeField`, and `DateTimeField` form the `TemporalField` abstract category; `SingleValuedEnumField` and `MultiValuedEnumField` together form the `EnumField` abstract category. See `grammar.md` for the rationale behind these splits.
+A `Field` is an abstract category refined into typed concrete variants — `TextField`, `IntegerNumberField`, `RealNumberField`, `BooleanField`, `DateField`, `TimeField`, `DateTimeField`, `ControlledTermField`, `SingleValuedEnumField`, `MultiValuedEnumField`, `LinkField`, `EmailField`, `PhoneNumberField`, the external authority fields (`OrcidField`, `RorField`, `DoiField`, `PubMedIdField`, `RridField`, `NihGrantIdField`), and `AttributeValueField`. Each concrete field carries a matching `FieldSpec` that specifies its value semantics and configuration. The field artifact carries identity, metadata, and lifecycle information; the `FieldSpec` carries value rules and rendering properties. `IntegerNumberField` and `RealNumberField` together form the `NumericField` abstract category; `DateField`, `TimeField`, and `DateTimeField` form the `TemporalField` abstract category; `SingleValuedEnumField` and `MultiValuedEnumField` form the `EnumField` abstract category; `EmailField` and `PhoneNumberField` form the `ContactField` abstract category; the six external-authority variants form the `ExternalAuthorityField` abstract category. See `grammar.md` for the rationale behind these splits.
 
 A `PresentationComponent` is a reusable non-data-bearing artifact that contributes presentational or instructional structure within a template. Examples include rich text, images, YouTube videos, section breaks, and page breaks. Presentation components do not produce instance values.
 
-An `EmbeddedArtifact` contextualises a reusable artifact within a specific `Template`. It carries the template-local properties — key, cardinality, visibility, default value, label override, value requirement, and an optional semantic property IRI — that govern how the referenced artifact participates in that template context. There are three forms: `EmbeddedField`, `EmbeddedTemplate`, and `EmbeddedPresentationComponent`. `EmbeddedPresentationComponent` carries only the embedding key and an optional visibility, since it contributes no instance data and exists purely to contribute presentational structure.
+An `EmbeddedArtifact` contextualises a reusable artifact within a specific `Template`. There are three forms, and they carry different subsets of template-local properties:
+
+- **`EmbeddedField`** carries the full property set: an `EmbeddedArtifactKey`, a typed reference to the embedded `Field`, and optional `ValueRequirement`, `Cardinality`, `Visibility`, family-typed `defaultValue`, `LabelOverride`, and `Property` (a semantic property IRI for the embedding site).
+- **`EmbeddedTemplate`** carries the embedding key, the embedded template's identifier, and optional `ValueRequirement`, `Cardinality`, `Visibility`, `LabelOverride`, and `Property`. It carries no `defaultValue` (templates do not have value-typed defaults).
+- **`EmbeddedPresentationComponent`** carries only the embedding key, the embedded presentation component's identifier, and an optional `Visibility`. It contributes no instance data and exists purely to contribute presentational structure.
 
 An `EmbeddedArtifactKey` is the local identifier of an `EmbeddedArtifact` within its containing `Template`. It is the mechanism that connects template structure to instance structure.
 
@@ -141,3 +145,25 @@ classDiagram
   NihGrantIdField --> NihGrantIdFieldSpec : carries
   AttributeValueField --> AttributeValueFieldSpec : carries
 ```
+
+## Layered Specification
+
+The CEDAR Template Model is specified across four normative chapters, each with a different concern:
+
+| Chapter | Concern |
+|---|---|
+| [`grammar.md`](grammar.md) | The **abstract grammar** — the productions, the categories, and the structural relationships that constitute the model. The authoritative definition. |
+| [`wire-grammar.md`](wire-grammar.md) | The **JSON wire form** — the concrete shape every production takes when encoded as JSON, plus the encoding rules (kind discriminator, wrapper collapse, property names). |
+| [`serialization.md`](serialization.md) | **Encoding and decoding semantics** — round-tripping, the error model, NFC normalisation, integer-string fallback, default-value semantics. |
+| [`bindings.md`](bindings.md) | **Host-language idioms** for TypeScript, Java, and Python, plus codebase-organisation guidance. |
+
+A reusable [conformance test suite](normative-tests/README.md) accompanies the specification, embedded into `serialization.md` §8 via mdBook `{{#include}}`. It defines a cross-binding acceptance contract.
+
+## Cross-Cutting Conventions
+
+A few structural conventions thread through every chapter:
+
+- **The kind discriminator.** Every member of a `discriminator: kind` union (e.g. every `Field` family, every `Value` family, every `EmbeddedField` family) carries a `kind` property identifying its production, at every position it occupies on the wire. Productions that are *not* members of any kind-discriminated union (`Cardinality`, `Annotation`, `LabelOverride`, `Property`, etc.) never carry `kind`. The rule is uniform — see [`wire-grammar.md`](wire-grammar.md) §1.5.
+- **Two-layer default values.** Every concrete field family except `AttributeValueField` carries two layers of optional default value: a *field-level* default on the reusable `Field`'s `FieldSpec`, and an *embedding-level* default on the `EmbeddedXxxField` inside a Template. The embedding-level default overrides the field-level default when both are present. Defaults are UI/UX initialisation only — they do not appear in `TemplateInstance` artifacts and do not affect the [RDF projection](rdf-projection.md). See [`grammar.md` §Defaults](grammar.md#defaults).
+- **Pinned lexical-form productions.** The grammar's primitive string types (`SemanticVersion`, `IriString`, `Bcp47Tag`, `Iso8601DateTimeLexicalForm`, `AsciiIdentifier`, `IntegerLexicalForm`) are normatively pinned to specific external specifications and regular expressions. See [`grammar.md` §Primitive String Types](grammar.md#primitive-string-types).
+- **The error model.** Conforming decoders and encoders report errors in three normatively-defined categories — `wireShape`, `lexical`, and `structural` — each with a JSON-pointer path locating the offending slot. See [`serialization.md` §9](serialization.md#9-errors).
