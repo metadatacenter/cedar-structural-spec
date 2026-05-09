@@ -18,6 +18,9 @@ Validation in the CEDAR Template Model consists of structural conformance to the
   - [Rendering Hint Compatibility](#rendering-hint-compatibility)
   - [Controlled Term Value Structure](#controlled-term-value-structure)
 - [Canonical Validation Algorithm](#canonical-validation-algorithm)
+  - [Reporting errors](#reporting-errors)
+  - [External resolution](#external-resolution)
+  - [Lexical-form precision](#lexical-form-precision)
   - [Phase 1: Schema Validation](#phase-1-schema-validation)
   - [Phase 2: Instance Validation](#phase-2-instance-validation)
   - [Out of Scope](#out-of-scope)
@@ -274,9 +277,53 @@ Each report uses the four-field shape from [`serialization.md` §9.3](serializat
 - `<input>/arrayName/<i>` — an element of an array (with `<i>` an index variable).
 - `<input>/arrayName/<i>/inner` — a nested slot inside the i-th element.
 
-The caller of a subroutine substitutes the placeholder for the actual JSON Pointer of its input. For example, when `[validate_cardinality_consistency](#fn-validate-cardinality-consistency)` runs against `template.members[2]`, an error reported at `<embedded>/cardinality/min` becomes `/members/2/cardinality/min` in the surfaced report.
+The caller of a subroutine substitutes the placeholder for the actual JSON Pointer of its input. For example, when [`validate_cardinality_consistency`](#fn-validate-cardinality-consistency) runs against `template.members[2]`, an error reported at `<embedded>/cardinality/min` becomes `/members/2/cardinality/min` in the surfaced report.
+
+When a subroutine `S₁` calls another subroutine `S₂` and `S₂` reports an error at path `<S₂.input>/foo`, the surfaced path is `<S₁.input>/<path-to-S₂.input>/foo`. Each layer prepends its own input path. For example, [`validate_default_value`](#fn-validate-default-value) calls a family-specific value-validator with the default value as input; an error from the inner validator at `<value>/value` is surfaced at `<embedded>/defaultValue/value`.
 
 Warning reports follow the same shape but are emitted through the binding's warning channel rather than its error channel.
+
+#### External resolution
+
+Several `Verify` steps require resolving an artifact-reference IRI to its definition — for example, [`validate_embedding_reference`](#fn-validate-embedding-reference) verifies that `embedded.artifactRef` "identifies an existing `<Family>Field`". Resolution is **outside the scope** of this specification. A conforming validator is given an external resolver function
+
+> `resolve(iri: Iri) → Artifact | null`
+
+that returns the artifact referenced by an IRI, or `null` if no such artifact is known. The validator MUST use this resolver to resolve every `EmbeddedField.artifactRef`, every `EmbeddedTemplate.artifactRef`, every `EmbeddedPresentationComponent.artifactRef`, and every `TemplateInstance.templateRef`.
+
+How the resolver is implemented is a binding concern, not a model concern. Plausible implementations:
+
+- A registry-backed resolver that looks up artifacts in a local catalogue.
+- A document-local resolver that finds artifacts inlined in the same input document.
+- A network-backed resolver that dereferences HTTP IRIs.
+
+When `resolve(iri)` returns `null`, the surfaced error is:
+
+> `structural` at the relevant `artifactRef` slot, production naming the embedding's family, message `"artifactRef does not resolve to an artifact"`.
+
+When `resolve(iri)` returns an artifact of the wrong family (e.g. a `TextField` is returned for an `EmbeddedDateField.artifactRef`), the surfaced error is the family-mismatch error already documented at [`validate_embedding_reference`](#fn-validate-embedding-reference).
+
+Implementations MAY operate without a resolver — in which case all `Verify <…>identifying an existing <Family>` steps are SKIPPED and any conformance claim must be qualified accordingly. This is a partial-validation mode appropriate for syntactic linting; full conformance requires a resolver.
+
+#### Lexical-form precision
+
+Several `Verify` steps appeal to lexical-form well-formedness for the primitive types pinned in [`grammar.md` §Primitive String Types](grammar.md#primitive-string-types). For interoperability across implementations, the lexical-form predicates resolve as follows:
+
+| Lexical form | Authoritative grammar |
+|---|---|
+| `SemanticVersion` | The regular expression at [semver.org](https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string). |
+| `IriString` | The `IRI` ABNF in [RFC 3987 §2.2](https://www.rfc-editor.org/rfc/rfc3987#section-2.2). The IRI MUST be absolute (carry a scheme). Implementations MAY use a permissive scheme-and-non-whitespace check as a fast pre-filter, but a conforming validator MUST be capable of full RFC 3987 conformance on demand. |
+| `Bcp47Tag` | The `Language-Tag` production of [RFC 5646](https://www.rfc-editor.org/rfc/rfc5646). Implementations MAY validate against the IANA Language Subtag Registry; a syntactic-only check is acceptable as a baseline. |
+| `IntegerLexicalForm` | Regex `^-?(0\|[1-9][0-9]*)$`. No leading `+`, no leading zeros (other than the literal `0`), no whitespace. Magnitude is unbounded. |
+| `AsciiIdentifier` | Regex `^[A-Za-z][A-Za-z0-9_-]*$`. Length is unbounded. |
+| `Iso8601DateTimeLexicalForm` | The `dateTime` lexical form from [XML Schema 1.1 Part 2 §3.3.7](https://www.w3.org/TR/xmlschema11-2/#dateTime), extended format. |
+| `xsd:date` lexical form | [XML Schema 1.1 Part 2 §3.3.9](https://www.w3.org/TR/xmlschema11-2/#date). |
+| `xsd:time` lexical form | [XML Schema 1.1 Part 2 §3.3.8](https://www.w3.org/TR/xmlschema11-2/#time). |
+| `xsd:dateTime` lexical form | [XML Schema 1.1 Part 2 §3.3.7](https://www.w3.org/TR/xmlschema11-2/#dateTime). |
+| `xsd:decimal` lexical form | [XML Schema 1.1 Part 2 §3.3.3](https://www.w3.org/TR/xmlschema11-2/#decimal). |
+| `xsd:float` / `xsd:double` lexical form | [XML Schema 1.1 Part 2 §3.3.6](https://www.w3.org/TR/xmlschema11-2/#float) and [§3.3.5](https://www.w3.org/TR/xmlschema11-2/#double). The special values `INF`, `-INF`, and `NaN` are part of the lexical space. |
+
+A conforming validator MUST treat the cited grammar as authoritative; a value is well-formed if and only if it matches the cited grammar. This pins the predicate so two independently-implemented validators agree on every input.
 
 ---
 
@@ -347,7 +394,13 @@ Applies the [EmbeddedArtifactKey Uniqueness](#embeddedartifactkey-uniqueness) ru
 
 Applies the [Embedding References](#embedding-references) rules.
 
-For each step below, *on failure:* `structural` at `<embedded>/artifactRef`, production naming `embedded`'s family (e.g. `EmbeddedTextField`), message `"artifactRef IRI does not identify an existing <Family> of the family declared by the surrounding kind"`.
+Each step below resolves `embedded.artifactRef` via the external resolver `resolve(iri)` (see [External resolution](#external-resolution)) and verifies the resolved artifact's family. If the validator was given no resolver, all steps are SKIPPED.
+
+For each step below, two failure modes are possible:
+
+*On failure (unresolved):* `structural` at `<embedded>/artifactRef`, production naming `embedded`'s family, message `"artifactRef does not resolve to an artifact"`.
+
+*On failure (family mismatch):* `structural` at `<embedded>/artifactRef`, production naming `embedded`'s family, message `"artifactRef resolves to an artifact of the wrong family (expected <Family>, got <ResolvedFamily>)"`.
 
 1. If `embedded` is an `EmbeddedTextField`: verify `embedded.artifactRef` is a `TextFieldId` identifying an existing `TextField`.
 2. If `embedded` is an `EmbeddedIntegerNumberField`: verify `embedded.artifactRef` is an `IntegerNumberFieldId` identifying an existing `IntegerNumberField`.
@@ -613,6 +666,14 @@ Dispatch on the kind of `fieldSpec`:
    *On failure:* `structural` at `<value>/value`, production `RealNumberValue`, message `"value below RealNumberFieldSpec.minValue"`.
 4. If `fieldSpec.max_value` is present: verify `n ≤ fieldSpec.max_value.value` (compared as numbers under `fieldSpec.datatype`'s ordering).
    *On failure:* `structural` at `<value>/value`, production `RealNumberValue`, message `"value above RealNumberFieldSpec.maxValue"`.
+
+**Comparison semantics for `float` and `double`.** The numeric value `n` MAY be `NaN`, `+INF`, or `-INF` (these are part of the `xsd:float` and `xsd:double` lexical spaces). The bound comparisons in steps 3 and 4 follow IEEE 754 ordering:
+
+- If `n` is `NaN`, every comparison `n ≥ x` and `n ≤ x` is false. A `NaN` value therefore violates any present `minValue` or `maxValue` bound and reports the corresponding bound-failure error.
+- If `n` is `+INF`, then `n ≥ x` is true for every finite `x` and `n ≤ x` is true only when `x` is `+INF`.
+- If `n` is `-INF`, then `n ≤ x` is true for every finite `x` and `n ≥ x` is true only when `x` is `-INF`.
+
+This convention matches the IEEE 754 totalOrder relation restricted to comparison; bindings SHOULD use their host language's IEEE 754-compliant comparison primitives.
 
 ---
 
