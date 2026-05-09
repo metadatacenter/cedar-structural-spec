@@ -232,6 +232,29 @@ pre.ebnf code {
   background: rgba(90, 62, 154, 0.06);
 }
 
+/* Local algorithm variables (T, F, E, fields, keys, req, eff_min, …).
+   Soft amber accent so they read as named bindings within the algorithm
+   text without competing visually with productions or properties. */
+.content code.ph-var {
+  color: #a06800;
+  background: rgba(160, 104, 0, 0.06);
+}
+
+/* Property-access chains (T.embedded_artifacts, M.versioning_metadata.status).
+   Slate-blue tint slightly darker than ph-var so a chain reads as a
+   structural path rather than a bare variable. */
+.content code.ph-prop {
+  color: #4a6080;
+  background: rgba(74, 96, 128, 0.06);
+}
+
+/* String literals ("required", "draft", "year", …). Soft green so
+   literal values stand out against the surrounding identifier soup. */
+.content code.ph-string {
+  color: #4a7a2a;
+  background: rgba(74, 122, 42, 0.06);
+}
+
 /* Dark-theme adjustments. */
 .navy .content code.ph-prod,
 .coal .content code.ph-prod,
@@ -244,4 +267,22 @@ pre.ebnf code {
 .ayu .content code.ph-keyword {
   color: #b39ddb;
   background: rgba(179, 157, 219, 0.10);
+}
+.navy .content code.ph-var,
+.coal .content code.ph-var,
+.ayu .content code.ph-var {
+  color: #d8a157;
+  background: rgba(216, 161, 87, 0.10);
+}
+.navy .content code.ph-prop,
+.coal .content code.ph-prop,
+.ayu .content code.ph-prop {
+  color: #8aa9d9;
+  background: rgba(138, 169, 217, 0.10);
+}
+.navy .content code.ph-string,
+.coal .content code.ph-string,
+.ayu .content code.ph-string {
+  color: #a8c97a;
+  background: rgba(168, 201, 122, 0.10);
 }

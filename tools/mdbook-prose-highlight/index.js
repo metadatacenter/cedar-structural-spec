@@ -49,16 +49,18 @@ process.stdin.on('end', () => {
 
 // ---------------------------------------------------------------- config ----
 
-// Chapter paths whose prose we extend with algorithm-keyword colouring.
-// Keyword colouring is opt-in per chapter to avoid colouring "Run" or
-// "Verify" everywhere in the spec.
-const KEYWORD_CHAPTERS = new Set(['validation.md']);
+// Chapter paths whose prose we extend with the full structural
+// palette: keywords, variables, property accesses, and string
+// literals. Production-name colouring fires on every chapter and is
+// not gated by this list. Adding a chapter here opts it in to the
+// full set; useful for chapters with algorithm-style prose.
+const EXTENDED_CHAPTERS = new Set(['validation.md']);
 
-// Algorithm keywords we colour inside KEYWORD_CHAPTERS. Conformance
-// auxiliaries (MUST/SHOULD/MAY etc.) are coloured everywhere they are
-// already wrapped in backticks — the spec convention is that
-// MUST/SHOULD/MAY appearing inline as English-language words are NOT
-// in backticks, so this is naturally limited.
+// Algorithm keywords we colour inside EXTENDED_CHAPTERS. The spec
+// convention is that English-language uses of MUST/SHOULD/MAY are
+// NOT in backticks, so this is naturally limited to the algorithm
+// primitives (Run, Verify, Warn, Let) plus the rare backticked
+// conformance keyword.
 const KEYWORDS = new Set([
   // Algorithm primitives
   'Run', 'Verify', 'Warn', 'Let',
@@ -66,6 +68,26 @@ const KEYWORDS = new Set([
   'MUST', 'SHOULD', 'MAY',
   'MUST NOT', 'SHOULD NOT',
 ]);
+
+// Recognition regexes. A backtick span's trimmed content is
+// classified by trying these in order:
+//
+//   1. STRING_RE     — quoted JSON-style string literal.
+//   2. PROP_RE       — property-access chain like `T.embedded_artifacts`
+//                      or `M.versioning_metadata.status`. Lowercase head
+//                      with at least one dot-accessor.
+//   3. (production)  — the global UpperCamelCase set built from EBNF
+//                      blocks; checked separately.
+//   4. (keyword)     — the KEYWORDS set above.
+//   5. VAR_RE        — single capital letter (`T`, `F`, `E`) or a plain
+//                      lowercase identifier (`fields`, `keys`, `req`,
+//                      `eff_min`).
+//
+// Any backtick span that matches none of these is left as a plain
+// `<code>` span.
+const STRING_RE = /^"[^"\n]*"$/;
+const PROP_RE   = /^[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)+$/;
+const VAR_RE    = /^(?:[A-Z]|[a-z_][a-z0-9_]*)$/;
 
 // --------------------------------------------------------------- traversal ----
 
@@ -141,7 +163,7 @@ function collectProductionNames(chapters) {
 // detect markdown-link wrapping.
 
 function rewriteChapter(ch, productions) {
-  const wantKeywords = KEYWORD_CHAPTERS.has(ch.path);
+  const extended = EXTENDED_CHAPTERS.has(ch.path);
   const lines = ch.content.split('\n');
   const out = [];
   let inFence = false;
@@ -166,7 +188,7 @@ function rewriteChapter(ch, productions) {
       out.push(line);
       continue;
     }
-    out.push(rewriteLine(line, productions, wantKeywords));
+    out.push(rewriteLine(line, productions, extended));
   }
   return out.join('\n');
 }
@@ -176,7 +198,7 @@ function rewriteChapter(ch, productions) {
 // Pattern: ``…`` where neither immediate adjacency is `[` or `](`.
 // We match a backtick span and inspect the preceding/following
 // characters to decide whether to leave it alone.
-function rewriteLine(line, productions, wantKeywords) {
+function rewriteLine(line, productions, extended) {
   // Skip lines that are pure heading anchors like `## Heading {#id}`.
   // Heading content can include backtick spans we should NOT classify
   // (they're part of the heading text); leave headings alone.
@@ -211,14 +233,24 @@ function rewriteLine(line, productions, wantKeywords) {
     // link text), leave alone — link styling handles it.
     const insideLinkText = before === '[' && after === ']';
 
-    // Classify the span content.
+    // Classify the span content. Order is most-specific first so that
+    // an unambiguous match wins over a broader pattern (e.g. a
+    // production name is preferred over the var-fallback for an
+    // UpperCamelCase identifier — except productions only match if
+    // the global productions set knows the name).
     let cls = null;
     if (!insideLinkText) {
       const trimmed = inner.trim();
-      if (productions.has(trimmed)) {
-        cls = 'ph-prod';
-      } else if (wantKeywords && KEYWORDS.has(trimmed)) {
+      if (extended && STRING_RE.test(trimmed)) {
+        cls = 'ph-string';
+      } else if (extended && PROP_RE.test(trimmed)) {
+        cls = 'ph-prop';
+      } else if (extended && KEYWORDS.has(trimmed)) {
         cls = 'ph-keyword';
+      } else if (productions.has(trimmed)) {
+        cls = 'ph-prod';
+      } else if (extended && VAR_RE.test(trimmed)) {
+        cls = 'ph-var';
       }
     }
 
