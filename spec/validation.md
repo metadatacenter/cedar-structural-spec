@@ -269,12 +269,12 @@ Each report uses the four-field shape from [`serialization.md` §9.3](serializat
 
 **Path conventions.** Subroutines describe paths *relative to their input*, using a placeholder for the input and slot accessors after slashes:
 
-- `<input>` — the subroutine's input parameter, e.g. `<E>`, `<T>`, `<FT>`.
+- `<input>` — the subroutine's input parameter, e.g. `<embedded>`, `<template>`, `<fieldSpec>`.
 - `<input>/slotName` — a property slot.
 - `<input>/arrayName/<i>` — an element of an array (with `<i>` an index variable).
 - `<input>/arrayName/<i>/inner` — a nested slot inside the i-th element.
 
-The caller of a subroutine substitutes the placeholder for the actual JSON Pointer of its input. For example, when `[validate_cardinality_consistency](#fn-validate-cardinality-consistency)` runs against `T.members[2]`, an error reported at `<E>/cardinality/min` becomes `/members/2/cardinality/min` in the surfaced report.
+The caller of a subroutine substitutes the placeholder for the actual JSON Pointer of its input. For example, when `[validate_cardinality_consistency](#fn-validate-cardinality-consistency)` runs against `template.members[2]`, an error reported at `<embedded>/cardinality/min` becomes `/members/2/cardinality/min` in the surfaced report.
 
 Warning reports follow the same shape but are emitted through the binding's warning channel rather than its error channel.
 
@@ -284,107 +284,107 @@ Warning reports follow the same shape but are emitted through the binding's warn
 
 #### Entry Point
 
-##### `validate_schema(T: Template)` {#fn-validate-schema}
+##### `validate_schema(template: Template)` {#fn-validate-schema}
 
 Entry point for schema validation.
 
-1. Run [`validate_model_version(T.model_version)`](#fn-validate-model-version) and [`validate_artifact_metadata(T.schema_artifact_metadata)`](#fn-validate-artifact-metadata).
-2. Let `fields` = the set of `Field` artifacts referenced by `EmbeddedField` constructs in `T`.
-3. For each `F` in `fields`: run [`validate_model_version(F.model_version)`](#fn-validate-model-version), [`validate_artifact_metadata(F.schema_artifact_metadata)`](#fn-validate-artifact-metadata), and [`validate_field_spec(F.field_spec)`](#fn-validate-field-spec).
-4. Let `pcs` = the set of `PresentationComponent` artifacts referenced by `EmbeddedPresentationComponent` constructs in `T`.
-5. For each `PC` in `pcs`: run [`validate_model_version(PC.model_version)`](#fn-validate-model-version) and [`validate_artifact_metadata(PC.artifact_metadata)`](#fn-validate-artifact-metadata).
-6. Run [`validate_embedded_artifact_keys(T)`](#fn-validate-embedded-artifact-keys).
-7. For each `E` in `T.embedded_artifacts`:
-   1. Run [`validate_embedding_reference(E)`](#fn-validate-embedding-reference).
-   2. Run [`validate_cardinality_consistency(E)`](#fn-validate-cardinality-consistency).
-   3. If `E` is an `EmbeddedField`: run [`validate_rendering_hints(E)`](#fn-validate-rendering-hints).
-   4. If `E.default_value` is present: run [`validate_default_value(E.default_value, E)`](#fn-validate-default-value).
-   5. If `E` is an `EmbeddedTemplate`: run [`validate_schema(E.referenced_template)`](#fn-validate-schema).
+1. Run [`validate_model_version(template.model_version)`](#fn-validate-model-version) and [`validate_artifact_metadata(template.schema_artifact_metadata)`](#fn-validate-artifact-metadata).
+2. Let `fields` = the set of `Field` artifacts referenced by `EmbeddedField` constructs in `template`.
+3. For each `field` in `fields`: run [`validate_model_version(field.model_version)`](#fn-validate-model-version), [`validate_artifact_metadata(field.schema_artifact_metadata)`](#fn-validate-artifact-metadata), and [`validate_field_spec(field.field_spec)`](#fn-validate-field-spec).
+4. Let `pcs` = the set of `PresentationComponent` artifacts referenced by `EmbeddedPresentationComponent` constructs in `template`.
+5. For each `component` in `pcs`: run [`validate_model_version(component.model_version)`](#fn-validate-model-version) and [`validate_artifact_metadata(component.artifact_metadata)`](#fn-validate-artifact-metadata).
+6. Run [`validate_embedded_artifact_keys(template)`](#fn-validate-embedded-artifact-keys).
+7. For each `embedded` in `template.embedded_artifacts`:
+   1. Run [`validate_embedding_reference(embedded)`](#fn-validate-embedding-reference).
+   2. Run [`validate_cardinality_consistency(embedded)`](#fn-validate-cardinality-consistency).
+   3. If `embedded` is an `EmbeddedField`: run [`validate_rendering_hints(embedded)`](#fn-validate-rendering-hints).
+   4. If `embedded.default_value` is present: run [`validate_default_value(embedded.default_value, embedded)`](#fn-validate-default-value).
+   5. If `embedded` is an `EmbeddedTemplate`: run [`validate_schema(embedded.referenced_template)`](#fn-validate-schema).
 
 ---
 
 #### Metadata and Key Validation
 
-##### `validate_artifact_metadata(M: SchemaArtifactMetadata)` {#fn-validate-artifact-metadata}
+##### `validate_artifact_metadata(metadata: SchemaArtifactMetadata)` {#fn-validate-artifact-metadata}
 
 Applies the [Versioning](#versioning) rules.
 
-1. Let `v` = `M.versioning_metadata.version`. Verify `v` conforms to the `SemanticVersion` lexical form (Semantic Versioning 2.0.0).
-   *On failure:* `lexical` at `<M>/versioning/version`, production `SchemaArtifactVersioning`, message `"version is not a valid SemanticVersion 2.0.0 string"`.
-2. Let `s` = `M.versioning_metadata.status`. Verify `s ∈ { draft, published }`.
-   *On failure:* `wireShape` at `<M>/versioning/status`, production `SchemaArtifactVersioning`, message `"status must be 'draft' or 'published'"`.
-3. If both `M.versioning_metadata.previous_version` and `M.versioning_metadata.derived_from` are present: verify they do not carry the same IRI value.
-   *On failure:* `structural` at `<M>/versioning/derivedFrom`, production `SchemaArtifactVersioning`, message `"previousVersion and derivedFrom MUST NOT carry the same IRI"`.
+1. Let `version` = `metadata.versioning_metadata.version`. Verify `version` conforms to the `SemanticVersion` lexical form (Semantic Versioning 2.0.0).
+   *On failure:* `lexical` at `<metadata>/versioning/version`, production `SchemaArtifactVersioning`, message `"version is not a valid SemanticVersion 2.0.0 string"`.
+2. Let `status` = `metadata.versioning_metadata.status`. Verify `status ∈ { draft, published }`.
+   *On failure:* `wireShape` at `<metadata>/versioning/status`, production `SchemaArtifactVersioning`, message `"status must be 'draft' or 'published'"`.
+3. If both `metadata.versioning_metadata.previous_version` and `metadata.versioning_metadata.derived_from` are present: verify they do not carry the same IRI value.
+   *On failure:* `structural` at `<metadata>/versioning/derivedFrom`, production `SchemaArtifactVersioning`, message `"previousVersion and derivedFrom MUST NOT carry the same IRI"`.
 
 When invoked with an `ArtifactMetadata` value (e.g. a `PresentationComponent`'s metadata), all steps are skipped: `ArtifactMetadata` does not carry `SchemaArtifactVersioning`.
 
 ---
 
-##### `validate_model_version(mv: ModelVersion)` {#fn-validate-model-version}
+##### `validate_model_version(modelVersion: ModelVersion)` {#fn-validate-model-version}
 
 Applies the [Versioning](#versioning) rules to the artifact-level `ModelVersion` carried directly by every concrete `Artifact`.
 
-1. Verify `mv` conforms to the `SemanticVersion` lexical form (Semantic Versioning 2.0.0).
-   *On failure:* `lexical` at `<mv>`, production naming the enclosing artifact (e.g. `TextField`, `Template`), message `"modelVersion is not a valid SemanticVersion 2.0.0 string"`.
+1. Verify `modelVersion` conforms to the `SemanticVersion` lexical form (Semantic Versioning 2.0.0).
+   *On failure:* `lexical` at `<modelVersion>`, production naming the enclosing artifact (e.g. `TextField`, `Template`), message `"modelVersion is not a valid SemanticVersion 2.0.0 string"`.
 
 ---
 
-##### `validate_embedded_artifact_keys(T: Template)` {#fn-validate-embedded-artifact-keys}
+##### `validate_embedded_artifact_keys(template: Template)` {#fn-validate-embedded-artifact-keys}
 
 Applies the [EmbeddedArtifactKey Uniqueness](#embeddedartifactkey-uniqueness) rules.
 
-1. Let `keys` = the sequence of `EmbeddedArtifactKey` values across all `EmbeddedArtifact` constructs in `T`.
+1. Let `keys` = the sequence of `EmbeddedArtifactKey` values across all `EmbeddedArtifact` constructs in `template`.
 2. For each key `k` in `keys`: verify `k` conforms to the `AsciiIdentifier` lexical form (regex `^[A-Za-z][A-Za-z0-9_-]*$`).
-   *On failure:* `lexical` at `<T>/members/<i>/key`, production naming the embedded artifact at index `<i>`, message `"EmbeddedArtifactKey does not match the AsciiIdentifier pattern"`.
-3. Verify all values in `keys` are distinct: for each pair `(k₁, k₂)` where `k₁ ≠ k₂` as positions but `k₁ = k₂` as values, report a duplicate-key error. Key uniqueness is scoped to `T`; the same key may appear in a nested template without conflict.
-   *On failure:* `structural` at `<T>/members/<j>/key` (the second occurrence), production `Template`, message `"EmbeddedArtifact.key is not unique within the enclosing Template (also at /members/<i>/key)"`.
+   *On failure:* `lexical` at `<template>/members/<i>/key`, production naming the embedded artifact at index `<i>`, message `"EmbeddedArtifactKey does not match the AsciiIdentifier pattern"`.
+3. Verify all values in `keys` are distinct: for each pair `(k₁, k₂)` where `k₁ ≠ k₂` as positions but `k₁ = k₂` as values, report a duplicate-key error. Key uniqueness is scoped to `template`; the same key may appear in a nested template without conflict.
+   *On failure:* `structural` at `<template>/members/<j>/key` (the second occurrence), production `Template`, message `"EmbeddedArtifact.key is not unique within the enclosing Template (also at /members/<i>/key)"`.
 
 ---
 
 #### Reference and Cardinality Validation
 
-##### `validate_embedding_reference(E: EmbeddedArtifact)` {#fn-validate-embedding-reference}
+##### `validate_embedding_reference(embedded: EmbeddedArtifact)` {#fn-validate-embedding-reference}
 
 Applies the [Embedding References](#embedding-references) rules.
 
-For each step below, *on failure:* `structural` at `<E>/artifactRef`, production naming `E`'s family (e.g. `EmbeddedTextField`), message `"artifactRef IRI does not identify an existing <Family> of the family declared by the surrounding kind"`.
+For each step below, *on failure:* `structural` at `<embedded>/artifactRef`, production naming `embedded`'s family (e.g. `EmbeddedTextField`), message `"artifactRef IRI does not identify an existing <Family> of the family declared by the surrounding kind"`.
 
-1. If `E` is an `EmbeddedTextField`: verify `E.artifactRef` is a `TextFieldId` identifying an existing `TextField`.
-2. If `E` is an `EmbeddedIntegerNumberField`: verify `E.artifactRef` is an `IntegerNumberFieldId` identifying an existing `IntegerNumberField`.
-3. If `E` is an `EmbeddedRealNumberField`: verify `E.artifactRef` is a `RealNumberFieldId` identifying an existing `RealNumberField`.
-4. If `E` is an `EmbeddedBooleanField`: verify `E.artifactRef` is a `BooleanFieldId` identifying an existing `BooleanField`.
-5. If `E` is an `EmbeddedDateField`: verify `E.artifactRef` is a `DateFieldId` identifying an existing `DateField`.
-6. If `E` is an `EmbeddedTimeField`: verify `E.artifactRef` is a `TimeFieldId` identifying an existing `TimeField`.
-7. If `E` is an `EmbeddedDateTimeField`: verify `E.artifactRef` is a `DateTimeFieldId` identifying an existing `DateTimeField`.
-8. If `E` is an `EmbeddedControlledTermField`: verify `E.artifactRef` is a `ControlledTermFieldId` identifying an existing `ControlledTermField`.
-9. If `E` is an `EmbeddedSingleValuedEnumField`: verify `E.artifactRef` is a `SingleValuedEnumFieldId` identifying an existing `SingleValuedEnumField`.
-10. If `E` is an `EmbeddedMultiValuedEnumField`: verify `E.artifactRef` is a `MultiValuedEnumFieldId` identifying an existing `MultiValuedEnumField`.
-11. If `E` is an `EmbeddedLinkField`: verify `E.artifactRef` is a `LinkFieldId` identifying an existing `LinkField`.
-12. If `E` is an `EmbeddedEmailField`: verify `E.artifactRef` is an `EmailFieldId` identifying an existing `EmailField`.
-13. If `E` is an `EmbeddedPhoneNumberField`: verify `E.artifactRef` is a `PhoneNumberFieldId` identifying an existing `PhoneNumberField`.
-14. If `E` is an `EmbeddedOrcidField`: verify `E.artifactRef` is an `OrcidFieldId` identifying an existing `OrcidField`.
-15. If `E` is an `EmbeddedRorField`: verify `E.artifactRef` is a `RorFieldId` identifying an existing `RorField`.
-16. If `E` is an `EmbeddedDoiField`: verify `E.artifactRef` is a `DoiFieldId` identifying an existing `DoiField`.
-17. If `E` is an `EmbeddedPubMedIdField`: verify `E.artifactRef` is a `PubMedIdFieldId` identifying an existing `PubMedIdField`.
-18. If `E` is an `EmbeddedRridField`: verify `E.artifactRef` is an `RridFieldId` identifying an existing `RridField`.
-19. If `E` is an `EmbeddedNihGrantIdField`: verify `E.artifactRef` is a `NihGrantIdFieldId` identifying an existing `NihGrantIdField`.
-20. If `E` is an `EmbeddedAttributeValueField`: verify `E.artifactRef` is an `AttributeValueFieldId` identifying an existing `AttributeValueField`.
-21. If `E` is an `EmbeddedTemplate`: verify `E.artifactRef` is a `TemplateId` identifying an existing `Template`.
-22. If `E` is an `EmbeddedPresentationComponent`: verify `E.artifactRef` is a `PresentationComponentId` identifying an existing `PresentationComponent`.
+1. If `embedded` is an `EmbeddedTextField`: verify `embedded.artifactRef` is a `TextFieldId` identifying an existing `TextField`.
+2. If `embedded` is an `EmbeddedIntegerNumberField`: verify `embedded.artifactRef` is an `IntegerNumberFieldId` identifying an existing `IntegerNumberField`.
+3. If `embedded` is an `EmbeddedRealNumberField`: verify `embedded.artifactRef` is a `RealNumberFieldId` identifying an existing `RealNumberField`.
+4. If `embedded` is an `EmbeddedBooleanField`: verify `embedded.artifactRef` is a `BooleanFieldId` identifying an existing `BooleanField`.
+5. If `embedded` is an `EmbeddedDateField`: verify `embedded.artifactRef` is a `DateFieldId` identifying an existing `DateField`.
+6. If `embedded` is an `EmbeddedTimeField`: verify `embedded.artifactRef` is a `TimeFieldId` identifying an existing `TimeField`.
+7. If `embedded` is an `EmbeddedDateTimeField`: verify `embedded.artifactRef` is a `DateTimeFieldId` identifying an existing `DateTimeField`.
+8. If `embedded` is an `EmbeddedControlledTermField`: verify `embedded.artifactRef` is a `ControlledTermFieldId` identifying an existing `ControlledTermField`.
+9. If `embedded` is an `EmbeddedSingleValuedEnumField`: verify `embedded.artifactRef` is a `SingleValuedEnumFieldId` identifying an existing `SingleValuedEnumField`.
+10. If `embedded` is an `EmbeddedMultiValuedEnumField`: verify `embedded.artifactRef` is a `MultiValuedEnumFieldId` identifying an existing `MultiValuedEnumField`.
+11. If `embedded` is an `EmbeddedLinkField`: verify `embedded.artifactRef` is a `LinkFieldId` identifying an existing `LinkField`.
+12. If `embedded` is an `EmbeddedEmailField`: verify `embedded.artifactRef` is an `EmailFieldId` identifying an existing `EmailField`.
+13. If `embedded` is an `EmbeddedPhoneNumberField`: verify `embedded.artifactRef` is a `PhoneNumberFieldId` identifying an existing `PhoneNumberField`.
+14. If `embedded` is an `EmbeddedOrcidField`: verify `embedded.artifactRef` is an `OrcidFieldId` identifying an existing `OrcidField`.
+15. If `embedded` is an `EmbeddedRorField`: verify `embedded.artifactRef` is a `RorFieldId` identifying an existing `RorField`.
+16. If `embedded` is an `EmbeddedDoiField`: verify `embedded.artifactRef` is a `DoiFieldId` identifying an existing `DoiField`.
+17. If `embedded` is an `EmbeddedPubMedIdField`: verify `embedded.artifactRef` is a `PubMedIdFieldId` identifying an existing `PubMedIdField`.
+18. If `embedded` is an `EmbeddedRridField`: verify `embedded.artifactRef` is an `RridFieldId` identifying an existing `RridField`.
+19. If `embedded` is an `EmbeddedNihGrantIdField`: verify `embedded.artifactRef` is a `NihGrantIdFieldId` identifying an existing `NihGrantIdField`.
+20. If `embedded` is an `EmbeddedAttributeValueField`: verify `embedded.artifactRef` is an `AttributeValueFieldId` identifying an existing `AttributeValueField`.
+21. If `embedded` is an `EmbeddedTemplate`: verify `embedded.artifactRef` is a `TemplateId` identifying an existing `Template`.
+22. If `embedded` is an `EmbeddedPresentationComponent`: verify `embedded.artifactRef` is a `PresentationComponentId` identifying an existing `PresentationComponent`.
 
 ---
 
-##### `validate_cardinality_consistency(E: EmbeddedArtifact)` {#fn-validate-cardinality-consistency}
+##### `validate_cardinality_consistency(embedded: EmbeddedArtifact)` {#fn-validate-cardinality-consistency}
 
 Applies the [Cardinality Consistency](#cardinality-consistency) rules.
 
-1. Let `min` = `E.cardinality.min_cardinality` if `E.cardinality` is present, else `1`.
-2. Let `max` = `E.cardinality.max_cardinality` if `E.cardinality` is present, else `1`. If `max` is `UnboundedCardinality`, let `max = ∞`.
+1. Let `min` = `embedded.cardinality.min_cardinality` if `embedded.cardinality` is present, else `1`.
+2. Let `max` = `embedded.cardinality.max_cardinality` if `embedded.cardinality` is present, else `1`. If `max` is `UnboundedCardinality`, let `max = ∞`.
 3. Verify `min ≤ max`.
-   *On failure:* `structural` at `<E>/cardinality`, production `Cardinality`, message `"min must not exceed max"`.
-4. Let `req` = `E.value_requirement` if present, else `"optional"`.
+   *On failure:* `structural` at `<embedded>/cardinality`, production `Cardinality`, message `"min must not exceed max"`.
+4. Let `req` = `embedded.value_requirement` if present, else `"optional"`.
 5. If `req = "required"`: verify `min ≥ 1`.
-   *On failure:* `structural` at `<E>/cardinality/min`, production `Cardinality`, message `"required embedding must have min cardinality of at least 1"`.
+   *On failure:* `structural` at `<embedded>/cardinality/min`, production `Cardinality`, message `"required embedding must have min cardinality of at least 1"`.
 
 ---
 
@@ -392,92 +392,92 @@ Applies the [Cardinality Consistency](#cardinality-consistency) rules.
 
 Applies the [Field Spec Compatibility](#field-spec-compatibility) rules. See also [Field Specs](grammar.md#field-specs) in the abstract grammar.
 
-##### `validate_field_spec(FT: FieldSpec)` {#fn-validate-field-spec}
+##### `validate_field_spec(fieldSpec: FieldSpec)` {#fn-validate-field-spec}
 
-Dispatch on the kind of `FT`:
+Dispatch on the kind of `fieldSpec`:
 
-- If `FT` is `TextFieldSpec`: run [`validate_text_field_spec(FT)`](#fn-validate-text-field-spec).
-- If `FT` is `IntegerNumberFieldSpec`: run [`validate_integer_number_field_spec(FT)`](#fn-validate-integer-number-field-spec).
-- If `FT` is `RealNumberFieldSpec`: run [`validate_real_number_field_spec(FT)`](#fn-validate-real-number-field-spec).
-- If `FT` is `SingleValuedEnumFieldSpec` or `MultiValuedEnumFieldSpec`: run [`validate_enum_field_spec(FT)`](#fn-validate-enum-field-spec).
+- If `fieldSpec` is `TextFieldSpec`: run [`validate_text_field_spec(fieldSpec)`](#fn-validate-text-field-spec).
+- If `fieldSpec` is `IntegerNumberFieldSpec`: run [`validate_integer_number_field_spec(fieldSpec)`](#fn-validate-integer-number-field-spec).
+- If `fieldSpec` is `RealNumberFieldSpec`: run [`validate_real_number_field_spec(fieldSpec)`](#fn-validate-real-number-field-spec).
+- If `fieldSpec` is `SingleValuedEnumFieldSpec` or `MultiValuedEnumFieldSpec`: run [`validate_enum_field_spec(fieldSpec)`](#fn-validate-enum-field-spec).
 - All other field specs have no additional schema-level well-formedness checks beyond structural grammar conformance.
 
 ---
 
-##### `validate_text_field_spec(FT: TextFieldSpec)` {#fn-validate-text-field-spec}
+##### `validate_text_field_spec(fieldSpec: TextFieldSpec)` {#fn-validate-text-field-spec}
 
-1. If both `FT.min_length` and `FT.max_length` are present: verify `FT.min_length ≤ FT.max_length`.
-   *On failure:* `structural` at `<FT>/minLength`, production `TextFieldSpec`, message `"minLength must not exceed maxLength"`.
-
----
-
-##### `validate_integer_number_field_spec(FT: IntegerNumberFieldSpec)` {#fn-validate-integer-number-field-spec}
-
-1. If both `FT.min_value` and `FT.max_value` are present: verify `FT.min_value ≤ FT.max_value`.
-   *On failure:* `structural` at `<FT>/minValue`, production `IntegerNumberFieldSpec`, message `"minValue must not exceed maxValue"`.
+1. If both `fieldSpec.min_length` and `fieldSpec.max_length` are present: verify `fieldSpec.min_length ≤ fieldSpec.max_length`.
+   *On failure:* `structural` at `<fieldSpec>/minLength`, production `TextFieldSpec`, message `"minLength must not exceed maxLength"`.
 
 ---
 
-##### `validate_real_number_field_spec(FT: RealNumberFieldSpec)` {#fn-validate-real-number-field-spec}
+##### `validate_integer_number_field_spec(fieldSpec: IntegerNumberFieldSpec)` {#fn-validate-integer-number-field-spec}
 
-1. If both `FT.min_value` and `FT.max_value` are present: verify `FT.min_value ≤ FT.max_value`.
-   *On failure:* `structural` at `<FT>/minValue`, production `RealNumberFieldSpec`, message `"minValue must not exceed maxValue"`.
+1. If both `fieldSpec.min_value` and `fieldSpec.max_value` are present: verify `fieldSpec.min_value ≤ fieldSpec.max_value`.
+   *On failure:* `structural` at `<fieldSpec>/minValue`, production `IntegerNumberFieldSpec`, message `"minValue must not exceed maxValue"`.
 
 ---
 
-##### `validate_enum_field_spec(FT: EnumFieldSpec)` {#fn-validate-enum-field-spec}
+##### `validate_real_number_field_spec(fieldSpec: RealNumberFieldSpec)` {#fn-validate-real-number-field-spec}
 
-1. Let `tokens` = the sequence of `pv.value` values across all `pv` in `FT.permissible_values`.
+1. If both `fieldSpec.min_value` and `fieldSpec.max_value` are present: verify `fieldSpec.min_value ≤ fieldSpec.max_value`.
+   *On failure:* `structural` at `<fieldSpec>/minValue`, production `RealNumberFieldSpec`, message `"minValue must not exceed maxValue"`.
+
+---
+
+##### `validate_enum_field_spec(fieldSpec: EnumFieldSpec)` {#fn-validate-enum-field-spec}
+
+1. Let `tokens` = the sequence of `pv.value` values across all `pv` in `fieldSpec.permissible_values`.
 2. Verify all values in `tokens` are distinct: report a duplicate-token error for any pair sharing the same token string.
-   *On failure:* `structural` at `<FT>/permissibleValues/<j>/value` (the second occurrence), production naming `FT`'s kind, message `"PermissibleValue.value is not unique within the enclosing spec (also at /permissibleValues/<i>/value)"`.
-3. For each `pv` in `FT.permissible_values`: verify `pv.value` is a non-empty Unicode string.
-   *On failure:* `wireShape` at `<FT>/permissibleValues/<i>/value`, production `PermissibleValue`, message `"value must be a non-empty Unicode string"`.
-4. For each `pv` in `FT.permissible_values`, for each `m` in `pv.meanings`: verify `m.iri` is a syntactically valid IRI.
-   *On failure:* `lexical` at `<FT>/permissibleValues/<i>/meanings/<j>/iri`, production `Meaning`, message `"iri is not a valid IRI"`.
-5. If `FT` is a `SingleValuedEnumFieldSpec` and `FT.default_value` is present: verify `FT.default_value` is an `EnumValue` and that `FT.default_value.value ∈ tokens`.
-   *On failure:* `structural` at `<FT>/defaultValue/value`, production `SingleValuedEnumFieldSpec`, message `"defaultValue does not match any of the spec's permissibleValues"`.
-6. If `FT` is a `MultiValuedEnumFieldSpec` and `FT.default_values` is present:
+   *On failure:* `structural` at `<fieldSpec>/permissibleValues/<j>/value` (the second occurrence), production naming `fieldSpec`'s kind, message `"PermissibleValue.value is not unique within the enclosing spec (also at /permissibleValues/<i>/value)"`.
+3. For each `pv` in `fieldSpec.permissible_values`: verify `pv.value` is a non-empty Unicode string.
+   *On failure:* `wireShape` at `<fieldSpec>/permissibleValues/<i>/value`, production `PermissibleValue`, message `"value must be a non-empty Unicode string"`.
+4. For each `pv` in `fieldSpec.permissible_values`, for each `m` in `pv.meanings`: verify `m.iri` is a syntactically valid IRI.
+   *On failure:* `lexical` at `<fieldSpec>/permissibleValues/<i>/meanings/<j>/iri`, production `Meaning`, message `"iri is not a valid IRI"`.
+5. If `fieldSpec` is a `SingleValuedEnumFieldSpec` and `fieldSpec.default_value` is present: verify `fieldSpec.default_value` is an `EnumValue` and that `fieldSpec.default_value.value ∈ tokens`.
+   *On failure:* `structural` at `<fieldSpec>/defaultValue/value`, production `SingleValuedEnumFieldSpec`, message `"defaultValue does not match any of the spec's permissibleValues"`.
+6. If `fieldSpec` is a `MultiValuedEnumFieldSpec` and `fieldSpec.default_values` is present:
    1. Verify each entry is an `EnumValue` and that its `value ∈ tokens`.
-      *On failure:* `structural` at `<FT>/defaultValues/<i>/value`, production `MultiValuedEnumFieldSpec`, message `"defaultValues entry does not match any of the spec's permissibleValues"`.
+      *On failure:* `structural` at `<fieldSpec>/defaultValues/<i>/value`, production `MultiValuedEnumFieldSpec`, message `"defaultValues entry does not match any of the spec's permissibleValues"`.
    2. Verify all entries' `value` strings are distinct.
-      *On failure:* `structural` at `<FT>/defaultValues/<j>/value` (the second occurrence), production `MultiValuedEnumFieldSpec`, message `"defaultValues contains duplicate entries (also at /defaultValues/<i>/value)"`.
+      *On failure:* `structural` at `<fieldSpec>/defaultValues/<j>/value` (the second occurrence), production `MultiValuedEnumFieldSpec`, message `"defaultValues contains duplicate entries (also at /defaultValues/<i>/value)"`.
 
 ---
 
 #### Default Value Validation
 
-##### `validate_default_value(D: Value, E: EmbeddedArtifact)` {#fn-validate-default-value}
+##### `validate_default_value(defaultValue: Value, embedded: EmbeddedArtifact)` {#fn-validate-default-value}
 
-Let `FT` = the `FieldSpec` of the `Field` referenced by `E`.
+Let `fieldSpec` = the `FieldSpec` of the `Field` referenced by `embedded`.
 
-1. Verify `D` is of the family-specific `Value` type for `FT`: `TextValue` for `TextFieldSpec`, `IntegerNumberValue` for `IntegerNumberFieldSpec`, `RealNumberValue` for `RealNumberFieldSpec`, `BooleanValue` for `BooleanFieldSpec`, `DateValue` for `DateFieldSpec`, `TimeValue` for `TimeFieldSpec`, `DateTimeValue` for `DateTimeFieldSpec`, `ControlledTermValue` for `ControlledTermFieldSpec`, `EnumValue` for `SingleValuedEnumFieldSpec`, a sequence of `EnumValue` for `MultiValuedEnumFieldSpec`, `LinkValue` for `LinkFieldSpec`, `EmailValue` for `EmailFieldSpec`, `PhoneNumberValue` for `PhoneNumberFieldSpec`, and the corresponding external-authority `Value` types for the external-authority field specs. `AttributeValueFieldSpec` does not admit a default value.
-   *On failure:* `wireShape` at `<E>/defaultValue`, production naming `E`'s family, message `"defaultValue must be a <FamilyValue> (got <kind>)"`.
-2. Apply the family-specific `validate_xxx_value(D, FT)` procedure to `D`. The default value MUST satisfy every constraint that a `FieldValue` carrying the same `Value` would satisfy. Errors reported by the inner subroutine are surfaced verbatim, with the path rooted at `<E>/defaultValue`.
-3. If `E` is an `EmbeddedSingleValuedEnumField`: verify `D` is a single `EnumValue` (not a sequence).
-   *On failure:* `wireShape` at `<E>/defaultValue`, production `EmbeddedSingleValuedEnumField`, message `"defaultValue must be a single EnumValue, not a sequence"`.
-4. If `E` is an `EmbeddedMultiValuedEnumField`: verify `D` is a (possibly empty) sequence of `EnumValue` constructs and that no two entries share the same `value`.
-   *On failure (shape):* `wireShape` at `<E>/defaultValue`, production `EmbeddedMultiValuedEnumField`, message `"defaultValue must be an array of EnumValue"`.
-   *On failure (duplicate):* `structural` at `<E>/defaultValue/<j>/value` (the second occurrence), production `EmbeddedMultiValuedEnumField`, message `"defaultValue contains duplicate entries (also at /defaultValue/<i>/value)"`.
+1. Verify `defaultValue` is of the family-specific `Value` type for `fieldSpec`: `TextValue` for `TextFieldSpec`, `IntegerNumberValue` for `IntegerNumberFieldSpec`, `RealNumberValue` for `RealNumberFieldSpec`, `BooleanValue` for `BooleanFieldSpec`, `DateValue` for `DateFieldSpec`, `TimeValue` for `TimeFieldSpec`, `DateTimeValue` for `DateTimeFieldSpec`, `ControlledTermValue` for `ControlledTermFieldSpec`, `EnumValue` for `SingleValuedEnumFieldSpec`, a sequence of `EnumValue` for `MultiValuedEnumFieldSpec`, `LinkValue` for `LinkFieldSpec`, `EmailValue` for `EmailFieldSpec`, `PhoneNumberValue` for `PhoneNumberFieldSpec`, and the corresponding external-authority `Value` types for the external-authority field specs. `AttributeValueFieldSpec` does not admit a default value.
+   *On failure:* `wireShape` at `<embedded>/defaultValue`, production naming `embedded`'s family, message `"defaultValue must be a <FamilyValue> (got <kind>)"`.
+2. Apply the family-specific `validate_xxx_value(defaultValue, fieldSpec)` procedure to `defaultValue`. The default value MUST satisfy every constraint that a `FieldValue` carrying the same `Value` would satisfy. Errors reported by the inner subroutine are surfaced verbatim, with the path rooted at `<embedded>/defaultValue`.
+3. If `embedded` is an `EmbeddedSingleValuedEnumField`: verify `defaultValue` is a single `EnumValue` (not a sequence).
+   *On failure:* `wireShape` at `<embedded>/defaultValue`, production `EmbeddedSingleValuedEnumField`, message `"defaultValue must be a single EnumValue, not a sequence"`.
+4. If `embedded` is an `EmbeddedMultiValuedEnumField`: verify `defaultValue` is a (possibly empty) sequence of `EnumValue` constructs and that no two entries share the same `value`.
+   *On failure (shape):* `wireShape` at `<embedded>/defaultValue`, production `EmbeddedMultiValuedEnumField`, message `"defaultValue must be an array of EnumValue"`.
+   *On failure (duplicate):* `structural` at `<embedded>/defaultValue/<j>/value` (the second occurrence), production `EmbeddedMultiValuedEnumField`, message `"defaultValue contains duplicate entries (also at /defaultValue/<i>/value)"`.
 
 ---
 
 #### Rendering Hint Validation
 
-##### `validate_rendering_hints(E: EmbeddedField)` {#fn-validate-rendering-hints}
+##### `validate_rendering_hints(embedded: EmbeddedField)` {#fn-validate-rendering-hints}
 
 Applies the [Rendering Hint Compatibility](#rendering-hint-compatibility) rules.
 
-Let `FT` = the `FieldSpec` of the `Field` referenced by `E`.
+Let `fieldSpec` = the `FieldSpec` of the `Field` referenced by `embedded`.
 
-For each step below, *on failure:* `structural` at the rendering-hint slot's path (e.g. `<E>/renderingHint`), production naming `E`'s family, message `"<HintKind> is not compatible with <FieldSpecKind>"`.
+For each step below, *on failure:* `structural` at the rendering-hint slot's path (e.g. `<embedded>/renderingHint`), production naming `embedded`'s family, message `"<HintKind> is not compatible with <FieldSpecKind>"`.
 
-1. If `E` carries a `TextRenderingHint`: verify `FT` is `TextFieldSpec`.
-2. If `E` carries a `SingleValuedEnumRenderingHint`: verify `FT` is `SingleValuedEnumFieldSpec`.
-3. If `E` carries a `MultiValuedEnumRenderingHint`: verify `FT` is `MultiValuedEnumFieldSpec`.
-4. If `E` carries a `NumericRenderingHint`: verify `FT` is `IntegerNumberFieldSpec` or `RealNumberFieldSpec`.
-5. If `E` carries a `DateRenderingHint`: verify `FT` is `DateFieldSpec`.
-6. If `E` carries a `TimeRenderingHint`: verify `FT` is `TimeFieldSpec`.
-7. If `E` carries a `DateTimeRenderingHint`: verify `FT` is `DateTimeFieldSpec`.
+1. If `embedded` carries a `TextRenderingHint`: verify `fieldSpec` is `TextFieldSpec`.
+2. If `embedded` carries a `SingleValuedEnumRenderingHint`: verify `fieldSpec` is `SingleValuedEnumFieldSpec`.
+3. If `embedded` carries a `MultiValuedEnumRenderingHint`: verify `fieldSpec` is `MultiValuedEnumFieldSpec`.
+4. If `embedded` carries a `NumericRenderingHint`: verify `fieldSpec` is `IntegerNumberFieldSpec` or `RealNumberFieldSpec`.
+5. If `embedded` carries a `DateRenderingHint`: verify `fieldSpec` is `DateFieldSpec`.
+6. If `embedded` carries a `TimeRenderingHint`: verify `fieldSpec` is `TimeFieldSpec`.
+7. If `embedded` carries a `DateTimeRenderingHint`: verify `fieldSpec` is `DateTimeFieldSpec`.
 
 ---
 
@@ -485,221 +485,221 @@ For each step below, *on failure:* `structural` at the rendering-hint slot's pat
 
 #### Entry Point
 
-##### `validate_instance(I: TemplateInstance, T: Template)` {#fn-validate-instance}
+##### `validate_instance(instance: TemplateInstance, template: Template)` {#fn-validate-instance}
 
 Entry point for instance validation.
 
-1. Run [`validate_model_version(I.model_version)`](#fn-validate-model-version).
-2. Run [`validate_instance_alignment(I, T)`](#fn-validate-instance-alignment).
-3. Run [`validate_field_presence_and_cardinality(I, T)`](#fn-validate-field-presence-and-cardinality).
-4. For each `FV` in `I.instance_values` where `FV` is a `FieldValue`:
-   1. Let `EF` = the `EmbeddedField` in `T` whose key = `FV.key`.
-   2. Run [`validate_field_value(FV, EF)`](#fn-validate-field-value).
-5. Run [`validate_nested_template_presence_and_cardinality(I, T)`](#fn-validate-nested-template-presence-and-cardinality).
-6. For each `NTI` in `I.instance_values` where `NTI` is a `NestedTemplateInstance`:
-   1. Let `ET` = the `EmbeddedTemplate` in `T` whose key = `NTI.key`.
-   2. Let `RT` = the `Template` identified by `ET.artifactRef`.
-   3. Run [`validate_instance(NTI, RT)`](#fn-validate-instance).
+1. Run [`validate_model_version(instance.model_version)`](#fn-validate-model-version).
+2. Run [`validate_instance_alignment(instance, template)`](#fn-validate-instance-alignment).
+3. Run [`validate_field_presence_and_cardinality(instance, template)`](#fn-validate-field-presence-and-cardinality).
+4. For each `fieldValue` in `instance.instance_values` where `fieldValue` is a `FieldValue`:
+   1. Let `embeddedField` = the `EmbeddedField` in `template` whose key = `fieldValue.key`.
+   2. Run [`validate_field_value(fieldValue, embeddedField)`](#fn-validate-field-value).
+5. Run [`validate_nested_template_presence_and_cardinality(instance, template)`](#fn-validate-nested-template-presence-and-cardinality).
+6. For each `nestedInstance` in `instance.instance_values` where `nestedInstance` is a `NestedTemplateInstance`:
+   1. Let `embeddedTemplate` = the `EmbeddedTemplate` in `template` whose key = `nestedInstance.key`.
+   2. Let `referencedTemplate` = the `Template` identified by `embeddedTemplate.artifactRef`.
+   3. Run [`validate_instance(nestedInstance, referencedTemplate)`](#fn-validate-instance).
 
 ---
 
 #### Structural Alignment
 
-##### `validate_instance_alignment(I: TemplateInstance, T: Template)` {#fn-validate-instance-alignment}
+##### `validate_instance_alignment(instance: TemplateInstance, template: Template)` {#fn-validate-instance-alignment}
 
 Applies the [Instance Alignment](#instance-alignment) rules.
 
-1. Let `field_keys` = `{ E.key | E ∈ T.embedded_artifacts, E is EmbeddedField }`.
-2. Let `template_keys` = `{ E.key | E ∈ T.embedded_artifacts, E is EmbeddedTemplate }`.
-3. Let `pc_keys` = `{ E.key | E ∈ T.embedded_artifacts, E is EmbeddedPresentationComponent }`.
-4. For each `FV` in `I.instance_values` where `FV` is a `FieldValue`: verify `FV.key ∈ field_keys`.
-   *On failure:* `structural` at `<I>/values/<i>/key`, production `FieldValue`, message `"FieldValue.key does not identify any EmbeddedField in the referenced Template"`.
-5. For each `NTI` in `I.instance_values` where `NTI` is a `NestedTemplateInstance`: verify `NTI.key ∈ template_keys`.
-   *On failure:* `structural` at `<I>/values/<i>/key`, production `NestedTemplateInstance`, message `"NestedTemplateInstance.key does not identify any EmbeddedTemplate in the referenced Template"`.
-6. For each `IV` in `I.instance_values`: verify `IV.key ∉ pc_keys`.
-   *On failure:* `structural` at `<I>/values/<i>/key`, production naming `IV`'s kind, message `"InstanceValue keyed to an EmbeddedPresentationComponent — presentation components do not produce instance values"`.
+1. Let `field_keys` = `{ embedded.key | embedded ∈ template.embedded_artifacts, embedded is EmbeddedField }`.
+2. Let `template_keys` = `{ embedded.key | embedded ∈ template.embedded_artifacts, embedded is EmbeddedTemplate }`.
+3. Let `pc_keys` = `{ embedded.key | embedded ∈ template.embedded_artifacts, embedded is EmbeddedPresentationComponent }`.
+4. For each `fieldValue` in `instance.instance_values` where `fieldValue` is a `FieldValue`: verify `fieldValue.key ∈ field_keys`.
+   *On failure:* `structural` at `<instance>/values/<i>/key`, production `FieldValue`, message `"FieldValue.key does not identify any EmbeddedField in the referenced Template"`.
+5. For each `nestedInstance` in `instance.instance_values` where `nestedInstance` is a `NestedTemplateInstance`: verify `nestedInstance.key ∈ template_keys`.
+   *On failure:* `structural` at `<instance>/values/<i>/key`, production `NestedTemplateInstance`, message `"NestedTemplateInstance.key does not identify any EmbeddedTemplate in the referenced Template"`.
+6. For each `instanceValue` in `instance.instance_values`: verify `instanceValue.key ∉ pc_keys`.
+   *On failure:* `structural` at `<instance>/values/<i>/key`, production naming `instanceValue`'s kind, message `"InstanceValue keyed to an EmbeddedPresentationComponent — presentation components do not produce instance values"`.
 
 ---
 
 #### Field Presence and Cardinality
 
-##### `validate_field_presence_and_cardinality(I: TemplateInstance, T: Template)` {#fn-validate-field-presence-and-cardinality}
+##### `validate_field_presence_and_cardinality(instance: TemplateInstance, template: Template)` {#fn-validate-field-presence-and-cardinality}
 
 Applies the [Cardinality Consistency](#cardinality-consistency) and [Cardinality Defaults and Multiplicity](#cardinality-defaults-and-multiplicity) rules.
 
-For each `EF` in `T.embedded_artifacts` where `EF` is an `EmbeddedField`:
+For each `embeddedField` in `template.embedded_artifacts` where `embeddedField` is an `EmbeddedField`:
 
-1. Let `eff_min` = `EF.cardinality.min_cardinality` if present, else `1`.
-2. Let `eff_max` = `EF.cardinality.max_cardinality` if present, else `1`. If `eff_max` is `UnboundedCardinality`, let `eff_max = ∞`.
-3. Let `req` = `EF.value_requirement` if present, else `"optional"`.
-4. Let `FV` = the `FieldValue` in `I` with key = `EF.key`, or `absent` if none exists.
+1. Let `eff_min` = `embeddedField.cardinality.min_cardinality` if present, else `1`.
+2. Let `eff_max` = `embeddedField.cardinality.max_cardinality` if present, else `1`. If `eff_max` is `UnboundedCardinality`, let `eff_max = ∞`.
+3. Let `req` = `embeddedField.value_requirement` if present, else `"optional"`.
+4. Let `fieldValue` = the `FieldValue` in `instance` with key = `embeddedField.key`, or `absent` if none exists.
 5. If `req = "required"`:
-   1. Verify `FV ≠ absent`.
-      *On failure:* `structural` at `<I>/values`, production `TemplateInstance`, message `"required field <EF.key> is missing from the instance"`.
-   2. Verify `count(FV.values) ≥ eff_min`.
-      *On failure:* `structural` at `<FV>/values`, production `FieldValue`, message `"value count below required minimum cardinality (got <n>, expected ≥ <eff_min>)"`.
-   3. If `eff_max ≠ ∞`: verify `count(FV.values) ≤ eff_max`.
-      *On failure:* `structural` at `<FV>/values`, production `FieldValue`, message `"value count above maximum cardinality (got <n>, expected ≤ <eff_max>)"`.
+   1. Verify `fieldValue ≠ absent`.
+      *On failure:* `structural` at `<instance>/values`, production `TemplateInstance`, message `"required field <embeddedField.key> is missing from the instance"`.
+   2. Verify `count(fieldValue.values) ≥ eff_min`.
+      *On failure:* `structural` at `<fieldValue>/values`, production `FieldValue`, message `"value count below required minimum cardinality (got <n>, expected ≥ <eff_min>)"`.
+   3. If `eff_max ≠ ∞`: verify `count(fieldValue.values) ≤ eff_max`.
+      *On failure:* `structural` at `<fieldValue>/values`, production `FieldValue`, message `"value count above maximum cardinality (got <n>, expected ≤ <eff_max>)"`.
 6. If `req = "recommended"` or `req = "optional"`:
-   1. If `FV ≠ absent`:
-      1. Verify `count(FV.values) ≥ eff_min`.
-         *On failure:* `structural` at `<FV>/values`, production `FieldValue`, message `"value count below minimum cardinality (got <n>, expected ≥ <eff_min>)"`.
-      2. If `eff_max ≠ ∞`: verify `count(FV.values) ≤ eff_max`.
-         *On failure:* `structural` at `<FV>/values`, production `FieldValue`, message `"value count above maximum cardinality (got <n>, expected ≤ <eff_max>)"`.
+   1. If `fieldValue ≠ absent`:
+      1. Verify `count(fieldValue.values) ≥ eff_min`.
+         *On failure:* `structural` at `<fieldValue>/values`, production `FieldValue`, message `"value count below minimum cardinality (got <n>, expected ≥ <eff_min>)"`.
+      2. If `eff_max ≠ ∞`: verify `count(fieldValue.values) ≤ eff_max`.
+         *On failure:* `structural` at `<fieldValue>/values`, production `FieldValue`, message `"value count above maximum cardinality (got <n>, expected ≤ <eff_max>)"`.
 
 ---
 
 #### Field Value Validation
 
-##### `validate_field_value(FV: FieldValue, EF: EmbeddedField)` {#fn-validate-field-value}
+##### `validate_field_value(fieldValue: FieldValue, embeddedField: EmbeddedField)` {#fn-validate-field-value}
 
-1. Let `FT` = the `FieldSpec` of the `Field` referenced by `EF`.
-2. For each `V` in `FV.values`: run [`validate_value(V, FT)`](#fn-validate-value).
-
----
-
-##### `validate_value(V: Value, FT: FieldSpec)` {#fn-validate-value}
-
-Dispatch on the kind of `FT`:
-
-- `TextFieldSpec` → [`validate_text_value(V, FT)`](#fn-validate-text-value)
-- `IntegerNumberFieldSpec` → [`validate_integer_number_value(V, FT)`](#fn-validate-integer-number-value)
-- `RealNumberFieldSpec` → [`validate_real_number_value(V, FT)`](#fn-validate-real-number-value)
-- `BooleanFieldSpec` → [`validate_boolean_value(V, FT)`](#fn-validate-boolean-value)
-- `DateFieldSpec` → [`validate_date_value(V, FT)`](#fn-validate-date-value)
-- `TimeFieldSpec` → [`validate_time_value(V, FT)`](#fn-validate-time-value)
-- `DateTimeFieldSpec` → [`validate_datetime_value(V, FT)`](#fn-validate-datetime-value)
-- `ControlledTermFieldSpec` → [`validate_controlled_term_value(V, FT)`](#fn-validate-controlled-term-value)
-- `SingleValuedEnumFieldSpec` or `MultiValuedEnumFieldSpec` → [`validate_enum_value(V, FT)`](#fn-validate-enum-value)
-- `LinkFieldSpec` → [`validate_link_value(V)`](#fn-validate-link-value)
-- `EmailFieldSpec` or `PhoneNumberFieldSpec` → [`validate_contact_value(V)`](#fn-validate-contact-value)
-- `OrcidFieldSpec`, `RorFieldSpec`, `DoiFieldSpec`, `PubMedIdFieldSpec`, `RridFieldSpec`, or `NihGrantIdFieldSpec` → [`validate_external_authority_value(V, FT)`](#fn-validate-external-authority-value)
-- `AttributeValueFieldSpec` → [`validate_attribute_value(V)`](#fn-validate-attribute-value)
+1. Let `fieldSpec` = the `FieldSpec` of the `Field` referenced by `embeddedField`.
+2. For each `value` in `fieldValue.values`: run [`validate_value(value, fieldSpec)`](#fn-validate-value).
 
 ---
 
-##### `validate_text_value(V: TextValue, FT: TextFieldSpec)` {#fn-validate-text-value}
+##### `validate_value(value: Value, fieldSpec: FieldSpec)` {#fn-validate-value}
 
-1. Let `s` = `V.value` (the lexical form).
-2. If `FT.min_length` is present: verify `len(s) ≥ FT.min_length`.
-   *On failure:* `structural` at `<V>/value`, production `TextValue`, message `"value length below TextFieldSpec.minLength"`.
-3. If `FT.max_length` is present: verify `len(s) ≤ FT.max_length`.
-   *On failure:* `structural` at `<V>/value`, production `TextValue`, message `"value length above TextFieldSpec.maxLength"`.
-4. If `FT.validation_regex` is present: verify `s` matches `FT.validation_regex`.
-   *On failure:* `structural` at `<V>/value`, production `TextValue`, message `"value does not match TextFieldSpec.validationRegex"`.
-5. If `V.lang` is present: verify it conforms to the `Bcp47Tag` lexical form (RFC 5646).
-   *On failure:* `lexical` at `<V>/lang`, production `TextValue`, message `"lang is not a well-formed BCP 47 tag"`.
+Dispatch on the kind of `fieldSpec`:
 
----
-
-##### `validate_integer_number_value(V: IntegerNumberValue, FT: IntegerNumberFieldSpec)` {#fn-validate-integer-number-value}
-
-1. Verify `V.value` conforms to the `IntegerLexicalForm` (regex `^-?(0|[1-9][0-9]*)$`). Let `n` = its integer value.
-   *On failure:* `lexical` at `<V>/value`, production `IntegerNumberValue`, message `"value is not a well-formed IntegerLexicalForm"`.
-2. If `FT.min_value` is present: verify `n ≥ FT.min_value.value` (compared as integers).
-   *On failure:* `structural` at `<V>/value`, production `IntegerNumberValue`, message `"value below IntegerNumberFieldSpec.minValue"`.
-3. If `FT.max_value` is present: verify `n ≤ FT.max_value.value` (compared as integers).
-   *On failure:* `structural` at `<V>/value`, production `IntegerNumberValue`, message `"value above IntegerNumberFieldSpec.maxValue"`.
+- `TextFieldSpec` → [`validate_text_value(value, fieldSpec)`](#fn-validate-text-value)
+- `IntegerNumberFieldSpec` → [`validate_integer_number_value(value, fieldSpec)`](#fn-validate-integer-number-value)
+- `RealNumberFieldSpec` → [`validate_real_number_value(value, fieldSpec)`](#fn-validate-real-number-value)
+- `BooleanFieldSpec` → [`validate_boolean_value(value, fieldSpec)`](#fn-validate-boolean-value)
+- `DateFieldSpec` → [`validate_date_value(value, fieldSpec)`](#fn-validate-date-value)
+- `TimeFieldSpec` → [`validate_time_value(value, fieldSpec)`](#fn-validate-time-value)
+- `DateTimeFieldSpec` → [`validate_datetime_value(value, fieldSpec)`](#fn-validate-datetime-value)
+- `ControlledTermFieldSpec` → [`validate_controlled_term_value(value, fieldSpec)`](#fn-validate-controlled-term-value)
+- `SingleValuedEnumFieldSpec` or `MultiValuedEnumFieldSpec` → [`validate_enum_value(value, fieldSpec)`](#fn-validate-enum-value)
+- `LinkFieldSpec` → [`validate_link_value(value)`](#fn-validate-link-value)
+- `EmailFieldSpec` or `PhoneNumberFieldSpec` → [`validate_contact_value(value)`](#fn-validate-contact-value)
+- `OrcidFieldSpec`, `RorFieldSpec`, `DoiFieldSpec`, `PubMedIdFieldSpec`, `RridFieldSpec`, or `NihGrantIdFieldSpec` → [`validate_external_authority_value(value, fieldSpec)`](#fn-validate-external-authority-value)
+- `AttributeValueFieldSpec` → [`validate_attribute_value(value)`](#fn-validate-attribute-value)
 
 ---
 
-##### `validate_real_number_value(V: RealNumberValue, FT: RealNumberFieldSpec)` {#fn-validate-real-number-value}
+##### `validate_text_value(value: TextValue, fieldSpec: TextFieldSpec)` {#fn-validate-text-value}
 
-1. Verify `V.datatype = FT.datatype` (one of `decimal`, `float`, `double`).
-   *On failure:* `structural` at `<V>/datatype`, production `RealNumberValue`, message `"datatype does not match the enclosing RealNumberFieldSpec.datatype"`.
-2. Verify `V.value` is a well-formed lexical form for that datatype. Let `n` = its numeric value.
-   *On failure:* `lexical` at `<V>/value`, production `RealNumberValue`, message `"value is not a well-formed lexical form for datatype <datatype>"`.
-3. If `FT.min_value` is present: verify `n ≥ FT.min_value.value` (compared as numbers under `FT.datatype`'s ordering).
-   *On failure:* `structural` at `<V>/value`, production `RealNumberValue`, message `"value below RealNumberFieldSpec.minValue"`.
-4. If `FT.max_value` is present: verify `n ≤ FT.max_value.value` (compared as numbers under `FT.datatype`'s ordering).
-   *On failure:* `structural` at `<V>/value`, production `RealNumberValue`, message `"value above RealNumberFieldSpec.maxValue"`.
-
----
-
-##### `validate_boolean_value(V: BooleanValue, FT: BooleanFieldSpec)` {#fn-validate-boolean-value}
-
-1. Verify `V.value` is `true` or `false`.
-   *On failure:* `wireShape` at `<V>/value`, production `BooleanValue`, message `"value must be a JSON boolean"`.
+1. Let `s` = `value.value` (the lexical form).
+2. If `fieldSpec.min_length` is present: verify `len(s) ≥ fieldSpec.min_length`.
+   *On failure:* `structural` at `<value>/value`, production `TextValue`, message `"value length below TextFieldSpec.minLength"`.
+3. If `fieldSpec.max_length` is present: verify `len(s) ≤ fieldSpec.max_length`.
+   *On failure:* `structural` at `<value>/value`, production `TextValue`, message `"value length above TextFieldSpec.maxLength"`.
+4. If `fieldSpec.validation_regex` is present: verify `s` matches `fieldSpec.validation_regex`.
+   *On failure:* `structural` at `<value>/value`, production `TextValue`, message `"value does not match TextFieldSpec.validationRegex"`.
+5. If `value.lang` is present: verify it conforms to the `Bcp47Tag` lexical form (RFC 5646).
+   *On failure:* `lexical` at `<value>/lang`, production `TextValue`, message `"lang is not a well-formed BCP 47 tag"`.
 
 ---
 
-##### `validate_date_value(V: DateValue, FT: DateFieldSpec)` {#fn-validate-date-value}
+##### `validate_integer_number_value(value: IntegerNumberValue, fieldSpec: IntegerNumberFieldSpec)` {#fn-validate-integer-number-value}
 
-1. If `FT.date_value_type = "year"`: verify `V` is a `YearValue` whose `value` matches `[0-9]{4}`.
-   *On failure (arm):* `structural` at `<V>`, production `DateValue`, message `"DateFieldSpec.dateValueType 'year' admits only YearValue"`.
-   *On failure (lexical):* `lexical` at `<V>/value`, production `YearValue`, message `"value does not match YYYY"`.
-2. If `FT.date_value_type = "yearMonth"`: verify `V` is a `YearMonthValue` whose `value` matches `[0-9]{4}-(0[1-9]|1[0-2])`.
-   *On failure (arm):* `structural` at `<V>`, production `DateValue`, message `"DateFieldSpec.dateValueType 'yearMonth' admits only YearMonthValue"`.
-   *On failure (lexical):* `lexical` at `<V>/value`, production `YearMonthValue`, message `"value does not match YYYY-MM"`.
-3. If `FT.date_value_type = "fullDate"`: verify `V` is a `FullDateValue` whose `value` is a well-formed `xsd:date` lexical form.
-   *On failure (arm):* `structural` at `<V>`, production `DateValue`, message `"DateFieldSpec.dateValueType 'fullDate' admits only FullDateValue"`.
-   *On failure (lexical):* `lexical` at `<V>/value`, production `FullDateValue`, message `"value is not a well-formed xsd:date lexical form"`.
+1. Verify `value.value` conforms to the `IntegerLexicalForm` (regex `^-?(0|[1-9][0-9]*)$`). Let `n` = its integer value.
+   *On failure:* `lexical` at `<value>/value`, production `IntegerNumberValue`, message `"value is not a well-formed IntegerLexicalForm"`.
+2. If `fieldSpec.min_value` is present: verify `n ≥ fieldSpec.min_value.value` (compared as integers).
+   *On failure:* `structural` at `<value>/value`, production `IntegerNumberValue`, message `"value below IntegerNumberFieldSpec.minValue"`.
+3. If `fieldSpec.max_value` is present: verify `n ≤ fieldSpec.max_value.value` (compared as integers).
+   *On failure:* `structural` at `<value>/value`, production `IntegerNumberValue`, message `"value above IntegerNumberFieldSpec.maxValue"`.
 
 ---
 
-##### `validate_time_value(V: TimeValue, FT: TimeFieldSpec)` {#fn-validate-time-value}
+##### `validate_real_number_value(value: RealNumberValue, fieldSpec: RealNumberFieldSpec)` {#fn-validate-real-number-value}
 
-For each step below that verifies a precision constraint, *on failure:* `structural` at `<V>/value`, production `TimeValue`, message `"value does not match the precision required by TimeFieldSpec.timePrecision"`. For lexical-form failures (`xsd:time` ill-formedness), the category is `lexical` instead.
-
-1. Let `t` = `V.value`.
-2. If `FT.time_precision = "hourMinute"`: verify `t` contains only hour and minute components (form `HH:MM`; no seconds or fractional seconds present).
-3. If `FT.time_precision = "hourMinuteSecond"`: verify `t` contains hour, minute, and second components (form `HH:MM:SS`; no fractional seconds present).
-4. If `FT.time_precision = "hourMinuteSecondFraction"`: verify `t` is a well-formed `xsd:time` lexical form; fractional seconds are permitted.
-5. If `FT.time_precision` is absent: verify `t` is a well-formed `xsd:time` lexical form.
-6. If `FT.timezone_requirement = "timezoneRequired"`: verify `t` includes a timezone designator.
-   *On failure:* `structural` at `<V>/value`, production `TimeValue`, message `"timezone designator missing; TimeFieldSpec.timezoneRequirement is 'timezoneRequired'"`.
-
----
-
-##### `validate_datetime_value(V: DateTimeValue, FT: DateTimeFieldSpec)` {#fn-validate-datetime-value}
-
-For each step below that verifies a precision constraint, *on failure:* `structural` at `<V>/value`, production `DateTimeValue`, message `"value does not match the precision required by DateTimeFieldSpec.dateTimeValueType"`. For lexical-form failures (`xsd:dateTime` ill-formedness), the category is `lexical` instead.
-
-1. Let `dt` = `V.value`.
-2. If `FT.datetime_value_type = "dateHourMinute"`: verify the time component of `dt` contains only hour and minute (form `…THH:MM`; no seconds present).
-3. If `FT.datetime_value_type = "dateHourMinuteSecond"`: verify the time component contains hour, minute, and second (form `…THH:MM:SS`; no fractional seconds present).
-4. If `FT.datetime_value_type = "dateHourMinuteSecondFraction"`: verify `dt` is a well-formed `xsd:dateTime` lexical form; fractional seconds are permitted.
-5. If `FT.timezone_requirement = "timezoneRequired"`: verify `dt` includes a timezone designator.
-   *On failure:* `structural` at `<V>/value`, production `DateTimeValue`, message `"timezone designator missing; DateTimeFieldSpec.timezoneRequirement is 'timezoneRequired'"`.
+1. Verify `value.datatype = fieldSpec.datatype` (one of `decimal`, `float`, `double`).
+   *On failure:* `structural` at `<value>/datatype`, production `RealNumberValue`, message `"datatype does not match the enclosing RealNumberFieldSpec.datatype"`.
+2. Verify `value.value` is a well-formed lexical form for that datatype. Let `n` = its numeric value.
+   *On failure:* `lexical` at `<value>/value`, production `RealNumberValue`, message `"value is not a well-formed lexical form for datatype <datatype>"`.
+3. If `fieldSpec.min_value` is present: verify `n ≥ fieldSpec.min_value.value` (compared as numbers under `fieldSpec.datatype`'s ordering).
+   *On failure:* `structural` at `<value>/value`, production `RealNumberValue`, message `"value below RealNumberFieldSpec.minValue"`.
+4. If `fieldSpec.max_value` is present: verify `n ≤ fieldSpec.max_value.value` (compared as numbers under `fieldSpec.datatype`'s ordering).
+   *On failure:* `structural` at `<value>/value`, production `RealNumberValue`, message `"value above RealNumberFieldSpec.maxValue"`.
 
 ---
 
-##### `validate_controlled_term_value(V: ControlledTermValue, FT: ControlledTermFieldSpec)` {#fn-validate-controlled-term-value}
+##### `validate_boolean_value(value: BooleanValue, fieldSpec: BooleanFieldSpec)` {#fn-validate-boolean-value}
 
-1. Verify `V.term_iri` is present.
-   *On failure:* `wireShape` at `<V>/term`, production `ControlledTermValue`, message `"term is required"`.
-2. Warn if `V.label` is absent.
-   *On warning:* `structural` at `<V>/label`, production `ControlledTermValue`, message `"label SHOULD be present so consumers without ontology access can render the term"` (warning, not error).
-
-Note: validation of `V.term_iri` against `FT.controlled_term_sources` requires an external ontology resolver and is outside the scope of this algorithm; see [Out of Scope](#out-of-scope).
+1. Verify `value.value` is `true` or `false`.
+   *On failure:* `wireShape` at `<value>/value`, production `BooleanValue`, message `"value must be a JSON boolean"`.
 
 ---
 
-##### `validate_enum_value(V: EnumValue, FT: EnumFieldSpec)` {#fn-validate-enum-value}
+##### `validate_date_value(value: DateValue, fieldSpec: DateFieldSpec)` {#fn-validate-date-value}
 
-1. Verify there exists a `pv` in `FT.permissible_values` such that `V.value = pv.value` (string equality, character by character).
-   *On failure:* `structural` at `<V>/value`, production `EnumValue`, message `"value does not match any of the spec's permissibleValues tokens"`.
-
----
-
-##### `validate_link_value(V: LinkValue)` {#fn-validate-link-value}
-
-1. Verify `V.iri` is present and is a well-formed IRI.
-   *On failure (missing):* `wireShape` at `<V>/iri`, production `LinkValue`, message `"iri is required"`.
-   *On failure (malformed):* `lexical` at `<V>/iri`, production `LinkValue`, message `"iri is not a valid IRI"`.
-
----
-
-##### `validate_contact_value(V: ContactValue)` {#fn-validate-contact-value}
-
-1. If `V` is an `EmailValue`: verify `V.value` is a non-empty lexical form.
-   *On failure:* `wireShape` at `<V>/value`, production `EmailValue`, message `"value must be a non-empty string"`.
-2. If `V` is a `PhoneNumberValue`: verify `V.value` is a non-empty lexical form.
-   *On failure:* `wireShape` at `<V>/value`, production `PhoneNumberValue`, message `"value must be a non-empty string"`.
+1. If `fieldSpec.date_value_type = "year"`: verify `value` is a `YearValue` whose `value` matches `[0-9]{4}`.
+   *On failure (arm):* `structural` at `<value>`, production `DateValue`, message `"DateFieldSpec.dateValueType 'year' admits only YearValue"`.
+   *On failure (lexical):* `lexical` at `<value>/value`, production `YearValue`, message `"value does not match YYYY"`.
+2. If `fieldSpec.date_value_type = "yearMonth"`: verify `value` is a `YearMonthValue` whose `value` matches `[0-9]{4}-(0[1-9]|1[0-2])`.
+   *On failure (arm):* `structural` at `<value>`, production `DateValue`, message `"DateFieldSpec.dateValueType 'yearMonth' admits only YearMonthValue"`.
+   *On failure (lexical):* `lexical` at `<value>/value`, production `YearMonthValue`, message `"value does not match YYYY-MM"`.
+3. If `fieldSpec.date_value_type = "fullDate"`: verify `value` is a `FullDateValue` whose `value` is a well-formed `xsd:date` lexical form.
+   *On failure (arm):* `structural` at `<value>`, production `DateValue`, message `"DateFieldSpec.dateValueType 'fullDate' admits only FullDateValue"`.
+   *On failure (lexical):* `lexical` at `<value>/value`, production `FullDateValue`, message `"value is not a well-formed xsd:date lexical form"`.
 
 ---
 
-##### `validate_external_authority_value(V: ExternalAuthorityValue, FT: ExternalAuthorityFieldSpec)` {#fn-validate-external-authority-value}
+##### `validate_time_value(value: TimeValue, fieldSpec: TimeFieldSpec)` {#fn-validate-time-value}
+
+For each step below that verifies a precision constraint, *on failure:* `structural` at `<value>/value`, production `TimeValue`, message `"value does not match the precision required by TimeFieldSpec.timePrecision"`. For lexical-form failures (`xsd:time` ill-formedness), the category is `lexical` instead.
+
+1. Let `t` = `value.value`.
+2. If `fieldSpec.time_precision = "hourMinute"`: verify `t` contains only hour and minute components (form `HH:MM`; no seconds or fractional seconds present).
+3. If `fieldSpec.time_precision = "hourMinuteSecond"`: verify `t` contains hour, minute, and second components (form `HH:MM:SS`; no fractional seconds present).
+4. If `fieldSpec.time_precision = "hourMinuteSecondFraction"`: verify `t` is a well-formed `xsd:time` lexical form; fractional seconds are permitted.
+5. If `fieldSpec.time_precision` is absent: verify `t` is a well-formed `xsd:time` lexical form.
+6. If `fieldSpec.timezone_requirement = "timezoneRequired"`: verify `t` includes a timezone designator.
+   *On failure:* `structural` at `<value>/value`, production `TimeValue`, message `"timezone designator missing; TimeFieldSpec.timezoneRequirement is 'timezoneRequired'"`.
+
+---
+
+##### `validate_datetime_value(value: DateTimeValue, fieldSpec: DateTimeFieldSpec)` {#fn-validate-datetime-value}
+
+For each step below that verifies a precision constraint, *on failure:* `structural` at `<value>/value`, production `DateTimeValue`, message `"value does not match the precision required by DateTimeFieldSpec.dateTimeValueType"`. For lexical-form failures (`xsd:dateTime` ill-formedness), the category is `lexical` instead.
+
+1. Let `dt` = `value.value`.
+2. If `fieldSpec.datetime_value_type = "dateHourMinute"`: verify the time component of `dt` contains only hour and minute (form `…THH:MM`; no seconds present).
+3. If `fieldSpec.datetime_value_type = "dateHourMinuteSecond"`: verify the time component contains hour, minute, and second (form `…THH:MM:SS`; no fractional seconds present).
+4. If `fieldSpec.datetime_value_type = "dateHourMinuteSecondFraction"`: verify `dt` is a well-formed `xsd:dateTime` lexical form; fractional seconds are permitted.
+5. If `fieldSpec.timezone_requirement = "timezoneRequired"`: verify `dt` includes a timezone designator.
+   *On failure:* `structural` at `<value>/value`, production `DateTimeValue`, message `"timezone designator missing; DateTimeFieldSpec.timezoneRequirement is 'timezoneRequired'"`.
+
+---
+
+##### `validate_controlled_term_value(value: ControlledTermValue, fieldSpec: ControlledTermFieldSpec)` {#fn-validate-controlled-term-value}
+
+1. Verify `value.term_iri` is present.
+   *On failure:* `wireShape` at `<value>/term`, production `ControlledTermValue`, message `"term is required"`.
+2. Warn if `value.label` is absent.
+   *On warning:* `structural` at `<value>/label`, production `ControlledTermValue`, message `"label SHOULD be present so consumers without ontology access can render the term"` (warning, not error).
+
+Note: validation of `value.term_iri` against `fieldSpec.controlled_term_sources` requires an external ontology resolver and is outside the scope of this algorithm; see [Out of Scope](#out-of-scope).
+
+---
+
+##### `validate_enum_value(value: EnumValue, fieldSpec: EnumFieldSpec)` {#fn-validate-enum-value}
+
+1. Verify there exists a `pv` in `fieldSpec.permissible_values` such that `value.value = pv.value` (string equality, character by character).
+   *On failure:* `structural` at `<value>/value`, production `EnumValue`, message `"value does not match any of the spec's permissibleValues tokens"`.
+
+---
+
+##### `validate_link_value(value: LinkValue)` {#fn-validate-link-value}
+
+1. Verify `value.iri` is present and is a well-formed IRI.
+   *On failure (missing):* `wireShape` at `<value>/iri`, production `LinkValue`, message `"iri is required"`.
+   *On failure (malformed):* `lexical` at `<value>/iri`, production `LinkValue`, message `"iri is not a valid IRI"`.
+
+---
+
+##### `validate_contact_value(value: ContactValue)` {#fn-validate-contact-value}
+
+1. If `value` is an `EmailValue`: verify `value.value` is a non-empty lexical form.
+   *On failure:* `wireShape` at `<value>/value`, production `EmailValue`, message `"value must be a non-empty string"`.
+2. If `value` is a `PhoneNumberValue`: verify `value.value` is a non-empty lexical form.
+   *On failure:* `wireShape` at `<value>/value`, production `PhoneNumberValue`, message `"value must be a non-empty string"`.
+
+---
+
+##### `validate_external_authority_value(value: ExternalAuthorityValue, fieldSpec: ExternalAuthorityFieldSpec)` {#fn-validate-external-authority-value}
 
 Each external-authority `Value` carries a typed IRI specialised for its authority. The lexical patterns below are recommended (suitable for syntactic conformance checking) but are not structurally normative beyond `Iri` well-formedness; binding-level validators MAY apply stricter checks.
 
@@ -712,47 +712,47 @@ Each external-authority `Value` carries a typed IRI specialised for its authorit
 | `RridFieldSpec` | `RridIri` | `https://identifiers\.org/RRID:[A-Z]+_\d+` |
 | `NihGrantIdFieldSpec` | `NihGrantIri` | (see [Out of Scope](#out-of-scope)) |
 
-In every case the procedure is: verify `V` is the corresponding `XxxValue` and that its `iri` slot is present and is a well-formed `Iri` per [`grammar.md` §Primitive String Types](grammar.md#primitive-string-types). Implementations MAY additionally check the recommended pattern.
+In every case the procedure is: verify `value` is the corresponding `XxxValue` and that its `iri` slot is present and is a well-formed `Iri` per [`grammar.md` §Primitive String Types](grammar.md#primitive-string-types). Implementations MAY additionally check the recommended pattern.
 
-*On failure (missing iri):* `wireShape` at `<V>/iri`, production naming `V`'s family, message `"iri is required"`.
-*On failure (not a well-formed Iri):* `lexical` at `<V>/iri`, production naming `V`'s family, message `"iri is not a valid Iri"`.
-*On failure (recommended pattern, when implementations check):* `lexical` at `<V>/iri`, production naming `V`'s family, message `"iri does not match the recommended pattern for <Authority>"`.
+*On failure (missing iri):* `wireShape` at `<value>/iri`, production naming `value`'s family, message `"iri is required"`.
+*On failure (not a well-formed Iri):* `lexical` at `<value>/iri`, production naming `value`'s family, message `"iri is not a valid Iri"`.
+*On failure (recommended pattern, when implementations check):* `lexical` at `<value>/iri`, production naming `value`'s family, message `"iri does not match the recommended pattern for <Authority>"`.
 
 ---
 
-##### `validate_attribute_value(V: AttributeValue)` {#fn-validate-attribute-value}
+##### `validate_attribute_value(value: AttributeValue)` {#fn-validate-attribute-value}
 
-1. Verify `V.name` is present and contains a non-empty `string`.
-   *On failure:* `wireShape` at `<V>/name`, production `AttributeValue`, message `"name must be a non-empty string"`.
-2. Verify `V.value` is present and is a well-formed `Value`.
-   *On failure:* `wireShape` at `<V>/value`, production `AttributeValue`, message `"value is required and must be a Value"`.
-3. If `V.value` is an `AttributeValue`: run [`validate_attribute_value(V.value)`](#fn-validate-attribute-value).
+1. Verify `value.name` is present and contains a non-empty `string`.
+   *On failure:* `wireShape` at `<value>/name`, production `AttributeValue`, message `"name must be a non-empty string"`.
+2. Verify `value.value` is present and is a well-formed `Value`.
+   *On failure:* `wireShape` at `<value>/value`, production `AttributeValue`, message `"value is required and must be a Value"`.
+3. If `value.value` is an `AttributeValue`: run [`validate_attribute_value(value.value)`](#fn-validate-attribute-value).
 
 ---
 
 #### Nested Template Validation
 
-##### `validate_nested_template_presence_and_cardinality(I: TemplateInstance, T: Template)` {#fn-validate-nested-template-presence-and-cardinality}
+##### `validate_nested_template_presence_and_cardinality(instance: TemplateInstance, template: Template)` {#fn-validate-nested-template-presence-and-cardinality}
 
 Applies the [Cardinality Consistency](#cardinality-consistency) and [Cardinality Defaults and Multiplicity](#cardinality-defaults-and-multiplicity) rules.
 
-For each `ET` in `T.embedded_artifacts` where `ET` is an `EmbeddedTemplate`:
+For each `embeddedTemplate` in `template.embedded_artifacts` where `embeddedTemplate` is an `EmbeddedTemplate`:
 
-1. Let `eff_min` = `ET.cardinality.min_cardinality` if present, else `1`.
-2. Let `eff_max` = `ET.cardinality.max_cardinality` if present, else `1`. If `eff_max` is `UnboundedCardinality`, let `eff_max = ∞`.
-3. Let `req` = `ET.value_requirement` if present, else `"optional"`.
-4. Let `n` = `count({ NTI | NTI ∈ I.instance_values, NTI is NestedTemplateInstance, NTI.key = ET.key })`.
+1. Let `eff_min` = `embeddedTemplate.cardinality.min_cardinality` if present, else `1`.
+2. Let `eff_max` = `embeddedTemplate.cardinality.max_cardinality` if present, else `1`. If `eff_max` is `UnboundedCardinality`, let `eff_max = ∞`.
+3. Let `req` = `embeddedTemplate.value_requirement` if present, else `"optional"`.
+4. Let `n` = `count({ nestedInstance | nestedInstance ∈ instance.instance_values, nestedInstance is NestedTemplateInstance, nestedInstance.key = embeddedTemplate.key })`.
 5. If `req = "required"`:
    1. Verify `n ≥ eff_min`.
-      *On failure:* `structural` at `<I>/values`, production `TemplateInstance`, message `"required NestedTemplateInstance count below minimum (got <n>, expected ≥ <eff_min>) for key '<ET.key>'"`.
+      *On failure:* `structural` at `<instance>/values`, production `TemplateInstance`, message `"required NestedTemplateInstance count below minimum (got <n>, expected ≥ <eff_min>) for key '<embeddedTemplate.key>'"`.
    2. If `eff_max ≠ ∞`: verify `n ≤ eff_max`.
-      *On failure:* `structural` at `<I>/values`, production `TemplateInstance`, message `"NestedTemplateInstance count above maximum (got <n>, expected ≤ <eff_max>) for key '<ET.key>'"`.
+      *On failure:* `structural` at `<instance>/values`, production `TemplateInstance`, message `"NestedTemplateInstance count above maximum (got <n>, expected ≤ <eff_max>) for key '<embeddedTemplate.key>'"`.
 6. If `req = "recommended"` or `req = "optional"`:
    1. If `n > 0`:
       1. Verify `n ≥ eff_min`.
-         *On failure:* `structural` at `<I>/values`, production `TemplateInstance`, message `"NestedTemplateInstance count below minimum (got <n>, expected ≥ <eff_min>) for key '<ET.key>'"`.
+         *On failure:* `structural` at `<instance>/values`, production `TemplateInstance`, message `"NestedTemplateInstance count below minimum (got <n>, expected ≥ <eff_min>) for key '<embeddedTemplate.key>'"`.
       2. If `eff_max ≠ ∞`: verify `n ≤ eff_max`.
-         *On failure:* `structural` at `<I>/values`, production `TemplateInstance`, message `"NestedTemplateInstance count above maximum (got <n>, expected ≤ <eff_max>) for key '<ET.key>'"`.
+         *On failure:* `structural` at `<instance>/values`, production `TemplateInstance`, message `"NestedTemplateInstance count above maximum (got <n>, expected ≤ <eff_max>) for key '<embeddedTemplate.key>'"`.
 
 ---
 
