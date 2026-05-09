@@ -262,28 +262,28 @@ The algorithm is expressed as a set of named subroutines. Each subroutine takes 
 
 #### Entry Point
 
-##### `validate_schema(T: Template)`
+##### `validate_schema(T: Template)` {#fn-validate-schema}
 
 Entry point for schema validation.
 
-1. Run `validate_model_version(T.model_version)` and `validate_artifact_metadata(T.schema_artifact_metadata)`.
+1. Run [`validate_model_version(T.model_version)`](#fn-validate-model-version) and [`validate_artifact_metadata(T.schema_artifact_metadata)`](#fn-validate-artifact-metadata).
 2. Let `fields` = the set of `Field` artifacts referenced by `EmbeddedField` constructs in `T`.
-3. For each `F` in `fields`: run `validate_model_version(F.model_version)`, `validate_artifact_metadata(F.schema_artifact_metadata)`, and `validate_field_spec(F.field_spec)`.
+3. For each `F` in `fields`: run [`validate_model_version(F.model_version)`](#fn-validate-model-version), [`validate_artifact_metadata(F.schema_artifact_metadata)`](#fn-validate-artifact-metadata), and [`validate_field_spec(F.field_spec)`](#fn-validate-field-spec).
 4. Let `pcs` = the set of `PresentationComponent` artifacts referenced by `EmbeddedPresentationComponent` constructs in `T`.
-5. For each `PC` in `pcs`: run `validate_model_version(PC.model_version)` and `validate_artifact_metadata(PC.artifact_metadata)`.
-6. Run `validate_embedded_artifact_keys(T)`.
+5. For each `PC` in `pcs`: run [`validate_model_version(PC.model_version)`](#fn-validate-model-version) and [`validate_artifact_metadata(PC.artifact_metadata)`](#fn-validate-artifact-metadata).
+6. Run [`validate_embedded_artifact_keys(T)`](#fn-validate-embedded-artifact-keys).
 7. For each `E` in `T.embedded_artifacts`:
-   1. Run `validate_embedding_reference(E)`.
-   2. Run `validate_cardinality_consistency(E)`.
-   3. If `E` is an `EmbeddedField`: run `validate_rendering_hints(E)`.
-   4. If `E.default_value` is present: run `validate_default_value(E.default_value, E)`.
-   5. If `E` is an `EmbeddedTemplate`: run `validate_schema(E.referenced_template)`.
+   1. Run [`validate_embedding_reference(E)`](#fn-validate-embedding-reference).
+   2. Run [`validate_cardinality_consistency(E)`](#fn-validate-cardinality-consistency).
+   3. If `E` is an `EmbeddedField`: run [`validate_rendering_hints(E)`](#fn-validate-rendering-hints).
+   4. If `E.default_value` is present: run [`validate_default_value(E.default_value, E)`](#fn-validate-default-value).
+   5. If `E` is an `EmbeddedTemplate`: run [`validate_schema(E.referenced_template)`](#fn-validate-schema).
 
 ---
 
 #### Metadata and Key Validation
 
-##### `validate_artifact_metadata(M: SchemaArtifactMetadata)`
+##### `validate_artifact_metadata(M: SchemaArtifactMetadata)` {#fn-validate-artifact-metadata}
 
 Applies the [Versioning](#versioning) rules.
 
@@ -295,7 +295,7 @@ When invoked with an `ArtifactMetadata` value (e.g. a `PresentationComponent`'s 
 
 ---
 
-##### `validate_model_version(mv: ModelVersion)`
+##### `validate_model_version(mv: ModelVersion)` {#fn-validate-model-version}
 
 Applies the [Versioning](#versioning) rules to the artifact-level `ModelVersion` carried directly by every concrete `Artifact`.
 
@@ -303,7 +303,7 @@ Applies the [Versioning](#versioning) rules to the artifact-level `ModelVersion`
 
 ---
 
-##### `validate_embedded_artifact_keys(T: Template)`
+##### `validate_embedded_artifact_keys(T: Template)` {#fn-validate-embedded-artifact-keys}
 
 Applies the [EmbeddedArtifactKey Uniqueness](#embeddedartifactkey-uniqueness) rules.
 
@@ -315,7 +315,7 @@ Applies the [EmbeddedArtifactKey Uniqueness](#embeddedartifactkey-uniqueness) ru
 
 #### Reference and Cardinality Validation
 
-##### `validate_embedding_reference(E: EmbeddedArtifact)`
+##### `validate_embedding_reference(E: EmbeddedArtifact)` {#fn-validate-embedding-reference}
 
 Applies the [Embedding References](#embedding-references) rules.
 
@@ -344,7 +344,7 @@ Applies the [Embedding References](#embedding-references) rules.
 
 ---
 
-##### `validate_cardinality_consistency(E: EmbeddedArtifact)`
+##### `validate_cardinality_consistency(E: EmbeddedArtifact)` {#fn-validate-cardinality-consistency}
 
 Applies the [Cardinality Consistency](#cardinality-consistency) rules.
 
@@ -360,37 +360,37 @@ Applies the [Cardinality Consistency](#cardinality-consistency) rules.
 
 Applies the [Field Spec Compatibility](#field-spec-compatibility) rules. See also [Field Specs](grammar.md#field-specs) in the abstract grammar.
 
-##### `validate_field_spec(FT: FieldSpec)`
+##### `validate_field_spec(FT: FieldSpec)` {#fn-validate-field-spec}
 
 Dispatch on the kind of `FT`:
 
-- If `FT` is `TextFieldSpec`: run `validate_text_field_spec(FT)`.
-- If `FT` is `IntegerNumberFieldSpec`: run `validate_integer_number_field_spec(FT)`.
-- If `FT` is `RealNumberFieldSpec`: run `validate_real_number_field_spec(FT)`.
-- If `FT` is `SingleValuedEnumFieldSpec` or `MultiValuedEnumFieldSpec`: run `validate_enum_field_spec(FT)`.
+- If `FT` is `TextFieldSpec`: run [`validate_text_field_spec(FT)`](#fn-validate-text-field-spec).
+- If `FT` is `IntegerNumberFieldSpec`: run [`validate_integer_number_field_spec(FT)`](#fn-validate-integer-number-field-spec).
+- If `FT` is `RealNumberFieldSpec`: run [`validate_real_number_field_spec(FT)`](#fn-validate-real-number-field-spec).
+- If `FT` is `SingleValuedEnumFieldSpec` or `MultiValuedEnumFieldSpec`: run [`validate_enum_field_spec(FT)`](#fn-validate-enum-field-spec).
 - All other field specs have no additional schema-level well-formedness checks beyond structural grammar conformance.
 
 ---
 
-##### `validate_text_field_spec(FT: TextFieldSpec)`
+##### `validate_text_field_spec(FT: TextFieldSpec)` {#fn-validate-text-field-spec}
 
 1. If both `FT.min_length` and `FT.max_length` are present: verify `FT.min_length ≤ FT.max_length`.
 
 ---
 
-##### `validate_integer_number_field_spec(FT: IntegerNumberFieldSpec)`
+##### `validate_integer_number_field_spec(FT: IntegerNumberFieldSpec)` {#fn-validate-integer-number-field-spec}
 
 1. If both `FT.min_value` and `FT.max_value` are present: verify `FT.min_value ≤ FT.max_value`.
 
 ---
 
-##### `validate_real_number_field_spec(FT: RealNumberFieldSpec)`
+##### `validate_real_number_field_spec(FT: RealNumberFieldSpec)` {#fn-validate-real-number-field-spec}
 
 1. If both `FT.min_value` and `FT.max_value` are present: verify `FT.min_value ≤ FT.max_value`.
 
 ---
 
-##### `validate_enum_field_spec(FT: EnumFieldSpec)`
+##### `validate_enum_field_spec(FT: EnumFieldSpec)` {#fn-validate-enum-field-spec}
 
 1. Let `tokens` = the sequence of `pv.value` values across all `pv` in `FT.permissible_values`.
 2. Verify all values in `tokens` are distinct: report a duplicate-token error for any pair sharing the same token string.
@@ -405,12 +405,12 @@ Dispatch on the kind of `FT`:
 
 #### Default Value Validation
 
-##### `validate_default_value(D: Value, E: EmbeddedArtifact)`
+##### `validate_default_value(D: Value, E: EmbeddedArtifact)` {#fn-validate-default-value}
 
 Let `FT` = the `FieldSpec` of the `Field` referenced by `E`.
 
 1. Verify `D` is of the family-specific `Value` type for `FT`: `TextValue` for `TextFieldSpec`, `IntegerNumberValue` for `IntegerNumberFieldSpec`, `RealNumberValue` for `RealNumberFieldSpec`, `BooleanValue` for `BooleanFieldSpec`, `DateValue` for `DateFieldSpec`, `TimeValue` for `TimeFieldSpec`, `DateTimeValue` for `DateTimeFieldSpec`, `ControlledTermValue` for `ControlledTermFieldSpec`, `EnumValue` for `SingleValuedEnumFieldSpec`, a sequence of `EnumValue` for `MultiValuedEnumFieldSpec`, `LinkValue` for `LinkFieldSpec`, `EmailValue` for `EmailFieldSpec`, `PhoneNumberValue` for `PhoneNumberFieldSpec`, and the corresponding external-authority `Value` types for the external-authority field specs. `AttributeValueFieldSpec` does not admit a default value.
-2. Apply the family-specific `validate_xxx_value(D, FT)` procedure to `D`. The default value MUST satisfy every constraint that a `FieldValue` carrying the same `Value` would satisfy.
+2. Apply the family-specific [`validate_xxx_value(D, FT)`](#fn-validate-xxx-value) procedure to `D`. The default value MUST satisfy every constraint that a `FieldValue` carrying the same `Value` would satisfy.
 3. If `E` is an `EmbeddedSingleValuedEnumField`: verify `D` is a single `EnumValue` (not a sequence).
 4. If `E` is an `EmbeddedMultiValuedEnumField`: verify `D` is a (possibly empty) sequence of `EnumValue` constructs and that no two entries share the same `value`.
 
@@ -418,7 +418,7 @@ Let `FT` = the `FieldSpec` of the `Field` referenced by `E`.
 
 #### Rendering Hint Validation
 
-##### `validate_rendering_hints(E: EmbeddedField)`
+##### `validate_rendering_hints(E: EmbeddedField)` {#fn-validate-rendering-hints}
 
 Applies the [Rendering Hint Compatibility](#rendering-hint-compatibility) rules.
 
@@ -438,27 +438,27 @@ Let `FT` = the `FieldSpec` of the `Field` referenced by `E`.
 
 #### Entry Point
 
-##### `validate_instance(I: TemplateInstance, T: Template)`
+##### `validate_instance(I: TemplateInstance, T: Template)` {#fn-validate-instance}
 
 Entry point for instance validation.
 
-1. Run `validate_model_version(I.model_version)`.
-2. Run `validate_instance_alignment(I, T)`.
-3. Run `validate_field_presence_and_cardinality(I, T)`.
+1. Run [`validate_model_version(I.model_version)`](#fn-validate-model-version).
+2. Run [`validate_instance_alignment(I, T)`](#fn-validate-instance-alignment).
+3. Run [`validate_field_presence_and_cardinality(I, T)`](#fn-validate-field-presence-and-cardinality).
 4. For each `FV` in `I.instance_values` where `FV` is a `FieldValue`:
    1. Let `EF` = the `EmbeddedField` in `T` whose key = `FV.key`.
-   2. Run `validate_field_value(FV, EF)`.
-5. Run `validate_nested_template_presence_and_cardinality(I, T)`.
+   2. Run [`validate_field_value(FV, EF)`](#fn-validate-field-value).
+5. Run [`validate_nested_template_presence_and_cardinality(I, T)`](#fn-validate-nested-template-presence-and-cardinality).
 6. For each `NTI` in `I.instance_values` where `NTI` is a `NestedTemplateInstance`:
    1. Let `ET` = the `EmbeddedTemplate` in `T` whose key = `NTI.key`.
    2. Let `RT` = the `Template` identified by `ET.artifactRef`.
-   3. Run `validate_instance(NTI, RT)`.
+   3. Run [`validate_instance(NTI, RT)`](#fn-validate-instance).
 
 ---
 
 #### Structural Alignment
 
-##### `validate_instance_alignment(I: TemplateInstance, T: Template)`
+##### `validate_instance_alignment(I: TemplateInstance, T: Template)` {#fn-validate-instance-alignment}
 
 Applies the [Instance Alignment](#instance-alignment) rules.
 
@@ -473,7 +473,7 @@ Applies the [Instance Alignment](#instance-alignment) rules.
 
 #### Field Presence and Cardinality
 
-##### `validate_field_presence_and_cardinality(I: TemplateInstance, T: Template)`
+##### `validate_field_presence_and_cardinality(I: TemplateInstance, T: Template)` {#fn-validate-field-presence-and-cardinality}
 
 Applies the [Cardinality Consistency](#cardinality-consistency) and [Cardinality Defaults and Multiplicity](#cardinality-defaults-and-multiplicity) rules.
 
@@ -496,34 +496,34 @@ For each `EF` in `T.embedded_artifacts` where `EF` is an `EmbeddedField`:
 
 #### Field Value Validation
 
-##### `validate_field_value(FV: FieldValue, EF: EmbeddedField)`
+##### `validate_field_value(FV: FieldValue, EF: EmbeddedField)` {#fn-validate-field-value}
 
 1. Let `FT` = the `FieldSpec` of the `Field` referenced by `EF`.
-2. For each `V` in `FV.values`: run `validate_value(V, FT)`.
+2. For each `V` in `FV.values`: run [`validate_value(V, FT)`](#fn-validate-value).
 
 ---
 
-##### `validate_value(V: Value, FT: FieldSpec)`
+##### `validate_value(V: Value, FT: FieldSpec)` {#fn-validate-value}
 
 Dispatch on the kind of `FT`:
 
-- `TextFieldSpec` → `validate_text_value(V, FT)`
-- `IntegerNumberFieldSpec` → `validate_integer_number_value(V, FT)`
-- `RealNumberFieldSpec` → `validate_real_number_value(V, FT)`
-- `BooleanFieldSpec` → `validate_boolean_value(V, FT)`
-- `DateFieldSpec` → `validate_date_value(V, FT)`
-- `TimeFieldSpec` → `validate_time_value(V, FT)`
-- `DateTimeFieldSpec` → `validate_datetime_value(V, FT)`
-- `ControlledTermFieldSpec` → `validate_controlled_term_value(V, FT)`
-- `SingleValuedEnumFieldSpec` or `MultiValuedEnumFieldSpec` → `validate_enum_value(V, FT)`
-- `LinkFieldSpec` → `validate_link_value(V)`
-- `EmailFieldSpec` or `PhoneNumberFieldSpec` → `validate_contact_value(V)`
-- `OrcidFieldSpec`, `RorFieldSpec`, `DoiFieldSpec`, `PubMedIdFieldSpec`, `RridFieldSpec`, or `NihGrantIdFieldSpec` → `validate_external_authority_value(V, FT)`
-- `AttributeValueFieldSpec` → `validate_attribute_value(V)`
+- `TextFieldSpec` → [`validate_text_value(V, FT)`](#fn-validate-text-value)
+- `IntegerNumberFieldSpec` → [`validate_integer_number_value(V, FT)`](#fn-validate-integer-number-value)
+- `RealNumberFieldSpec` → [`validate_real_number_value(V, FT)`](#fn-validate-real-number-value)
+- `BooleanFieldSpec` → [`validate_boolean_value(V, FT)`](#fn-validate-boolean-value)
+- `DateFieldSpec` → [`validate_date_value(V, FT)`](#fn-validate-date-value)
+- `TimeFieldSpec` → [`validate_time_value(V, FT)`](#fn-validate-time-value)
+- `DateTimeFieldSpec` → [`validate_datetime_value(V, FT)`](#fn-validate-datetime-value)
+- `ControlledTermFieldSpec` → [`validate_controlled_term_value(V, FT)`](#fn-validate-controlled-term-value)
+- `SingleValuedEnumFieldSpec` or `MultiValuedEnumFieldSpec` → [`validate_enum_value(V, FT)`](#fn-validate-enum-value)
+- `LinkFieldSpec` → [`validate_link_value(V)`](#fn-validate-link-value)
+- `EmailFieldSpec` or `PhoneNumberFieldSpec` → [`validate_contact_value(V)`](#fn-validate-contact-value)
+- `OrcidFieldSpec`, `RorFieldSpec`, `DoiFieldSpec`, `PubMedIdFieldSpec`, `RridFieldSpec`, or `NihGrantIdFieldSpec` → [`validate_external_authority_value(V, FT)`](#fn-validate-external-authority-value)
+- `AttributeValueFieldSpec` → [`validate_attribute_value(V)`](#fn-validate-attribute-value)
 
 ---
 
-##### `validate_text_value(V: TextValue, FT: TextFieldSpec)`
+##### `validate_text_value(V: TextValue, FT: TextFieldSpec)` {#fn-validate-text-value}
 
 1. Let `s` = `V.value` (the lexical form).
 2. If `FT.min_length` is present: verify `len(s) ≥ FT.min_length`.
@@ -533,7 +533,7 @@ Dispatch on the kind of `FT`:
 
 ---
 
-##### `validate_integer_number_value(V: IntegerNumberValue, FT: IntegerNumberFieldSpec)`
+##### `validate_integer_number_value(V: IntegerNumberValue, FT: IntegerNumberFieldSpec)` {#fn-validate-integer-number-value}
 
 1. Verify `V.value` conforms to the `IntegerLexicalForm` (regex `^-?(0|[1-9][0-9]*)$`). Let `n` = its integer value.
 2. If `FT.min_value` is present: verify `n ≥ FT.min_value.value` (compared as integers).
@@ -541,7 +541,7 @@ Dispatch on the kind of `FT`:
 
 ---
 
-##### `validate_real_number_value(V: RealNumberValue, FT: RealNumberFieldSpec)`
+##### `validate_real_number_value(V: RealNumberValue, FT: RealNumberFieldSpec)` {#fn-validate-real-number-value}
 
 1. Verify `V.datatype = FT.datatype` (one of `decimal`, `float`, `double`).
 2. Verify `V.value` is a well-formed lexical form for that datatype. Let `n` = its numeric value.
@@ -550,13 +550,13 @@ Dispatch on the kind of `FT`:
 
 ---
 
-##### `validate_boolean_value(V: BooleanValue, FT: BooleanFieldSpec)`
+##### `validate_boolean_value(V: BooleanValue, FT: BooleanFieldSpec)` {#fn-validate-boolean-value}
 
 1. Verify `V.value` is `true` or `false`.
 
 ---
 
-##### `validate_date_value(V: DateValue, FT: DateFieldSpec)`
+##### `validate_date_value(V: DateValue, FT: DateFieldSpec)` {#fn-validate-date-value}
 
 1. If `FT.date_value_type = "year"`: verify `V` is a `YearValue` whose `value` matches `[0-9]{4}`.
 2. If `FT.date_value_type = "yearMonth"`: verify `V` is a `YearMonthValue` whose `value` matches `[0-9]{4}-(0[1-9]|1[0-2])`.
@@ -564,7 +564,7 @@ Dispatch on the kind of `FT`:
 
 ---
 
-##### `validate_time_value(V: TimeValue, FT: TimeFieldSpec)`
+##### `validate_time_value(V: TimeValue, FT: TimeFieldSpec)` {#fn-validate-time-value}
 
 1. Let `t` = `V.value`.
 2. If `FT.time_precision = "hourMinute"`: verify `t` contains only hour and minute components (form `HH:MM`; no seconds or fractional seconds present).
@@ -575,7 +575,7 @@ Dispatch on the kind of `FT`:
 
 ---
 
-##### `validate_datetime_value(V: DateTimeValue, FT: DateTimeFieldSpec)`
+##### `validate_datetime_value(V: DateTimeValue, FT: DateTimeFieldSpec)` {#fn-validate-datetime-value}
 
 1. Let `dt` = `V.value`.
 2. If `FT.datetime_value_type = "dateHourMinute"`: verify the time component of `dt` contains only hour and minute (form `…THH:MM`; no seconds present).
@@ -585,7 +585,7 @@ Dispatch on the kind of `FT`:
 
 ---
 
-##### `validate_controlled_term_value(V: ControlledTermValue, FT: ControlledTermFieldSpec)`
+##### `validate_controlled_term_value(V: ControlledTermValue, FT: ControlledTermFieldSpec)` {#fn-validate-controlled-term-value}
 
 1. Verify `V.term_iri` is present.
 2. Warn if `V.label` is absent.
@@ -594,27 +594,27 @@ Note: validation of `V.term_iri` against `FT.controlled_term_sources` requires a
 
 ---
 
-##### `validate_enum_value(V: EnumValue, FT: EnumFieldSpec)`
+##### `validate_enum_value(V: EnumValue, FT: EnumFieldSpec)` {#fn-validate-enum-value}
 
 1. Verify there exists a `pv` in `FT.permissible_values` such that `V.value = pv.value` (string equality, character by character).
 2. If no such `pv` exists: report error.
 
 ---
 
-##### `validate_link_value(V: LinkValue)`
+##### `validate_link_value(V: LinkValue)` {#fn-validate-link-value}
 
 1. Verify `V.iri` is present and is a well-formed IRI.
 
 ---
 
-##### `validate_contact_value(V: ContactValue)`
+##### `validate_contact_value(V: ContactValue)` {#fn-validate-contact-value}
 
 1. If `V` is an `EmailValue`: verify `V.value` is a non-empty lexical form.
 2. If `V` is a `PhoneNumberValue`: verify `V.value` is a non-empty lexical form.
 
 ---
 
-##### `validate_external_authority_value(V: ExternalAuthorityValue, FT: ExternalAuthorityFieldSpec)`
+##### `validate_external_authority_value(V: ExternalAuthorityValue, FT: ExternalAuthorityFieldSpec)` {#fn-validate-external-authority-value}
 
 Each external-authority `Value` carries a typed IRI specialised for its authority. The lexical patterns below are recommended (suitable for syntactic conformance checking) but are not structurally normative beyond `Iri` well-formedness; binding-level validators MAY apply stricter checks.
 
@@ -631,17 +631,17 @@ In every case the procedure is: verify `V` is the corresponding `XxxValue` and t
 
 ---
 
-##### `validate_attribute_value(V: AttributeValue)`
+##### `validate_attribute_value(V: AttributeValue)` {#fn-validate-attribute-value}
 
 1. Verify `V.name` is present and contains a non-empty `string`.
 2. Verify `V.value` is present and is a well-formed `Value`.
-3. If `V.value` is an `AttributeValue`: run `validate_attribute_value(V.value)`.
+3. If `V.value` is an `AttributeValue`: run [`validate_attribute_value(V.value)`](#fn-validate-attribute-value).
 
 ---
 
 #### Nested Template Validation
 
-##### `validate_nested_template_presence_and_cardinality(I: TemplateInstance, T: Template)`
+##### `validate_nested_template_presence_and_cardinality(I: TemplateInstance, T: Template)` {#fn-validate-nested-template-presence-and-cardinality}
 
 Applies the [Cardinality Consistency](#cardinality-consistency) and [Cardinality Defaults and Multiplicity](#cardinality-defaults-and-multiplicity) rules.
 
