@@ -64,6 +64,8 @@ const EXTENDED_CHAPTERS = new Set(['validation.md']);
 const KEYWORDS = new Set([
   // Algorithm primitives
   'Run', 'Verify', 'Warn', 'Let',
+  // Set-builder / membership operators (English-language form)
+  'is', 'in', 'else',
   // Conformance keywords (RFC 2119)
   'MUST', 'SHOULD', 'MAY',
   'MUST NOT', 'SHOULD NOT',
@@ -253,6 +255,16 @@ function rewriteLine(line, productions, extended) {
         rendered = wrapPlain('ph-prod', inner);
       } else if (extended && VAR_RE.test(trimmed)) {
         rendered = wrapPlain('ph-var', inner);
+      } else if (
+        extended &&
+        /[\s{}|,=≠≤≥∈∉∞]/.test(trimmed) &&
+        !looksLikeRegexOrLiteral(trimmed)
+      ) {
+        // Compound expression — set-builder, membership predicate,
+        // or other multi-token shape. Tokenize and classify per
+        // token so identifiers within the expression pick up the
+        // same colours they would standalone.
+        rendered = renderCompoundExpression(inner, productions);
       }
     }
 
@@ -268,6 +280,92 @@ function rewriteLine(line, productions, extended) {
 
 function wrapPlain(cls, content) {
   return `<code class="${cls}">${escapeHtml(content)}</code>`;
+}
+
+// Decide whether a backtick span looks like a regex, URL pattern, or
+// other literal that should NOT be tokenized as a compound algorithm
+// expression. The compound-expression classifier expects tokens like
+// `E.key | E ∈ T.embedded_artifacts`; it would misclassify a regex
+// like `\d{4}` (treating `d` as a variable, `{4}` as braces).
+function looksLikeRegexOrLiteral(s) {
+  // Backslash escapes (\d, \., \w, \s, \\): regex metacharacters.
+  if (/\\[dwsDWS.bnrt\\(){}[\]+*?|^$]/.test(s)) return true;
+  // Character classes [...]: regex notation.
+  if (/\[[^\]]+\]/.test(s)) return true;
+  // {n} or {n,m} quantifiers (with no spaces between digits and brace).
+  if (/\{\d+(?:,\d*)?\}/.test(s)) return true;
+  // URL or URI pattern (scheme://...).
+  if (/^[A-Za-z][A-Za-z0-9+.-]*:\/\//.test(s)) return true;
+  return false;
+}
+
+// Tokenize a compound code-span (like a set-builder expression) and
+// classify each token so identifiers within the expression pick up
+// the same colours they would standalone.
+//
+// Examples:
+//   { E.key | E ∈ T.embedded_artifacts, E is EmbeddedField }
+//   FV.key ∈ field_keys
+//   IV.key ∉ pc_keys
+//
+// The whole expression is wrapped in a single outer <code> wrapper
+// so the existing code-span backround/font-family applies, and inner
+// <code class="ph-..."> spans paint the per-token colours.
+const COMPOUND_TOKEN = /"[^"\n]*"|[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)+|[A-Za-z_][A-Za-z0-9_]*|[0-9]+|[∈∉≤≥≠∞|{}(),:=]|\s+|./g;
+
+function renderCompoundExpression(content, productions) {
+  let out = '';
+  COMPOUND_TOKEN.lastIndex = 0;
+  let m;
+  while ((m = COMPOUND_TOKEN.exec(content)) !== null) {
+    const t = m[0];
+    out += classifyToken(t, productions);
+  }
+  // We emit a <span> rather than a <code> wrapper so that pulldown-
+  // cmark doesn't try to phrase-content-validate the inner <span>
+  // tokens as if they were nested inside a code element. The
+  // .ph-expr CSS class supplies the monospace styling and standard
+  // code-span tinted background.
+  return `<span class="ph-expr">${out}</span>`;
+}
+
+function classifyToken(t, productions) {
+  // Whitespace: pass through.
+  if (/^\s+$/.test(t)) return escapeHtml(t);
+  // String literal.
+  if (/^"[^"\n]*"$/.test(t)) return wrapInner('ph-string', t);
+  // Property access (head + dotted tail).
+  if (/^[A-Za-z_][A-Za-z0-9_]*\.[A-Za-z_][A-Za-z0-9_]*/.test(t)) {
+    const m = /^([A-Za-z_][A-Za-z0-9_]*)(\..+)$/.exec(t);
+    if (m) {
+      const head = m[1];
+      const tail = m[2];
+      const headCls = productions.has(head) ? 'ph-prod' : 'ph-var';
+      return wrapInner(headCls, head) + wrapInner('ph-prop', tail);
+    }
+  }
+  // Identifier — production, keyword, or variable.
+  if (/^[A-Za-z_][A-Za-z0-9_]*$/.test(t)) {
+    if (productions.has(t)) return wrapInner('ph-prod', t);
+    if (KEYWORDS.has(t)) return wrapInner('ph-keyword', t);
+    if (VAR_RE.test(t)) return wrapInner('ph-var', t);
+    return escapeHtml(t);
+  }
+  // Number.
+  if (/^[0-9]+$/.test(t)) return wrapInner('ph-string', t);
+  // Set/math operator or punctuation.
+  if (/^[∈∉≤≥≠∞|{}(),:=]$/.test(t)) return wrapInner('ph-punct', t);
+  // Anything else: pass through unstyled.
+  return escapeHtml(t);
+}
+
+// Wrap a token in an inner <span> for colour-only styling. We
+// deliberately do not use a nested <code> because nesting <code>
+// inside <code> is not well-formed HTML (pulldown-cmark warns
+// about it). The outer <code class="ph-expr"> wrapper carries the
+// monospace styling; these <span>s contribute the colour overlay.
+function wrapInner(cls, content) {
+  return `<span class="${cls}">${escapeHtml(content)}</span>`;
 }
 
 // Heading-line specialisation. Subroutine headings in
