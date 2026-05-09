@@ -4,17 +4,28 @@
 
 `PresentationComponent` defines reusable presentation or instructional content that may appear within a `Template` through `EmbeddedPresentationComponent`.
 
-`PresentationComponent` is distinct from `Field` and MUST NOT be treated as a data-bearing schema construct.
+`PresentationComponent` is distinct from `Field` and MUST NOT be treated as a data-bearing schema construct. It is also distinct from `SchemaArtifact`: presentation components carry plain `ArtifactMetadata` rather than `SchemaArtifactMetadata`, since they do not participate in schema versioning.
+
+## Artifact shape
+
+Every concrete `PresentationComponent` carries the following common slots:
+
+- `PresentationComponentId` — the artifact's identity IRI.
+- `ModelVersion` — the version of the CEDAR structural model the artifact conforms to (hoisted to top-level on every concrete artifact).
+- `ArtifactMetadata` — the artifact's name, description, lifecycle, optional annotations, etc.
+- a per-variant **body**: the substantive content of the component (HTML, image IRI, video IRI, or — for the structural break components — empty).
 
 ## Defined Components
 
 This specification defines the following `PresentationComponent` variants:
 
-- `RichTextComponent`
-- `ImageComponent`
-- `YoutubeVideoComponent`
-- `SectionBreakComponent`
-- `PageBreakComponent`
+| Variant | Body |
+|---|---|
+| `RichTextComponent` | `HtmlContent` (an HTML string for rendered presentation) |
+| `ImageComponent` | `Iri` for the image source, with optional `Label` and `Description` |
+| `YoutubeVideoComponent` | `Iri` for the video source, with optional `Label` and `Description` |
+| `SectionBreakComponent` | (no body) — contributes sectional separation in a rendered form |
+| `PageBreakComponent` | (no body) — contributes pagination structure |
 
 These constructs replace the older practice of treating static presentation constructs as field variants.
 
@@ -22,23 +33,19 @@ These constructs replace the older practice of treating static presentation cons
 
 Presentation constructs appear in a `Template` only through `EmbeddedPresentationComponent`.
 
-An `EmbeddedPresentationComponent` carries an `EmbeddedArtifactKey` and an optional `Visibility`. It does not carry a value requirement, cardinality, default value, label override, or property: it contributes no instance data and exists purely to contribute presentational structure.
+An `EmbeddedPresentationComponent` carries:
 
-`RichTextComponent` carries reusable HTML content.
+- `EmbeddedArtifactKey` — the local key identifying this embedding within the containing `Template`.
+- `PresentationComponentId` — the `artifactRef` to the reusable `PresentationComponent` being embedded.
+- optional `Visibility` — the rendering visibility of the embedded component.
 
-`ImageComponent` carries an image source.
-
-`YoutubeVideoComponent` carries a YouTube video source.
-
-`SectionBreakComponent` contributes sectional separation within a rendered template.
-
-`PageBreakComponent` contributes pagination structure for rendered forms.
+It does **not** carry a value requirement, cardinality, default value, label override, or semantic property IRI: the component contributes no instance data and exists purely to contribute presentational structure.
 
 ## Instance Semantics
 
 `PresentationComponent` does not produce `InstanceValue`.
 
-Conforming implementations MUST NOT create `FieldValue`, `NestedTemplateInstance`, or any other `InstanceValue` for a `PresentationComponent`.
+Conforming implementations MUST NOT create `FieldValue`, `NestedTemplateInstance`, or any other `InstanceValue` for a `PresentationComponent`. The `EmbeddedArtifactKey` of an `EmbeddedPresentationComponent` MUST NOT appear as the key of any `InstanceValue` in a conforming `TemplateInstance`.
 
 ## Open Questions
 
