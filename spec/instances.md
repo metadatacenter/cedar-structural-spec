@@ -8,7 +8,9 @@ The structure of a `TemplateInstance` is determined by the embedded data-bearing
 
 ## TemplateInstance
 
-A `TemplateInstance` references a `Template` and contains zero or more `InstanceValue` constructs.
+A `TemplateInstance` carries a `TemplateInstanceId`, a `ModelVersion` (the version of the CEDAR structural model the instance conforms to, hoisted to top-level on every concrete artifact), an `ArtifactMetadata` block, a reference to the `Template` it conforms to, and zero or more `InstanceValue` constructs.
+
+`TemplateInstance` carries `ArtifactMetadata` rather than `SchemaArtifactMetadata`: instances do not carry schema versioning. The `Template` they reference fixes the schema version.
 
 Each `InstanceValue` corresponds to an embedded artifact in the referenced `Template` that contributes data.
 
@@ -31,9 +33,22 @@ The key identifies the embedding site within the containing `Template`, which al
 
 `FieldValue` may contain multiple values when the corresponding `EmbeddedField` permits multiplicity.
 
-The permitted form of each contained value is determined by the `FieldSpec` of the referenced `Field`.
+The permitted form of each contained value is determined by the `FieldSpec` of the referenced `Field`. Each value in `FieldValue.values` is a member of the `Value` polymorphic union and therefore carries a `kind` discriminator on the wire (per [`wire-grammar.md` §1.5](wire-grammar.md#15-the-kind-rule)). A decoder reads `kind` to pick the union arm; the resulting arm MUST match the family expected by the referenced `FieldSpec` (e.g. a `FieldValue` for a `TextFieldSpec` carries `TextValue` entries with `"kind": "TextValue"`).
 
-For `EnumFieldSpec`, every contained value is an `EnumValue` carrying a `Token` that MUST equal the canonical `Token` of one of the referenced spec's `PermissibleValue` entries. A `SingleValuedEnumFieldSpec` permits exactly one such `EnumValue` per `FieldValue`; a `MultiValuedEnumFieldSpec` permits one or more, subject to the embedding's `Cardinality`.
+For `EnumFieldSpec`, every contained value is a tagged `EnumValue` (`{ "kind": "EnumValue", "value": "<Token>" }`) whose `value` MUST equal the canonical `Token` of one of the referenced spec's `PermissibleValue` entries. A `SingleValuedEnumFieldSpec` permits exactly one such `EnumValue` per `FieldValue`; a `MultiValuedEnumFieldSpec` permits one or more, subject to the embedding's `Cardinality`.
+
+## Defaults are not part of instances
+
+A `TemplateInstance` records the values a user supplied; it does not record default values. Defaults specified at the field-level (`XxxFieldSpec.defaultValue`) or embedding-level (`EmbeddedXxxField.defaultValue`) are UI/UX initialisation only — they pre-populate the form a user fills in, but the resulting instance carries the user's chosen value as if the user had typed it in by hand.
+
+Two consequences:
+
+- A user who accepts a default without modification produces a `FieldValue` carrying that value verbatim. From the instance's perspective the default and a user-supplied identical value are indistinguishable.
+- A user who supplies no value (and the field is not required) produces *no* `FieldValue` for that key. The default does not appear by virtue of having existed; absence in the instance means absence, not "use the default."
+
+This matters for downstream consumers: the absence of a `FieldValue` for a given `EmbeddedField` is unambiguous evidence that no value was supplied, and never an implicit reference to a default.
+
+See also [`grammar.md` §Defaults](grammar.md#defaults) and [`serialization.md` §6.8](serialization.md#68-default-values).
 
 ## NestedTemplateInstance
 
