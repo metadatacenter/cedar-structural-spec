@@ -100,9 +100,23 @@ A conforming RDF emitter MUST therefore have access to the `EnumFieldSpec` of th
 
 ### Attribute value
 
-`AttributeValue { name, value }` carries an attribute key and a nested value. The `name` is treated as the IRI of the predicate connecting the enclosing subject to the projected `value`; the projected RDF term is the projection of the nested `value`. The wrapper introduces one triple of the form `<subject> <name> <projected-value>`, where `<subject>` is supplied by the enclosing structure. The accompanying triples of the nested `value` (if any) travel with the projected value as for any other position.
+`AttributeValue { name, value }` carries an attribute name and a nested value. The grammar types `name` as a Unicode string (the `AttributeName` production), not an `Iri` — attribute names are not constrained to be IRIs at the abstract-grammar level.
 
-The `name` slot MUST therefore be a syntactically valid IRI when the projection is applied; CEDAR data that carries non-IRI `name` strings is not projectable to RDF without prior resolution against an enclosing namespace.
+The projection treats `name` as the IRI of the predicate connecting the enclosing subject to the projected `value`; the projected RDF term is the projection of the nested `value`. The wrapper introduces one triple of the form `<subject> <name> <projected-value>`, where `<subject>` is supplied by the enclosing structure. The accompanying triples of the nested `value` (if any) travel with the projected value as for any other position.
+
+For projection to succeed, the `name` string MUST be resolvable to a syntactically valid IRI — either because it is already an absolute IRI, or because the consuming tool resolves a relative name against an enclosing namespace before projection. CEDAR data whose `name` strings cannot be resolved this way is not projectable to RDF; tooling SHOULD either supply a default namespace or refuse to project such instances.
+
+### Annotation
+
+An `Annotation` carries a `property` IRI and a `body` of polymorphic kind (`AnnotationStringValue` or `AnnotationIriValue` per [`grammar.md` §Annotations](grammar.md#annotations)). On any artifact carrying annotations (`Field`, `Template`, `PresentationComponent`), the annotation projects to a single triple whose subject is the artifact's IRI, predicate is the annotation property, and object depends on the body kind:
+
+| Annotation body kind | RDF term for the object |
+|---|---|
+| `AnnotationStringValue { value, lang }` (lang present) | `"value"@lang` (`rdf:langString`) |
+| `AnnotationStringValue { value }` (lang absent) | `"value"^^xsd:string` |
+| `AnnotationIriValue { iri }` | `<iri>` |
+
+Each annotation produces exactly one triple. Multiple annotations on the same artifact produce one triple each. Annotations are projected only when the surrounding artifact is itself projected; the wrapping `Annotation` carries no other RDF presence.
 
 ## Round-trip and faithfulness
 
@@ -116,6 +130,7 @@ The following CEDAR information is **not** carried by the projection:
 
 - the `kind` discriminator of each `Value` variant — it is not preserved as an RDF triple. Variants whose RDF terms coincide (for example, `EmailValue` and `PhoneNumberValue` both projecting to `xsd:string` literals) cannot be distinguished from RDF alone,
 - presentation hints, label overrides, visibility, and other embedding-level configuration carried by `EmbeddedField` properties — the projection covers `Value` content only,
-- field-spec metadata such as units, validation regexes, or rendering hints — these are properties of the schema, not of the value.
+- field-spec metadata such as units, validation regexes, or rendering hints — these are properties of the schema, not of the value,
+- **default values** at either layer (`XxxFieldSpec.defaultValue` and `EmbeddedXxxField.defaultValue`) — defaults are UI/UX initialisation only and never appear in `TemplateInstance` artifacts (see [`grammar.md` §Defaults](grammar.md#defaults) and [`instances.md`](instances.md)). The projection sees only the values an instance actually carries; defaults that were accepted are projected as the chosen value (indistinguishable from a user-typed identical value), and defaults that were not accepted are simply absent.
 
 Tooling that requires faithful round-tripping of these CEDAR-native concerns SHOULD work directly with the wire form rather than relying on the RDF projection.
