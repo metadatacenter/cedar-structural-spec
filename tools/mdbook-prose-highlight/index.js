@@ -69,6 +69,8 @@ const KEYWORDS = new Set([
   // Conformance keywords (RFC 2119)
   'MUST', 'SHOULD', 'MAY',
   'MUST NOT', 'SHOULD NOT',
+  // Error-category labels (§9.1 of serialization.md)
+  'wireShape', 'lexical', 'structural',
 ]);
 
 // Recognition regexes. A backtick span's trimmed content is
