@@ -27,7 +27,7 @@
       "value": "09:00:00"
     },
     "timePrecision": "hourMinuteSecond",
-    "timezoneRequirement": "withTimezone",
+    "timezoneRequirement": "timezoneRequired",
     "renderingHint": {
       "timeFormat": "twelveHour"
     }

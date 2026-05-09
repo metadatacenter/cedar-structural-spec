@@ -27,7 +27,7 @@
       "kind": "DateTimeValue",
       "value": "2026-01-01T09:00:00Z"
     },
-    "timezoneRequirement": "withTimezone",
+    "timezoneRequirement": "timezoneRequired",
     "renderingHint": {
       "timeFormat": "twentyFourHour"
     }
