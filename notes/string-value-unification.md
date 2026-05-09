@@ -1,6 +1,8 @@
-# String-value unification — open question
+# String-value unification — closed
 
-Captured 2026-05-06. Defer.
+Captured 2026-05-06. Closed 2026-05-09: the original three-way
+concern shrank to a two-way concern, and the remaining duplication
+is judged acceptable. See [Resolution](#resolution) below.
 
 ## The framing
 
@@ -102,3 +104,54 @@ the LinkML schema is brought in line. At that point, either:
 2. Decide to keep `TextValue` and accept the naming inconsistency. Note
    that the inconsistency is now permanent and document the rationale
    in `notation.md`.
+
+## Resolution (2026-05-09)
+
+**Closed without unification. The note's three-way concern has shrunk
+to a two-way concern, and the residual duplication is now considered
+acceptable.**
+
+What changed in the meantime:
+
+- **`LiteralChoiceValue` is gone entirely.** The choice→enum refactor
+  replaced the `LiteralChoice*` family with the `Enum*` family.
+  `EnumValue` carries a `Token` (a non-localizable canonical
+  identifier), not a localizable string. The third member of the
+  three-way duplication is removed by elimination.
+- **`TextValue` and `AnnotationStringValue` both still exist** with
+  the identical `{ LexicalForm, [LanguageTag] }` shape. They live at
+  different positions in the model:
+    - `TextValue` is an instance value admitted by `TextFieldSpec` —
+      it appears at `FieldValue.values[*]` for text fields.
+    - `AnnotationStringValue` is an annotation body — it appears at
+      `Annotation.body` and is one of two arms of the kind-discriminated
+      `AnnotationValue` union (the other being `AnnotationIriValue`).
+
+Why two-way duplication is acceptable here, where three-way wasn't:
+
+- The two productions are at **genuinely different positions** in the
+  model — instance value vs. annotation body. Role-specific names
+  arguably read more clearly than a shared `StringValue` reused at
+  both positions.
+- `AnnotationStringValue` is a member of a kind-discriminated union
+  (`AnnotationValue`); collapsing it to `StringValue` would either
+  require renaming the sibling arm (`AnnotationIriValue`) for
+  symmetry — making it a `StringValue` | `IriValue` union without
+  the "Annotation" qualifier, which loses the role information — or
+  introduce structural asymmetry.
+- The wire-grammar `kind` discriminator differs between the two
+  (`"TextValue"` vs `"AnnotationStringValue"`), so they are not
+  interchangeable at decode time anyway. Unification at the abstract-
+  grammar level wouldn't translate into wire-form unification without
+  further design.
+
+The original "rename `TextValue` to `StringValue` for LinkML alignment"
+sub-question (interpretation A) is also resolved against renaming:
+LinkML's `String` is the scalar core type, but the CEDAR analogue is
+the `LexicalForm` carried inside `TextValue`, not `TextValue` itself.
+The `Text*` family naming therefore reflects the **field family** —
+text-as-distinct-from-numeric/boolean/date/etc. — and the LinkML
+alignment is at the lexical layer, not the production-name layer.
+
+If LinkML alignment ever forces a per-production rename, this note
+should be revisited; otherwise the model is left as-is.
