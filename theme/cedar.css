@@ -161,3 +161,87 @@ pre.ebnf code {
 .navy .ebnf-ident, .coal .ebnf-ident, .ayu .ebnf-ident {
   color: #e07b7b;
 }
+
+/* ---------- Validation algorithm subroutine signatures ---------- */
+/* Each subroutine in spec/validation.md has an h5 heading with an
+   id of the form `fn-validate-...`. Box those headings so each
+   signature stands out as a navigable landmark. */
+
+.content h5[id^="fn-validate-"] {
+  background: rgba(13, 138, 138, 0.08);
+  border-left: 4px solid #0d8a8a;
+  border-radius: 3px;
+  padding: 0.5rem 0.8rem;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.content h5[id^="fn-validate-"] code {
+  background: transparent;
+  padding: 0;
+  font-size: 1.05em;
+}
+
+.content h5[id^="fn-validate-"] a.header {
+  color: #0d6f6f;
+  text-decoration: none;
+}
+
+/* In-text links to the boxed subroutines — give them a subtle marker
+   so the reader can spot them at a glance. */
+.content a[href^="#fn-validate-"] code {
+  background: rgba(13, 138, 138, 0.08);
+  border-bottom: 1px dotted rgba(13, 138, 138, 0.5);
+}
+
+/* Dark-theme adjustments. */
+.navy .content h5[id^="fn-validate-"],
+.coal .content h5[id^="fn-validate-"],
+.ayu .content h5[id^="fn-validate-"] {
+  background: rgba(109, 211, 211, 0.08);
+  border-left-color: #6dd3d3;
+}
+.navy .content h5[id^="fn-validate-"] a.header,
+.coal .content h5[id^="fn-validate-"] a.header,
+.ayu .content h5[id^="fn-validate-"] a.header {
+  color: #6dd3d3;
+}
+.navy .content a[href^="#fn-validate-"] code,
+.coal .content a[href^="#fn-validate-"] code,
+.ayu .content a[href^="#fn-validate-"] code {
+  background: rgba(109, 211, 211, 0.10);
+  border-bottom-color: rgba(109, 211, 211, 0.5);
+}
+
+/* ---------- Prose code-span colouring (mdbook-prose-highlight) ---------- */
+
+/* Production names — UpperCamelCase identifiers from the abstract grammar.
+   Subtle teal italic; readers can spot grammar references at a glance. */
+.content code.ph-prod {
+  color: #0d6f6f;
+  font-style: italic;
+  background: rgba(13, 138, 138, 0.06);
+}
+
+/* Algorithm keywords (Run, Verify, Warn, Let, MUST, SHOULD, MAY, etc.).
+   Bold accent in a contrasting hue so they pop against the code-span
+   background of variables and property accesses. */
+.content code.ph-keyword {
+  color: #5a3e9a;
+  font-weight: 600;
+  background: rgba(90, 62, 154, 0.06);
+}
+
+/* Dark-theme adjustments. */
+.navy .content code.ph-prod,
+.coal .content code.ph-prod,
+.ayu .content code.ph-prod {
+  color: #6dd3d3;
+  background: rgba(109, 211, 211, 0.08);
+}
+.navy .content code.ph-keyword,
+.coal .content code.ph-keyword,
+.ayu .content code.ph-keyword {
+  color: #b39ddb;
+  background: rgba(179, 157, 219, 0.10);
+}

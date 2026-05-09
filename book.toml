@@ -38,6 +38,10 @@ runnable = false
 
 [preprocessor.index]
 
+[preprocessor.prose-highlight]
+command = "node tools/mdbook-prose-highlight/index.js"
+before = ["ebnf-xref", "links", "mermaid"]
+
 [preprocessor.ebnf-xref]
 command = "node tools/mdbook-ebnf-xref/index.js"
 before = ["links"]
