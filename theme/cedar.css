@@ -378,6 +378,111 @@ pre.ebnf code {
   color: #b39ddb;
   background: rgba(179, 157, 219, 0.10);
 }
+
+/* ---------- On-failure / On-warning boxes ---------- */
+/* Each Verify step in spec/validation.md has an inline annotation
+   describing the error a conforming binding MUST report. The
+   prose-highlight preprocessor rewrites those annotations into a
+   structured key-value box: a left accent bar, a label header, and
+   a definition list aligning category/path/production/message. */
+
+.content .on-failure,
+.content .on-warning {
+  margin: 0.4rem 0 0.8rem 0;
+  padding: 0.35rem 0.7rem 0.5rem 0.9rem;
+  border-radius: 3px;
+}
+
+.content .on-failure {
+  background: rgba(192, 57, 43, 0.04);
+  border-left: 3px solid rgba(192, 57, 43, 0.55);
+}
+.content .on-warning {
+  background: rgba(214, 137, 16, 0.04);
+  border-left: 3px solid rgba(214, 137, 16, 0.55);
+}
+
+.content .on-failure-label,
+.content .on-warning-label {
+  font-size: 0.85em;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  margin-bottom: 0.25rem;
+}
+.content .on-failure-label {
+  color: #a0392b;
+}
+.content .on-warning-label {
+  color: #a76e10;
+}
+
+.content .on-failure-fields,
+.content .on-warning-fields {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.15rem 0.75rem;
+  margin: 0;
+}
+
+.content .on-failure-fields dt,
+.content .on-warning-fields dt {
+  font-size: 0.85em;
+  color: #777;
+  font-weight: 500;
+  margin: 0;
+  padding: 0;
+}
+.content .on-failure-fields dd,
+.content .on-warning-fields dd {
+  margin: 0;
+  padding: 0;
+  font-size: 0.9em;
+}
+
+/* Inline note next to a path, e.g. "(the second occurrence)". */
+.content .of-path-note {
+  font-size: 0.85em;
+  color: #888;
+  font-style: italic;
+}
+.navy .content .of-path-note,
+.coal .content .of-path-note,
+.ayu .content .of-path-note {
+  color: #aaa;
+}
+
+/* Dark-theme adjustments. */
+.navy .content .on-failure,
+.coal .content .on-failure,
+.ayu .content .on-failure {
+  background: rgba(255, 100, 90, 0.06);
+  border-left-color: rgba(255, 130, 120, 0.6);
+}
+.navy .content .on-warning,
+.coal .content .on-warning,
+.ayu .content .on-warning {
+  background: rgba(255, 180, 80, 0.05);
+  border-left-color: rgba(255, 180, 80, 0.6);
+}
+.navy .content .on-failure-label,
+.coal .content .on-failure-label,
+.ayu .content .on-failure-label {
+  color: #ff9a8a;
+}
+.navy .content .on-warning-label,
+.coal .content .on-warning-label,
+.ayu .content .on-warning-label {
+  color: #f1b878;
+}
+.navy .content .on-failure-fields dt,
+.coal .content .on-failure-fields dt,
+.ayu .content .on-failure-fields dt,
+.navy .content .on-warning-fields dt,
+.coal .content .on-warning-fields dt,
+.ayu .content .on-warning-fields dt {
+  color: #aaa;
+}
 .navy .content code.ph-var,
 .coal .content code.ph-var,
 .ayu .content code.ph-var {

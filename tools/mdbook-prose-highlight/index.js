@@ -192,9 +192,96 @@ function rewriteChapter(ch, productions) {
       out.push(line);
       continue;
     }
+
+    // On-failure / On-warning structured-line rewrite. Recognises
+    // lines of the form
+    //   *On failure:* `<category>` at `<path>`, production `<prod>`, message `<msg>`.
+    // (with optional sub-label like "On failure (arm):") and replaces
+    // them with a structured key-value box. Only fires inside
+    // EXTENDED_CHAPTERS where the report shape is established.
+    if (extended) {
+      const boxed = tryRenderOnFailureLine(line, productions);
+      if (boxed !== null) {
+        out.push(boxed);
+        continue;
+      }
+    }
+
     out.push(rewriteLine(line, productions, extended));
   }
   return out.join('\n');
+}
+
+// Recognise an On-failure / On-warning line and produce a key-value
+// box. Returns null if the line doesn't match.
+//
+// Source pattern:
+//   <indent>*On failure:* `<cat>` at `<path>`, production `<prod>`, message `<msg>`.
+// or
+//   <indent>*On failure (sublabel):* ...same shape...
+// or
+//   <indent>*On warning:* ...same shape...
+//
+// The leading indent (often 3 spaces, for nested list items) is
+// preserved so the boxed div is rendered at the right list nesting.
+const ON_FAILURE_RE = new RegExp(
+  '^(\\s*)' +                             // 1: indent
+  '\\*On (failure|warning)' +             // 2: "failure" | "warning"
+  '(?:\\s*\\(([^)]+)\\))?' +              // 3: optional sublabel
+  ':\\*\\s+' +
+  '`([^`]+)`' +                           // 4: category
+  '\\s+at\\s+`([^`]+)`' +                 // 5: path
+  '(?:\\s*\\(([^)]+)\\))?' +              // 6: optional parenthetical path note
+  ',\\s+' +
+  'production\\s+(.+?),\\s+' +            // 7: production (free text — may be a single
+                                          //    backticked name OR a descriptive phrase
+                                          //    like "naming `fieldSpec`'s kind")
+  'message\\s+`([^`]+)`' +                // 8: message
+  '(?:\\s*\\([^)]+\\))?' +                // optional trailing parenthetical (e.g. "(warning, not error)")
+  '\\.?\\s*$'
+);
+
+function tryRenderOnFailureLine(line, productions) {
+  const m = ON_FAILURE_RE.exec(line);
+  if (!m) return null;
+
+  const indent = m[1];
+  const kind = m[2];                  // failure | warning
+  const sublabel = m[3] || '';
+  const category = m[4];
+  const path = m[5];
+  const pathNote = m[6] || '';        // e.g. "the second occurrence"
+  const production = m[7];
+  const message = m[8];
+
+  const labelText =
+    'On ' + kind + (sublabel ? ' (' + sublabel + ')' : '');
+
+  const cls = kind === 'warning' ? 'on-warning' : 'on-failure';
+
+  // Style each value with the appropriate prose-highlight class.
+  // category -> ph-keyword (matches §9.1 enum colouring)
+  // path     -> plain code (placeholders + slashes), plus an
+  //             optional in-prose note like "(the second occurrence)"
+  // production -> ph-prod
+  // message  -> ph-string
+
+  const pathHtml =
+    `<code>${escapeHtml(path)}</code>` +
+    (pathNote ? ` <span class="of-path-note">(${escapeHtml(pathNote)})</span>` : '');
+
+  return (
+    indent +
+    `<div class="${cls}">` +
+    `<div class="${cls}-label">${escapeHtml(labelText)}</div>` +
+    `<dl class="${cls}-fields">` +
+    `<dt>category</dt><dd>${wrapPlain('ph-keyword', category)}</dd>` +
+    `<dt>path</dt><dd>${pathHtml}</dd>` +
+    `<dt>production</dt><dd>${renderProductionField(production, productions)}</dd>` +
+    `<dt>message</dt><dd>${wrapPlain('ph-string', message)}</dd>` +
+    `</dl>` +
+    `</div>`
+  );
 }
 
 // Rewrite plain backtick spans on one prose line.
@@ -282,6 +369,63 @@ function rewriteLine(line, productions, extended) {
 
 function wrapPlain(cls, content) {
   return `<code class="${cls}">${escapeHtml(content)}</code>`;
+}
+
+// Render the "production" field of an On-failure box.
+//
+// Two shapes are accepted:
+//
+//   1. A single backticked production name, e.g. `TextValue`. Rendered
+//      with the production-name colour if known.
+//   2. A free-text descriptive phrase that may contain backticked
+//      identifiers, e.g. "naming `fieldSpec`'s kind". The phrase
+//      is preserved with each backtick span classified per the
+//      standard rules (production → ph-prod, var → ph-var).
+function renderProductionField(text, productions) {
+  // If the whole field is a single backticked identifier, treat it
+  // as a production reference.
+  const single = /^`([^`]+)`$/.exec(text);
+  if (single) {
+    const name = single[1];
+    return productions.has(name)
+      ? wrapPlain('ph-prod', name)
+      : `<code>${escapeHtml(name)}</code>`;
+  }
+  // Otherwise it's prose; render the prose with classified backtick
+  // spans inside.
+  return renderInlineProse(text, productions);
+}
+
+// Render a prose snippet, classifying any backtick-quoted identifiers
+// according to the standard rules. Used by renderProductionField for
+// descriptive production phrases.
+function renderInlineProse(text, productions) {
+  let out = '';
+  let i = 0;
+  while (i < text.length) {
+    const c = text[i];
+    if (c !== '`') {
+      out += escapeHtml(c);
+      i++;
+      continue;
+    }
+    const close = text.indexOf('`', i + 1);
+    if (close === -1) {
+      out += escapeHtml(text.slice(i));
+      break;
+    }
+    const inner = text.slice(i + 1, close);
+    const trimmed = inner.trim();
+    if (productions.has(trimmed)) {
+      out += wrapPlain('ph-prod', inner);
+    } else if (/^[A-Z]$/.test(trimmed) || /^[a-z_][a-zA-Z0-9_]*$/.test(trimmed)) {
+      out += wrapPlain('ph-var', inner);
+    } else {
+      out += `<code>${escapeHtml(inner)}</code>`;
+    }
+    i = close + 1;
+  }
+  return out;
 }
 
 // Decide whether a backtick span looks like a regex, URL pattern, or
