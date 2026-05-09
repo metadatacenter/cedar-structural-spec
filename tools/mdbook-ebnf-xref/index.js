@@ -278,6 +278,28 @@ function rewriteChapter(ch, defs) {
 // the abstract grammar — the wire grammar is a self-contained surface.
 const FILE_SCOPED_FILES = new Set(['wire-grammar.md']);
 
+// "Prose-pinned leaf" productions — primitive string types that
+// have no `::=` LHS in any EBNF block but are *prose-defined* in
+// grammar.md §Primitive String Types. Without this set the
+// preprocessor would redden them as unresolved identifiers.
+//
+// We treat them as known references that link to the prose section
+// where they're defined, and style them with the standard ebnf-ref
+// class so they read as resolved cross-references rather than as
+// dangling identifiers.
+const PROSE_PINNED_LEAVES = new Set([
+  'SemanticVersion',
+  'IriString',
+  'Bcp47Tag',
+  'Iso8601DateTimeLexicalForm',
+  'AsciiIdentifier',
+  'IntegerLexicalForm',
+]);
+
+// Where the prose-pinned leaves are documented, relative to any
+// chapter referring to them.
+const PROSE_PINNED_LEAVES_HREF = 'grammar.html#primitive-string-types';
+
 // Render a single EBNF block body as raw HTML <pre class="ebnf">…</pre>.
 function renderEbnfBlock(body, currentPath, defs) {
   const lines = body.split('\n');
@@ -345,13 +367,21 @@ function renderRhs(text, currentPath, defs) {
     } else if (/^[A-Z][A-Za-z0-9]*$/.test(t)) {
       // UpperCamelCase identifier — link if known.
       // For file-scoped pages (e.g. wire-grammar.md), only link to defs
-      // defined within the same file; cross-file refs render as plain text.
+      // defined within the same file; cross-file refs render as plain
+      // text. The prose-pinned leaves (SemanticVersion, IriString,
+      // Bcp47Tag, etc.) have no EBNF LHS but are documented in
+      // grammar.md §Primitive String Types — link them there so they
+      // don't appear as unresolved identifiers.
       const target = resolveDef(t, currentPath, defs);
       const fileScoped = FILE_SCOPED_FILES.has(currentPath);
       const inScope = target && (!fileScoped || target.path === currentPath);
       if (inScope) {
         const href = linkHref(currentPath, target);
         out += `<a class="ebnf-ref" href="${href}">${esc(t)}</a>`;
+      } else if (PROSE_PINNED_LEAVES.has(t)) {
+        // Resolves to grammar.md §Primitive String Types regardless
+        // of currentPath; the leaves are global.
+        out += `<a class="ebnf-ref" href="${PROSE_PINNED_LEAVES_HREF}">${esc(t)}</a>`;
       } else {
         out += `<span class="ebnf-ident">${esc(t)}</span>`;
       }

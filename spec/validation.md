@@ -633,12 +633,12 @@ Dispatch on the kind of `fieldSpec`:
 
 ##### `validate_text_value(value: TextValue, fieldSpec: TextFieldSpec)` {#fn-validate-text-value}
 
-1. Let `s` = `value.value` (the lexical form).
-2. If `fieldSpec.min_length` is present: verify `len(s) ≥ fieldSpec.min_length`.
+1. Let `lexicalForm` = `value.value`.
+2. If `fieldSpec.min_length` is present: verify `len(lexicalForm) ≥ fieldSpec.min_length`.
    *On failure:* `structural` at `<value>/value`, production `TextValue`, message `"value length below TextFieldSpec.minLength"`.
-3. If `fieldSpec.max_length` is present: verify `len(s) ≤ fieldSpec.max_length`.
+3. If `fieldSpec.max_length` is present: verify `len(lexicalForm) ≤ fieldSpec.max_length`.
    *On failure:* `structural` at `<value>/value`, production `TextValue`, message `"value length above TextFieldSpec.maxLength"`.
-4. If `fieldSpec.validation_regex` is present: verify `s` matches `fieldSpec.validation_regex`.
+4. If `fieldSpec.validation_regex` is present: verify `lexicalForm` matches `fieldSpec.validation_regex`.
    *On failure:* `structural` at `<value>/value`, production `TextValue`, message `"value does not match TextFieldSpec.validationRegex"`.
 5. If `value.lang` is present: verify it conforms to the `Bcp47Tag` lexical form (RFC 5646).
    *On failure:* `lexical` at `<value>/lang`, production `TextValue`, message `"lang is not a well-formed BCP 47 tag"`.

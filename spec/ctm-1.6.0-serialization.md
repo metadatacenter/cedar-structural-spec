@@ -396,7 +396,7 @@ merge(
 )
 ```
 
-**Calls:** [`encode_artifact_metadata`](#encode_artifact_metadatam-artifactmetadata--object), [`encode_schema_artifact_versioning`](#encode_schema_artifact_versioningv-schemaversioning--object)
+**Calls:** [`encode_artifact_metadata`](#encode_artifact_metadatam-artifactmetadata--object), [`encode_schema_artifact_versioning`](#encode_schema_artifact_versioningv-schemaartifactversioning--object)
 
 ---
 
