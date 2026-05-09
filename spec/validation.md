@@ -4,13 +4,45 @@
 
 Validation in the CEDAR Template Model consists of structural conformance to the abstract grammar and satisfaction of well-formedness conditions that are not expressed directly in grammar productions. The [Canonical Validation Algorithm](#canonical-validation-algorithm) section defines a two-phase procedural algorithm that operationalises all normative rules in this document.
 
+## Contents
+
+- [Relationship to the wire-form error model](#relationship-to-the-wire-form-error-model)
+- [Well-Formedness Conditions](#well-formedness-conditions)
+  - [EmbeddedArtifactKey Uniqueness](#embeddedartifactkey-uniqueness)
+  - [Embedding References](#embedding-references)
+  - [Cardinality Consistency](#cardinality-consistency)
+  - [Cardinality Defaults and Multiplicity](#cardinality-defaults-and-multiplicity)
+  - [Versioning](#versioning)
+  - [Instance Alignment](#instance-alignment)
+  - [Field Spec Compatibility](#field-spec-compatibility)
+  - [Rendering Hint Compatibility](#rendering-hint-compatibility)
+  - [Controlled Term Value Structure](#controlled-term-value-structure)
+- [Canonical Validation Algorithm](#canonical-validation-algorithm)
+  - [Phase 1: Schema Validation](#phase-1-schema-validation)
+  - [Phase 2: Instance Validation](#phase-2-instance-validation)
+  - [Out of Scope](#out-of-scope)
+- [Open Questions](#open-questions)
+
+## Relationship to the wire-form error model
+
+This document and [`serialization.md` §9](serialization.md#9-errors) describe two complementary layers of conformance checking:
+
+- The wire-form **error model** (`serialization.md` §9) governs decoder and encoder behaviour at the JSON boundary. It defines three error categories (`wireShape`, `lexical`, `structural`) and a JSON-pointer-based path format for locating each error.
+- This **validation algorithm** governs post-decode checking on in-memory values. It assumes a successful decode has already produced syntactically well-formed structures and verifies the cross-cutting rules that bind those structures together (key uniqueness, cardinality, instance alignment, field-spec compatibility, and so on).
+
+The two layers overlap in scope: many of the structural-invariant constraints listed in §9.1 are also Phase 1 checks here, because a conforming decoder operating in collected mode applies them at decode time. Implementations MAY perform validation entirely at decode (folding Phase 1 into the decoder) or entirely after decode (running Phase 1 as a separate pass). Either approach is conforming.
+
+When this document refers to a constraint that is also enumerated in `serialization.md` §9.1, the wire-form error category and path semantics from §9 apply. Reported errors SHOULD use the four-field shape from §9.3 (`category`, `path`, `production`, `message`).
+
 ## Well-Formedness Conditions
+
+The conditions below are organised by structural concern. Each subsection corresponds to one of the §9.1 categories — primarily *structural-invariant* (cross-position constraints that the grammar alone cannot express) but with a few *lexical* constraints (regex-based well-formedness of pinned primitive types) called out where they are most natural to state.
 
 ### EmbeddedArtifactKey Uniqueness
 
 Within a single `Template`, each `EmbeddedArtifact` MUST have a unique `EmbeddedArtifactKey`. The uniqueness constraint is local to that template level and does not extend across nested template boundaries. Accordingly, an embedded template MAY contain `EmbeddedArtifactKey` values that are identical to keys used in its containing template, because each template defines its own local key space.
 
-Each `EmbeddedArtifactKey` MUST be an ASCII identifier without whitespace.
+Each `EmbeddedArtifactKey` MUST conform to the `AsciiIdentifier` lexical form (per [grammar.md](grammar.md#primitive-string-types)) — the regular expression `^[A-Za-z][A-Za-z0-9_-]*$`.
 
 ### Embedding References
 
@@ -44,11 +76,13 @@ An `EmbeddedField` is **multi-valued** if its effective maximum cardinality is g
 
 ### Versioning
 
-`Version` MUST conform to Semantic Versioning 2.0.0.
+`Version` and `ModelVersion` MUST conform to the `SemanticVersion` lexical form (per [grammar.md](grammar.md#primitive-string-types)) — Semantic Versioning 2.0.0.
 
-`ModelVersion` MUST conform to Semantic Versioning 2.0.0. `ModelVersion` is a top-level component of every concrete `Artifact` (every `Template`, `TemplateInstance`, every `Field`, and every `PresentationComponent`); it is not a component of `SchemaArtifactVersioning`.
+`ModelVersion` is a top-level component of every concrete `Artifact` (every `Template`, `TemplateInstance`, every `Field`, and every `PresentationComponent`); it is not a component of `SchemaArtifactVersioning`.
 
 `Status` MUST be either `draft` or `published`.
+
+`SchemaArtifactVersioning.previousVersion` and `SchemaArtifactVersioning.derivedFrom`, when both present on the same artifact, MUST NOT carry the same IRI value (per [grammar.md §Schema Artifact Versioning](grammar.md#schema-artifact-versioning)).
 
 ### Instance Alignment
 
@@ -62,29 +96,31 @@ Each `NestedTemplateInstance` in a `TemplateInstance` MUST reference the `Embedd
 
 Values in a `FieldValue` MUST satisfy the `FieldSpec` and any field-spec-specific properties of the referenced `Field`.
 
-The contained values MUST follow the `FieldSpec`-to-`Value` correspondence defined in `spec/grammar.md`. In particular:
+The contained values MUST follow the `FieldSpec`-to-`Value` correspondence defined in [`grammar.md`](grammar.md):
 
-- `TextFieldSpec` values MUST be `TextValue`
-- `IntegerNumberFieldSpec` values MUST be `IntegerNumberValue`
-- `RealNumberFieldSpec` values MUST be `RealNumberValue`
-- `BooleanFieldSpec` values MUST be `BooleanValue`
-- `DateFieldSpec` values MUST be `DateValue`
-- `TimeFieldSpec` values MUST be `TimeValue`
-- `DateTimeFieldSpec` values MUST be `DateTimeValue`
-- `ControlledTermFieldSpec` values MUST be `ControlledTermValue`
-- `EnumFieldSpec` values MUST be `EnumValue`
-- `LinkFieldSpec` values MUST be `LinkValue`
-- `EmailFieldSpec` values MUST be `EmailValue`
-- `PhoneNumberFieldSpec` values MUST be `PhoneNumberValue`
-- `OrcidFieldSpec` values MUST be `OrcidValue`
-- `RorFieldSpec` values MUST be `RorValue`
-- `DoiFieldSpec` values MUST be `DoiValue`
-- `PubMedIdFieldSpec` values MUST be `PubMedIdValue`
-- `RridFieldSpec` values MUST be `RridValue`
-- `NihGrantIdFieldSpec` values MUST be `NihGrantIdValue`
-- `AttributeValueFieldSpec` values MUST be `AttributeValue`
+| FieldSpec | Required Value type |
+|---|---|
+| `TextFieldSpec` | `TextValue` |
+| `IntegerNumberFieldSpec` | `IntegerNumberValue` |
+| `RealNumberFieldSpec` | `RealNumberValue` |
+| `BooleanFieldSpec` | `BooleanValue` |
+| `DateFieldSpec` | `DateValue` (`YearValue` / `YearMonthValue` / `FullDateValue` per `dateValueType`) |
+| `TimeFieldSpec` | `TimeValue` |
+| `DateTimeFieldSpec` | `DateTimeValue` |
+| `ControlledTermFieldSpec` | `ControlledTermValue` |
+| `SingleValuedEnumFieldSpec` / `MultiValuedEnumFieldSpec` | `EnumValue` |
+| `LinkFieldSpec` | `LinkValue` |
+| `EmailFieldSpec` | `EmailValue` |
+| `PhoneNumberFieldSpec` | `PhoneNumberValue` |
+| `OrcidFieldSpec` | `OrcidValue` |
+| `RorFieldSpec` | `RorValue` |
+| `DoiFieldSpec` | `DoiValue` |
+| `PubMedIdFieldSpec` | `PubMedIdValue` |
+| `RridFieldSpec` | `RridValue` |
+| `NihGrantIdFieldSpec` | `NihGrantIdValue` |
+| `AttributeValueFieldSpec` | `AttributeValue` |
 
-Additional well-formedness conditions apply as follows.
+Additional well-formedness conditions apply per family, as described below.
 
 For text values:
 
@@ -119,9 +155,10 @@ For boolean values:
 
 For date values:
 
-- `DateFieldSpec` with `"year"` MUST use `YearValue`, whose lexical form MUST match the pattern `YYYY`
-- `DateFieldSpec` with `"yearMonth"` MUST use `YearMonthValue`, whose lexical form MUST match the pattern `YYYY-MM`
-- `DateFieldSpec` with `"fullDate"` MUST use `FullDateValue`, whose lexical form MUST be a well-formed `xsd:date` lexical form
+- `DateFieldSpec` with `dateValueType: "year"` MUST use `YearValue`, whose lexical form MUST match the pattern `YYYY` (a four-digit Gregorian year)
+- `DateFieldSpec` with `dateValueType: "yearMonth"` MUST use `YearMonthValue`, whose lexical form MUST match the pattern `YYYY-MM` (with month in `01`–`12`)
+- `DateFieldSpec` with `dateValueType: "fullDate"` MUST use `FullDateValue`, whose lexical form MUST be a well-formed `xsd:date` lexical form (`YYYY-MM-DD` with optional zone offset)
+- `DateFieldSpec.defaultValue`, if present, MUST carry a `DateValue` arm consistent with `dateValueType` — `dateValueType: "year"` admits only `YearValue`, `dateValueType: "yearMonth"` admits only `YearMonthValue`, `dateValueType: "fullDate"` admits only `FullDateValue`. The same constraint applies to `EmbeddedDateField.defaultValue`.
 
 For time values:
 
@@ -137,10 +174,10 @@ For enum values:
 
 - A `FieldValue` for a `SingleValuedEnumFieldSpec` MUST contain exactly one `EnumValue`
 - A `FieldValue` for a `MultiValuedEnumFieldSpec` MUST contain one or more `EnumValue` constructs (subject to the `Cardinality` of the embedding)
-- Each `EnumValue.value` MUST equal the canonical `Token` of one of the referenced spec's `PermissibleValue` entries
+- Each `EnumValue.value` (a `Token`) MUST equal the canonical `Token` of one of the referenced spec's `PermissibleValue` entries
 - The `Token` strings of an `EnumFieldSpec`'s `PermissibleValue+` MUST be unique within that spec
-- `SingleValuedEnumFieldSpec.defaultValue`, if present, MUST equal the `Token` of one of its `PermissibleValue` entries
-- `MultiValuedEnumFieldSpec.defaultValues`, if present, MUST be a (possibly empty) list of `Token` values each equal to the `Token` of one of its `PermissibleValue` entries; the list MUST NOT contain duplicates
+- `SingleValuedEnumFieldSpec.defaultValue`, if present, MUST be an `EnumValue` whose `value` equals the `Token` of one of its `PermissibleValue` entries
+- `MultiValuedEnumFieldSpec.defaultValues`, if present, MUST be a (possibly empty) list of `EnumValue` constructs each whose `value` equals the `Token` of one of its `PermissibleValue` entries; the list MUST NOT contain duplicate `value` entries
 
 An `EnumValue` matches a `PermissibleValue` if and only if the value's `Token` string equals the permissible value's `Token` string (compared character by character).
 
@@ -165,16 +202,23 @@ For external authority values:
 
 For string-bearing values generally:
 
-- lexical forms SHOULD be in Unicode Normalization Form C
-- when present, language tags MUST be non-empty and well-formed according to BCP 47
+- lexical forms MUST be in Unicode Normalization Form C (per [`serialization.md` §4.5](serialization.md#45-string-values))
+- when present, language tags MUST conform to the `Bcp47Tag` lexical form (per [grammar.md](grammar.md#primitive-string-types) — RFC 5646)
 
-For embedding-level defaults:
+For default values (both layers):
 
-- `EmbeddedXxxField.defaultValue`, if present, MUST be the family-specific `Value` type as given in [grammar.md](grammar.md) §Defaults
-- a `defaultValue` MUST satisfy every well-formedness condition that a corresponding `FieldValue` would satisfy for the same `FieldSpec`
-- `EmbeddedSingleValuedEnumField.defaultValue`, if present, MUST be a single `EnumValue` whose `Token` equals the `Token` of one of the referenced spec's `PermissibleValue` entries
-- `EmbeddedMultiValuedEnumField.defaultValue`, if present, MUST be a (possibly empty) list of `EnumValue` constructs each whose `Token` equals the `Token` of one of the referenced spec's `PermissibleValue` entries; the list MUST NOT contain duplicates
-- when both an embedding-level `defaultValue` and a spec-level default are present, the embedding-level default takes precedence (parallel to `TextFieldSpec.defaultValue`)
+The model carries default values at two layers, and validation rules apply uniformly across the two:
+
+- A *field-level default* lives on the reusable `Field`'s `FieldSpec` (`XxxFieldSpec.defaultValue`), shared by every Template that embeds the field. Every concrete `XxxFieldSpec` except `AttributeValueFieldSpec` admits an optional default.
+- An *embedding-level default* lives on the `EmbeddedXxxField` inside a Template (`EmbeddedXxxField.defaultValue`), specific to that one embedding.
+
+The well-formedness conditions:
+
+- A default value, at either layer, MUST be the family-specific `Value` type as given in [grammar.md](grammar.md#defaults).
+- A default MUST satisfy every well-formedness condition that a corresponding `FieldValue` would satisfy for the same `FieldSpec` (length bounds, numeric bounds, datatype consistency, lexical-form constraints, and so on).
+- Enum defaults at either layer MUST be `EnumValue` constructs (single for `SingleValuedEnumField`/`Spec`, a possibly-empty list for `MultiValuedEnumField`/`Spec`) whose `value` equals the `Token` of one of the spec's `PermissibleValue` entries; the multi-valued list MUST NOT contain duplicate `value` entries.
+- When both a field-level and an embedding-level default are present for the same field, the embedding-level default takes precedence (see [grammar.md](grammar.md#defaults)).
+- `AttributeValueFieldSpec` and `EmbeddedAttributeValueField` carry no defaults at either layer.
 
 For multiplicity:
 
@@ -185,27 +229,24 @@ For multiplicity:
 
 ### Rendering Hint Compatibility
 
-Any rendering hint used by the model MUST be compatible with the associated `FieldSpec`.
+Any rendering hint used by the model MUST be compatible with the associated `FieldSpec`:
 
-`TextRenderingHint` MUST be used only with `TextFieldSpec`.
-
-`SingleValuedEnumRenderingHint` MUST be used only with `SingleValuedEnumFieldSpec`.
-
-`MultiValuedEnumRenderingHint` MUST be used only with `MultiValuedEnumFieldSpec`.
-
-`NumericRenderingHint` MUST be used only with `IntegerNumberFieldSpec` or `RealNumberFieldSpec`.
-
-`DateRenderingHint` MUST be used only with `DateFieldSpec`.
-
-`TimeRenderingHint` MUST be used only with `TimeFieldSpec`.
-
-`DateTimeRenderingHint` MUST be used only with `DateTimeFieldSpec`.
+| Rendering hint | Permitted on |
+|---|---|
+| `TextRenderingHint` | `TextFieldSpec` |
+| `SingleValuedEnumRenderingHint` | `SingleValuedEnumFieldSpec` |
+| `MultiValuedEnumRenderingHint` | `MultiValuedEnumFieldSpec` |
+| `BooleanRenderingHint` | `BooleanFieldSpec` |
+| `NumericRenderingHint` | `IntegerNumberFieldSpec`, `RealNumberFieldSpec` |
+| `DateRenderingHint` | `DateFieldSpec` |
+| `TimeRenderingHint` | `TimeFieldSpec` |
+| `DateTimeRenderingHint` | `DateTimeFieldSpec` |
 
 ### Controlled Term Value Structure
 
 If a value conforms to `ControlledTermFieldSpec`, the value MUST include a term identifier and SHOULD include a human-readable label.
 
-An `EmbeddedControlledTermField.defaultValue`, if present, MUST be a `ControlledTermValue` whose `TermIri` identifies a term drawn from one of the declared `ControlledTermSource` entries of the referenced `ControlledTermFieldSpec`.
+A `ControlledTermFieldSpec.defaultValue` or `EmbeddedControlledTermField.defaultValue`, if present, SHOULD identify a term drawn from one of the declared `ControlledTermSource` entries of the referenced `ControlledTermFieldSpec`. Verifying source membership requires resolving the `TermIri` against an external ontology and is outside the scope of the canonical algorithm; see [Out of Scope](#out-of-scope).
 
 ## Canonical Validation Algorithm
 
@@ -246,10 +287,11 @@ Entry point for schema validation.
 
 Applies the [Versioning](#versioning) rules.
 
-1. Let `v` = `M.versioning_metadata.version`. Verify `v` is a well-formed Semantic Versioning 2.0.0 string.
+1. Let `v` = `M.versioning_metadata.version`. Verify `v` conforms to the `SemanticVersion` lexical form (Semantic Versioning 2.0.0).
 2. Let `s` = `M.versioning_metadata.status`. Verify `s ∈ { draft, published }`.
+3. If both `M.versioning_metadata.previous_version` and `M.versioning_metadata.derived_from` are present: verify they do not carry the same IRI value.
 
-When invoked with an `ArtifactMetadata` value (e.g. a `PresentationComponent`'s metadata), step 1 and step 2 are skipped: `ArtifactMetadata` does not carry `SchemaArtifactVersioning`.
+When invoked with an `ArtifactMetadata` value (e.g. a `PresentationComponent`'s metadata), all steps are skipped: `ArtifactMetadata` does not carry `SchemaArtifactVersioning`.
 
 ---
 
@@ -257,7 +299,7 @@ When invoked with an `ArtifactMetadata` value (e.g. a `PresentationComponent`'s 
 
 Applies the [Versioning](#versioning) rules to the artifact-level `ModelVersion` carried directly by every concrete `Artifact`.
 
-1. Verify `mv` is a well-formed Semantic Versioning 2.0.0 string.
+1. Verify `mv` conforms to the `SemanticVersion` lexical form (Semantic Versioning 2.0.0).
 
 ---
 
@@ -266,7 +308,7 @@ Applies the [Versioning](#versioning) rules to the artifact-level `ModelVersion`
 Applies the [EmbeddedArtifactKey Uniqueness](#embeddedartifactkey-uniqueness) rules.
 
 1. Let `keys` = the sequence of `EmbeddedArtifactKey` values across all `EmbeddedArtifact` constructs in `T`.
-2. For each key `k` in `keys`: verify `k` matches the pattern `[A-Za-z][A-Za-z0-9_-]*`.
+2. For each key `k` in `keys`: verify `k` conforms to the `AsciiIdentifier` lexical form (regex `^[A-Za-z][A-Za-z0-9_-]*$`).
 3. Verify all values in `keys` are distinct: for each pair `(k₁, k₂)` where `k₁ ≠ k₂` as positions but `k₁ = k₂` as values, report a duplicate-key error. Key uniqueness is scoped to `T`; the same key may appear in a nested template without conflict.
 
 ---
@@ -354,10 +396,10 @@ Dispatch on the kind of `FT`:
 2. Verify all values in `tokens` are distinct: report a duplicate-token error for any pair sharing the same token string.
 3. For each `pv` in `FT.permissible_values`: verify `pv.value` is a non-empty Unicode string.
 4. For each `pv` in `FT.permissible_values`, for each `m` in `pv.meanings`: verify `m.iri` is a syntactically valid IRI.
-5. If `FT` is a `SingleValuedEnumFieldSpec` and `FT.default_value` is present: verify `FT.default_value` equals one of the entries in `tokens`.
+5. If `FT` is a `SingleValuedEnumFieldSpec` and `FT.default_value` is present: verify `FT.default_value` is an `EnumValue` and that `FT.default_value.value ∈ tokens`.
 6. If `FT` is a `MultiValuedEnumFieldSpec` and `FT.default_values` is present:
-   1. Verify each entry equals one of the entries in `tokens`.
-   2. Verify all entries in `FT.default_values` are distinct.
+   1. Verify each entry is an `EnumValue` and that its `value ∈ tokens`.
+   2. Verify all entries' `value` strings are distinct.
 
 ---
 
@@ -370,7 +412,7 @@ Let `FT` = the `FieldSpec` of the `Field` referenced by `E`.
 1. Verify `D` is of the family-specific `Value` type for `FT`: `TextValue` for `TextFieldSpec`, `IntegerNumberValue` for `IntegerNumberFieldSpec`, `RealNumberValue` for `RealNumberFieldSpec`, `BooleanValue` for `BooleanFieldSpec`, `DateValue` for `DateFieldSpec`, `TimeValue` for `TimeFieldSpec`, `DateTimeValue` for `DateTimeFieldSpec`, `ControlledTermValue` for `ControlledTermFieldSpec`, `EnumValue` for `SingleValuedEnumFieldSpec`, a sequence of `EnumValue` for `MultiValuedEnumFieldSpec`, `LinkValue` for `LinkFieldSpec`, `EmailValue` for `EmailFieldSpec`, `PhoneNumberValue` for `PhoneNumberFieldSpec`, and the corresponding external-authority `Value` types for the external-authority field specs. `AttributeValueFieldSpec` does not admit a default value.
 2. Apply the family-specific `validate_xxx_value(D, FT)` procedure to `D`. The default value MUST satisfy every constraint that a `FieldValue` carrying the same `Value` would satisfy.
 3. If `E` is an `EmbeddedSingleValuedEnumField`: verify `D` is a single `EnumValue` (not a sequence).
-4. If `E` is an `EmbeddedMultiValuedEnumField`: verify `D` is a (possibly empty) sequence of `EnumValue` constructs and that no two entries share the same `Token` value.
+4. If `E` is an `EmbeddedMultiValuedEnumField`: verify `D` is a (possibly empty) sequence of `EnumValue` constructs and that no two entries share the same `value`.
 
 ---
 
@@ -487,15 +529,15 @@ Dispatch on the kind of `FT`:
 2. If `FT.min_length` is present: verify `len(s) ≥ FT.min_length`.
 3. If `FT.max_length` is present: verify `len(s) ≤ FT.max_length`.
 4. If `FT.validation_regex` is present: verify `s` matches `FT.validation_regex`.
-5. If `V.lang` is present: verify it is non-empty and well-formed per BCP 47.
+5. If `V.lang` is present: verify it conforms to the `Bcp47Tag` lexical form (RFC 5646).
 
 ---
 
 ##### `validate_integer_number_value(V: IntegerNumberValue, FT: IntegerNumberFieldSpec)`
 
-1. Verify `V.value` is a base-10 integer lexical form. Let `n` = its integer value.
-2. If `FT.min_value` is present: verify `n ≥ FT.min_value`.
-3. If `FT.max_value` is present: verify `n ≤ FT.max_value`.
+1. Verify `V.value` conforms to the `IntegerLexicalForm` (regex `^-?(0|[1-9][0-9]*)$`). Let `n` = its integer value.
+2. If `FT.min_value` is present: verify `n ≥ FT.min_value.value` (compared as integers).
+3. If `FT.max_value` is present: verify `n ≤ FT.max_value.value` (compared as integers).
 
 ---
 
@@ -503,8 +545,8 @@ Dispatch on the kind of `FT`:
 
 1. Verify `V.datatype = FT.datatype` (one of `decimal`, `float`, `double`).
 2. Verify `V.value` is a well-formed lexical form for that datatype. Let `n` = its numeric value.
-3. If `FT.min_value` is present: verify `n ≥ FT.min_value`.
-4. If `FT.max_value` is present: verify `n ≤ FT.max_value`.
+3. If `FT.min_value` is present: verify `n ≥ FT.min_value.value` (compared as numbers under `FT.datatype`'s ordering).
+4. If `FT.max_value` is present: verify `n ≤ FT.max_value.value` (compared as numbers under `FT.datatype`'s ordering).
 
 ---
 
@@ -574,12 +616,18 @@ Note: validation of `V.term_iri` against `FT.controlled_term_sources` requires a
 
 ##### `validate_external_authority_value(V: ExternalAuthorityValue, FT: ExternalAuthorityFieldSpec)`
 
-1. If `FT` is `OrcidFieldSpec`: verify `V` contains an `OrcidIri` whose lexical form matches `https://orcid\.org/\d{4}-\d{4}-\d{4}-\d{3}[0-9X]`.
-2. If `FT` is `RorFieldSpec`: verify `V` contains a `RorIri` whose lexical form matches `https://ror\.org/0[a-hj-km-np-tv-z0-9]{6}[0-9]{2}`.
-3. If `FT` is `DoiFieldSpec`: verify `V` contains a `DoiIri` whose lexical form matches `https://doi\.org/10\.\d{4,9}/.+`.
-4. If `FT` is `PubMedIdFieldSpec`: verify `V` contains a `PubMedIri` whose lexical form matches `https://pubmed\.ncbi\.nlm\.nih\.gov/\d+`.
-5. If `FT` is `RridFieldSpec`: verify `V` contains an `RridIri` whose lexical form matches `https://identifiers\.org/RRID:[A-Z]+_\d+`.
-6. If `FT` is `NihGrantIdFieldSpec`: verify `V` contains a `NihGrantIri`. No pattern check is applied; see [Out of Scope](#out-of-scope).
+Each external-authority `Value` carries a typed IRI specialised for its authority. The lexical patterns below are recommended (suitable for syntactic conformance checking) but are not structurally normative beyond `Iri` well-formedness; binding-level validators MAY apply stricter checks.
+
+| Field spec | Required IRI | Recommended pattern |
+|---|---|---|
+| `OrcidFieldSpec` | `OrcidIri` | `https://orcid\.org/\d{4}-\d{4}-\d{4}-\d{3}[0-9X]` |
+| `RorFieldSpec` | `RorIri` | `https://ror\.org/0[a-hj-km-np-tv-z0-9]{6}[0-9]{2}` |
+| `DoiFieldSpec` | `DoiIri` | `https://doi\.org/10\.\d{4,9}/.+` |
+| `PubMedIdFieldSpec` | `PubMedIri` | `https://pubmed\.ncbi\.nlm\.nih\.gov/\d+` |
+| `RridFieldSpec` | `RridIri` | `https://identifiers\.org/RRID:[A-Z]+_\d+` |
+| `NihGrantIdFieldSpec` | `NihGrantIri` | (see [Out of Scope](#out-of-scope)) |
+
+In every case the procedure is: verify `V` is the corresponding `XxxValue` and that its `iri` slot is present and is a well-formed `Iri` per [`grammar.md` §Primitive String Types](grammar.md#primitive-string-types). Implementations MAY additionally check the recommended pattern.
 
 ---
 
@@ -620,10 +668,6 @@ The following checks are outside the scope of the canonical algorithm and are no
 - **`ControlledTermSource` membership** — verifying that a `ControlledTermValue`'s `TermIri` is drawn from a declared ontology, branch, class set, or value set requires an external ontology resolver and is not defined here.
 - **NIH Grant ID pattern** — the lexical pattern for `NihGrantIri` is currently unspecified.
 - **`AttributeValueField` name validation** — attribute names are not fixed at schema definition time and cannot be structurally validated against the schema.
-
-## Validation Scope
-
-This specification defines two conformance phases: schema validation (Phase 1) and instance validation (Phase 2), as described in the Canonical Validation Algorithm section above.
 
 ## Open Questions
 
