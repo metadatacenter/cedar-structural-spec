@@ -215,16 +215,42 @@ pre.ebnf code {
 
 /* ---------- Prose code-span colouring (mdbook-prose-highlight) ---------- */
 
-/* When a property-access chain renders as adjacent <code> elements
-   (variable head + dotted-accessor tail), each piece gets the default
-   code-span padding, leaving a visible gap. Tighten the padding for
-   these classes so the parts read as one continuous identifier. */
+/* When a property-access chain or subroutine signature renders as
+   adjacent <code> elements, each piece gets the default code-span
+   padding, leaving a visible gap. Tighten the padding for these
+   classes so the parts read as one continuous identifier. */
 .content code.ph-prod,
 .content code.ph-var,
 .content code.ph-prop,
 .content code.ph-string,
-.content code.ph-keyword {
+.content code.ph-keyword,
+.content code.ph-fn,
+.content code.ph-punct {
   padding: 0.05rem 0.15rem;
+}
+
+/* Subroutine signatures in headings: the function name keeps the
+   heading's teal accent; punctuation (parens, commas, colons)
+   reads as quiet structural glue. */
+.content code.ph-fn {
+  color: #0d6f6f;
+  background: transparent;
+  font-weight: 600;
+}
+.content code.ph-punct {
+  color: #888;
+  background: transparent;
+  padding: 0;
+}
+.navy .content code.ph-fn,
+.coal .content code.ph-fn,
+.ayu .content code.ph-fn {
+  color: #6dd3d3;
+}
+.navy .content code.ph-punct,
+.coal .content code.ph-punct,
+.ayu .content code.ph-punct {
+  color: #aaa;
 }
 
 /* Production names — UpperCamelCase identifiers from the abstract grammar.

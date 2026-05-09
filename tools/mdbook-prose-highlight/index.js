@@ -199,10 +199,12 @@ function rewriteChapter(ch, productions) {
 // We match a backtick span and inspect the preceding/following
 // characters to decide whether to leave it alone.
 function rewriteLine(line, productions, extended) {
-  // Skip lines that are pure heading anchors like `## Heading {#id}`.
-  // Heading content can include backtick spans we should NOT classify
-  // (they're part of the heading text); leave headings alone.
-  if (/^#{1,6}\s/.test(line)) return line;
+  // Heading lines: leave most alone, but specialise subroutine
+  // headings that match `name(arg: Type, ...)` so the parameter
+  // names and types pick up the same colours used in the body.
+  if (/^#{1,6}\s/.test(line)) {
+    return rewriteHeading(line, productions, extended);
+  }
 
   let out = '';
   let i = 0;
@@ -266,6 +268,67 @@ function rewriteLine(line, productions, extended) {
 
 function wrapPlain(cls, content) {
   return `<code class="${cls}">${escapeHtml(content)}</code>`;
+}
+
+// Heading-line specialisation. Subroutine headings in
+// `validation.md` look like:
+//
+//     ##### `validate_xxx(FT: TextFieldSpec)` {#fn-validate-xxx}
+//
+// where the whole `name(arg1: Type1, arg2: Type2)` is in a single
+// backtick span. We want to colour the argument names like local
+// variables and the type names like productions, matching the
+// colouring used in the algorithm body. Anything else in headings
+// is left untouched (heading boxes already provide visual structure).
+const SUBROUTINE_HEADING_RE = /^(#{1,6}\s+)`([a-z_][a-z_0-9]*\([^`]*\))`(\s*\{#[^}]+\})?\s*$/;
+const SUBROUTINE_BODY_RE = /^([a-z_][a-z_0-9]*)\(([^)]*)\)$/;
+
+function rewriteHeading(line, productions, extended) {
+  if (!extended) return line;
+  const m = SUBROUTINE_HEADING_RE.exec(line);
+  if (!m) return line;
+  const prefix = m[1];                  // "##### "
+  const inner = m[2];                   // "validate_xxx(FT: TextFieldSpec)"
+  const anchor = m[3] || '';            // " {#fn-validate-xxx}"
+  const bodyMatch = SUBROUTINE_BODY_RE.exec(inner);
+  if (!bodyMatch) return line;
+  const fnName = bodyMatch[1];
+  const argList = bodyMatch[2].trim();
+  const renderedArgs = renderArgList(argList, productions);
+  // Emit the function name as a plain code span (will pick up the
+  // heading-box styling via the heading anchor), and the parens with
+  // each argument coloured.
+  const html =
+    `<code class="ph-fn">${escapeHtml(fnName)}</code>` +
+    `<code class="ph-punct">(</code>` +
+    renderedArgs +
+    `<code class="ph-punct">)</code>`;
+  return `${prefix}${html}${anchor}`;
+}
+
+function renderArgList(argList, productions) {
+  if (argList === '') return '';
+  // Split on commas; each piece is `name: Type` or just `name`.
+  const pieces = argList.split(',').map((p) => p.trim());
+  const rendered = pieces.map((p) => renderOneArg(p, productions));
+  return rendered.join(`<code class="ph-punct">, </code>`);
+}
+
+function renderOneArg(piece, productions) {
+  // `name: Type`
+  const m = /^([A-Za-z_][A-Za-z0-9_]*)\s*:\s*([A-Za-z_][A-Za-z0-9_]*)$/.exec(piece);
+  if (m) {
+    const argName = m[1];
+    const typeName = m[2];
+    const typeCls = productions.has(typeName) ? 'ph-prod' : 'ph-var';
+    return (
+      `<code class="ph-var">${escapeHtml(argName)}</code>` +
+      `<code class="ph-punct">: </code>` +
+      `<code class="${typeCls}">${escapeHtml(typeName)}</code>`
+    );
+  }
+  // Just `name` (rare).
+  return `<code class="ph-var">${escapeHtml(piece)}</code>`;
 }
 
 // Render a property-access chain so the leading identifier picks up
