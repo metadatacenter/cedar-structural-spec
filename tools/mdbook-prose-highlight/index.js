@@ -238,30 +238,59 @@ function rewriteLine(line, productions, extended) {
     // production name is preferred over the var-fallback for an
     // UpperCamelCase identifier — except productions only match if
     // the global productions set knows the name).
-    let cls = null;
+    let rendered = null;
     if (!insideLinkText) {
       const trimmed = inner.trim();
       if (extended && STRING_RE.test(trimmed)) {
-        cls = 'ph-string';
+        rendered = wrapPlain('ph-string', inner);
       } else if (extended && PROP_RE.test(trimmed)) {
-        cls = 'ph-prop';
+        rendered = renderPropertyChain(inner, productions);
       } else if (extended && KEYWORDS.has(trimmed)) {
-        cls = 'ph-keyword';
+        rendered = wrapPlain('ph-keyword', inner);
       } else if (productions.has(trimmed)) {
-        cls = 'ph-prod';
+        rendered = wrapPlain('ph-prod', inner);
       } else if (extended && VAR_RE.test(trimmed)) {
-        cls = 'ph-var';
+        rendered = wrapPlain('ph-var', inner);
       }
     }
 
-    if (cls) {
-      out += `<code class="${cls}">${escapeHtml(inner)}</code>`;
+    if (rendered !== null) {
+      out += rendered;
     } else {
       out += line.slice(i, closeIdx + runLen);
     }
     i = closeIdx + runLen;
   }
   return out;
+}
+
+function wrapPlain(cls, content) {
+  return `<code class="${cls}">${escapeHtml(content)}</code>`;
+}
+
+// Render a property-access chain so the leading identifier picks up
+// its own classification (production-name if known, else variable),
+// and the dotted-accessor tail keeps the property colour. The eye can
+// then track the leading binding (`E` in `E.artifactRef`) the same
+// way it tracks a standalone `E`.
+//
+// Examples:
+//   E.artifactRef                 -> [E:var][.artifactRef:prop]
+//   FT.permissible_values         -> [FT:var][.permissible_values:prop]
+//   M.versioning_metadata.status  -> [M:var][.versioning_metadata.status:prop]
+//   ControlledTermFieldSpec.defaultValue
+//                                 -> [ControlledTermFieldSpec:prod][.defaultValue:prop]
+//                                    (or [..:var] if not a known production)
+function renderPropertyChain(content, productions) {
+  const m = /^([A-Za-z_][A-Za-z0-9_]*)(\..+)$/.exec(content);
+  if (!m) return wrapPlain('ph-prop', content);  // shouldn't happen
+  const head = m[1];
+  const tail = m[2];
+  const headCls = productions.has(head) ? 'ph-prod' : 'ph-var';
+  return (
+    `<code class="${headCls}">${escapeHtml(head)}</code>` +
+    `<code class="ph-prop">${escapeHtml(tail)}</code>`
+  );
 }
 
 function escapeHtml(s) {

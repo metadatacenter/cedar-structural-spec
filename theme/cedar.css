@@ -215,6 +215,18 @@ pre.ebnf code {
 
 /* ---------- Prose code-span colouring (mdbook-prose-highlight) ---------- */
 
+/* When a property-access chain renders as adjacent <code> elements
+   (variable head + dotted-accessor tail), each piece gets the default
+   code-span padding, leaving a visible gap. Tighten the padding for
+   these classes so the parts read as one continuous identifier. */
+.content code.ph-prod,
+.content code.ph-var,
+.content code.ph-prop,
+.content code.ph-string,
+.content code.ph-keyword {
+  padding: 0.05rem 0.15rem;
+}
+
 /* Production names — UpperCamelCase identifiers from the abstract grammar.
    Subtle teal italic; readers can spot grammar references at a glance. */
 .content code.ph-prod {
