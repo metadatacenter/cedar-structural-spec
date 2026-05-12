@@ -955,8 +955,11 @@ TextFieldSpec ::: object {
   minLength?: MinLength
   maxLength?: MaxLength
   validationRegex?: ValidationRegex
+  langTagRequirement?: LangTagRequirement
   renderingHint?: TextRenderingHint
 }
+
+LangTagRequirement ::: "langTagRequired" | "langTagOptional" | "langTagForbidden"
   // defaultValue, when present, encodes as a tagged TextValue per
   // the kind rule (§1.5): `{ "kind": "TextValue", "value": ..., "lang"?: ... }`.
   // See §6.5 for default-value semantics across all field families.
@@ -2204,7 +2207,8 @@ the union of the inner `ArtifactMetadata` properties plus
 1. `[MinLength]` → `minLength?`
 2. `[MaxLength]` → `maxLength?`
 3. `[ValidationRegex]` → `validationRegex?`
-4. `[TextRenderingHint]` → `renderingHint?`
+4. `[LangTagRequirement]` → `langTagRequirement?`
+5. `[TextRenderingHint]` → `renderingHint?`
 
 **`IntegerNumberFieldSpec`** (`integer_number_field_spec`):
 0. `[IntegerNumberValue]` → `defaultValue?`

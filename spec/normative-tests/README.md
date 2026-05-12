@@ -22,7 +22,8 @@ normative-tests/
 │   ├── 01-02   mega-fixtures (Template + Instance, 5 families)
 │   ├── 03-48   per-family Template + Instance pairs (the embedding surface)
 │   ├── 49-72   per-family Field artifacts (the artifact + FieldSpec surface)
-│   └── 73-77   presentation components
+│   ├── 73-77   presentation components
+│   └── 78-83   LangTagRequirement (template + instance + field per arm)
 └── invalid/
     ├── 01-unknown-kind/                                # wireShape (§9.5)
     ├── 02-fieldid-family-mismatch-and-duplicate-key/   # structural (×2)
@@ -42,7 +43,9 @@ normative-tests/
     ├── 16-date-field-default-arm-mismatch/             # structural (cross-slot consistency)
     ├── 17-previous-version-equals-derived-from/        # structural (cross-slot exclusion)
     ├── 18-invalid-semantic-version/                    # lexical (SemanticVersion)
-    └── 19-invalid-iso8601-datetime/                    # lexical (Iso8601DateTimeLexicalForm)
+    ├── 19-invalid-iso8601-datetime/                    # lexical (Iso8601DateTimeLexicalForm)
+    ├── 20-text-lang-tag-required-missing/              # structural (LangTagRequirement)
+    └── 21-text-lang-tag-forbidden-present/             # structural (LangTagRequirement)
         # each subdirectory contains input.json + expected-errors.json
 ```
 
@@ -114,7 +117,14 @@ this group:
 components carry `ArtifactMetadata` (not `SchemaArtifactMetadata`),
 and the metadata fixtures here exercise that distinction.
 
-A binding that round-trips every fixture in groups 1–4 has
+**`78`–`83` `LangTagRequirement`.** Two Template + Instance pairs
+exercising `langTagRequired` (a tagged title) and `langTagForbidden`
+(an untagged slug), plus the corresponding standalone `TextField`
+artifacts. The `langTagOptional` arm is the default behaviour and is
+exercised throughout the other valid fixtures, so no dedicated
+fixtures for it are needed.
+
+A binding that round-trips every fixture in groups 1–5 has
 demonstrated correct mapping for every reachable wire production
 this specification defines.
 
