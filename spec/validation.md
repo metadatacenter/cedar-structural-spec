@@ -136,6 +136,9 @@ For text values:
 - `TextFieldSpec.defaultValue`, if present, MUST satisfy any defined `MinLength`, `MaxLength`, and `ValidationRegex`
 - `TextValue` lexical forms SHOULD be in Unicode Normalization Form C
 - when present, `TextValue.lang` MUST be non-empty and well-formed according to BCP 47
+- if `LangTagRequirement` is `"langTagRequired"`, each `TextValue` MUST carry a `lang` slot
+- if `LangTagRequirement` is `"langTagForbidden"`, each `TextValue` MUST NOT carry a `lang` slot
+- `TextFieldSpec.defaultValue`, if present, MUST satisfy any defined `LangTagRequirement`
 
 For integer-number values:
 
@@ -461,6 +464,8 @@ Dispatch on the kind of `fieldSpec`:
 
 1. If both `fieldSpec.min_length` and `fieldSpec.max_length` are present: verify `fieldSpec.min_length ≤ fieldSpec.max_length`.
    *On failure:* `structural` at `<fieldSpec>/minLength`, production `TextFieldSpec`, message `"minLength must not exceed maxLength"`.
+2. If `fieldSpec.lang_tag_requirement` is present: verify it is one of `"langTagRequired"`, `"langTagOptional"`, `"langTagForbidden"`.
+   *On failure:* `wireShape` at `<fieldSpec>/langTagRequirement`, production `LangTagRequirement`, message `"unknown LangTagRequirement value"`.
 
 ---
 
@@ -642,6 +647,10 @@ Dispatch on the kind of `fieldSpec`:
    *On failure:* `structural` at `<value>/value`, production `TextValue`, message `"value does not match TextFieldSpec.validationRegex"`.
 5. If `value.lang` is present: verify it conforms to the `Bcp47Tag` lexical form (RFC 5646).
    *On failure:* `lexical` at `<value>/lang`, production `TextValue`, message `"lang is not a well-formed BCP 47 tag"`.
+6. If `fieldSpec.lang_tag_requirement = "langTagRequired"`: verify `value.lang` is present.
+   *On failure:* `structural` at `<value>/lang`, production `TextValue`, message `"lang tag missing; TextFieldSpec.langTagRequirement is 'langTagRequired'"`.
+7. If `fieldSpec.lang_tag_requirement = "langTagForbidden"`: verify `value.lang` is absent.
+   *On failure:* `structural` at `<value>/lang`, production `TextValue`, message `"lang tag present; TextFieldSpec.langTagRequirement is 'langTagForbidden'"`.
 
 ---
 

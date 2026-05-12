@@ -1,0 +1,24 @@
+{
+  "kind": "TextField",
+  "id": "https://example.org/fields/title-lang-required",
+  "modelVersion": "2.0.0",
+  "metadata": {
+    "name": [{ "value": "Title (lang-tag required)", "lang": "en" }],
+    "lifecycle": {
+      "createdOn": "2026-01-15T09:30:00Z",
+      "createdBy": "https://example.org/users/alice",
+      "modifiedOn": "2026-01-15T09:30:00Z",
+      "modifiedBy": "https://example.org/users/alice"
+    },
+    "versioning": { "version": "1.0.0", "status": "draft" }
+  },
+  "fieldSpec": {
+    "kind": "TextFieldSpec",
+    "defaultValue": {
+      "kind": "TextValue",
+      "value": "Default title",
+      "lang": "en"
+    },
+    "langTagRequirement": "langTagRequired"
+  }
+}

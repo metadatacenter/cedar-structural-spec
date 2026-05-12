@@ -36,7 +36,7 @@ This specification defines:
 - [rdf-projection.md](rdf-projection.md) — the derived projection from CEDAR `Value` instances to RDF.
 - [index-of-productions.md](index-of-productions.md) — auto-generated A–Z index of every production in the specification.
 
-A cross-language [conformance test suite](normative-tests/README.md) accompanies the specification: 96 fixtures (77 valid round-trip cases, 19 invalid cases with expected-error reports) embedded into `serialization.md` §8 and intended as a binding-acceptance contract.
+A cross-language [conformance test suite](normative-tests/README.md) accompanies the specification: 104 fixtures (83 valid round-trip cases, 21 invalid cases with expected-error reports) embedded into `serialization.md` §8 and intended as a binding-acceptance contract.
 
 ## Core Design Principles
 

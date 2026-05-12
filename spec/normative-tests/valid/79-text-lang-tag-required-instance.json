@@ -1,0 +1,28 @@
+{
+  "kind": "TemplateInstance",
+  "id": "https://example.org/instances/text-lang-tag-required-1",
+  "modelVersion": "2.0.0",
+  "metadata": {
+    "name": [{ "value": "Test instance", "lang": "en" }],
+    "lifecycle": {
+      "createdOn": "2026-04-15T10:22:00Z",
+      "createdBy": "https://example.org/users/alice",
+      "modifiedOn": "2026-04-15T10:22:00Z",
+      "modifiedBy": "https://example.org/users/alice"
+    }
+  },
+  "templateRef": "https://example.org/templates/text-lang-tag-required",
+  "values": [
+    {
+      "kind": "FieldValue",
+      "key": "title",
+      "values": [
+        {
+          "kind": "TextValue",
+          "value": "A worked example",
+          "lang": "en"
+        }
+      ]
+    }
+  ]
+}

@@ -1483,8 +1483,13 @@ TextFieldSpec ::= text_field_spec(
                     [MinLength]
                     [MaxLength]
                     [ValidationRegex]
+                    [LangTagRequirement]
                     [TextRenderingHint]
                   )
+
+LangTagRequirement ::= "langTagRequired"
+                     | "langTagOptional"
+                     | "langTagForbidden"
 
 IntegerNumberFieldSpec ::= integer_number_field_spec(
                              [IntegerNumberValue]
@@ -1859,7 +1864,17 @@ This specification draws a strict distinction between semantic structure and pre
 
 Accordingly, `TextFieldSpec` is a single semantic field spec whose single-line and multi-line display forms are represented by `TextRenderingHint`.
 
-A `TextFieldSpec` MAY additionally define a default text value, minimum length, maximum length, and validating regular expression.
+A `TextFieldSpec` MAY additionally define a default text value, minimum length, maximum length, validating regular expression, and a `LangTagRequirement` constraining the presence of the `lang` slot on conforming `TextValue` instances.
+
+`LangTagRequirement` identifies whether the `lang` slot of a `TextValue` is required, optional, or forbidden by the field spec:
+
+- `"langTagRequired"` — every `TextValue` admitted by this field MUST carry a `lang` slot with a well-formed BCP 47 tag. Suitable for fields whose values are natural-language text that authors expect to be language-tagged (e.g., titles, abstracts, captions).
+- `"langTagOptional"` — every `TextValue` admitted MAY carry a `lang` slot. This matches the default behaviour when `LangTagRequirement` is absent and is provided for explicitness.
+- `"langTagForbidden"` — every `TextValue` admitted MUST NOT carry a `lang` slot. Suitable for fields whose values are technical identifiers, slugs, query fragments, or other strings for which a natural-language tag has no meaning.
+
+When `LangTagRequirement` is absent from a `TextFieldSpec`, the constraint behaves as `"langTagOptional"` (the historical default).
+
+The `LangTagRequirement` constraint applies to each `TextValue` individually: in a multi-valued field, every value MUST satisfy the constraint independently. The constraint also applies to the field-spec-level `defaultValue` (when present) and to any embedding-level `defaultValue` carried by an `EmbeddedTextField`.
 
 Similarly, `EnumFieldSpec` distinguishes `SingleValuedEnumFieldSpec` from `MultiValuedEnumFieldSpec` semantically, while the rendering hint determines whether the UI uses radio buttons, dropdown, checkboxes, or multi-select presentation. Typed rendering hints make incompatible combinations structurally invalid.
 

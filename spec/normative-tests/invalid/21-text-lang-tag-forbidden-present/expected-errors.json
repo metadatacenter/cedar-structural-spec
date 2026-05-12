@@ -1,0 +1,8 @@
+[
+  {
+    "category": "structural",
+    "path": "/fieldSpec/defaultValue/lang",
+    "production": "TextValue",
+    "messageRegex": "lang tag present|langTagForbidden|lang.*forbidden"
+  }
+]

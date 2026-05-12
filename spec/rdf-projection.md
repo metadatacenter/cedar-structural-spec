@@ -40,6 +40,8 @@ Each `Value` variant projects to a single RDF term. The "RDF term" column gives 
 
 For `RealNumberValue`, the `<datatype>` placeholder is the lexical name of the carried `RealNumberDatatypeKind` (`decimal`, `float`, or `double`), expanded against `xsd:`.
 
+When the originating `TextFieldSpec` carries `LangTagRequirement`, the projection is pinned to a single RDF literal shape: `"langTagRequired"` always projects to `rdf:langString` literals; `"langTagForbidden"` always projects to `xsd:string` literals. `"langTagOptional"` (the default) admits either shape and projects each `TextValue` according to whether its `lang` slot is present.
+
 ### Temporal values
 
 | `Value` variant | RDF term |
