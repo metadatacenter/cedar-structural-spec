@@ -3,22 +3,62 @@
   "id": "https://example.org/fields/severity-1",
   "modelVersion": "2.0.0",
   "metadata": {
-    "name": [{ "value": "Severity", "lang": "en" }],
+    "preferredLabel": [
+      {
+        "value": "Severity",
+        "lang": "en"
+      }
+    ],
     "lifecycle": {
       "createdOn": "2026-01-15T09:30:00Z",
       "createdBy": "https://example.org/u",
       "modifiedOn": "2026-01-15T09:30:00Z",
       "modifiedBy": "https://example.org/u"
     },
-    "versioning": { "version": "1.0.0", "status": "draft" }
+    "versioning": {
+      "version": "1.0.0",
+      "status": "draft"
+    }
   },
   "fieldSpec": {
     "kind": "SingleValuedEnumFieldSpec",
     "permissibleValues": [
-      { "value": "mild", "label": [{ "value": "Mild", "lang": "en" }] },
-      { "value": "moderate", "label": [{ "value": "Moderate", "lang": "en" }] },
-      { "value": "moderate", "label": [{ "value": "Mid", "lang": "en" }] },
-      { "value": "severe", "label": [{ "value": "Severe", "lang": "en" }] }
+      {
+        "value": "mild",
+        "label": [
+          {
+            "value": "Mild",
+            "lang": "en"
+          }
+        ]
+      },
+      {
+        "value": "moderate",
+        "label": [
+          {
+            "value": "Moderate",
+            "lang": "en"
+          }
+        ]
+      },
+      {
+        "value": "moderate",
+        "label": [
+          {
+            "value": "Mid",
+            "lang": "en"
+          }
+        ]
+      },
+      {
+        "value": "severe",
+        "label": [
+          {
+            "value": "Severe",
+            "lang": "en"
+          }
+        ]
+      }
     ]
   }
 }

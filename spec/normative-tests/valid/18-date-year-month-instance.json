@@ -3,7 +3,7 @@
   "id": "https://example.org/instances/date-year-month-1",
   "modelVersion": "2.0.0",
   "metadata": {
-    "name": [
+    "preferredLabel": [
       {
         "value": "Test instance",
         "lang": "en"

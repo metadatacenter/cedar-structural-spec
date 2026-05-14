@@ -669,16 +669,14 @@ members of the same object — there is no `descriptiveMetadata`
 wrapper.
 
 ```
-Name ::: MultilingualString
 Description ::: MultilingualString
 Identifier ::: string
 AlternativeLabel ::: MultilingualString
 
 ArtifactMetadata ::: object {
-  name: Name
+  preferredLabel: PreferredLabel
   description?: Description
   identifier?: Identifier
-  preferredLabel?: PreferredLabel
   altLabels?: array<AlternativeLabel>
   lifecycle: LifecycleMetadata
   annotations?: array<Annotation>
@@ -687,7 +685,7 @@ ArtifactMetadata ::: object {
   // as an empty array in memory
   // annotations SHOULD be omitted from the wire when empty; it round-trips
   // as an empty array in memory
-  // the grammar's Name, Description, PreferredLabel, and AlternativeLabel
+  // the grammar's Description, PreferredLabel, and AlternativeLabel
   // productions are MultilingualString-typed wrappers that collapse on
   // the wire (§1.6); the type names appear here for parity with the
   // abstract grammar's component naming
@@ -709,10 +707,9 @@ For completeness, the full wire form:
 
 ```
 SchemaArtifactMetadata ::: object {
-  name: Name
+  preferredLabel: PreferredLabel
   description?: Description
   identifier?: Identifier
-  preferredLabel?: PreferredLabel
   altLabels?: array<AlternativeLabel>
   lifecycle: LifecycleMetadata
   annotations?: array<Annotation>
@@ -2071,13 +2068,12 @@ the union of the inner `ArtifactMetadata` properties plus
 1. `SchemaArtifactVersioning` → `versioning`
 
 **`ArtifactMetadata`** (`artifact_metadata`):
-0. `Name` → `name`
+0. `PreferredLabel` → `preferredLabel`
 1. `[Description]` → `description?`
 2. `[Identifier]` → `identifier?`
-3. `[PreferredLabel]` → `preferredLabel?`
-4. `AlternativeLabel*` → `altLabels?` (SHOULD-omitted when empty per §1.7 rule 4)
-5. `LifecycleMetadata` → `lifecycle`
-6. `Annotation*` → `annotations?` (SHOULD-omitted when empty)
+3. `AlternativeLabel*` → `altLabels?` (SHOULD-omitted when empty per §1.7 rule 4)
+4. `LifecycleMetadata` → `lifecycle`
+5. `Annotation*` → `annotations?` (SHOULD-omitted when empty)
 
 **`LifecycleMetadata`** (`lifecycle_metadata`):
 0. `CreatedOn` → `createdOn`

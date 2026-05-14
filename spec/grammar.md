@@ -796,10 +796,9 @@ SchemaArtifactMetadata ::= schema_artifact_metadata(
                            )
 
 ArtifactMetadata ::= artifact_metadata(
-                       Name
+                       PreferredLabel
                        [Description]
                        [Identifier]
-                       [PreferredLabel]
                        AlternativeLabel*
                        LifecycleMetadata
                        Annotation*
@@ -808,13 +807,9 @@ ArtifactMetadata ::= artifact_metadata(
 
 ### Descriptive Metadata
 
-The descriptive metadata of an artifact comprises a set of human-oriented properties carried directly by `ArtifactMetadata`. These properties support naming, explanatory text, and external or local identifiers used for cataloging. `Name` is the required user-supplied name of the artifact. `Description`, when present, is extended textual description explaining the artifact's purpose and content. `Identifier`, when present, is a user-specified external identifier intended for integration with institutional or external systems. `PreferredLabel`, when present, is the primary display label shown to end users — for fields, this is the question text presented in a rendered form. `AlternativeLabel`, when present, provides additional display labels for the artifact.
+The descriptive metadata of an artifact comprises a set of human-oriented properties carried directly by `ArtifactMetadata`. These properties support naming, explanatory text, and external or local identifiers used for cataloging. `PreferredLabel` is the required human-readable display label for the artifact — for fields, this is the question text presented in a rendered form; for templates, presentation components, and instances, it is the artifact's display title in catalogs and authoring UIs. `Description`, when present, is an extended textual explanation of the artifact's purpose and content, intended for catalog display. `Identifier`, when present, is a user-specified external identifier intended for integration with institutional or external systems. `AlternativeLabel`, when present, provides additional display labels for the artifact (synonyms, abbreviations, legacy labels carried forward from prior versions of the model).
 
 ```ebnf
-Name ::= name(
-           MultilingualString
-         )
-
 Description ::= description(
                   MultilingualString
                 )
@@ -824,9 +819,7 @@ Identifier ::= identifier(
                )
 ```
 
-`Name` and `Description` carry [`MultilingualString`](#multilingual-strings) values: human-readable text that may be presented in one or more natural languages. `Identifier` carries an arbitrary Unicode string value: it is a technical user-supplied key intended for integration with external systems and is not a human-display label, so it is not multilingual. `PreferredLabel` is defined in the [Controlled Term Value](#controlled-term-value) section; `AlternativeLabel` is defined in the [Label Override](#label-override) section.
-
-> **Note:** Confirm with the CEDAR team that `PreferredLabel` and `AlternativeLabel` belong on `ArtifactMetadata` for all artifact kinds rather than on a field-specific metadata structure. The v2.0.0 conceptual document (§4.1) describes these in the context of fields specifically; it is worth verifying whether templates, presentation components, and instances should carry them too.
+`Description` carries a [`MultilingualString`](#multilingual-strings) value: human-readable text that may be presented in one or more natural languages. `Identifier` carries an arbitrary Unicode string value: it is a technical user-supplied key intended for integration with external systems and is not a human-display label, so it is not multilingual. `PreferredLabel` is defined in the [Controlled Term Value](#controlled-term-value) section; `AlternativeLabel` is defined in the [Label Override](#label-override) section. Both are `MultilingualString`-valued.
 
 ### Lifecycle Metadata
 
@@ -1063,7 +1056,7 @@ MultilingualString ::= multilingual_string(
 
 The `'und'` (undetermined) BCP 47 subtag MAY be used to denote a `LangString` whose natural language is unspecified. Implementations MAY use `'und'` as the default tag when constructing a `MultilingualString` from a bare string with no language information.
 
-`MultilingualString` differs from a single language-tagged scalar value (such as `TextValue` with a `LanguageTag`) in that it carries an unweighted localization *set* — multiple language tags coexist for the same conceptual string at metadata positions such as `Template.header` or `ArtifactMetadata.name`.
+`MultilingualString` differs from a single language-tagged scalar value (such as `TextValue` with a `LanguageTag`) in that it carries an unweighted localization *set* — multiple language tags coexist for the same conceptual string at metadata positions such as `Template.header` or `ArtifactMetadata.preferredLabel`.
 
 ### Numeric Datatype Kind
 

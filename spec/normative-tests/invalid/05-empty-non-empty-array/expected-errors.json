@@ -1,7 +1,7 @@
 [
   {
     "category": "wireShape",
-    "path": "/metadata/name",
+    "path": "/metadata/preferredLabel",
     "production": "MultilingualString",
     "messageRegex": "(non-?empty|nonEmpty).*array|empty array|MUST.*non-?empty|at least one"
   }

@@ -3,7 +3,12 @@
   "id": "https://example.org/instances/i1",
   "modelVersion": "2.0.0",
   "metadata": {
-    "name": [{ "value": "x", "lang": "en" }],
+    "preferredLabel": [
+      {
+        "value": "x",
+        "lang": "en"
+      }
+    ],
     "lifecycle": {
       "createdOn": "2026-01-15T09:30:00Z",
       "createdBy": "https://example.org/u",
@@ -17,7 +22,10 @@
       "kind": "FieldValue",
       "key": "n",
       "values": [
-        { "kind": "IntegerNumberValue", "value": "007" }
+        {
+          "kind": "IntegerNumberValue",
+          "value": "007"
+        }
       ]
     }
   ]

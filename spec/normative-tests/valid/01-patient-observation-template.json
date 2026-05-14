@@ -3,7 +3,7 @@
   "id": "https://example.org/templates/patient-observation",
   "modelVersion": "2.0.0",
   "metadata": {
-    "name": [
+    "preferredLabel": [
       {
         "value": "Patient observation",
         "lang": "en"
@@ -16,12 +16,6 @@
     "description": [
       {
         "value": "A single observation made about a patient.",
-        "lang": "en"
-      }
-    ],
-    "preferredLabel": [
-      {
-        "value": "Observation",
         "lang": "en"
       }
     ],
