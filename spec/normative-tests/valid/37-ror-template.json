@@ -3,7 +3,7 @@
   "id": "https://example.org/templates/ror",
   "modelVersion": "2.0.0",
   "metadata": {
-    "name": [
+    "preferredLabel": [
       {
         "value": "Test",
         "lang": "en"

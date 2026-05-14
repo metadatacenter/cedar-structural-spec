@@ -3,7 +3,12 @@
   "id": "https://example.org/fields/note/v/1.1.0",
   "modelVersion": "2.0.0",
   "metadata": {
-    "name": [{ "value": "Note", "lang": "en" }],
+    "preferredLabel": [
+      {
+        "value": "Note",
+        "lang": "en"
+      }
+    ],
     "lifecycle": {
       "createdOn": "2026-01-15T09:30:00Z",
       "createdBy": "https://example.org/u",

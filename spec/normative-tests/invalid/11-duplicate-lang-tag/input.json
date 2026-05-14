@@ -3,9 +3,15 @@
   "id": "https://example.org/templates/x",
   "modelVersion": "2.0.0",
   "metadata": {
-    "name": [
-      { "value": "Hello", "lang": "en" },
-      { "value": "Greetings", "lang": "EN" }
+    "preferredLabel": [
+      {
+        "value": "Hello",
+        "lang": "en"
+      },
+      {
+        "value": "Greetings",
+        "lang": "EN"
+      }
     ],
     "lifecycle": {
       "createdOn": "2026-01-15T09:30:00Z",
@@ -13,7 +19,10 @@
       "modifiedOn": "2026-01-15T09:30:00Z",
       "modifiedBy": "https://example.org/u"
     },
-    "versioning": { "version": "1.0.0", "status": "draft" }
+    "versioning": {
+      "version": "1.0.0",
+      "status": "draft"
+    }
   },
   "members": []
 }

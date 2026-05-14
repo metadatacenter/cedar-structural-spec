@@ -130,7 +130,7 @@ encode_X(x: X) → JSON-kind
 
 **Accessor Notation**
 
-Dot notation is used on grammar constructs, e.g. `T.schema_artifact_metadata` or `E.embedded_artifact_key`. Where a grammar construct wraps a primitive string (e.g. `Name ::= name(string)`), write `T.name.string` to reach the string value.
+Dot notation is used on grammar constructs, e.g. `T.schema_artifact_metadata` or `E.embedded_artifact_key`. Where a grammar construct wraps a primitive string (e.g. `Identifier ::= identifier(string)`), write `D.identifier.string` to reach the string value.
 
 **Helper Functions**
 
@@ -417,18 +417,22 @@ merge(
 
 ### `encode_descriptive_metadata(D: DescriptiveMetadata) → Object`
 
-Encodes the human-readable identity of an artifact. The `schema:name` and `schema:description` keys are always written; `schema:identifier` and `rdfs:label` appear only when set in the Structural Model. Alternative labels have no CTM 1.6.0 equivalent and are dropped.
+Encodes the human-readable identity of an artifact. The `schema:name` and `schema:description` keys are always written; `schema:identifier` and `rdfs:label` appear only when set in the Structural Model.
+
+CTM 1.6.0 requires a single-string `schema:name`. The Structural Model no longer carries an artifact-level `Name`; `PreferredLabel` is the canonical human-readable display label. The encoder flattens `D.preferred_label` (a `MultilingualString`) to a single string by selecting the `en` localization if present, else the first localization entry. The same flattened string is also written to `rdfs:label` for round-trip stability.
 
 Returns a JSON object with the following keys:
 
 | Key | Value | Condition |
 |-----------------|---|---|
-| `"schema:name"` | `D.name.unicode_string` | Always present |
+| `"schema:name"` | `flatten_to_string(D.preferred_label)` — prefer `en`, else first entry | Always present |
 | `"schema:description"` | `D.description.unicode_string` | `null` if `D.description` absent |
 | `"schema:identifier"` | `D.identifier.unicode_string` | Omit if `D.identifier` absent |
-| `"rdfs:label"`  | `D.preferred_label.unicode_string` | Omit if `D.preferred_label` absent |
+| `"rdfs:label"` | `flatten_to_string(D.preferred_label)` | Always present (mirrors `schema:name`) |
 
-`AlternativeLabel` values on `DescriptiveMetadata` have no direct CTM 1.6.0 equivalent and are omitted.
+`AlternativeLabel` values on `DescriptiveMetadata` have no direct CTM 1.6.0 equivalent and are omitted on encode.
+
+**Reverse direction (CTM 1.6.0 import).** When importing a CTM 1.6.0 document into the Structural Model, `schema:name` is **not** mapped to `PreferredLabel`: legacy `schema:name` values were not curated as the *preferred* display label, and promoting them would overstate their curatorial status. Instead, an importer appends `schema:name`'s value to `D.alternative_labels`, as a `MultilingualString` with a single `und`-tagged entry. If the legacy document carries a non-empty `rdfs:label`, the importer maps `rdfs:label` to `D.preferred_label`; otherwise `D.preferred_label` is initialized from `schema:name` so the Structural Model invariant (every artifact has a `PreferredLabel`) is preserved.
 
 ---
 

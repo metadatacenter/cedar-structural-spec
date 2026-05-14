@@ -1,7 +1,7 @@
 [
   {
     "category": "lexical",
-    "path": "/metadata/name/0/lang",
+    "path": "/metadata/preferredLabel/0/lang",
     "production": "LangString",
     "messageRegex": "BCP\\s?47|invalid.*language(\\s|-)?tag|language(\\s|-)?tag.*invalid|RFC\\s?5646"
   }

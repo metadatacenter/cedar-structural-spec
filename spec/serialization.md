@@ -261,13 +261,12 @@ Each `Value` family is encoded as a tagged object that carries its content direc
 
 ### 6.4 Metadata and annotations
 
-`LifecycleMetadata`, `SchemaArtifactVersioning`, `ArtifactMetadata`, and `SchemaArtifactMetadata` are singleton-only productions (never members of any `discriminator: kind` union per §4.4), so they encode as untagged JSON objects. The descriptive properties of an artifact (`name`, `description`, `identifier`, `preferredLabel`, `altLabels`) sit directly on `ArtifactMetadata` rather than under a `descriptiveMetadata` wrapper.
+`LifecycleMetadata`, `SchemaArtifactVersioning`, `ArtifactMetadata`, and `SchemaArtifactMetadata` are singleton-only productions (never members of any `discriminator: kind` union per §4.4), so they encode as untagged JSON objects. The descriptive properties of an artifact (`preferredLabel`, `description`, `identifier`, `altLabels`) sit directly on `ArtifactMetadata` rather than under a `descriptiveMetadata` wrapper.
 
 ```json
 {
-  "name": [{ "value": "Full Name", "lang": "en" }],
+  "preferredLabel": [{ "value": "Full Name", "lang": "en" }],
   "description": [{ "value": "Full legal name.", "lang": "en" }],
-  "preferredLabel": [{ "value": "Name", "lang": "en" }],
   "lifecycle": {
     "createdOn": "2024-01-01T00:00:00Z",
     "createdBy": "https://orcid.org/0000-0002-1825-0097",
@@ -595,8 +594,8 @@ The example is deliberately compact rather than minimal: every wire
 shape this spec defines that is reachable from a `Template` appears
 at least once. The companion `TemplateInstance` exercises every value
 shape that is reachable from a `FieldValue`. Smaller variations
-(empty `members`, no annotations, single-language `name`) are
-straightforward subsets of the larger artifact and are not
+(empty `members`, no annotations, single-language `preferredLabel`)
+are straightforward subsets of the larger artifact and are not
 separately illustrated.
 
 ### 8.1 A `Template` exercising the principal wire shapes
@@ -605,8 +604,8 @@ The `Template` below describes a single **patient observation**: an
 identifier, a free-text comment, a single-valued enum severity, a
 date observed, an integer-valued count of repeated occurrences (with
 unit and bounds), and a controlled-term diagnosis. It carries
-multi-language `name` and `description`, a versioned lifecycle, and
-two annotations on the metadata.
+multi-language `preferredLabel` and `description`, a versioned
+lifecycle, and two annotations on the metadata.
 
 ```json
 {{#include normative-tests/valid/01-patient-observation-template.json}}
@@ -616,16 +615,15 @@ A few things in the above artifact are worth highlighting because
 they exercise specific rules:
 
 - **`metadata` flattening.** `SchemaArtifactMetadata`'s
-  `ArtifactMetadata` properties (`name`, `description`,
-  `preferredLabel`, `altLabels`, `lifecycle`, `annotations`) and its
-  `versioning` slot all sit at the same level on the wire, with no
-  inner `artifact` or `descriptive` wrapper (per §6.4 / wire-grammar
-  §5.1).
-- **Multilingual content.** `name` and `description` are
+  `ArtifactMetadata` properties (`preferredLabel`, `description`,
+  `altLabels`, `lifecycle`, `annotations`) and its `versioning` slot
+  all sit at the same level on the wire, with no inner `artifact` or
+  `descriptive` wrapper (per §6.4 / wire-grammar §5.1).
+- **Multilingual content.** `preferredLabel` and `description` are
   `MultilingualString` arrays. Each `altLabels` element is itself a
   `MultilingualString`, so `altLabels` is an array of arrays. Two of
-  the language-tagged entries on `name` exercise the unique-lang-tag
-  invariant (§9.1 category 3).
+  the language-tagged entries on `preferredLabel` exercise the
+  unique-lang-tag invariant (§9.1 category 3).
 - **`AnnotationValue` polymorphism.** `Annotation.body` is a
   `discriminator: kind` union with `AnnotationStringValue` and
   `AnnotationIriValue` arms; the wire form carries the discriminator

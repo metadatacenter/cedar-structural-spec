@@ -1,7 +1,7 @@
 [
   {
     "category": "structural",
-    "path": "/metadata/name/1/lang",
+    "path": "/metadata/preferredLabel/1/lang",
     "production": "MultilingualString",
     "messageRegex": "duplicate.*lang|lang.*duplicate|lang(\\s|-)?tag.*not unique|case-folded"
   }
