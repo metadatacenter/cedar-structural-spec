@@ -1,11 +1,11 @@
 {
-  "kind": "TextField",
-  "id": "https://example.org/fields/text-1",
+  "kind": "EmailField",
+  "id": "https://example.org/fields/contact-email",
   "modelVersion": "2.0.0",
   "metadata": {
     "preferredLabel": [
       {
-        "value": "Test",
+        "value": "Contact email",
         "lang": "en"
       }
     ],
@@ -21,18 +21,11 @@
     }
   },
   "fieldSpec": {
-    "kind": "TextFieldSpec",
-    "defaultValue": {
-      "kind": "TextValue",
-      "value": "default text",
-      "lang": "en"
-    },
-    "minLength": 1,
-    "maxLength": 280,
-    "validationRegex": "^.{1,280}$",
+    "kind": "EmailFieldSpec",
     "renderingHint": {
-      "lineMode": "multiLine",
-      "placeholder": [{ "value": "Up to 280 characters of free text", "lang": "en" }]
+      "placeholder": [
+        { "value": "name@example.com", "lang": "en" }
+      ]
     }
   }
 }

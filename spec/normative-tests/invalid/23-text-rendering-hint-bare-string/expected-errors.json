@@ -1,0 +1,8 @@
+[
+  {
+    "category": "wireShape",
+    "path": "/fieldSpec/renderingHint",
+    "production": "TextRenderingHint",
+    "messageRegex": "expected.*object|TextRenderingHint.*object|bare.*string.*deprecated"
+  }
+]

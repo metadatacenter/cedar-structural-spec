@@ -1052,16 +1052,19 @@ DateTimeValueType ::: "dateHourMinute" | "dateHourMinuteSecond"
 
 DateRenderingHint ::: object {
   componentOrder?: DateComponentOrder
+  placeholder?: Placeholder
 }
 
 DateComponentOrder ::: "dayMonthYear" | "monthDayYear" | "yearMonthDay"
 
 TimeRenderingHint ::: object {
   timeFormat?: TimeFormat
+  placeholder?: Placeholder
 }
 
 DateTimeRenderingHint ::: object {
   timeFormat?: TimeFormat
+  placeholder?: Placeholder
 }
 
 TimeFormat ::: "twelveHour" | "twentyFourHour"
@@ -1074,6 +1077,7 @@ ControlledTermFieldSpec ::: object {
   "kind": "ControlledTermFieldSpec"
   defaultValue?: ControlledTermValue
   sources: nonEmptyArray<ControlledTermSource>
+  renderingHint?: ControlledTermRenderingHint
 }
   // defaultValue.term, when present, SHOULD belong to one of the
   // declared sources, but the structural model does not enforce this
@@ -1138,6 +1142,7 @@ Meaning ::: object {
 LinkFieldSpec ::: object {
   "kind": "LinkFieldSpec"
   defaultValue?: LinkValue
+  renderingHint?: LinkRenderingHint
 }
 
 ContactFieldSpec ::: EmailFieldSpec | PhoneNumberFieldSpec
@@ -1146,11 +1151,13 @@ ContactFieldSpec ::: EmailFieldSpec | PhoneNumberFieldSpec
 EmailFieldSpec ::: object {
   "kind": "EmailFieldSpec"
   defaultValue?: EmailValue
+  renderingHint?: EmailRenderingHint
 }
 
 PhoneNumberFieldSpec ::: object {
   "kind": "PhoneNumberFieldSpec"
   defaultValue?: PhoneNumberValue
+  renderingHint?: PhoneNumberRenderingHint
 }
 
 ExternalAuthorityFieldSpec ::: OrcidFieldSpec | RorFieldSpec | DoiFieldSpec
@@ -1161,31 +1168,37 @@ ExternalAuthorityFieldSpec ::: OrcidFieldSpec | RorFieldSpec | DoiFieldSpec
 OrcidFieldSpec ::: object {
   "kind": "OrcidFieldSpec"
   defaultValue?: OrcidValue
+  renderingHint?: OrcidRenderingHint
 }
 
 RorFieldSpec ::: object {
   "kind": "RorFieldSpec"
   defaultValue?: RorValue
+  renderingHint?: RorRenderingHint
 }
 
 DoiFieldSpec ::: object {
   "kind": "DoiFieldSpec"
   defaultValue?: DoiValue
+  renderingHint?: DoiRenderingHint
 }
 
 PubMedIdFieldSpec ::: object {
   "kind": "PubMedIdFieldSpec"
   defaultValue?: PubMedIdValue
+  renderingHint?: PubMedIdRenderingHint
 }
 
 RridFieldSpec ::: object {
   "kind": "RridFieldSpec"
   defaultValue?: RridValue
+  renderingHint?: RridRenderingHint
 }
 
 NihGrantIdFieldSpec ::: object {
   "kind": "NihGrantIdFieldSpec"
   defaultValue?: NihGrantIdValue
+  renderingHint?: NihGrantIdRenderingHint
 }
 
 AttributeValueFieldSpec ::: object {
@@ -1283,10 +1296,21 @@ RenderingHint ::: TextRenderingHint | SingleValuedEnumRenderingHint
                 | MultiValuedEnumRenderingHint | NumericRenderingHint
                 | BooleanRenderingHint
                 | DateRenderingHint | TimeRenderingHint | DateTimeRenderingHint
+                | ControlledTermRenderingHint
+                | EmailRenderingHint | PhoneNumberRenderingHint
+                | LinkRenderingHint
+                | OrcidRenderingHint | RorRenderingHint | DoiRenderingHint
+                | PubMedIdRenderingHint | RridRenderingHint
+                | NihGrantIdRenderingHint
   // discriminator: position
   // resolved by the renderingHint property of the enclosing FieldSpec
 
-TextRenderingHint ::: "singleLine" | "multiLine"
+TextRenderingHint ::: object {
+  lineMode?: TextLineMode
+  placeholder?: Placeholder
+}
+
+TextLineMode ::: "singleLine" | "multiLine"
 
 SingleValuedEnumRenderingHint ::: "radio" | "dropdown"
 
@@ -1294,13 +1318,29 @@ MultiValuedEnumRenderingHint ::: "checkbox" | "multiSelect"
 
 NumericRenderingHint ::: object {
   decimalPlaces?: DecimalPlaces
+  placeholder?: Placeholder
 }
   // decimalPlaces, when present, MUST be a non-negative integer
   // it is a presentation concern (display rounding); it does NOT
   // constrain the lexical form of submitted values
 
 BooleanRenderingHint ::: "checkbox" | "toggle" | "radio" | "dropdown"
+
+ControlledTermRenderingHint ::: object { placeholder?: Placeholder }
+EmailRenderingHint          ::: object { placeholder?: Placeholder }
+PhoneNumberRenderingHint    ::: object { placeholder?: Placeholder }
+LinkRenderingHint           ::: object { placeholder?: Placeholder }
+OrcidRenderingHint          ::: object { placeholder?: Placeholder }
+RorRenderingHint            ::: object { placeholder?: Placeholder }
+DoiRenderingHint            ::: object { placeholder?: Placeholder }
+PubMedIdRenderingHint       ::: object { placeholder?: Placeholder }
+RridRenderingHint           ::: object { placeholder?: Placeholder }
+NihGrantIdRenderingHint     ::: object { placeholder?: Placeholder }
+
+Placeholder ::: MultilingualString
 ```
+
+`Placeholder` collapses on the wire per the wrapper-collapse rule (§1.6).
 
 ---
 
@@ -2311,6 +2351,7 @@ the union of the inner `ArtifactMetadata` properties plus
 **`ControlledTermFieldSpec`** (`controlled_term_field_spec`):
 0. `[ControlledTermValue]` → `defaultValue?`
 1. `ControlledTermSource+` → `sources`
+2. `[ControlledTermRenderingHint]` → `renderingHint?`
 
 **`SingleValuedEnumFieldSpec`** (`single_valued_enum_field_spec`):
 0. `PermissibleValue+` → `permissibleValues`
@@ -2332,44 +2373,74 @@ the union of the inner `ArtifactMetadata` properties plus
 0. `TermIri` → `iri`
 1. `[Label]` → `label?`
 
+**`TextRenderingHint`** (`text_rendering_hint`):
+0. `[TextLineMode]` → `lineMode?`
+1. `[Placeholder]` → `placeholder?`
+
 **`DateRenderingHint`** (`date_rendering_hint`):
 0. `[DateComponentOrder]` → `componentOrder?`
+1. `[Placeholder]` → `placeholder?`
 
 **`TimeRenderingHint`** (`time_rendering_hint`):
 0. `[TimeFormat]` → `timeFormat?`
+1. `[Placeholder]` → `placeholder?`
 
 **`DateTimeRenderingHint`** (`date_time_rendering_hint`):
 0. `[TimeFormat]` → `timeFormat?`
+1. `[Placeholder]` → `placeholder?`
 
 **`NumericRenderingHint`** (`numeric_rendering_hint`):
 0. `[DecimalPlaces]` → `decimalPlaces?`
+1. `[Placeholder]` → `placeholder?`
+
+The ten new rendering hints introduced for previously hint-less families each carry a single optional slot:
+
+**`ControlledTermRenderingHint`** (`controlled_term_rendering_hint`): `[Placeholder]` → `placeholder?`
+**`EmailRenderingHint`** (`email_rendering_hint`): `[Placeholder]` → `placeholder?`
+**`PhoneNumberRenderingHint`** (`phone_number_rendering_hint`): `[Placeholder]` → `placeholder?`
+**`LinkRenderingHint`** (`link_rendering_hint`): `[Placeholder]` → `placeholder?`
+**`OrcidRenderingHint`** (`orcid_rendering_hint`): `[Placeholder]` → `placeholder?`
+**`RorRenderingHint`** (`ror_rendering_hint`): `[Placeholder]` → `placeholder?`
+**`DoiRenderingHint`** (`doi_rendering_hint`): `[Placeholder]` → `placeholder?`
+**`PubMedIdRenderingHint`** (`pub_med_id_rendering_hint`): `[Placeholder]` → `placeholder?`
+**`RridRenderingHint`** (`rrid_rendering_hint`): `[Placeholder]` → `placeholder?`
+**`NihGrantIdRenderingHint`** (`nih_grant_id_rendering_hint`): `[Placeholder]` → `placeholder?`
 
 **`LinkFieldSpec`** (`link_field_spec`):
 0. `[LinkValue]` → `defaultValue?`
+1. `[LinkRenderingHint]` → `renderingHint?`
 
 **`EmailFieldSpec`** (`email_field_spec`):
 0. `[EmailValue]` → `defaultValue?`
+1. `[EmailRenderingHint]` → `renderingHint?`
 
 **`PhoneNumberFieldSpec`** (`phone_number_field_spec`):
 0. `[PhoneNumberValue]` → `defaultValue?`
+1. `[PhoneNumberRenderingHint]` → `renderingHint?`
 
 **`OrcidFieldSpec`** (`orcid_field_spec`):
 0. `[OrcidValue]` → `defaultValue?`
+1. `[OrcidRenderingHint]` → `renderingHint?`
 
 **`RorFieldSpec`** (`ror_field_spec`):
 0. `[RorValue]` → `defaultValue?`
+1. `[RorRenderingHint]` → `renderingHint?`
 
 **`DoiFieldSpec`** (`doi_field_spec`):
 0. `[DoiValue]` → `defaultValue?`
+1. `[DoiRenderingHint]` → `renderingHint?`
 
 **`PubMedIdFieldSpec`** (`pub_med_id_field_spec`):
 0. `[PubMedIdValue]` → `defaultValue?`
+1. `[PubMedIdRenderingHint]` → `renderingHint?`
 
 **`RridFieldSpec`** (`rrid_field_spec`):
 0. `[RridValue]` → `defaultValue?`
+1. `[RridRenderingHint]` → `renderingHint?`
 
 **`NihGrantIdFieldSpec`** (`nih_grant_id_field_spec`):
 0. `[NihGrantIdValue]` → `defaultValue?`
+1. `[NihGrantIdRenderingHint]` → `renderingHint?`
 
 `AttributeValueFieldSpec` carries no components and has no entry here.
 

@@ -1631,6 +1631,7 @@ TemporalFieldSpec ::= DateFieldSpec
 ControlledTermFieldSpec ::= controlled_term_field_spec(
                               [ControlledTermValue]
                               ControlledTermSource+
+                              [ControlledTermRenderingHint]
                             )
 
 EnumFieldSpec ::= SingleValuedEnumFieldSpec
@@ -1666,6 +1667,7 @@ Meaning ::= meaning(
 
 LinkFieldSpec ::= link_field_spec(
                     [LinkValue]
+                    [LinkRenderingHint]
                   )
 
 ContactFieldSpec ::= EmailFieldSpec
@@ -1673,10 +1675,12 @@ ContactFieldSpec ::= EmailFieldSpec
 
 EmailFieldSpec ::= email_field_spec(
                      [EmailValue]
+                     [EmailRenderingHint]
                    )
 
 PhoneNumberFieldSpec ::= phone_number_field_spec(
                            [PhoneNumberValue]
+                           [PhoneNumberRenderingHint]
                          )
 
 ExternalAuthorityFieldSpec ::= OrcidFieldSpec
@@ -1688,26 +1692,32 @@ ExternalAuthorityFieldSpec ::= OrcidFieldSpec
 
 OrcidFieldSpec ::= orcid_field_spec(
                      [OrcidValue]
+                     [OrcidRenderingHint]
                    )
 
 RorFieldSpec ::= ror_field_spec(
                    [RorValue]
+                   [RorRenderingHint]
                  )
 
 DoiFieldSpec ::= doi_field_spec(
                    [DoiValue]
+                   [DoiRenderingHint]
                  )
 
 PubMedIdFieldSpec ::= pub_med_id_field_spec(
                         [PubMedIdValue]
+                        [PubMedIdRenderingHint]
                       )
 
 RridFieldSpec ::= rrid_field_spec(
                     [RridValue]
+                    [RridRenderingHint]
                   )
 
 NihGrantIdFieldSpec ::= nih_grant_id_field_spec(
                           [NihGrantIdValue]
+                          [NihGrantIdRenderingHint]
                         )
 
 AttributeValueFieldSpec ::= attribute_value_field_spec()
@@ -1794,16 +1804,19 @@ DateTimeValueType ::= "dateHourMinute" | "dateHourMinuteSecond" | "dateHourMinut
 ```ebnf
 DateRenderingHint ::= date_rendering_hint(
                         [DateComponentOrder]
+                        [Placeholder]
                       )
 
 DateComponentOrder ::= "dayMonthYear" | "monthDayYear" | "yearMonthDay"
 
 TimeRenderingHint ::= time_rendering_hint(
                         [TimeFormat]
+                        [Placeholder]
                       )
 
 DateTimeRenderingHint ::= date_time_rendering_hint(
                             [TimeFormat]
+                            [Placeholder]
                           )
 
 TimeFormat ::= "twelveHour" | "twentyFourHour"
@@ -1920,8 +1933,23 @@ RenderingHint ::= TextRenderingHint
                 | DateRenderingHint
                 | TimeRenderingHint
                 | DateTimeRenderingHint
+                | ControlledTermRenderingHint
+                | EmailRenderingHint
+                | PhoneNumberRenderingHint
+                | LinkRenderingHint
+                | OrcidRenderingHint
+                | RorRenderingHint
+                | DoiRenderingHint
+                | PubMedIdRenderingHint
+                | RridRenderingHint
+                | NihGrantIdRenderingHint
 
-TextRenderingHint ::= "singleLine" | "multiLine"
+TextRenderingHint ::= text_rendering_hint(
+                        [TextLineMode]
+                        [Placeholder]
+                      )
+
+TextLineMode ::= "singleLine" | "multiLine"
 
 SingleValuedEnumRenderingHint ::= "radio" | "dropdown"
 
@@ -1929,6 +1957,7 @@ MultiValuedEnumRenderingHint ::= "checkbox" | "multiSelect"
 
 NumericRenderingHint ::= numeric_rendering_hint(
                            [DecimalPlaces]
+                           [Placeholder]
                          )
 
 DecimalPlaces ::= decimal_places(
@@ -1936,7 +1965,26 @@ DecimalPlaces ::= decimal_places(
                   )
 
 BooleanRenderingHint ::= "checkbox" | "toggle" | "radio" | "dropdown"
+
+ControlledTermRenderingHint ::= controlled_term_rendering_hint( [Placeholder] )
+EmailRenderingHint          ::= email_rendering_hint(            [Placeholder] )
+PhoneNumberRenderingHint    ::= phone_number_rendering_hint(     [Placeholder] )
+LinkRenderingHint           ::= link_rendering_hint(             [Placeholder] )
+OrcidRenderingHint          ::= orcid_rendering_hint(            [Placeholder] )
+RorRenderingHint            ::= ror_rendering_hint(              [Placeholder] )
+DoiRenderingHint            ::= doi_rendering_hint(              [Placeholder] )
+PubMedIdRenderingHint       ::= pub_med_id_rendering_hint(       [Placeholder] )
+RridRenderingHint           ::= rrid_rendering_hint(             [Placeholder] )
+NihGrantIdRenderingHint     ::= nih_grant_id_rendering_hint(     [Placeholder] )
+
+Placeholder ::= placeholder( MultilingualString )
 ```
+
+`Placeholder` is a [`MultilingualString`](#multilingual-strings)-valued production carrying sample-input text shown inside an empty text-entry widget. It is purely presentational format demonstration — distinct from [`HelpText`](#field-artifacts), which carries semantic content about the field's meaning. Placeholder content is not validated against the field spec's lexical-form constraints; a placeholder of `"YYYY-MM-DD"` may appear on a date field whose values must conform to ISO 8601, since the placeholder is a *demonstration* of the expected lexical shape, not an instance of one.
+
+`Placeholder` appears as an optional slot on every rendering hint attached to a text-entry-capable field family: `TextRenderingHint`, `NumericRenderingHint`, `DateRenderingHint`, `TimeRenderingHint`, `DateTimeRenderingHint`, plus the ten rendering hints introduced for `ControlledTermField`, `EmailField`, `PhoneNumberField`, `LinkField`, and the six identifier families. It does NOT appear on `BooleanRenderingHint`, `SingleValuedEnumRenderingHint`, or `MultiValuedEnumRenderingHint`, since those widgets are not text-entry surfaces.
+
+**Note on `TextRenderingHint` shape.** In earlier revisions of this spec, `TextRenderingHint` was a bare string enum (`"singleLine" | "multiLine"`). It has been restructured into a structured object carrying an optional `TextLineMode` (the former enum content) plus the optional `Placeholder` slot. This is a wire-form-breaking change for templates that carry the bare-string form; such templates require migration to the object form before they will decode under this revision of the spec.
 
 This specification draws a strict distinction between semantic structure and presentation. Semantic distinctions MUST be modeled in `FieldSpec` when they affect the meaning, cardinality, or value structure of a field. This includes distinctions such as single-valued versus multi-valued enum, date versus time versus date-time, and permitted temporal precision. Purely presentational distinctions MUST NOT be modeled as separate field specs. Instead, distinctions such as single-line versus multi-line text entry, date component ordering, and 12-hour versus 24-hour time display MUST be expressed only through compatible typed rendering hints.
 

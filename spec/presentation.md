@@ -82,6 +82,32 @@ This rule is **specific to `HelpDisplayMode`**. Future `TemplateRenderingHint` s
 
 When `HelpDisplayMode` is absent from a `Template` — either because the template carries no `TemplateRenderingHint`, or because the hint omits the slot — the resolved mode is `"inline"`.
 
+## Placeholder Rendering
+
+This section is normative for conforming form renderers. The structural model carries placeholder content on rendering-hint productions attached to text-entry-capable field families (see [`grammar.md`](grammar.md) §Field Specs and §Rendering Hints, and the new `Placeholder` production). How that content is *presented* at form-render time is governed by the rules below.
+
+### What `Placeholder` is
+
+`Placeholder` is a [`MultilingualString`](grammar.md#multilingual-strings)-valued slot on every rendering hint attached to a text-entry-capable field family. It carries **sample input text** — typically a short format demonstration such as `"YYYY-MM-DD"`, `"john.doe@example.com"`, or `"https://orcid.org/0000-0000-0000-0000"` — intended to be displayed inside an empty text-entry widget and to disappear once the user begins typing.
+
+`Placeholder` is **not** semantic content about the field's meaning; that is the role of [`HelpText`](grammar.md#field-artifacts). The two slots may coexist on the same field: `HelpText` explains *what the field is for*, `Placeholder` demonstrates *what the typed input looks like*.
+
+### Rendering requirements
+
+Conforming renderers:
+
+- SHOULD display the effective `Placeholder` content inside text-entry input widgets when those inputs are empty.
+- MUST NOT display `Placeholder` content in a way that could be mistaken for a user-supplied value. Placeholders MUST be visually distinguishable from real input — conventionally via reduced opacity, italics, or a contrasting style.
+- MAY omit `Placeholder` rendering when accessibility concerns warrant (some screen readers handle the HTML `placeholder` attribute poorly). When `Placeholder` is omitted from the visual rendering, the renderer SHOULD ensure the same content is available through `HelpText` or another accessible affordance if it conveys information the user otherwise lacks.
+
+### Localization selection
+
+When `Placeholder` carries multiple language-tagged localizations, the renderer selects the entry whose `LanguageTag` best matches the user's preferred display language, falling back per the spec's existing `MultilingualString`-localization-preference rules. No new rule is introduced for `Placeholder`; it follows the same selection convention as `HelpText`, `PreferredLabel`, and other `MultilingualString`-valued display content.
+
+### Relationship to value validation
+
+`Placeholder` content is *purely presentational*. It is not validated against the field spec's value constraints (`validationRegex`, `langTagRequirement`, `timezoneRequirement`, `minLength`, `maxLength`, etc.). A placeholder of `"YYYY-MM-DD"` may appear on a date field whose values are constrained to ISO 8601 — the placeholder is a demonstration of the expected lexical shape, not an instance of one. Conforming validators MUST NOT apply field-spec value constraints to placeholder content.
+
 ## Open Questions
 
 - **Model revision candidate:** The current model requires all `PresentationComponent` variants to carry full reusable artifact identity. This is uniform but may be unnecessarily heavy for simple structural elements such as `PageBreakComponent`, which carry no meaningful content and are unlikely to be shared across templates. A future revision should consider whether lightweight inline-only variants could be introduced for such cases, and define the criteria for determining which components warrant reusable identity.

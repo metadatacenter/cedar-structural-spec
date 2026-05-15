@@ -1,11 +1,11 @@
 {
   "kind": "TextField",
-  "id": "https://example.org/fields/text-1",
+  "id": "https://example.org/fields/full-name",
   "modelVersion": "2.0.0",
   "metadata": {
     "preferredLabel": [
       {
-        "value": "Test",
+        "value": "Full name",
         "lang": "en"
       }
     ],
@@ -22,17 +22,14 @@
   },
   "fieldSpec": {
     "kind": "TextFieldSpec",
-    "defaultValue": {
-      "kind": "TextValue",
-      "value": "default text",
-      "lang": "en"
-    },
     "minLength": 1,
-    "maxLength": 280,
-    "validationRegex": "^.{1,280}$",
+    "maxLength": 255,
     "renderingHint": {
-      "lineMode": "multiLine",
-      "placeholder": [{ "value": "Up to 280 characters of free text", "lang": "en" }]
+      "lineMode": "singleLine",
+      "placeholder": [
+        { "value": "e.g. Jane Doe", "lang": "en" },
+        { "value": "p. ej. Juana Pérez", "lang": "es" }
+      ]
     }
   }
 }

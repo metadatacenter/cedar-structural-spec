@@ -1,11 +1,11 @@
 {
-  "kind": "TextField",
-  "id": "https://example.org/fields/text-1",
+  "kind": "OrcidField",
+  "id": "https://example.org/fields/author-orcid",
   "modelVersion": "2.0.0",
   "metadata": {
     "preferredLabel": [
       {
-        "value": "Test",
+        "value": "Author ORCID",
         "lang": "en"
       }
     ],
@@ -21,18 +21,11 @@
     }
   },
   "fieldSpec": {
-    "kind": "TextFieldSpec",
-    "defaultValue": {
-      "kind": "TextValue",
-      "value": "default text",
-      "lang": "en"
-    },
-    "minLength": 1,
-    "maxLength": 280,
-    "validationRegex": "^.{1,280}$",
+    "kind": "OrcidFieldSpec",
     "renderingHint": {
-      "lineMode": "multiLine",
-      "placeholder": [{ "value": "Up to 280 characters of free text", "lang": "en" }]
+      "placeholder": [
+        { "value": "https://orcid.org/0000-0000-0000-0000", "lang": "en" }
+      ]
     }
   }
 }
