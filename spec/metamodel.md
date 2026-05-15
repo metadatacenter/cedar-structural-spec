@@ -10,7 +10,7 @@ The CEDAR Template Model is organised around three principal concerns: reusable 
 
 `Artifact` is the broadest category in the model. Every artifact carries a repository-assigned identifier, descriptive metadata, lifecycle metadata, and zero or more annotations. `SchemaArtifact`, `PresentationComponent`, and `TemplateInstance` are the three principal subclasses.
 
-A `SchemaArtifact` is a reusable artifact that defines schema structure. `Template` and `Field` are the two concrete schema artifact kinds. Both carry versioning metadata in addition to the common artifact metadata. Versioning metadata includes a semantic version, a publication status (`draft` or `published`), and optional lineage references: `PreviousVersion`, which links to the immediate predecessor in a version chain, and `DerivedFrom`, which identifies a source artifact when a schema has been copied or adapted from another. Independently of `SchemaArtifactVersioning`, every concrete `Artifact` (every `Template`, `TemplateInstance`, every `Field`, and every `PresentationComponent`) carries a top-level `ModelVersion` identifying the version of the CEDAR structural model the artifact conforms to.
+A `SchemaArtifact` is a reusable artifact that defines schema structure. `Template` and `Field` are the two concrete schema artifact kinds. Both carry versioning metadata — semantic version, publication status, optional lineage references — in addition to the common artifact metadata; see [`grammar.md`](grammar.md) for the normative shape. Independently of schema versioning, every concrete `Artifact` (every `Template`, every `TemplateInstance`, every `Field`, and every `PresentationComponent`) carries a top-level `ModelVersion` identifying the version of the CEDAR structural model the artifact conforms to.
 
 A `Template` is the central container of the model. It specifies an ordered arrangement of `EmbeddedArtifact` constructs and defines the schema that `TemplateInstance` constructs must conform to.
 
@@ -27,6 +27,12 @@ An `EmbeddedArtifact` contextualises a reusable artifact within a specific `Temp
 An `EmbeddedArtifactKey` is the local identifier of an `EmbeddedArtifact` within its containing `Template`. It is the mechanism that connects template structure to instance structure.
 
 A `TemplateInstance` is an artifact that records data conforming to a `Template`. It contains `FieldValue` and `NestedTemplateInstance` constructs keyed by `EmbeddedArtifactKey`, corresponding to the data-bearing embedded artifacts of the referenced template.
+
+The diagram below sketches how the principal categories connect at runtime. Schema-side classes (definitions) are on the right; instance-side classes (data records) are on the left. The horizontal arrows show the two cross-side links: a `TemplateInstance` is bound to its `Template` by IRI (`templateRef`), and each `FieldValue` is joined to its corresponding `EmbeddedField` by an `EmbeddedArtifactKey`. The schema-side downward chain (`Template` → `EmbeddedField` → `Field` → `FieldSpec`) is the structural surface a template author defines; the instance-side downward chain (`TemplateInstance` → `FieldValue` → `Value`) is the runtime data the schema admits.
+
+![Relationships between Template, EmbeddedField, Field, FieldSpec, TemplateInstance, FieldValue, and Value](diagrams/template-field-relationships.svg)
+
+For the within-`Field` typed-variant hierarchy (the 20 concrete field families and their abstract groupings), see the next section.
 
 ## Field Hierarchy
 
