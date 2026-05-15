@@ -915,7 +915,16 @@ LabelOverride ::: object {
   // altLabels MAY be empty
 ```
 
-### 6.7 Properties
+### 6.7 Help text
+
+```
+HelpText ::: MultilingualString
+HelpTextOverride ::: MultilingualString
+```
+
+Both productions collapse on the wire per the wrapper-collapse rule (§1.6): a `MultilingualString` is encoded as a non-empty array of `LangString` entries. `HelpText` is carried by the reusable `Field` artifact (slot `helpText?`); `HelpTextOverride` is carried by each `EmbeddedXxxField` (slot `helpTextOverride?`).
+
+### 6.8 Properties
 
 ```
 Property ::: object {
@@ -1331,6 +1340,7 @@ TextField ::: object {
   modelVersion: ModelVersion
   metadata: SchemaArtifactMetadata
   fieldSpec: TextFieldSpec
+  helpText?: HelpText
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
@@ -1340,6 +1350,7 @@ IntegerNumberField ::: object {
   modelVersion: ModelVersion
   metadata: SchemaArtifactMetadata
   fieldSpec: IntegerNumberFieldSpec
+  helpText?: HelpText
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
@@ -1349,6 +1360,7 @@ RealNumberField ::: object {
   modelVersion: ModelVersion
   metadata: SchemaArtifactMetadata
   fieldSpec: RealNumberFieldSpec
+  helpText?: HelpText
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
@@ -1358,6 +1370,7 @@ BooleanField ::: object {
   modelVersion: ModelVersion
   metadata: SchemaArtifactMetadata
   fieldSpec: BooleanFieldSpec
+  helpText?: HelpText
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
@@ -1367,6 +1380,7 @@ DateField ::: object {
   modelVersion: ModelVersion
   metadata: SchemaArtifactMetadata
   fieldSpec: DateFieldSpec
+  helpText?: HelpText
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
@@ -1376,6 +1390,7 @@ TimeField ::: object {
   modelVersion: ModelVersion
   metadata: SchemaArtifactMetadata
   fieldSpec: TimeFieldSpec
+  helpText?: HelpText
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
@@ -1385,6 +1400,7 @@ DateTimeField ::: object {
   modelVersion: ModelVersion
   metadata: SchemaArtifactMetadata
   fieldSpec: DateTimeFieldSpec
+  helpText?: HelpText
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
@@ -1394,6 +1410,7 @@ ControlledTermField ::: object {
   modelVersion: ModelVersion
   metadata: SchemaArtifactMetadata
   fieldSpec: ControlledTermFieldSpec
+  helpText?: HelpText
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
@@ -1403,6 +1420,7 @@ SingleValuedEnumField ::: object {
   modelVersion: ModelVersion
   metadata: SchemaArtifactMetadata
   fieldSpec: SingleValuedEnumFieldSpec
+  helpText?: HelpText
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
@@ -1412,6 +1430,7 @@ MultiValuedEnumField ::: object {
   modelVersion: ModelVersion
   metadata: SchemaArtifactMetadata
   fieldSpec: MultiValuedEnumFieldSpec
+  helpText?: HelpText
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
@@ -1421,6 +1440,7 @@ LinkField ::: object {
   modelVersion: ModelVersion
   metadata: SchemaArtifactMetadata
   fieldSpec: LinkFieldSpec
+  helpText?: HelpText
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
@@ -1430,6 +1450,7 @@ EmailField ::: object {
   modelVersion: ModelVersion
   metadata: SchemaArtifactMetadata
   fieldSpec: EmailFieldSpec
+  helpText?: HelpText
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
@@ -1439,6 +1460,7 @@ PhoneNumberField ::: object {
   modelVersion: ModelVersion
   metadata: SchemaArtifactMetadata
   fieldSpec: PhoneNumberFieldSpec
+  helpText?: HelpText
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
@@ -1448,6 +1470,7 @@ OrcidField ::: object {
   modelVersion: ModelVersion
   metadata: SchemaArtifactMetadata
   fieldSpec: OrcidFieldSpec
+  helpText?: HelpText
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
@@ -1457,6 +1480,7 @@ RorField ::: object {
   modelVersion: ModelVersion
   metadata: SchemaArtifactMetadata
   fieldSpec: RorFieldSpec
+  helpText?: HelpText
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
@@ -1466,6 +1490,7 @@ DoiField ::: object {
   modelVersion: ModelVersion
   metadata: SchemaArtifactMetadata
   fieldSpec: DoiFieldSpec
+  helpText?: HelpText
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
@@ -1475,6 +1500,7 @@ PubMedIdField ::: object {
   modelVersion: ModelVersion
   metadata: SchemaArtifactMetadata
   fieldSpec: PubMedIdFieldSpec
+  helpText?: HelpText
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
@@ -1484,6 +1510,7 @@ RridField ::: object {
   modelVersion: ModelVersion
   metadata: SchemaArtifactMetadata
   fieldSpec: RridFieldSpec
+  helpText?: HelpText
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
@@ -1493,6 +1520,7 @@ NihGrantIdField ::: object {
   modelVersion: ModelVersion
   metadata: SchemaArtifactMetadata
   fieldSpec: NihGrantIdFieldSpec
+  helpText?: HelpText
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
@@ -1502,6 +1530,7 @@ AttributeValueField ::: object {
   modelVersion: ModelVersion
   metadata: SchemaArtifactMetadata
   fieldSpec: AttributeValueFieldSpec
+  helpText?: HelpText
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 ```
@@ -1556,6 +1585,7 @@ EmbeddedTextField ::: object {
   visibility?: Visibility
   defaultValue?: TextValue
   labelOverride?: LabelOverride
+  helpTextOverride?: HelpTextOverride
   property?: Property
 }
 
@@ -1568,6 +1598,7 @@ EmbeddedIntegerNumberField ::: object {
   visibility?: Visibility
   defaultValue?: IntegerNumberValue
   labelOverride?: LabelOverride
+  helpTextOverride?: HelpTextOverride
   property?: Property
 }
 
@@ -1580,6 +1611,7 @@ EmbeddedRealNumberField ::: object {
   visibility?: Visibility
   defaultValue?: RealNumberValue
   labelOverride?: LabelOverride
+  helpTextOverride?: HelpTextOverride
   property?: Property
 }
 
@@ -1591,6 +1623,7 @@ EmbeddedBooleanField ::: object {
   visibility?: Visibility
   defaultValue?: BooleanValue
   labelOverride?: LabelOverride
+  helpTextOverride?: HelpTextOverride
   property?: Property
 }
   // boolean embeddings carry no cardinality slot per grammar.md
@@ -1605,6 +1638,7 @@ EmbeddedDateField ::: object {
   visibility?: Visibility
   defaultValue?: DateValue
   labelOverride?: LabelOverride
+  helpTextOverride?: HelpTextOverride
   property?: Property
 }
 
@@ -1617,6 +1651,7 @@ EmbeddedTimeField ::: object {
   visibility?: Visibility
   defaultValue?: TimeValue
   labelOverride?: LabelOverride
+  helpTextOverride?: HelpTextOverride
   property?: Property
 }
 
@@ -1629,6 +1664,7 @@ EmbeddedDateTimeField ::: object {
   visibility?: Visibility
   defaultValue?: DateTimeValue
   labelOverride?: LabelOverride
+  helpTextOverride?: HelpTextOverride
   property?: Property
 }
 
@@ -1641,6 +1677,7 @@ EmbeddedControlledTermField ::: object {
   visibility?: Visibility
   defaultValue?: ControlledTermValue
   labelOverride?: LabelOverride
+  helpTextOverride?: HelpTextOverride
   property?: Property
 }
 
@@ -1652,6 +1689,7 @@ EmbeddedSingleValuedEnumField ::: object {
   visibility?: Visibility
   defaultValue?: EnumValue
   labelOverride?: LabelOverride
+  helpTextOverride?: HelpTextOverride
   property?: Property
 }
   // single-valued enum embeddings carry no cardinality slot per
@@ -1666,6 +1704,7 @@ EmbeddedMultiValuedEnumField ::: object {
   visibility?: Visibility
   defaultValue?: array<EnumValue>
   labelOverride?: LabelOverride
+  helpTextOverride?: HelpTextOverride
   property?: Property
 }
   // defaultValue is a (possibly empty) array of EnumValue entries;
@@ -1681,6 +1720,7 @@ EmbeddedLinkField ::: object {
   visibility?: Visibility
   defaultValue?: LinkValue
   labelOverride?: LabelOverride
+  helpTextOverride?: HelpTextOverride
   property?: Property
 }
 
@@ -1693,6 +1733,7 @@ EmbeddedEmailField ::: object {
   visibility?: Visibility
   defaultValue?: EmailValue
   labelOverride?: LabelOverride
+  helpTextOverride?: HelpTextOverride
   property?: Property
 }
 
@@ -1705,6 +1746,7 @@ EmbeddedPhoneNumberField ::: object {
   visibility?: Visibility
   defaultValue?: PhoneNumberValue
   labelOverride?: LabelOverride
+  helpTextOverride?: HelpTextOverride
   property?: Property
 }
 
@@ -1717,6 +1759,7 @@ EmbeddedOrcidField ::: object {
   visibility?: Visibility
   defaultValue?: OrcidValue
   labelOverride?: LabelOverride
+  helpTextOverride?: HelpTextOverride
   property?: Property
 }
 
@@ -1729,6 +1772,7 @@ EmbeddedRorField ::: object {
   visibility?: Visibility
   defaultValue?: RorValue
   labelOverride?: LabelOverride
+  helpTextOverride?: HelpTextOverride
   property?: Property
 }
 
@@ -1741,6 +1785,7 @@ EmbeddedDoiField ::: object {
   visibility?: Visibility
   defaultValue?: DoiValue
   labelOverride?: LabelOverride
+  helpTextOverride?: HelpTextOverride
   property?: Property
 }
 
@@ -1753,6 +1798,7 @@ EmbeddedPubMedIdField ::: object {
   visibility?: Visibility
   defaultValue?: PubMedIdValue
   labelOverride?: LabelOverride
+  helpTextOverride?: HelpTextOverride
   property?: Property
 }
 
@@ -1765,6 +1811,7 @@ EmbeddedRridField ::: object {
   visibility?: Visibility
   defaultValue?: RridValue
   labelOverride?: LabelOverride
+  helpTextOverride?: HelpTextOverride
   property?: Property
 }
 
@@ -1777,6 +1824,7 @@ EmbeddedNihGrantIdField ::: object {
   visibility?: Visibility
   defaultValue?: NihGrantIdValue
   labelOverride?: LabelOverride
+  helpTextOverride?: HelpTextOverride
   property?: Property
 }
 
@@ -1788,6 +1836,7 @@ EmbeddedAttributeValueField ::: object {
   cardinality?: Cardinality
   visibility?: Visibility
   labelOverride?: LabelOverride
+  helpTextOverride?: HelpTextOverride
   property?: Property
 }
   // attribute-value embeddings carry no defaultValue per grammar.md
@@ -1896,6 +1945,7 @@ Template ::: object {
   id: TemplateId
   modelVersion: ModelVersion
   metadata: SchemaArtifactMetadata
+  renderingHint?: TemplateRenderingHint
   header?: Header
   footer?: Footer
   members: array<EmbeddedArtifact>
@@ -1904,6 +1954,12 @@ Template ::: object {
   // EmbeddedArtifact keys (each member's `key` property) MUST be unique
   // within `members` (per grammar.md §Embedded Artifact Key)
   // the order of `members` MUST be preserved
+
+TemplateRenderingHint ::: object {
+  helpDisplayMode?: HelpDisplayMode
+}
+
+HelpDisplayMode ::: "inline" | "tooltip" | "both" | "none"
 
 Header ::: MultilingualString
 Footer ::: MultilingualString
@@ -1997,9 +2053,13 @@ Conventions:
 0. `TemplateId` → `id`
 1. `ModelVersion` → `modelVersion`
 2. `SchemaArtifactMetadata` → `metadata`
-3. `[Header]` → `header?`
-4. `[Footer]` → `footer?`
-5. `EmbeddedArtifact*` → `members`
+3. `[TemplateRenderingHint]` → `renderingHint?`
+4. `[Header]` → `header?`
+5. `[Footer]` → `footer?`
+6. `EmbeddedArtifact*` → `members`
+
+**`TemplateRenderingHint`** (`template_rendering_hint`):
+0. `[HelpDisplayMode]` → `helpDisplayMode?`
 
 **`TemplateInstance`** (`template_instance`):
 0. `TemplateInstanceId` → `id`
@@ -2023,6 +2083,7 @@ For all of `TextField`, `IntegerNumberField`, `RealNumberField`,
 1. `ModelVersion` → `modelVersion`
 2. `SchemaArtifactMetadata` → `metadata`
 3. `<Family>FieldSpec` → `fieldSpec`
+4. `[HelpText]` → `helpText?`
 
 ### 14.3 Embedded artifacts
 
@@ -2036,7 +2097,8 @@ with the per-family typed-id and typed-default-value slots:
 4. `[Visibility]` → `visibility?`
 5. `[<Family>Value]` → `defaultValue?` (omitted on `EmbeddedAttributeValueField`; on `EmbeddedMultiValuedEnumField` the slot is `EnumValue*` → `defaultValue?: array<EnumValue>`)
 6. `[LabelOverride]` → `labelOverride?`
-7. `[Property]` → `property?`
+7. `[HelpTextOverride]` → `helpTextOverride?`
+8. `[Property]` → `property?`
 
 (Component indices are renumbered to skip slots a particular family
 omits, per the per-family abstract production. The list above gives the

@@ -34,6 +34,7 @@ For example, in the production
 Template ::= template(
                TemplateId
                SchemaArtifactMetadata
+               [TemplateRenderingHint]
                EmbeddedArtifact*
              )
 ```
@@ -108,6 +109,7 @@ classDiagram
     TemplateId
     ModelVersion
     SchemaArtifactMetadata
+    [TemplateRenderingHint]
     [Header]
     [Footer]
   }
@@ -132,6 +134,7 @@ classDiagram
     [Visibility]
     [defaultValue]
     [LabelOverride]
+    [HelpTextOverride]
     [Property]
   }
   class EmbeddedTemplate {
@@ -195,6 +198,7 @@ Template ::= template(
                TemplateId
                ModelVersion
                SchemaArtifactMetadata
+               [TemplateRenderingHint]
                [Header]
                [Footer]
                EmbeddedArtifact*
@@ -207,9 +211,28 @@ Header ::= header(
 Footer ::= footer(
              MultilingualString
            )
+
+TemplateRenderingHint ::= template_rendering_hint(
+                            [HelpDisplayMode]
+                          )
+
+HelpDisplayMode ::= "inline" | "tooltip" | "both" | "none"
 ```
 
 `Header` and `Footer` denote optional human-readable textual content displayed at the top and bottom of a rendered template respectively. Each is a [`MultilingualString`](#multilingual-strings) carrying one or more language-tagged localizations of the same conceptual text.
+
+`TemplateRenderingHint` carries form-level UX configuration. Distinct from the per-field-spec [`RenderingHint`](#rendering-hints) family, which configures how a single field is rendered, `TemplateRenderingHint` configures behaviour that applies to the form as a whole. Currently the only slot is `HelpDisplayMode`; future revisions may add further form-level UX switches, each with its own cascade rule for embedded templates.
+
+`HelpDisplayMode` selects how field [`HelpText`](#field-artifacts) — and any per-embedding [`HelpTextOverride`](#help-text-override) — is presented at form-render time:
+
+- `"inline"` — `HelpText` renders as visible text adjacent to the field, typically beneath the input.
+- `"tooltip"` — `HelpText` renders as a hover/focus tooltip, triggered by a `?` icon or similar affordance.
+- `"both"` — both presentations are emitted. Useful for accessibility contexts where redundancy is preferred.
+- `"none"` — the field's `HelpText` is not displayed at form-render time. The content remains part of the model (visible to alternative renderers, to the RDF projection, and to catalog displays) but the form-rendering layer suppresses it.
+
+When `HelpDisplayMode` is absent — either because the `Template` carries no `TemplateRenderingHint`, or because the hint omits the slot — the default behaviour is `"inline"`.
+
+The cascade rule for nested templates is a rendering-time concern, not a structural validation constraint, and is normatively stated in [`presentation.md`](presentation.md): when a `Template` is embedded inside another `Template`, the inner template's `HelpDisplayMode` is ignored for help-text rendering; the enclosing template's setting applies to every field within the rendered form, including fields contributed by nested templates. The inner template's own `HelpDisplayMode` applies only when the template is rendered standalone.
 
 The following productions introduce the abstract field categories. `Field` remains an abstract category, while the intermediate categories group related concrete field artifacts for readability and shared semantics.
 
@@ -258,6 +281,7 @@ TextField ::= text_field(
                ModelVersion
                SchemaArtifactMetadata
                TextFieldSpec
+               [HelpText]
              )
 
 BooleanField ::= boolean_field(
@@ -265,6 +289,7 @@ BooleanField ::= boolean_field(
                   ModelVersion
                   SchemaArtifactMetadata
                   BooleanFieldSpec
+                  [HelpText]
                 )
 ```
 
@@ -276,6 +301,7 @@ IntegerNumberField ::= integer_number_field(
                          ModelVersion
                          SchemaArtifactMetadata
                          IntegerNumberFieldSpec
+                         [HelpText]
                        )
 
 RealNumberField ::= real_number_field(
@@ -283,6 +309,7 @@ RealNumberField ::= real_number_field(
                       ModelVersion
                       SchemaArtifactMetadata
                       RealNumberFieldSpec
+                      [HelpText]
                     )
 ```
 
@@ -294,6 +321,7 @@ DateField ::= date_field(
                ModelVersion
                SchemaArtifactMetadata
                DateFieldSpec
+               [HelpText]
              )
 
 TimeField ::= time_field(
@@ -301,6 +329,7 @@ TimeField ::= time_field(
                ModelVersion
                SchemaArtifactMetadata
                TimeFieldSpec
+               [HelpText]
              )
 
 DateTimeField ::= date_time_field(
@@ -308,6 +337,7 @@ DateTimeField ::= date_time_field(
                    ModelVersion
                    SchemaArtifactMetadata
                    DateTimeFieldSpec
+                   [HelpText]
                  )
 ```
 
@@ -319,6 +349,7 @@ ControlledTermField ::= controlled_term_field(
                           ModelVersion
                           SchemaArtifactMetadata
                           ControlledTermFieldSpec
+                          [HelpText]
                         )
 
 LinkField ::= link_field(
@@ -326,6 +357,7 @@ LinkField ::= link_field(
                ModelVersion
                SchemaArtifactMetadata
                LinkFieldSpec
+               [HelpText]
              )
 ```
 
@@ -337,6 +369,7 @@ SingleValuedEnumField ::= single_valued_enum_field(
                             ModelVersion
                             SchemaArtifactMetadata
                             SingleValuedEnumFieldSpec
+                            [HelpText]
                           )
 
 MultiValuedEnumField ::= multi_valued_enum_field(
@@ -344,6 +377,7 @@ MultiValuedEnumField ::= multi_valued_enum_field(
                            ModelVersion
                            SchemaArtifactMetadata
                            MultiValuedEnumFieldSpec
+                           [HelpText]
                          )
 ```
 
@@ -355,6 +389,7 @@ EmailField ::= email_field(
                 ModelVersion
                 SchemaArtifactMetadata
                 EmailFieldSpec
+                [HelpText]
               )
 
 PhoneNumberField ::= phone_number_field(
@@ -362,6 +397,7 @@ PhoneNumberField ::= phone_number_field(
                       ModelVersion
                       SchemaArtifactMetadata
                       PhoneNumberFieldSpec
+                      [HelpText]
                     )
 ```
 
@@ -373,6 +409,7 @@ OrcidField ::= orcid_field(
                 ModelVersion
                 SchemaArtifactMetadata
                 OrcidFieldSpec
+                [HelpText]
               )
 
 RorField ::= ror_field(
@@ -380,6 +417,7 @@ RorField ::= ror_field(
               ModelVersion
               SchemaArtifactMetadata
               RorFieldSpec
+              [HelpText]
             )
 
 DoiField ::= doi_field(
@@ -387,6 +425,7 @@ DoiField ::= doi_field(
               ModelVersion
               SchemaArtifactMetadata
               DoiFieldSpec
+              [HelpText]
             )
 
 PubMedIdField ::= pub_med_id_field(
@@ -394,6 +433,7 @@ PubMedIdField ::= pub_med_id_field(
                     ModelVersion
                     SchemaArtifactMetadata
                     PubMedIdFieldSpec
+                    [HelpText]
                   )
 
 RridField ::= rrid_field(
@@ -401,6 +441,7 @@ RridField ::= rrid_field(
                ModelVersion
                SchemaArtifactMetadata
                RridFieldSpec
+               [HelpText]
              )
 
 NihGrantIdField ::= nih_grant_id_field(
@@ -408,6 +449,7 @@ NihGrantIdField ::= nih_grant_id_field(
                      ModelVersion
                      SchemaArtifactMetadata
                      NihGrantIdFieldSpec
+                     [HelpText]
                    )
 ```
 
@@ -419,10 +461,21 @@ AttributeValueField ::= attribute_value_field(
                           ModelVersion
                           SchemaArtifactMetadata
                           AttributeValueFieldSpec
+                          [HelpText]
                         )
 ```
 
 The concrete field artifacts defined above are reusable schema-level constructs. A reusable `Field` deliberately does not carry template-local keying, cardinality, visibility, or label override — those properties belong to the embedding context, not to the reusable artifact. To appear within a `Template`, each field must be included via an [Embedded Artifacts](#embedded-artifacts) construct, which adds that template-local context and governs how the field participates in that specific template.
+
+Each concrete `Field` artifact MAY carry an optional `HelpText` slot. `HelpText` is authored guidance about what the field is asking for and how to answer — text typically rendered alongside the field at form-render time as inline help, as a hover tooltip, or both, controlled by the enclosing `Template`'s [`HelpDisplayMode`](#template-rendering-hint). `HelpText` is distinct from [`Description`](#descriptive-metadata): `Description` is the artifact-catalog explanation seen when browsing the field registry; `HelpText` is the form-author-facing guidance seen at data-entry time. The two roles often share text but serve different audiences.
+
+```ebnf
+HelpText ::= help_text( MultilingualString )
+```
+
+`HelpText` carries a [`MultilingualString`](#multilingual-strings) value: localized authored guidance that may be presented in one or more natural languages. The enclosing `Template`'s `HelpDisplayMode` selects the presentation; absence of `HelpDisplayMode` defaults to `"inline"` rendering. The `"none"` arm suppresses rendering but preserves the content in the model (visible to alternative renderers, RDF projection, and catalog displays).
+
+A per-embedding override is also defined: an `EmbeddedField` MAY carry an optional `HelpTextOverride` that replaces the field's canonical `HelpText` at that embedding site only, mirroring the existing `LabelOverride` precedent. See [Embedded Artifacts](#embedded-artifacts) for the embedding-site shape.
 
 ### Embedded Artifacts
 
@@ -470,6 +523,7 @@ EmbeddedTextField ::= embedded_text_field(
                         [Visibility]
                         [TextValue]
                         [LabelOverride]
+                        [HelpTextOverride]
                         [Property]
                       )
 
@@ -481,6 +535,7 @@ EmbeddedIntegerNumberField ::= embedded_integer_number_field(
                                  [Visibility]
                                  [IntegerNumberValue]
                                  [LabelOverride]
+                                 [HelpTextOverride]
                                  [Property]
                                )
 
@@ -492,6 +547,7 @@ EmbeddedRealNumberField ::= embedded_real_number_field(
                               [Visibility]
                               [RealNumberValue]
                               [LabelOverride]
+                              [HelpTextOverride]
                               [Property]
                             )
 
@@ -502,6 +558,7 @@ EmbeddedBooleanField ::= embedded_boolean_field(
                            [Visibility]
                            [BooleanValue]
                            [LabelOverride]
+                           [HelpTextOverride]
                            [Property]
                          )
 
@@ -513,6 +570,7 @@ EmbeddedDateField ::= embedded_date_field(
                         [Visibility]
                         [DateValue]
                         [LabelOverride]
+                        [HelpTextOverride]
                         [Property]
                       )
 
@@ -524,6 +582,7 @@ EmbeddedTimeField ::= embedded_time_field(
                         [Visibility]
                         [TimeValue]
                         [LabelOverride]
+                        [HelpTextOverride]
                         [Property]
                       )
 
@@ -535,6 +594,7 @@ EmbeddedDateTimeField ::= embedded_date_time_field(
                             [Visibility]
                             [DateTimeValue]
                             [LabelOverride]
+                            [HelpTextOverride]
                             [Property]
                           )
 
@@ -546,6 +606,7 @@ EmbeddedControlledTermField ::= embedded_controlled_term_field(
                                   [Visibility]
                                   [ControlledTermValue]
                                   [LabelOverride]
+                                  [HelpTextOverride]
                                   [Property]
                                 )
 
@@ -556,6 +617,7 @@ EmbeddedSingleValuedEnumField ::= embedded_single_valued_enum_field(
                                     [Visibility]
                                     [EnumValue]
                                     [LabelOverride]
+                                    [HelpTextOverride]
                                     [Property]
                                   )
 
@@ -567,6 +629,7 @@ EmbeddedMultiValuedEnumField ::= embedded_multi_valued_enum_field(
                                    [Visibility]
                                    EnumValue*
                                    [LabelOverride]
+                                   [HelpTextOverride]
                                    [Property]
                                  )
 
@@ -578,6 +641,7 @@ EmbeddedLinkField ::= embedded_link_field(
                         [Visibility]
                         [LinkValue]
                         [LabelOverride]
+                        [HelpTextOverride]
                         [Property]
                       )
 
@@ -589,6 +653,7 @@ EmbeddedEmailField ::= embedded_email_field(
                          [Visibility]
                          [EmailValue]
                          [LabelOverride]
+                         [HelpTextOverride]
                          [Property]
                        )
 
@@ -600,6 +665,7 @@ EmbeddedPhoneNumberField ::= embedded_phone_number_field(
                                [Visibility]
                                [PhoneNumberValue]
                                [LabelOverride]
+                               [HelpTextOverride]
                                [Property]
                              )
 
@@ -611,6 +677,7 @@ EmbeddedOrcidField ::= embedded_orcid_field(
                          [Visibility]
                          [OrcidValue]
                          [LabelOverride]
+                         [HelpTextOverride]
                          [Property]
                        )
 
@@ -622,6 +689,7 @@ EmbeddedRorField ::= embedded_ror_field(
                        [Visibility]
                        [RorValue]
                        [LabelOverride]
+                       [HelpTextOverride]
                        [Property]
                      )
 
@@ -633,6 +701,7 @@ EmbeddedDoiField ::= embedded_doi_field(
                        [Visibility]
                        [DoiValue]
                        [LabelOverride]
+                       [HelpTextOverride]
                        [Property]
                      )
 
@@ -644,6 +713,7 @@ EmbeddedPubMedIdField ::= embedded_pub_med_id_field(
                             [Visibility]
                             [PubMedIdValue]
                             [LabelOverride]
+                            [HelpTextOverride]
                             [Property]
                           )
 
@@ -655,6 +725,7 @@ EmbeddedRridField ::= embedded_rrid_field(
                         [Visibility]
                         [RridValue]
                         [LabelOverride]
+                        [HelpTextOverride]
                         [Property]
                       )
 
@@ -666,6 +737,7 @@ EmbeddedNihGrantIdField ::= embedded_nih_grant_id_field(
                                [Visibility]
                                [NihGrantIdValue]
                                [LabelOverride]
+                               [HelpTextOverride]
                                [Property]
                              )
 
@@ -676,6 +748,7 @@ EmbeddedAttributeValueField ::= embedded_attribute_value_field(
                                   [Cardinality]
                                   [Visibility]
                                   [LabelOverride]
+                                  [HelpTextOverride]
                                   [Property]
                                 )
 ```
@@ -1429,6 +1502,18 @@ LabelOverride ::= label_override(
 ```
 
 `AlternativeLabel` is a [`MultilingualString`](#multilingual-strings): each entry is itself a localization set for one alternative phrasing of the artifact's display label.
+
+### Help Text Override
+
+`HelpTextOverride` provides template-specific authored guidance for an embedded field. When present, it replaces the field's canonical [`HelpText`](#field-artifacts) for that embedding context only. The reusable `Field`'s `HelpText` remains the canonical content for all other embedding contexts (and for the field rendered standalone).
+
+```ebnf
+HelpTextOverride ::= help_text_override( MultilingualString )
+```
+
+`HelpTextOverride` is a [`MultilingualString`](#multilingual-strings): it carries the same kind of authored guidance as `HelpText`, but scoped to a single embedding site. The override's presentation — inline, tooltip, both, or none — is selected by the enclosing `Template`'s `HelpDisplayMode` exactly as for the underlying `HelpText`.
+
+The precedence rule is straightforward: at an embedding site, the renderer displays the embedding's `HelpTextOverride` if present, otherwise the referenced `Field`'s `HelpText`, otherwise nothing. The override is *replace*, not *merge*: localizations present in the field's `HelpText` but absent from the embedding's `HelpTextOverride` do not fall back.
 
 ### Properties
 
