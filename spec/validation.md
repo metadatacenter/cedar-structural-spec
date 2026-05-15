@@ -339,12 +339,13 @@ A conforming validator MUST treat the cited grammar as authoritative; a value is
 Entry point for schema validation.
 
 1. Run [`validate_model_version(template.model_version)`](#fn-validate-model-version) and [`validate_artifact_metadata(template.schema_artifact_metadata)`](#fn-validate-artifact-metadata).
-2. Let `fields` = the set of `Field` artifacts referenced by `EmbeddedField` constructs in `template`.
-3. For each `field` in `fields`: run [`validate_model_version(field.model_version)`](#fn-validate-model-version), [`validate_artifact_metadata(field.schema_artifact_metadata)`](#fn-validate-artifact-metadata), and [`validate_field_spec(field.field_spec)`](#fn-validate-field-spec).
-4. Let `pcs` = the set of `PresentationComponent` artifacts referenced by `EmbeddedPresentationComponent` constructs in `template`.
-5. For each `component` in `pcs`: run [`validate_model_version(component.model_version)`](#fn-validate-model-version) and [`validate_artifact_metadata(component.artifact_metadata)`](#fn-validate-artifact-metadata).
-6. Run [`validate_embedded_artifact_keys(template)`](#fn-validate-embedded-artifact-keys).
-7. For each `embedded` in `template.embedded_artifacts`:
+2. If `template.template_rendering_hint` is present: run [`validate_template_rendering_hint(template.template_rendering_hint)`](#fn-validate-template-rendering-hint).
+3. Let `fields` = the set of `Field` artifacts referenced by `EmbeddedField` constructs in `template`.
+4. For each `field` in `fields`: run [`validate_model_version(field.model_version)`](#fn-validate-model-version), [`validate_artifact_metadata(field.schema_artifact_metadata)`](#fn-validate-artifact-metadata), and [`validate_field_spec(field.field_spec)`](#fn-validate-field-spec).
+5. Let `pcs` = the set of `PresentationComponent` artifacts referenced by `EmbeddedPresentationComponent` constructs in `template`.
+6. For each `component` in `pcs`: run [`validate_model_version(component.model_version)`](#fn-validate-model-version) and [`validate_artifact_metadata(component.artifact_metadata)`](#fn-validate-artifact-metadata).
+7. Run [`validate_embedded_artifact_keys(template)`](#fn-validate-embedded-artifact-keys).
+8. For each `embedded` in `template.embedded_artifacts`:
    1. Run [`validate_embedding_reference(embedded)`](#fn-validate-embedding-reference).
    2. Run [`validate_cardinality_consistency(embedded)`](#fn-validate-cardinality-consistency).
    3. If `embedded` is an `EmbeddedField`: run [`validate_rendering_hints(embedded)`](#fn-validate-rendering-hints).
@@ -367,6 +368,13 @@ Applies the [Versioning](#versioning) rules.
    *On failure:* `structural` at `<metadata>/versioning/derivedFrom`, production `SchemaArtifactVersioning`, message `"previousVersion and derivedFrom MUST NOT carry the same IRI"`.
 
 When invoked with an `ArtifactMetadata` value (e.g. a `PresentationComponent`'s metadata), all steps are skipped: `ArtifactMetadata` does not carry `SchemaArtifactVersioning`.
+
+---
+
+##### `validate_template_rendering_hint(hint: TemplateRenderingHint)` {#fn-validate-template-rendering-hint}
+
+1. If `hint.help_display_mode` is present: verify it is one of `"inline"`, `"tooltip"`, `"both"`, `"none"`.
+   *On failure:* `wireShape` at `<hint>/helpDisplayMode`, production `HelpDisplayMode`, message `"unknown HelpDisplayMode value"`.
 
 ---
 
