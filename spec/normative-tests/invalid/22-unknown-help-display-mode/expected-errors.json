@@ -1,0 +1,8 @@
+[
+  {
+    "category": "wireShape",
+    "path": "/renderingHint/helpDisplayMode",
+    "production": "HelpDisplayMode",
+    "messageRegex": "unknown HelpDisplayMode|helpDisplayMode.*invalid|inline.*tooltip.*both.*none"
+  }
+]

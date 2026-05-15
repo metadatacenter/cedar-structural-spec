@@ -23,7 +23,8 @@ normative-tests/
 │   ├── 03-48   per-family Template + Instance pairs (the embedding surface)
 │   ├── 49-72   per-family Field artifacts (the artifact + FieldSpec surface)
 │   ├── 73-77   presentation components
-│   └── 78-83   LangTagRequirement (template + instance + field per arm)
+│   ├── 78-83   LangTagRequirement (template + instance + field per arm)
+│   └── 84-87   HelpText / HelpTextOverride / HelpDisplayMode
 └── invalid/
     ├── 01-unknown-kind/                                # wireShape (§9.5)
     ├── 02-fieldid-family-mismatch-and-duplicate-key/   # structural (×2)
@@ -45,7 +46,8 @@ normative-tests/
     ├── 18-invalid-semantic-version/                    # lexical (SemanticVersion)
     ├── 19-invalid-iso8601-datetime/                    # lexical (Iso8601DateTimeLexicalForm)
     ├── 20-text-lang-tag-required-missing/              # structural (LangTagRequirement)
-    └── 21-text-lang-tag-forbidden-present/             # structural (LangTagRequirement)
+    ├── 21-text-lang-tag-forbidden-present/             # structural (LangTagRequirement)
+    └── 22-unknown-help-display-mode/                   # wireShape (HelpDisplayMode)
         # each subdirectory contains input.json + expected-errors.json
 ```
 
@@ -124,7 +126,27 @@ artifacts. The `langTagOptional` arm is the default behaviour and is
 exercised throughout the other valid fixtures, so no dedicated
 fixtures for it are needed.
 
-A binding that round-trips every fixture in groups 1–5 has
+**`84`–`87` Help text and display mode.** Four fixtures covering the
+help-text feature:
+
+- `84` — a standalone `TextField` carrying multilingual `helpText`
+  (English and German).
+- `85` — a `Template` setting `renderingHint.helpDisplayMode` to
+  `"tooltip"`.
+- `86` — a `Template` whose `EmbeddedTextField` carries a
+  `helpTextOverride` that replaces the referenced field's
+  `helpText` for that embedding only.
+- `87` — a `Template` setting `helpDisplayMode` to `"none"`,
+  verifying that the model accepts and round-trips the
+  suppression mode.
+
+The default `"inline"` mode is exercised by absence of
+`renderingHint` throughout the other valid fixtures, so no dedicated
+fixture for it is needed. The `"both"` arm shares its wire-shape
+acceptance with the other arms and is verified by the per-arm
+round-trip of `85` plus the validator's enum-membership rule.
+
+A binding that round-trips every fixture in groups 1–6 has
 demonstrated correct mapping for every reachable wire production
 this specification defines.
 

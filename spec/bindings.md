@@ -744,6 +744,59 @@ equal regardless of allocation identity. Records and Pydantic models
 provide this automatically; TypeScript binders need a shallow-equality
 helper if equality is meaningful at call sites.
 
+### 2.12 Override-precedence accessors
+
+**What it is.** Several grammar slots come in pairs: a canonical value
+on a reusable artifact and an optional override on the embedding site.
+The override wins per the spec's two-layer precedence rule
+([`grammar.md`](grammar.md) §Defaults; [`presentation.md`](presentation.md)
+§Help-Text Rendering). The current pairs:
+
+| Reusable artifact slot                       | Embedding-site override slot                  |
+|---|---|
+| `Field.fieldSpec.defaultValue`               | `EmbeddedXxxField.defaultValue`               |
+| `Field.metadata.preferredLabel` / `altLabels`| `EmbeddedXxxField.labelOverride.label` / `altLabels` |
+| `Field.helpText`                             | `EmbeddedXxxField.helpTextOverride`           |
+
+**Binding guidance.** Bindings SHOULD expose a small convenience
+accessor per pair so call sites do not re-implement the precedence
+rule. The accessor takes the `EmbeddedField` and the resolved `Field`
+and returns the effective value:
+
+```ts
+// TypeScript
+function resolvedHelpText(
+  embedded: EmbeddedTextField,
+  field: TextField,
+): MultilingualString | undefined {
+  return embedded.helpTextOverride ?? field.helpText;
+}
+```
+
+```java
+// Java
+public static Optional<MultilingualString> resolvedHelpText(
+    EmbeddedTextField embedded, TextField field) {
+  return Optional.ofNullable(embedded.helpTextOverride())
+                 .or(() -> Optional.ofNullable(field.helpText()));
+}
+```
+
+```python
+# Python
+def resolved_help_text(
+    embedded: EmbeddedTextField, field: TextField
+) -> MultilingualString | None:
+    return embedded.help_text_override or field.help_text
+```
+
+The same pattern applies to `defaultValue` and `labelOverride.label`,
+each with its own accessor. Replace, not merge: the override
+*replaces* the canonical value at the embedding site; partial
+localization fallback (e.g., one language overridden, others falling
+through) is **not** part of the precedence rule. Bindings MUST NOT
+synthesise such fallback.
+
 ---
 
 ## 3. Naming Conventions per Language
