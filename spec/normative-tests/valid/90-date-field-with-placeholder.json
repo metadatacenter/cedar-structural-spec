@@ -1,11 +1,11 @@
 {
-  "kind": "TextField",
-  "id": "https://example.org/fields/text-1",
+  "kind": "DateField",
+  "id": "https://example.org/fields/birth-date",
   "modelVersion": "2.0.0",
   "metadata": {
     "preferredLabel": [
       {
-        "value": "Test",
+        "value": "Date of birth",
         "lang": "en"
       }
     ],
@@ -21,18 +21,13 @@
     }
   },
   "fieldSpec": {
-    "kind": "TextFieldSpec",
-    "defaultValue": {
-      "kind": "TextValue",
-      "value": "default text",
-      "lang": "en"
-    },
-    "minLength": 1,
-    "maxLength": 280,
-    "validationRegex": "^.{1,280}$",
+    "kind": "DateFieldSpec",
+    "dateValueType": "fullDate",
     "renderingHint": {
-      "lineMode": "multiLine",
-      "placeholder": [{ "value": "Up to 280 characters of free text", "lang": "en" }]
+      "componentOrder": "yearMonthDay",
+      "placeholder": [
+        { "value": "YYYY-MM-DD", "lang": "en" }
+      ]
     }
   }
 }

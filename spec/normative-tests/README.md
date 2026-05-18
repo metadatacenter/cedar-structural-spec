@@ -24,7 +24,8 @@ normative-tests/
 │   ├── 49-72   per-family Field artifacts (the artifact + FieldSpec surface)
 │   ├── 73-77   presentation components
 │   ├── 78-83   LangTagRequirement (template + instance + field per arm)
-│   └── 84-87   HelpText / HelpTextOverride / HelpDisplayMode
+│   ├── 84-87   HelpText / HelpTextOverride / HelpDisplayMode
+│   └── 88-91   Placeholder (text / email / date / orcid)
 └── invalid/
     ├── 01-unknown-kind/                                # wireShape (§9.5)
     ├── 02-fieldid-family-mismatch-and-duplicate-key/   # structural (×2)
@@ -47,7 +48,8 @@ normative-tests/
     ├── 19-invalid-iso8601-datetime/                    # lexical (Iso8601DateTimeLexicalForm)
     ├── 20-text-lang-tag-required-missing/              # structural (LangTagRequirement)
     ├── 21-text-lang-tag-forbidden-present/             # structural (LangTagRequirement)
-    └── 22-unknown-help-display-mode/                   # wireShape (HelpDisplayMode)
+    ├── 22-unknown-help-display-mode/                   # wireShape (HelpDisplayMode)
+    └── 23-text-rendering-hint-bare-string/             # wireShape (TextRenderingHint)
         # each subdirectory contains input.json + expected-errors.json
 ```
 
@@ -146,7 +148,28 @@ fixture for it is needed. The `"both"` arm shares its wire-shape
 acceptance with the other arms and is verified by the per-arm
 round-trip of `85` plus the validator's enum-membership rule.
 
-A binding that round-trips every fixture in groups 1–6 has
+**`88`–`91` Placeholder.** Four fixtures covering the `Placeholder`
+slot across families that take text-entry input:
+
+- `88` — a `TextField` with multilingual `placeholder` (en + es) on
+  its `renderingHint`, also carrying `lineMode`. Exercises the
+  restructured `TextRenderingHint` object form.
+- `89` — an `EmailField` with `placeholder` on the new
+  `EmailRenderingHint`. Exercises a "new rendering hint introduced
+  for an otherwise-no-hint family" surface.
+- `90` — a `DateField` with `placeholder` alongside the existing
+  `componentOrder`. Exercises "placeholder added alongside an
+  existing rendering-hint slot."
+- `91` — an `OrcidField` with `placeholder` on the new
+  `OrcidRenderingHint`. Exercises one of the six identifier-family
+  rendering hints.
+
+The existing standalone `TextField` fixture (`49`) was updated to
+the restructured `TextRenderingHint` object form (`{ lineMode:
+"multiLine", placeholder: ... }`) — the bare-string form
+(`"renderingHint": "multiLine"`) is no longer wire-form-valid.
+
+A binding that round-trips every fixture in groups 1–7 has
 demonstrated correct mapping for every reachable wire production
 this specification defines.
 

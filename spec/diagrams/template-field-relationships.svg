@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 1020 540"
+     font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+     font-size="15">
+
+  <!-- ───────── definitions ───────── -->
+  <defs>
+    <!-- closed-arrow head (association direction) -->
+    <marker id="arrow-open" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#222" />
+    </marker>
+    <!-- filled-diamond head (composition) -->
+    <marker id="diamond-filled" viewBox="0 0 12 10" refX="11" refY="5"
+            markerWidth="11" markerHeight="9" orient="auto-start-reverse">
+      <path d="M 0 5 L 6 0 L 12 5 L 6 10 z" fill="#222" stroke="#222" stroke-width="1" />
+    </marker>
+  </defs>
+
+  <style>
+    .box       { fill: #fdfdfd; stroke: #222; stroke-width: 2.4; }
+    .title     { font-weight: 600; text-anchor: middle; }
+    .role      { fill: #333; font-size: 15px; }
+    .legend    { fill: #222; font-size: 15px; }
+    .line      { stroke: #222; stroke-width: 2.2; fill: none; }
+    .line-dash { stroke: #222; stroke-width: 2.2; fill: none; stroke-dasharray: 8 5; }
+    .line-dot  { stroke: #222; stroke-width: 2.2; fill: none; stroke-dasharray: 2 5; stroke-linecap: round; }
+    .schema    { fill: #1f4e7a; }
+    .instance  { fill: #7a3a1f; }
+    .label-bg  { fill: #fdfdfd; }
+  </style>
+
+  <!-- ─────────────────────────────────────────────────────────────── -->
+  <!-- LEGEND (top)                                                    -->
+  <!-- ─────────────────────────────────────────────────────────────── -->
+
+  <g transform="translate(0, 0)">
+    <text x="40"  y="24" class="legend" font-weight="600">Schema side (reusable definitions)</text>
+    <line x1="330" y1="19" x2="370" y2="19" stroke="#1f4e7a" stroke-width="4" />
+
+    <text x="540" y="24" class="legend" font-weight="600">Instance side (data records)</text>
+    <line x1="780" y1="19" x2="820" y2="19" stroke="#7a3a1f" stroke-width="4" />
+  </g>
+
+  <!-- ─────────────────────────────────────────────────────────────── -->
+  <!-- ROW 1 — Artifacts                                                -->
+  <!-- ─────────────────────────────────────────────────────────────── -->
+
+  <!-- Template  (right side, schema) -->
+  <g>
+    <rect class="box" x="640" y="70" width="180" height="54" rx="5" />
+    <text class="title schema" x="730" y="103">Template</text>
+  </g>
+
+  <!-- TemplateInstance  (left side, instance) -->
+  <g>
+    <rect class="box" x="120" y="70" width="200" height="54" rx="5" />
+    <text class="title instance" x="220" y="103">TemplateInstance</text>
+  </g>
+
+  <!-- templateRef: TemplateInstance ──→ Template (label LIFTED above the line) -->
+  <line class="line" x1="320" y1="97" x2="640" y2="97"
+        marker-end="url(#arrow-open)" />
+  <text class="role" x="480" y="86" text-anchor="middle">templateRef (IRI)</text>
+
+  <!-- ─────────────────────────────────────────────────────────────── -->
+  <!-- ROW 2 — Embedding and value layer                                -->
+  <!-- ─────────────────────────────────────────────────────────────── -->
+
+  <!-- EmbeddedField, EmbeddedTemplate group  (right) -->
+  <g>
+    <rect class="box" x="540" y="220" width="160" height="54" rx="5" />
+    <text class="title schema" x="620" y="253">EmbeddedField</text>
+
+    <rect class="box" x="720" y="220" width="180" height="54" rx="5" />
+    <text class="title schema" x="810" y="253">EmbeddedTemplate</text>
+  </g>
+
+  <!-- Template ──◆ contains ──→ EmbeddedField  (composition).
+       Label sits LEFT of the line. -->
+  <line class="line" x1="700" y1="124" x2="640" y2="220"
+        marker-start="url(#diamond-filled)" />
+  <text class="role" x="624" y="178" text-anchor="end">contains</text>
+
+  <!-- Template ──◆ contains ──→ EmbeddedTemplate  (composition).
+       Label sits RIGHT of the line, between the line and the
+       EmbeddedTemplate box's left edge. -->
+  <line class="line" x1="770" y1="124" x2="810" y2="220"
+        marker-start="url(#diamond-filled)" />
+  <text class="role" x="805" y="178" text-anchor="start">contains</text>
+
+  <!-- EmbeddedTemplate ──→ Template (artifactRef, recursive).
+       Curve sweeps well out to the right of the EmbeddedTemplate box
+       so the loop and its label stay clear of the 'contains' label
+       inside the V. -->
+  <path class="line"
+        d="M 900 244 C 985 235 985 110 830 105"
+        marker-end="url(#arrow-open)" fill="none" />
+  <text class="role" x="965" y="178" text-anchor="middle">artifactRef</text>
+
+  <!-- FieldValue  (left, instance) -->
+  <g>
+    <rect class="box" x="120" y="220" width="200" height="54" rx="5" />
+    <text class="title instance" x="220" y="253">FieldValue</text>
+  </g>
+
+  <!-- TemplateInstance ──◆ contains ──→ FieldValue (composition).
+       Label sits LEFT of the line. -->
+  <line class="line" x1="220" y1="124" x2="220" y2="220"
+        marker-start="url(#diamond-filled)" />
+  <text class="role" x="205" y="178" text-anchor="end">contains</text>
+
+  <!-- FieldValue ──keyed by──→ EmbeddedField  (semantic join). Two-line
+       label ABOVE, centered between the two boxes. -->
+  <line class="line-dash" x1="320" y1="247" x2="540" y2="247"
+        marker-end="url(#arrow-open)" />
+  <text class="role" x="430" y="218" text-anchor="middle">keyed by</text>
+  <text class="role" x="430" y="236" text-anchor="middle">EmbeddedArtifactKey</text>
+
+  <!-- ─────────────────────────────────────────────────────────────── -->
+  <!-- ROW 3 — Leaf shapes                                              -->
+  <!-- ─────────────────────────────────────────────────────────────── -->
+
+  <!-- Field  (right) -->
+  <g>
+    <rect class="box" x="720" y="380" width="160" height="54" rx="5" />
+    <text class="title schema" x="800" y="413">Field</text>
+  </g>
+
+  <!-- FieldSpec  (middle-right) -->
+  <g>
+    <rect class="box" x="500" y="380" width="160" height="54" rx="5" />
+    <text class="title schema" x="580" y="413">FieldSpec</text>
+  </g>
+
+  <!-- EmbeddedField ──artifactRef──→ Field  (association by IRI).
+       Label sits RIGHT of the diagonal. -->
+  <line class="line" x1="700" y1="274" x2="780" y2="380"
+        marker-end="url(#arrow-open)" />
+  <text class="role" x="760" y="328" text-anchor="start">artifactRef</text>
+
+  <!-- Field ──◆ has ──→ FieldSpec  (composition). Label ABOVE. -->
+  <line class="line" x1="720" y1="407" x2="660" y2="407"
+        marker-start="url(#diamond-filled)" />
+  <text class="role" x="690" y="397" text-anchor="middle">has</text>
+
+  <!-- Value  (left, instance) -->
+  <g>
+    <rect class="box" x="120" y="380" width="200" height="54" rx="5" />
+    <text class="title instance" x="220" y="413">Value</text>
+  </g>
+
+  <!-- FieldValue ──◆ contains ──→ Value (composition, 1..*).
+       Label LEFT of the line. -->
+  <line class="line" x1="220" y1="274" x2="220" y2="380"
+        marker-start="url(#diamond-filled)" />
+  <text class="role" x="205" y="332" text-anchor="end">contains 1..*</text>
+
+  <!-- FieldSpec ──defines shape of──→ Value (dependency). Label ABOVE. -->
+  <line class="line-dot" x1="500" y1="407" x2="320" y2="407"
+        marker-end="url(#arrow-open)" />
+  <text class="role" x="410" y="397" text-anchor="middle">defines shape of</text>
+
+  <!-- ─────────────────────────────────────────────────────────────── -->
+  <!-- KEY (bottom)                                                     -->
+  <!-- ─────────────────────────────────────────────────────────────── -->
+
+  <g transform="translate(40, 460)">
+    <text class="legend" font-weight="600">Key</text>
+
+    <!-- composition -->
+    <g transform="translate(0, 22)">
+      <line class="line" x1="0" y1="8" x2="56" y2="8"
+            marker-start="url(#diamond-filled)" />
+      <text class="legend" x="66" y="12">composition (whole owns part)</text>
+    </g>
+
+    <!-- IRI reference -->
+    <g transform="translate(0, 46)">
+      <line class="line" x1="0" y1="8" x2="56" y2="8"
+            marker-end="url(#arrow-open)" />
+      <text class="legend" x="66" y="12">reference (by IRI)</text>
+    </g>
+
+    <!-- semantic join (dashed) -->
+    <g transform="translate(380, 22)">
+      <line class="line-dash" x1="0" y1="8" x2="56" y2="8"
+            marker-end="url(#arrow-open)" />
+      <text class="legend" x="66" y="12">semantic join (by key)</text>
+    </g>
+
+    <!-- dependency (dotted) -->
+    <g transform="translate(380, 46)">
+      <line class="line-dot" x1="0" y1="8" x2="56" y2="8"
+            marker-end="url(#arrow-open)" />
+      <text class="legend" x="66" y="12">dependency / shape constraint</text>
+    </g>
+  </g>
+
+</svg>
