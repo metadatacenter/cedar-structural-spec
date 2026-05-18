@@ -33,7 +33,9 @@ For example, in the production
 ```ebnf
 Template ::= template(
                TemplateId
-               SchemaArtifactMetadata
+               CatalogMetadata
+               SchemaArtifactVersioning
+               Title
                [TemplateRenderingHint]
                EmbeddedArtifact*
              )
@@ -108,7 +110,9 @@ classDiagram
   class Template {
     TemplateId
     ModelVersion
-    SchemaArtifactMetadata
+    CatalogMetadata
+    SchemaArtifactVersioning
+    Title
     [TemplateRenderingHint]
     [Header]
     [Footer]
@@ -116,12 +120,12 @@ classDiagram
   class PresentationComponent {
     PresentationComponentId
     ModelVersion
-    ArtifactMetadata
+    CatalogMetadata
   }
   class TemplateInstance {
     TemplateInstanceId
     ModelVersion
-    ArtifactMetadata
+    CatalogMetadata
   }
 
   class EmbeddedArtifact {
@@ -197,12 +201,22 @@ SchemaArtifact ::= Field
 Template ::= template(
                TemplateId
                ModelVersion
-               SchemaArtifactMetadata
+               CatalogMetadata
+               SchemaArtifactVersioning
+               Title
                [TemplateRenderingHint]
                [Header]
                [Footer]
                EmbeddedArtifact*
              )
+
+Title ::= title(
+            MultilingualString
+          )
+
+Label ::= label(
+            MultilingualString
+          )
 
 Header ::= header(
              MultilingualString
@@ -271,7 +285,7 @@ ExternalAuthorityField ::= OrcidField
 
 ### Concrete Field Artifacts
 
-Each concrete `Field` variant carries exactly four components: a typed artifact identifier that permanently identifies the reusable field; a `ModelVersion` identifying the version of the CEDAR structural model the artifact conforms to; `SchemaArtifactMetadata` providing the descriptive, lifecycle, versioning, and annotation metadata common to all schema artifacts; and a typed `FieldSpec` that specifies the value semantics and configuration for that field category. The identifier and `FieldSpec` are specific to each concrete variant; `ModelVersion` and `SchemaArtifactMetadata` are uniform across all fields. The groupings below mirror the abstract `Field` hierarchy defined in Core Structure.
+Each concrete `Field` variant carries six components: a typed artifact identifier that permanently identifies the reusable field; a `ModelVersion` identifying the version of the CEDAR structural model the artifact conforms to; `CatalogMetadata` providing the descriptive, lifecycle, and annotation metadata used in catalog and registry contexts; `SchemaArtifactVersioning` providing the version, status, and lineage information common to all schema artifacts; a typed `FieldSpec` that specifies the value semantics and configuration for that field category; and a `Label` that carries the rendered question text shown to users at data-entry time. The identifier, `FieldSpec`, and `Label` are specific to each concrete variant; `ModelVersion`, `CatalogMetadata`, and `SchemaArtifactVersioning` are uniform across all fields. Each concrete `Field` MAY additionally carry an optional `HelpText`. The groupings below mirror the abstract `Field` hierarchy defined in Core Structure.
 
 `TextField`, `BooleanField`, and the two numeric field families (`IntegerNumberField` and `RealNumberField`) are the simple scalar field specs. Each carries the most basic value semantics — free text, `true` / `false`, exact integer values, and real-valued numbers respectively.
 
@@ -279,16 +293,20 @@ Each concrete `Field` variant carries exactly four components: a typed artifact 
 TextField ::= text_field(
                TextFieldId
                ModelVersion
-               SchemaArtifactMetadata
+               CatalogMetadata
+               SchemaArtifactVersioning
                TextFieldSpec
+               Label
                [HelpText]
              )
 
 BooleanField ::= boolean_field(
                   BooleanFieldId
                   ModelVersion
-                  SchemaArtifactMetadata
+                  CatalogMetadata
+                  SchemaArtifactVersioning
                   BooleanFieldSpec
+                  Label
                   [HelpText]
                 )
 ```
@@ -299,16 +317,20 @@ The numeric field variants correspond to the `NumericField` abstract category. T
 IntegerNumberField ::= integer_number_field(
                          IntegerNumberFieldId
                          ModelVersion
-                         SchemaArtifactMetadata
+                         CatalogMetadata
+                         SchemaArtifactVersioning
                          IntegerNumberFieldSpec
+                         Label
                          [HelpText]
                        )
 
 RealNumberField ::= real_number_field(
                       RealNumberFieldId
                       ModelVersion
-                      SchemaArtifactMetadata
+                      CatalogMetadata
+                      SchemaArtifactVersioning
                       RealNumberFieldSpec
+                      Label
                       [HelpText]
                     )
 ```
@@ -319,24 +341,30 @@ The temporal field variants correspond to the `TemporalField` abstract category.
 DateField ::= date_field(
                DateFieldId
                ModelVersion
-               SchemaArtifactMetadata
+               CatalogMetadata
+               SchemaArtifactVersioning
                DateFieldSpec
+               Label
                [HelpText]
              )
 
 TimeField ::= time_field(
                TimeFieldId
                ModelVersion
-               SchemaArtifactMetadata
+               CatalogMetadata
+               SchemaArtifactVersioning
                TimeFieldSpec
+               Label
                [HelpText]
              )
 
 DateTimeField ::= date_time_field(
                    DateTimeFieldId
                    ModelVersion
-                   SchemaArtifactMetadata
+                   CatalogMetadata
+                   SchemaArtifactVersioning
                    DateTimeFieldSpec
+                   Label
                    [HelpText]
                  )
 ```
@@ -347,16 +375,20 @@ DateTimeField ::= date_time_field(
 ControlledTermField ::= controlled_term_field(
                           ControlledTermFieldId
                           ModelVersion
-                          SchemaArtifactMetadata
+                          CatalogMetadata
+                          SchemaArtifactVersioning
                           ControlledTermFieldSpec
+                          Label
                           [HelpText]
                         )
 
 LinkField ::= link_field(
                LinkFieldId
                ModelVersion
-               SchemaArtifactMetadata
+               CatalogMetadata
+               SchemaArtifactVersioning
                LinkFieldSpec
+               Label
                [HelpText]
              )
 ```
@@ -367,16 +399,20 @@ LinkField ::= link_field(
 SingleValuedEnumField ::= single_valued_enum_field(
                             SingleValuedEnumFieldId
                             ModelVersion
-                            SchemaArtifactMetadata
+                            CatalogMetadata
+                            SchemaArtifactVersioning
                             SingleValuedEnumFieldSpec
+                            Label
                             [HelpText]
                           )
 
 MultiValuedEnumField ::= multi_valued_enum_field(
                            MultiValuedEnumFieldId
                            ModelVersion
-                           SchemaArtifactMetadata
+                           CatalogMetadata
+                           SchemaArtifactVersioning
                            MultiValuedEnumFieldSpec
+                           Label
                            [HelpText]
                          )
 ```
@@ -387,16 +423,20 @@ The contact field variants correspond to the `ContactField` abstract category an
 EmailField ::= email_field(
                 EmailFieldId
                 ModelVersion
-                SchemaArtifactMetadata
+                CatalogMetadata
+                SchemaArtifactVersioning
                 EmailFieldSpec
+                Label
                 [HelpText]
               )
 
 PhoneNumberField ::= phone_number_field(
                       PhoneNumberFieldId
                       ModelVersion
-                      SchemaArtifactMetadata
+                      CatalogMetadata
+                      SchemaArtifactVersioning
                       PhoneNumberFieldSpec
+                      Label
                       [HelpText]
                     )
 ```
@@ -407,48 +447,60 @@ The external authority field variants correspond to the `ExternalAuthorityField`
 OrcidField ::= orcid_field(
                 OrcidFieldId
                 ModelVersion
-                SchemaArtifactMetadata
+                CatalogMetadata
+                SchemaArtifactVersioning
                 OrcidFieldSpec
+                Label
                 [HelpText]
               )
 
 RorField ::= ror_field(
               RorFieldId
               ModelVersion
-              SchemaArtifactMetadata
+              CatalogMetadata
+              SchemaArtifactVersioning
               RorFieldSpec
+              Label
               [HelpText]
             )
 
 DoiField ::= doi_field(
               DoiFieldId
               ModelVersion
-              SchemaArtifactMetadata
+              CatalogMetadata
+              SchemaArtifactVersioning
               DoiFieldSpec
+              Label
               [HelpText]
             )
 
 PubMedIdField ::= pub_med_id_field(
                     PubMedIdFieldId
                     ModelVersion
-                    SchemaArtifactMetadata
+                    CatalogMetadata
+                    SchemaArtifactVersioning
                     PubMedIdFieldSpec
+                    Label
                     [HelpText]
                   )
 
 RridField ::= rrid_field(
                RridFieldId
                ModelVersion
-               SchemaArtifactMetadata
+               CatalogMetadata
+               SchemaArtifactVersioning
                RridFieldSpec
+               Label
                [HelpText]
              )
 
 NihGrantIdField ::= nih_grant_id_field(
                      NihGrantIdFieldId
                      ModelVersion
-                     SchemaArtifactMetadata
+                     CatalogMetadata
+                     SchemaArtifactVersioning
                      NihGrantIdFieldSpec
+                     Label
                      [HelpText]
                    )
 ```
@@ -459,8 +511,10 @@ NihGrantIdField ::= nih_grant_id_field(
 AttributeValueField ::= attribute_value_field(
                           AttributeValueFieldId
                           ModelVersion
-                          SchemaArtifactMetadata
+                          CatalogMetadata
+                          SchemaArtifactVersioning
                           AttributeValueFieldSpec
+                          Label
                           [HelpText]
                         )
 ```
@@ -856,31 +910,30 @@ Concrete serializations need not preserve the per-family identifier distinctions
 
 ## Artifact Metadata
 
-Artifact metadata defines descriptive information, lifecycle information, versioning, and annotations. `ArtifactMetadata` provides the common metadata carried by all artifacts other than identity. `SchemaArtifactMetadata` extends that common structure with schema-versioning information used by reusable schema artifacts.
+Artifact metadata defines descriptive information, lifecycle information, versioning, and annotations. `CatalogMetadata` is uniform across every artifact kind and provides the common catalog-oriented metadata carried by all artifacts other than identity: descriptive properties (preferred catalog label, description, identifier, alternative labels), lifecycle metadata, and annotations. Schema artifacts (`Field`, `Template`) additionally carry `SchemaArtifactVersioning` as a separate top-level slot recording version, status, and lineage.
 
 ### Aggregate Structure
 
-This subsection identifies how the metadata categories are grouped at the artifact level. `ArtifactMetadata` carries the metadata common to all artifacts other than identity — descriptive properties, lifecycle metadata, and annotations — directly as members. `SchemaArtifactMetadata` adds versioning information for reusable schema artifacts.
+This subsection identifies how the metadata categories are grouped at the artifact level. `CatalogMetadata` carries the catalog-oriented properties of an artifact — descriptive properties (preferred catalog label, description, identifier, alternative labels), lifecycle metadata, and annotations — directly as members. It is uniform across every artifact kind: `Field`, `Template`, `PresentationComponent`, and `TemplateInstance` all carry the same `CatalogMetadata` shape.
+
+The schema artifacts (`Field` and `Template`) additionally carry [`SchemaArtifactVersioning`](#versioning) as a separate top-level slot on the artifact itself; non-schema artifacts (`PresentationComponent`, `TemplateInstance`) do not carry versioning.
+
+`CatalogMetadata` is distinct from an artifact's **rendered display name**. A `Field` carries a top-level `Label` slot (the rendered question text); a `Template` carries a top-level `Title` slot (the rendered form title); a `TemplateInstance` MAY carry an optional `Label` (a user-supplied instance name); a `PresentationComponent` carries no rendered display name at all. These rendered slots are defined on the per-artifact productions in [Field Artifacts](#field-artifacts), [Core Structure](#core-structure), [Instances](#instances), and [Presentation Components](#presentation-components) respectively.
 
 ```ebnf
-SchemaArtifactMetadata ::= schema_artifact_metadata(
-                             ArtifactMetadata
-                             SchemaArtifactVersioning
-                           )
-
-ArtifactMetadata ::= artifact_metadata(
-                       PreferredLabel
-                       [Description]
-                       [Identifier]
-                       AlternativeLabel*
-                       LifecycleMetadata
-                       Annotation*
-                     )
+CatalogMetadata ::= catalog_metadata(
+                      [PreferredLabel]
+                      [Description]
+                      [Identifier]
+                      AlternativeLabel*
+                      LifecycleMetadata
+                      Annotation*
+                    )
 ```
 
 ### Descriptive Metadata
 
-The descriptive metadata of an artifact comprises a set of human-oriented properties carried directly by `ArtifactMetadata`. These properties support naming, explanatory text, and external or local identifiers used for cataloging. `PreferredLabel` is the required human-readable display label for the artifact — for fields, this is the question text presented in a rendered form; for templates, presentation components, and instances, it is the artifact's display title in catalogs and authoring UIs. `Description`, when present, is an extended textual explanation of the artifact's purpose and content, intended for catalog display. `Identifier`, when present, is a user-specified external identifier intended for integration with institutional or external systems. `AlternativeLabel`, when present, provides additional display labels for the artifact (synonyms, abbreviations, legacy labels carried forward from prior versions of the model).
+The descriptive metadata of an artifact comprises a set of human-oriented properties carried directly by `CatalogMetadata`. These properties support naming, explanatory text, and external or local identifiers used for cataloging. `PreferredLabel`, when present, is the artifact's preferred display name in catalog and registry contexts (e.g., browsing the field registry or listing templates) — distinct from the artifact's *rendered* display name, which lives in a top-level slot on the artifact itself (`Field.label`, `Template.title`, `TemplateInstance.label`). Authors typically populate `PreferredLabel` with the same text as the rendered slot; the two are separate so they MAY differ when needed (for example, a field whose registry name is `"Comment field (v1.2)"` may render in forms as just `"Comment"`). `Description`, when present, is an extended textual explanation of the artifact's purpose and content, intended for catalog display. `Identifier`, when present, is a user-specified external identifier intended for integration with institutional or external systems. `AlternativeLabel`, when present, provides additional display labels for the artifact (synonyms, abbreviations, legacy labels carried forward from prior versions of the model).
 
 ```ebnf
 Description ::= description(
@@ -1129,7 +1182,7 @@ MultilingualString ::= multilingual_string(
 
 The `'und'` (undetermined) BCP 47 subtag MAY be used to denote a `LangString` whose natural language is unspecified. Implementations MAY use `'und'` as the default tag when constructing a `MultilingualString` from a bare string with no language information.
 
-`MultilingualString` differs from a single language-tagged scalar value (such as `TextValue` with a `LanguageTag`) in that it carries an unweighted localization *set* — multiple language tags coexist for the same conceptual string at metadata positions such as `Template.header` or `ArtifactMetadata.preferredLabel`.
+`MultilingualString` differs from a single language-tagged scalar value (such as `TextValue` with a `LanguageTag`) in that it carries an unweighted localization *set* — multiple language tags coexist for the same conceptual string at metadata positions such as `Template.header` or `CatalogMetadata.preferredLabel`.
 
 ### Numeric Datatype Kind
 
@@ -1537,7 +1590,7 @@ PropertyLabel ::= property_label( MultilingualString )
 
 A `FieldSpec` is the semantic configuration block carried by a concrete `Field` artifact. It specifies what kind of value the field accepts, any constraints on that value, and any compatible rendering hints for presentation. Each concrete `Field` variant carries exactly one `FieldSpec` that matches its kind: a `TextField` carries a `TextFieldSpec`, a `DateField` carries a `DateFieldSpec`, and so on. The correspondence between each `FieldSpec` and its permitted `Value` form is given in the [Field Spec And Value Correspondence](#field-spec-and-value-correspondence) section.
 
-One might ask why `FieldSpec` exists as a separate construct rather than folding its content directly into the concrete `Field` artifact. The answer is separation of concerns: the concrete field artifact — `TextField`, `DateField`, and so on — answers the question "what kind of reusable field is this?" and carries the artifact's identity, descriptive metadata, lifecycle metadata, and versioning. The `FieldSpec` answers the separate question "what are the value rules and rendering-compatible properties for this kind of field?" Keeping these concerns distinct means that artifact identity and lifecycle metadata remain uniform across all field kinds, while value semantics and field-specific configuration vary per family through `FieldSpec`. It also preserves a clean, uniform pattern: every concrete field artifact carries exactly one identifier, one `SchemaArtifactMetadata`, and one `FieldSpec`.
+One might ask why `FieldSpec` exists as a separate construct rather than folding its content directly into the concrete `Field` artifact. The answer is separation of concerns: the concrete field artifact — `TextField`, `DateField`, and so on — answers the question "what kind of reusable field is this?" and carries the artifact's identity, catalog metadata, versioning, and the rendered question-text label. The `FieldSpec` answers the separate question "what are the value rules and rendering-compatible properties for this kind of field?" Keeping these concerns distinct means that artifact identity, catalog metadata, and lifecycle/versioning information remain uniform across all field kinds, while value semantics and field-specific configuration vary per family through `FieldSpec`.
 
 `FieldSpec` productions are grouped here by field family, mirroring the abstract `Field` hierarchy in the Kernel Grammar. Temporal field specs, which carry additional precision and rendering configuration, are detailed in the [Temporal Field Specs](#temporal-field-specs) subsection. Controlled term source declarations, which specify the ontological authorities from which controlled-term values may be drawn, are covered in the [Controlled Term Sources](#controlled-term-sources) subsection. Rendering hints for all field families are defined in the [Rendering Hints](#rendering-hints) subsection, with the exception of temporal rendering hints which are defined alongside their field specs.
 
@@ -2035,14 +2088,14 @@ PresentationComponent ::= RichTextComponent
 RichTextComponent ::= rich_text_component(
                         PresentationComponentId
                         ModelVersion
-                        ArtifactMetadata
+                        CatalogMetadata
                         HtmlContent
                       )
 
 ImageComponent ::= image_component(
                      PresentationComponentId
                      ModelVersion
-                     ArtifactMetadata
+                     CatalogMetadata
                      Iri
                      [Label]
                      [Description]
@@ -2051,7 +2104,7 @@ ImageComponent ::= image_component(
 YoutubeVideoComponent ::= you_tube_video_component(
                             PresentationComponentId
                             ModelVersion
-                            ArtifactMetadata
+                            CatalogMetadata
                             Iri
                             [Label]
                             [Description]
@@ -2060,13 +2113,13 @@ YoutubeVideoComponent ::= you_tube_video_component(
 SectionBreakComponent ::= section_break_component(
                             PresentationComponentId
                             ModelVersion
-                            ArtifactMetadata
+                            CatalogMetadata
                           )
 
 PageBreakComponent ::= page_break_component(
                          PresentationComponentId
                          ModelVersion
-                         ArtifactMetadata
+                         CatalogMetadata
                        )
 ```
 
@@ -2121,7 +2174,7 @@ The two concrete enum field specs share a single value type, `EnumValue`. The ca
 
 A `TemplateInstance` is an `Artifact` that records data conforming to a specific `Template`. Instance productions are defined here separately from schema and presentation productions so that the schema model and the instance model can be read independently.
 
-Because `TemplateInstance` is a full `Artifact`, it carries `ArtifactMetadata` — a `TemplateInstanceId`, descriptive metadata, and lifecycle metadata. This means instances are independently identifiable, catalogable artifacts in their own right rather than anonymous data records. They can be referenced, versioned, and tracked just as templates and fields can.
+Because `TemplateInstance` is a full `Artifact`, it carries `CatalogMetadata` — a `TemplateInstanceId`, descriptive metadata, and lifecycle metadata. This means instances are independently identifiable, catalogable artifacts in their own right rather than anonymous data records. They can be referenced, versioned, and tracked just as templates and fields can.
 
 A `TemplateInstance` contains zero or more `InstanceValue` constructs, each keyed by an `EmbeddedArtifactKey` identifying the corresponding embedded artifact in the referenced template. There are two forms: `FieldValue`, which carries one or more typed values for an `EmbeddedField`, and `NestedTemplateInstance`, which carries a nested collection of `InstanceValue` constructs for an `EmbeddedTemplate`. `EmbeddedPresentationComponent` constructs produce no `InstanceValue` and are absent from the instance model entirely.
 
@@ -2129,8 +2182,9 @@ A `TemplateInstance` contains zero or more `InstanceValue` constructs, each keye
 TemplateInstance ::= template_instance(
                        TemplateInstanceId
                        ModelVersion
-                       ArtifactMetadata
+                       CatalogMetadata
                        TemplateId
+                       [Label]
                        InstanceValue*
                      )
 
