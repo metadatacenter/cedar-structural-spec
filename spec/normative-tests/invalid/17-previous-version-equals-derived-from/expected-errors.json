@@ -1,7 +1,7 @@
 [
   {
     "category": "structural",
-    "path": "/metadata/versioning/derivedFrom",
+    "path": "/versioning/derivedFrom",
     "production": "SchemaArtifactVersioning",
     "messageRegex": "previousVersion.*derivedFrom.*(same|equal)|derivedFrom.*previousVersion.*(same|equal)|succession.*derivation.*mutually exclusive"
   }

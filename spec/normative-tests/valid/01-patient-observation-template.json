@@ -3,16 +3,6 @@
   "id": "https://example.org/templates/patient-observation",
   "modelVersion": "2.0.0",
   "metadata": {
-    "preferredLabel": [
-      {
-        "value": "Patient observation",
-        "lang": "en"
-      },
-      {
-        "value": "Beobachtung des Patienten",
-        "lang": "de"
-      }
-    ],
     "description": [
       {
         "value": "A single observation made about a patient.",
@@ -39,11 +29,6 @@
       "modifiedOn": "2026-04-02T16:12:00Z",
       "modifiedBy": "https://example.org/users/bob"
     },
-    "versioning": {
-      "version": "1.2.0",
-      "status": "published",
-      "previousVersion": "https://example.org/templates/patient-observation/v/1.1.0"
-    },
     "annotations": [
       {
         "property": "https://purl.org/dc/terms/license",
@@ -62,6 +47,21 @@
       }
     ]
   },
+  "versioning": {
+    "version": "1.2.0",
+    "status": "published",
+    "previousVersion": "https://example.org/templates/patient-observation/v/1.1.0"
+  },
+  "title": [
+    {
+      "value": "Patient observation",
+      "lang": "en"
+    },
+    {
+      "value": "Beobachtung des Patienten",
+      "lang": "de"
+    }
+  ],
   "header": [
     {
       "value": "Record one observation per submission.",

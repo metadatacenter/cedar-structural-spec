@@ -1,7 +1,7 @@
 [
   {
     "category": "lexical",
-    "path": "/metadata/versioning/version",
+    "path": "/versioning/version",
     "production": "SchemaArtifactVersioning",
     "messageRegex": "SemanticVersion|semver|Semantic Versioning|version.*invalid|v1\\.0.*invalid|not.*semver"
   }

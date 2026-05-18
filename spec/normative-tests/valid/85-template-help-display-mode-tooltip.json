@@ -3,23 +3,23 @@
   "id": "https://example.org/templates/with-tooltip-help",
   "modelVersion": "2.0.0",
   "metadata": {
-    "preferredLabel": [
-      {
-        "value": "Form using tooltip help",
-        "lang": "en"
-      }
-    ],
     "lifecycle": {
       "createdOn": "2026-01-15T09:30:00Z",
       "createdBy": "https://example.org/users/alice",
       "modifiedOn": "2026-01-15T09:30:00Z",
       "modifiedBy": "https://example.org/users/alice"
-    },
-    "versioning": {
-      "version": "1.0.0",
-      "status": "draft"
     }
   },
+  "versioning": {
+    "version": "1.0.0",
+    "status": "draft"
+  },
+  "title": [
+    {
+      "value": "Form using tooltip help",
+      "lang": "en"
+    }
+  ],
   "renderingHint": {
     "helpDisplayMode": "tooltip"
   },
@@ -29,9 +29,14 @@
       "key": "comment",
       "artifactRef": "https://example.org/fields/patient-comment",
       "valueRequirement": "optional",
-      "cardinality": { "min": 0, "max": 1 },
+      "cardinality": {
+        "min": 0,
+        "max": 1
+      },
       "visibility": "visible",
-      "property": { "iri": "https://schema.org/comment" }
+      "property": {
+        "iri": "https://schema.org/comment"
+      }
     }
   ]
 }

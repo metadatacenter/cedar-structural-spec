@@ -3,29 +3,32 @@
   "id": "https://example.org/fields/author-orcid",
   "modelVersion": "2.0.0",
   "metadata": {
-    "preferredLabel": [
-      {
-        "value": "Author ORCID",
-        "lang": "en"
-      }
-    ],
     "lifecycle": {
       "createdOn": "2026-01-15T09:30:00Z",
       "createdBy": "https://example.org/users/alice",
       "modifiedOn": "2026-01-15T09:30:00Z",
       "modifiedBy": "https://example.org/users/alice"
-    },
-    "versioning": {
-      "version": "1.0.0",
-      "status": "draft"
     }
+  },
+  "versioning": {
+    "version": "1.0.0",
+    "status": "draft"
   },
   "fieldSpec": {
     "kind": "OrcidFieldSpec",
     "renderingHint": {
       "placeholder": [
-        { "value": "https://orcid.org/0000-0000-0000-0000", "lang": "en" }
+        {
+          "value": "https://orcid.org/0000-0000-0000-0000",
+          "lang": "en"
+        }
       ]
     }
-  }
+  },
+  "label": [
+    {
+      "value": "Author ORCID",
+      "lang": "en"
+    }
+  ]
 }
