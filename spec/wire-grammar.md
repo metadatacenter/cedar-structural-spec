@@ -103,8 +103,8 @@ if its abstract grammar production is a member of some
 `discriminator: kind` union — regardless of the position the object
 occupies in the wire form. Productions that are not members of any
 `discriminator: kind` union (`Cardinality`, `Annotation`,
-`LabelOverride`, `Property`, `SchemaArtifactMetadata`,
-`ArtifactMetadata`, `LifecycleMetadata`, `SchemaArtifactVersioning`,
+`LabelOverride`, `Property`, `CatalogMetadata`,
+`LifecycleMetadata`, `SchemaArtifactVersioning`,
 `Unit`, `OntologyReference`, `OntologyDisplayHint`,
 `ControlledTermClass`, `PermissibleValue`, `Meaning`, and the
 temporal `RenderingHint` object variants) never carry `kind`.
@@ -273,8 +273,8 @@ produce when applied to the corresponding `::=` production in
    Some sequence positions are encoded as omittable optional arrays per
    the wrapping principle of `serialization.md` §5 — `altLabels?:
    array<AlternativeLabel>` and `annotations?: array<Annotation>` on
-   `ArtifactMetadata` and `SchemaArtifactMetadata` are SHOULD-omitted
-   when empty, and the spec-level `MultiValuedEnumFieldSpec.defaultValues`
+   `CatalogMetadata` are SHOULD-omitted when empty, and the spec-level
+   `MultiValuedEnumFieldSpec.defaultValues`
    is similarly optional. These exceptions are flagged at the
    production sites with inline constraints.
 
@@ -658,13 +658,13 @@ IRI string.
 
 ---
 
-## 5. Artifact Metadata
+## 5. Catalog Metadata
 
 ### 5.1 Aggregate structure
 
-`ArtifactMetadata` is flat on the wire: its descriptive properties
-(`name`, `description`, `identifier`, `preferredLabel`, `altLabels`),
-its `lifecycle` slot, and its `annotations` slot are all direct
+`CatalogMetadata` is flat on the wire: its descriptive properties
+(`preferredLabel`, `description`, `identifier`, `altLabels`), its
+`lifecycle` slot, and its `annotations` slot are all direct
 members of the same object — there is no `descriptiveMetadata`
 wrapper.
 
@@ -673,14 +673,18 @@ Description ::: MultilingualString
 Identifier ::: string
 AlternativeLabel ::: MultilingualString
 
-ArtifactMetadata ::: object {
-  preferredLabel: PreferredLabel
+CatalogMetadata ::: object {
+  preferredLabel?: PreferredLabel
   description?: Description
   identifier?: Identifier
   altLabels?: array<AlternativeLabel>
   lifecycle: LifecycleMetadata
   annotations?: array<Annotation>
 }
+  // preferredLabel is the artifact's catalog-display name. It is
+  // distinct from a schema artifact's *rendered* display name, which
+  // lives on a top-level slot on the artifact itself (Field.label,
+  // Template.title, TemplateInstance.label).
   // altLabels SHOULD be omitted from the wire when empty; it round-trips
   // as an empty array in memory
   // annotations SHOULD be omitted from the wire when empty; it round-trips
@@ -691,32 +695,18 @@ ArtifactMetadata ::: object {
   // abstract grammar's component naming
 ```
 
-`SchemaArtifactMetadata` is the wire form used by reusable schema
-artifacts. The abstract grammar models it as the composition
-`schema_artifact_metadata(ArtifactMetadata, SchemaArtifactVersioning)`,
-but on the wire the inner `ArtifactMetadata` is unwrapped: every
-property of `ArtifactMetadata` appears directly on the outer object,
-alongside the additional `versioning` slot. There is no
-`metadata.artifact` intermediate. Equivalently:
+`CatalogMetadata` is uniform across every artifact kind: `Field`,
+`Template`, `PresentationComponent`, and `TemplateInstance` all carry
+the same `CatalogMetadata` shape under the wire-form `metadata` key.
 
-> `SchemaArtifactMetadata` = `ArtifactMetadata` + `{ versioning: SchemaArtifactVersioning }`,
-> with the `ArtifactMetadata` properties merged at the same level as
-> `versioning`.
-
-For completeness, the full wire form:
-
-```
-SchemaArtifactMetadata ::: object {
-  preferredLabel: PreferredLabel
-  description?: Description
-  identifier?: Identifier
-  altLabels?: array<AlternativeLabel>
-  lifecycle: LifecycleMetadata
-  annotations?: array<Annotation>
-  versioning: SchemaArtifactVersioning
-}
-  // altLabels and annotations SHOULD be omitted from the wire when empty
-```
+Schema artifacts (`Field`, `Template`) additionally carry
+`SchemaArtifactVersioning` as a separate top-level `versioning` slot
+on the artifact itself; non-schema artifacts (`PresentationComponent`,
+`TemplateInstance`) do not carry versioning. The
+`SchemaArtifactMetadata` wrapper production used in prior revisions
+of this specification is removed: in the new shape, schema artifacts
+carry `metadata` and `versioning` as parallel top-level slots rather
+than as a single `metadata`-wrapped blob.
 
 ### 5.2 Lifecycle metadata
 
@@ -1378,8 +1368,10 @@ TextField ::: object {
   "kind": "TextField"
   id: TextFieldId
   modelVersion: ModelVersion
-  metadata: SchemaArtifactMetadata
+  metadata: CatalogMetadata
+  versioning: SchemaArtifactVersioning
   fieldSpec: TextFieldSpec
+  label: Label
   helpText?: HelpText
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
@@ -1388,8 +1380,10 @@ IntegerNumberField ::: object {
   "kind": "IntegerNumberField"
   id: IntegerNumberFieldId
   modelVersion: ModelVersion
-  metadata: SchemaArtifactMetadata
+  metadata: CatalogMetadata
+  versioning: SchemaArtifactVersioning
   fieldSpec: IntegerNumberFieldSpec
+  label: Label
   helpText?: HelpText
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
@@ -1398,8 +1392,10 @@ RealNumberField ::: object {
   "kind": "RealNumberField"
   id: RealNumberFieldId
   modelVersion: ModelVersion
-  metadata: SchemaArtifactMetadata
+  metadata: CatalogMetadata
+  versioning: SchemaArtifactVersioning
   fieldSpec: RealNumberFieldSpec
+  label: Label
   helpText?: HelpText
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
@@ -1408,8 +1404,10 @@ BooleanField ::: object {
   "kind": "BooleanField"
   id: BooleanFieldId
   modelVersion: ModelVersion
-  metadata: SchemaArtifactMetadata
+  metadata: CatalogMetadata
+  versioning: SchemaArtifactVersioning
   fieldSpec: BooleanFieldSpec
+  label: Label
   helpText?: HelpText
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
@@ -1418,8 +1416,10 @@ DateField ::: object {
   "kind": "DateField"
   id: DateFieldId
   modelVersion: ModelVersion
-  metadata: SchemaArtifactMetadata
+  metadata: CatalogMetadata
+  versioning: SchemaArtifactVersioning
   fieldSpec: DateFieldSpec
+  label: Label
   helpText?: HelpText
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
@@ -1428,8 +1428,10 @@ TimeField ::: object {
   "kind": "TimeField"
   id: TimeFieldId
   modelVersion: ModelVersion
-  metadata: SchemaArtifactMetadata
+  metadata: CatalogMetadata
+  versioning: SchemaArtifactVersioning
   fieldSpec: TimeFieldSpec
+  label: Label
   helpText?: HelpText
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
@@ -1438,8 +1440,10 @@ DateTimeField ::: object {
   "kind": "DateTimeField"
   id: DateTimeFieldId
   modelVersion: ModelVersion
-  metadata: SchemaArtifactMetadata
+  metadata: CatalogMetadata
+  versioning: SchemaArtifactVersioning
   fieldSpec: DateTimeFieldSpec
+  label: Label
   helpText?: HelpText
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
@@ -1448,8 +1452,10 @@ ControlledTermField ::: object {
   "kind": "ControlledTermField"
   id: ControlledTermFieldId
   modelVersion: ModelVersion
-  metadata: SchemaArtifactMetadata
+  metadata: CatalogMetadata
+  versioning: SchemaArtifactVersioning
   fieldSpec: ControlledTermFieldSpec
+  label: Label
   helpText?: HelpText
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
@@ -1458,8 +1464,10 @@ SingleValuedEnumField ::: object {
   "kind": "SingleValuedEnumField"
   id: SingleValuedEnumFieldId
   modelVersion: ModelVersion
-  metadata: SchemaArtifactMetadata
+  metadata: CatalogMetadata
+  versioning: SchemaArtifactVersioning
   fieldSpec: SingleValuedEnumFieldSpec
+  label: Label
   helpText?: HelpText
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
@@ -1468,8 +1476,10 @@ MultiValuedEnumField ::: object {
   "kind": "MultiValuedEnumField"
   id: MultiValuedEnumFieldId
   modelVersion: ModelVersion
-  metadata: SchemaArtifactMetadata
+  metadata: CatalogMetadata
+  versioning: SchemaArtifactVersioning
   fieldSpec: MultiValuedEnumFieldSpec
+  label: Label
   helpText?: HelpText
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
@@ -1478,8 +1488,10 @@ LinkField ::: object {
   "kind": "LinkField"
   id: LinkFieldId
   modelVersion: ModelVersion
-  metadata: SchemaArtifactMetadata
+  metadata: CatalogMetadata
+  versioning: SchemaArtifactVersioning
   fieldSpec: LinkFieldSpec
+  label: Label
   helpText?: HelpText
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
@@ -1488,8 +1500,10 @@ EmailField ::: object {
   "kind": "EmailField"
   id: EmailFieldId
   modelVersion: ModelVersion
-  metadata: SchemaArtifactMetadata
+  metadata: CatalogMetadata
+  versioning: SchemaArtifactVersioning
   fieldSpec: EmailFieldSpec
+  label: Label
   helpText?: HelpText
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
@@ -1498,8 +1512,10 @@ PhoneNumberField ::: object {
   "kind": "PhoneNumberField"
   id: PhoneNumberFieldId
   modelVersion: ModelVersion
-  metadata: SchemaArtifactMetadata
+  metadata: CatalogMetadata
+  versioning: SchemaArtifactVersioning
   fieldSpec: PhoneNumberFieldSpec
+  label: Label
   helpText?: HelpText
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
@@ -1508,8 +1524,10 @@ OrcidField ::: object {
   "kind": "OrcidField"
   id: OrcidFieldId
   modelVersion: ModelVersion
-  metadata: SchemaArtifactMetadata
+  metadata: CatalogMetadata
+  versioning: SchemaArtifactVersioning
   fieldSpec: OrcidFieldSpec
+  label: Label
   helpText?: HelpText
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
@@ -1518,8 +1536,10 @@ RorField ::: object {
   "kind": "RorField"
   id: RorFieldId
   modelVersion: ModelVersion
-  metadata: SchemaArtifactMetadata
+  metadata: CatalogMetadata
+  versioning: SchemaArtifactVersioning
   fieldSpec: RorFieldSpec
+  label: Label
   helpText?: HelpText
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
@@ -1528,8 +1548,10 @@ DoiField ::: object {
   "kind": "DoiField"
   id: DoiFieldId
   modelVersion: ModelVersion
-  metadata: SchemaArtifactMetadata
+  metadata: CatalogMetadata
+  versioning: SchemaArtifactVersioning
   fieldSpec: DoiFieldSpec
+  label: Label
   helpText?: HelpText
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
@@ -1538,8 +1560,10 @@ PubMedIdField ::: object {
   "kind": "PubMedIdField"
   id: PubMedIdFieldId
   modelVersion: ModelVersion
-  metadata: SchemaArtifactMetadata
+  metadata: CatalogMetadata
+  versioning: SchemaArtifactVersioning
   fieldSpec: PubMedIdFieldSpec
+  label: Label
   helpText?: HelpText
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
@@ -1548,8 +1572,10 @@ RridField ::: object {
   "kind": "RridField"
   id: RridFieldId
   modelVersion: ModelVersion
-  metadata: SchemaArtifactMetadata
+  metadata: CatalogMetadata
+  versioning: SchemaArtifactVersioning
   fieldSpec: RridFieldSpec
+  label: Label
   helpText?: HelpText
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
@@ -1558,8 +1584,10 @@ NihGrantIdField ::: object {
   "kind": "NihGrantIdField"
   id: NihGrantIdFieldId
   modelVersion: ModelVersion
-  metadata: SchemaArtifactMetadata
+  metadata: CatalogMetadata
+  versioning: SchemaArtifactVersioning
   fieldSpec: NihGrantIdFieldSpec
+  label: Label
   helpText?: HelpText
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
@@ -1568,8 +1596,10 @@ AttributeValueField ::: object {
   "kind": "AttributeValueField"
   id: AttributeValueFieldId
   modelVersion: ModelVersion
-  metadata: SchemaArtifactMetadata
+  metadata: CatalogMetadata
+  versioning: SchemaArtifactVersioning
   fieldSpec: AttributeValueFieldSpec
+  label: Label
   helpText?: HelpText
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
@@ -1914,7 +1944,7 @@ RichTextComponent ::: object {
   "kind": "RichTextComponent"
   id: PresentationComponentId
   modelVersion: ModelVersion
-  metadata: ArtifactMetadata
+  metadata: CatalogMetadata
   html: HtmlContent
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
@@ -1923,7 +1953,7 @@ ImageComponent ::: object {
   "kind": "ImageComponent"
   id: PresentationComponentId
   modelVersion: ModelVersion
-  metadata: ArtifactMetadata
+  metadata: CatalogMetadata
   image: Iri
   label?: Label
   description?: Description
@@ -1937,7 +1967,7 @@ YoutubeVideoComponent ::: object {
   "kind": "YoutubeVideoComponent"
   id: PresentationComponentId
   modelVersion: ModelVersion
-  metadata: ArtifactMetadata
+  metadata: CatalogMetadata
   video: Iri
   label?: Label
   description?: Description
@@ -1951,7 +1981,7 @@ SectionBreakComponent ::: object {
   "kind": "SectionBreakComponent"
   id: PresentationComponentId
   modelVersion: ModelVersion
-  metadata: ArtifactMetadata
+  metadata: CatalogMetadata
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
@@ -1959,7 +1989,7 @@ PageBreakComponent ::: object {
   "kind": "PageBreakComponent"
   id: PresentationComponentId
   modelVersion: ModelVersion
-  metadata: ArtifactMetadata
+  metadata: CatalogMetadata
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
@@ -1984,7 +2014,9 @@ Template ::: object {
   "kind": "Template"
   id: TemplateId
   modelVersion: ModelVersion
-  metadata: SchemaArtifactMetadata
+  metadata: CatalogMetadata
+  versioning: SchemaArtifactVersioning
+  title: Title
   renderingHint?: TemplateRenderingHint
   header?: Header
   footer?: Footer
@@ -2001,6 +2033,8 @@ TemplateRenderingHint ::: object {
 
 HelpDisplayMode ::: "inline" | "tooltip" | "both" | "none"
 
+Title ::: MultilingualString
+
 Header ::: MultilingualString
 Footer ::: MultilingualString
 ```
@@ -2014,13 +2048,16 @@ TemplateInstance ::: object {
   "kind": "TemplateInstance"
   id: TemplateInstanceId
   modelVersion: ModelVersion
-  metadata: ArtifactMetadata
+  metadata: CatalogMetadata
   templateRef: TemplateId
+  label?: Label
   values: array<InstanceValue>
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
-  // metadata is ArtifactMetadata, not SchemaArtifactMetadata
-  // (instances do not carry schema versioning)
+  // metadata is CatalogMetadata; instances do not carry schema
+  // versioning, so there is no top-level versioning slot
+  // label, when present, is a user-supplied name for this instance,
+  // shown in catalog listings or detail views
 
 InstanceValue ::: FieldValue | NestedTemplateInstance
   // discriminator: kind
@@ -2092,11 +2129,13 @@ Conventions:
 **`Template`** (`template`):
 0. `TemplateId` → `id`
 1. `ModelVersion` → `modelVersion`
-2. `SchemaArtifactMetadata` → `metadata`
-3. `[TemplateRenderingHint]` → `renderingHint?`
-4. `[Header]` → `header?`
-5. `[Footer]` → `footer?`
-6. `EmbeddedArtifact*` → `members`
+2. `CatalogMetadata` → `metadata`
+3. `SchemaArtifactVersioning` → `versioning`
+4. `Title` → `title`
+5. `[TemplateRenderingHint]` → `renderingHint?`
+6. `[Header]` → `header?`
+7. `[Footer]` → `footer?`
+8. `EmbeddedArtifact*` → `members`
 
 **`TemplateRenderingHint`** (`template_rendering_hint`):
 0. `[HelpDisplayMode]` → `helpDisplayMode?`
@@ -2104,26 +2143,30 @@ Conventions:
 **`TemplateInstance`** (`template_instance`):
 0. `TemplateInstanceId` → `id`
 1. `ModelVersion` → `modelVersion`
-2. `ArtifactMetadata` → `metadata`
+2. `CatalogMetadata` → `metadata`
 3. `TemplateId` → `templateRef`
-4. `InstanceValue*` → `values`
+4. `[Label]` → `label?`
+5. `InstanceValue*` → `values`
 
 ### 14.2 Field artifacts
 
-Every concrete `Field` production has the same four-component shape:
-`(<Family>FieldId, ModelVersion, SchemaArtifactMetadata, <Family>FieldSpec)`.
-For all of `TextField`, `IntegerNumberField`, `RealNumberField`,
-`BooleanField`, `DateField`, `TimeField`, `DateTimeField`,
-`ControlledTermField`, `SingleValuedEnumField`, `MultiValuedEnumField`,
-`LinkField`, `EmailField`, `PhoneNumberField`, `OrcidField`,
-`RorField`, `DoiField`, `PubMedIdField`, `RridField`,
-`NihGrantIdField`, and `AttributeValueField`:
+Every concrete `Field` production has the same six-component shape:
+`(<Family>FieldId, ModelVersion, CatalogMetadata, SchemaArtifactVersioning, <Family>FieldSpec, Label)`,
+with an optional seventh `HelpText` slot. For all of `TextField`,
+`IntegerNumberField`, `RealNumberField`, `BooleanField`, `DateField`,
+`TimeField`, `DateTimeField`, `ControlledTermField`,
+`SingleValuedEnumField`, `MultiValuedEnumField`, `LinkField`,
+`EmailField`, `PhoneNumberField`, `OrcidField`, `RorField`,
+`DoiField`, `PubMedIdField`, `RridField`, `NihGrantIdField`, and
+`AttributeValueField`:
 
 0. `<Family>FieldId` → `id`
 1. `ModelVersion` → `modelVersion`
-2. `SchemaArtifactMetadata` → `metadata`
-3. `<Family>FieldSpec` → `fieldSpec`
-4. `[HelpText]` → `helpText?`
+2. `CatalogMetadata` → `metadata`
+3. `SchemaArtifactVersioning` → `versioning`
+4. `<Family>FieldSpec` → `fieldSpec`
+5. `Label` → `label`
+6. `[HelpText]` → `helpText?`
 
 ### 14.3 Embedded artifacts
 
@@ -2158,24 +2201,19 @@ canonical ordering common to the family.)
 1. `PresentationComponentId` → `artifactRef`
 2. `[Visibility]` → `visibility?`
 
-### 14.4 Artifact metadata
+### 14.4 Catalog metadata
 
-**`SchemaArtifactMetadata`** (`schema_artifact_metadata`): the wire
-form is a flat union — `ArtifactMetadata`'s components appear directly
-on the same object alongside `versioning`. The mapping below records
-the abstract production's two components, but the encoded wire form is
-the union of the inner `ArtifactMetadata` properties plus
-`versioning`:
-0. `ArtifactMetadata` → (flattened — properties appear directly)
-1. `SchemaArtifactVersioning` → `versioning`
-
-**`ArtifactMetadata`** (`artifact_metadata`):
-0. `PreferredLabel` → `preferredLabel`
+**`CatalogMetadata`** (`catalog_metadata`):
+0. `[PreferredLabel]` → `preferredLabel?`
 1. `[Description]` → `description?`
 2. `[Identifier]` → `identifier?`
 3. `AlternativeLabel*` → `altLabels?` (SHOULD-omitted when empty per §1.7 rule 4)
 4. `LifecycleMetadata` → `lifecycle`
 5. `Annotation*` → `annotations?` (SHOULD-omitted when empty)
+
+On schema artifacts, `SchemaArtifactVersioning` appears as a separate
+top-level `versioning` slot on the artifact rather than being nested
+inside `metadata`.
 
 **`LifecycleMetadata`** (`lifecycle_metadata`):
 0. `CreatedOn` → `createdOn`
@@ -2481,13 +2519,13 @@ The ten new rendering hints introduced for previously hint-less families each ca
 **`RichTextComponent`** (`rich_text_component`):
 0. `PresentationComponentId` → `id`
 1. `ModelVersion` → `modelVersion`
-2. `ArtifactMetadata` → `metadata`
+2. `CatalogMetadata` → `metadata`
 3. `HtmlContent` → `html`
 
 **`ImageComponent`** (`image_component`):
 0. `PresentationComponentId` → `id`
 1. `ModelVersion` → `modelVersion`
-2. `ArtifactMetadata` → `metadata`
+2. `CatalogMetadata` → `metadata`
 3. `Iri` → `image`
 4. `[Label]` → `label?`
 5. `[Description]` → `description?`
@@ -2495,7 +2533,7 @@ The ten new rendering hints introduced for previously hint-less families each ca
 **`YoutubeVideoComponent`** (`you_tube_video_component`):
 0. `PresentationComponentId` → `id`
 1. `ModelVersion` → `modelVersion`
-2. `ArtifactMetadata` → `metadata`
+2. `CatalogMetadata` → `metadata`
 3. `Iri` → `video`
 4. `[Label]` → `label?`
 5. `[Description]` → `description?`
@@ -2503,12 +2541,12 @@ The ten new rendering hints introduced for previously hint-less families each ca
 **`SectionBreakComponent`** (`section_break_component`):
 0. `PresentationComponentId` → `id`
 1. `ModelVersion` → `modelVersion`
-2. `ArtifactMetadata` → `metadata`
+2. `CatalogMetadata` → `metadata`
 
 **`PageBreakComponent`** (`page_break_component`):
 0. `PresentationComponentId` → `id`
 1. `ModelVersion` → `modelVersion`
-2. `ArtifactMetadata` → `metadata`
+2. `CatalogMetadata` → `metadata`
 
 ### 14.11 Instances
 
