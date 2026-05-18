@@ -110,7 +110,7 @@ A JSON object's discriminator presence depends on its **production**, not on the
 
 **Polymorphic-union members** — productions that appear as alternatives in a `discriminator: kind` union (e.g. `Value`, `FieldSpec`, `Annotation.body: AnnotationValue`, `EmbeddedField`, `EmbeddedArtifact`, every `Field` family, every `Value` family) — MUST encode as a tagged JSON object carrying `"kind": "<ProductionName>"`. The discriminator is present even when the surrounding context (the enclosing object's `kind` and property name) would already determine the family — for example, `EmbeddedTextField.defaultValue` carries `"kind": "TextValue"` even though `EmbeddedTextField.kind` already pins the family. Uniformity of the rule is preferred over the small wire-size saving.
 
-**Singleton-only productions** — productions that never appear as members of any `discriminator: kind` union (`Cardinality`, `Property`, `LabelOverride`, `SchemaArtifactMetadata`, `ArtifactMetadata`, `LifecycleMetadata`, `SchemaArtifactVersioning`, `Annotation`, `Unit`, `OntologyReference`, `OntologyDisplayHint`, `ControlledTermClass`, `PermissibleValue`, `Meaning`, and the temporal `RenderingHint` object variants) — MUST encode as untagged JSON objects whose properties correspond to the production's components. A `"kind"` property MUST NOT appear.
+**Singleton-only productions** — productions that never appear as members of any `discriminator: kind` union (`Cardinality`, `Property`, `LabelOverride`, `CatalogMetadata`, `LifecycleMetadata`, `SchemaArtifactVersioning`, `Annotation`, `Unit`, `OntologyReference`, `OntologyDisplayHint`, `ControlledTermClass`, `PermissibleValue`, `Meaning`, and the temporal `RenderingHint` object variants) — MUST encode as untagged JSON objects whose properties correspond to the production's components. A `"kind"` property MUST NOT appear.
 
 The rule applies recursively: a tagged object whose own components include further composite objects follows the same rule for each of those components, with the encoding determined by each inner production's own discriminator-union membership.
 
@@ -261,7 +261,7 @@ Each `Value` family is encoded as a tagged object that carries its content direc
 
 ### 6.4 Metadata and annotations
 
-`LifecycleMetadata`, `SchemaArtifactVersioning`, `ArtifactMetadata`, and `SchemaArtifactMetadata` are singleton-only productions (never members of any `discriminator: kind` union per §4.4), so they encode as untagged JSON objects. The descriptive properties of an artifact (`preferredLabel`, `description`, `identifier`, `altLabels`) sit directly on `ArtifactMetadata` rather than under a `descriptiveMetadata` wrapper.
+`LifecycleMetadata`, `SchemaArtifactVersioning`, and `CatalogMetadata` are singleton-only productions (never members of any `discriminator: kind` union per §4.4), so they encode as untagged JSON objects. The descriptive properties of an artifact (`preferredLabel`, `description`, `identifier`, `altLabels`) sit directly on `CatalogMetadata` rather than under a `descriptiveMetadata` wrapper. On schema artifacts, `SchemaArtifactVersioning` appears as a separate top-level `versioning` slot on the artifact rather than nested inside `metadata`.
 
 ```json
 {
@@ -369,8 +369,10 @@ A `Field` artifact (shown for the text family; the other nineteen families subst
   "kind": "TextField",
   "id": "<FieldId>",
   "modelVersion": "<SemanticVersion>",
-  "metadata": "<SchemaArtifactMetadata>",
-  "fieldSpec": "<FieldSpec>"
+  "metadata": "<CatalogMetadata>",
+  "versioning": "<SchemaArtifactVersioning>",
+  "fieldSpec": "<FieldSpec>",
+  "label": "<MultilingualString>"
 }
 ```
 
@@ -503,7 +505,9 @@ Examples by family — at every layer (field-level on `XxxFieldSpec.defaultValue
   "kind": "Template",
   "id": "<TemplateId>",
   "modelVersion": "<SemanticVersion>",
-  "metadata": "<SchemaArtifactMetadata>",
+  "metadata": "<CatalogMetadata>",
+  "versioning": "<SchemaArtifactVersioning>",
+  "title": [{ "value": "Form Title", "lang": "en" }],
   "header": [{ "value": "Template Header Text", "lang": "en" }],
   "members": ["<EmbeddedArtifact>*"]
 }
@@ -514,13 +518,13 @@ The `members` array MUST preserve order. The `EmbeddedArtifactKey` values within
 ### 6.10 Presentation components
 
 ```json
-{ "kind": "RichTextComponent", "id": "<PresentationComponentId>", "modelVersion": "<SemanticVersion>", "metadata": "<ArtifactMetadata>", "html": "<p>Hello</p>" }
+{ "kind": "RichTextComponent", "id": "<PresentationComponentId>", "modelVersion": "<SemanticVersion>", "metadata": "<CatalogMetadata>", "html": "<p>Hello</p>" }
 ```
 ```json
-{ "kind": "ImageComponent", "id": "<PresentationComponentId>", "modelVersion": "<SemanticVersion>", "metadata": "<ArtifactMetadata>", "image": "https://example.org/image.png" }
+{ "kind": "ImageComponent", "id": "<PresentationComponentId>", "modelVersion": "<SemanticVersion>", "metadata": "<CatalogMetadata>", "image": "https://example.org/image.png" }
 ```
 ```json
-{ "kind": "SectionBreakComponent", "id": "<PresentationComponentId>", "modelVersion": "<SemanticVersion>", "metadata": "<ArtifactMetadata>" }
+{ "kind": "SectionBreakComponent", "id": "<PresentationComponentId>", "modelVersion": "<SemanticVersion>", "metadata": "<CatalogMetadata>" }
 ```
 
 ### 6.11 Instances
@@ -530,13 +534,14 @@ The `members` array MUST preserve order. The `EmbeddedArtifactKey` values within
   "kind": "TemplateInstance",
   "id": "<TemplateInstanceId>",
   "modelVersion": "<SemanticVersion>",
-  "metadata": "<ArtifactMetadata>",
+  "metadata": "<CatalogMetadata>",
   "templateRef": "<TemplateId>",
+  "label": [{ "value": "Optional user-supplied instance label", "lang": "en" }],
   "values": ["<InstanceValue>*"]
 }
 ```
 
-`TemplateInstance.metadata` is `ArtifactMetadata` (not `SchemaArtifactMetadata`); instances do not carry schema versioning.
+`TemplateInstance.metadata` is `CatalogMetadata`; instances do not carry schema versioning, so there is no top-level `versioning` slot. The optional `label` slot, when present, carries a user-supplied name for the instance, shown in catalog listings or detail views.
 
 ```json
 { "kind": "FieldValue", "key": "<EmbeddedArtifactKey>", "values": ["<Value>+"] }
@@ -594,8 +599,8 @@ The example is deliberately compact rather than minimal: every wire
 shape this spec defines that is reachable from a `Template` appears
 at least once. The companion `TemplateInstance` exercises every value
 shape that is reachable from a `FieldValue`. Smaller variations
-(empty `members`, no annotations, single-language `preferredLabel`)
-are straightforward subsets of the larger artifact and are not
+(empty `members`, no annotations, single-language `title`) are
+straightforward subsets of the larger artifact and are not
 separately illustrated.
 
 ### 8.1 A `Template` exercising the principal wire shapes
@@ -603,9 +608,10 @@ separately illustrated.
 The `Template` below describes a single **patient observation**: an
 identifier, a free-text comment, a single-valued enum severity, a
 date observed, an integer-valued count of repeated occurrences (with
-unit and bounds), and a controlled-term diagnosis. It carries
-multi-language `preferredLabel` and `description`, a versioned
-lifecycle, and two annotations on the metadata.
+unit and bounds), and a controlled-term diagnosis. It carries a
+multi-language `title` (the rendered form heading) and `description`,
+a separate top-level `versioning` slot, a lifecycle, and two
+annotations on the metadata.
 
 ```json
 {{#include normative-tests/valid/01-patient-observation-template.json}}
@@ -614,16 +620,17 @@ lifecycle, and two annotations on the metadata.
 A few things in the above artifact are worth highlighting because
 they exercise specific rules:
 
-- **`metadata` flattening.** `SchemaArtifactMetadata`'s
-  `ArtifactMetadata` properties (`preferredLabel`, `description`,
-  `altLabels`, `lifecycle`, `annotations`) and its `versioning` slot
-  all sit at the same level on the wire, with no inner `artifact` or
-  `descriptive` wrapper (per §6.4 / wire-grammar §5.1).
-- **Multilingual content.** `preferredLabel` and `description` are
-  `MultilingualString` arrays. Each `altLabels` element is itself a
-  `MultilingualString`, so `altLabels` is an array of arrays. Two of
-  the language-tagged entries on `preferredLabel` exercise the
-  unique-lang-tag invariant (§9.1 category 3).
+- **Top-level layout.** `metadata` carries `CatalogMetadata`
+  (descriptive properties, lifecycle, annotations). `versioning`
+  is a separate top-level slot, not nested inside `metadata`.
+  `title` carries the rendered form heading and is also a separate
+  top-level slot (see §6.9 / wire-grammar §5.1).
+- **Multilingual content.** `title` and `description` are
+  `MultilingualString` arrays. Each `altLabels` element on
+  `metadata` is itself a `MultilingualString`, so `altLabels` is
+  an array of arrays. Two of the language-tagged entries on
+  `title` exercise the unique-lang-tag invariant
+  (§9.1 category 3).
 - **`AnnotationValue` polymorphism.** `Annotation.body` is a
   `discriminator: kind` union with `AnnotationStringValue` and
   `AnnotationIriValue` arms; the wire form carries the discriminator
@@ -728,8 +735,9 @@ optional `comment`, and carries two `diagnosis` terms (since
 Notes:
 
 - **Instance metadata.** `TemplateInstance.metadata` is
-  `ArtifactMetadata` (no `versioning`), since instances do not carry
-  schema versioning — the schema's version is fixed by `templateRef`.
+  `CatalogMetadata`. Instances do not carry schema versioning, so
+  there is no top-level `versioning` slot — the schema's version
+  is fixed by `templateRef`.
 - **`FieldValue.values` is non-empty.** Per the abstract grammar's
   `Value+` constraint, every `FieldValue` carries at least one value;
   absence of a value for a key is represented by **omitting the

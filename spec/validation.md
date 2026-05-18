@@ -338,12 +338,12 @@ A conforming validator MUST treat the cited grammar as authoritative; a value is
 
 Entry point for schema validation.
 
-1. Run [`validate_model_version(template.model_version)`](#fn-validate-model-version) and [`validate_artifact_metadata(template.schema_artifact_metadata)`](#fn-validate-artifact-metadata).
+1. Run [`validate_model_version(template.model_version)`](#fn-validate-model-version) and [`validate_schema_artifact_versioning(template.versioning)`](#fn-validate-schema-artifact-versioning).
 2. If `template.template_rendering_hint` is present: run [`validate_template_rendering_hint(template.template_rendering_hint)`](#fn-validate-template-rendering-hint).
 3. Let `fields` = the set of `Field` artifacts referenced by `EmbeddedField` constructs in `template`.
-4. For each `field` in `fields`: run [`validate_model_version(field.model_version)`](#fn-validate-model-version), [`validate_artifact_metadata(field.schema_artifact_metadata)`](#fn-validate-artifact-metadata), and [`validate_field_spec(field.field_spec)`](#fn-validate-field-spec).
+4. For each `field` in `fields`: run [`validate_model_version(field.model_version)`](#fn-validate-model-version), [`validate_schema_artifact_versioning(field.versioning)`](#fn-validate-schema-artifact-versioning), and [`validate_field_spec(field.field_spec)`](#fn-validate-field-spec).
 5. Let `pcs` = the set of `PresentationComponent` artifacts referenced by `EmbeddedPresentationComponent` constructs in `template`.
-6. For each `component` in `pcs`: run [`validate_model_version(component.model_version)`](#fn-validate-model-version) and [`validate_artifact_metadata(component.artifact_metadata)`](#fn-validate-artifact-metadata).
+6. For each `component` in `pcs`: run [`validate_model_version(component.model_version)`](#fn-validate-model-version). `PresentationComponent` does not carry `SchemaArtifactVersioning`, so no versioning validation step applies.
 7. Run [`validate_embedded_artifact_keys(template)`](#fn-validate-embedded-artifact-keys).
 8. For each `embedded` in `template.embedded_artifacts`:
    1. Run [`validate_embedding_reference(embedded)`](#fn-validate-embedding-reference).
@@ -356,18 +356,16 @@ Entry point for schema validation.
 
 #### Metadata and Key Validation
 
-##### `validate_artifact_metadata(metadata: SchemaArtifactMetadata)` {#fn-validate-artifact-metadata}
+##### `validate_schema_artifact_versioning(versioning: SchemaArtifactVersioning)` {#fn-validate-schema-artifact-versioning}
 
-Applies the [Versioning](#versioning) rules.
+Applies the [Versioning](#versioning) rules to the `SchemaArtifactVersioning` slot carried by each schema artifact (`Template`, `Field`). `PresentationComponent` and `TemplateInstance` do not carry `SchemaArtifactVersioning`; this subroutine is not invoked for them.
 
-1. Let `version` = `metadata.versioning_metadata.version`. Verify `version` conforms to the `SemanticVersion` lexical form (Semantic Versioning 2.0.0).
-   *On failure:* `lexical` at `<metadata>/versioning/version`, production `SchemaArtifactVersioning`, message `"version is not a valid SemanticVersion 2.0.0 string"`.
-2. Let `status` = `metadata.versioning_metadata.status`. Verify `status ∈ { draft, published }`.
-   *On failure:* `wireShape` at `<metadata>/versioning/status`, production `SchemaArtifactVersioning`, message `"status must be 'draft' or 'published'"`.
-3. If both `metadata.versioning_metadata.previous_version` and `metadata.versioning_metadata.derived_from` are present: verify they do not carry the same IRI value.
-   *On failure:* `structural` at `<metadata>/versioning/derivedFrom`, production `SchemaArtifactVersioning`, message `"previousVersion and derivedFrom MUST NOT carry the same IRI"`.
-
-When invoked with an `ArtifactMetadata` value (e.g. a `PresentationComponent`'s metadata), all steps are skipped: `ArtifactMetadata` does not carry `SchemaArtifactVersioning`.
+1. Let `version` = `versioning.version`. Verify `version` conforms to the `SemanticVersion` lexical form (Semantic Versioning 2.0.0).
+   *On failure:* `lexical` at `<versioning>/version`, production `SchemaArtifactVersioning`, message `"version is not a valid SemanticVersion 2.0.0 string"`.
+2. Let `status` = `versioning.status`. Verify `status ∈ { draft, published }`.
+   *On failure:* `wireShape` at `<versioning>/status`, production `SchemaArtifactVersioning`, message `"status must be 'draft' or 'published'"`.
+3. If both `versioning.previous_version` and `versioning.derived_from` are present: verify they do not carry the same IRI value.
+   *On failure:* `structural` at `<versioning>/derivedFrom`, production `SchemaArtifactVersioning`, message `"previousVersion and derivedFrom MUST NOT carry the same IRI"`.
 
 ---
 
