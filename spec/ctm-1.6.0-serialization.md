@@ -34,11 +34,13 @@ flowchart TD
     ETI(["encode_template_instance"])
 
     subgraph S5["§5 · Metadata"]
-        ESAM["encode_schema_artifact_metadata"]
         EAM["encode_artifact_metadata"]
+        ECM["encode_catalog_metadata"]
+        ETPR["encode_temporal_provenance"]
         ESV["encode_schema_artifact_versioning"]
-        ESAM --> EAM
-        ESAM --> ESV
+        EAM --> ECM
+        EAM --> ETPR
+        EAM --> ESV
     end
 
     subgraph S6["§6 · Template Structure"]
@@ -84,7 +86,7 @@ flowchart TD
         ENTS["encode_nested_template_instance_slot"]
     end
 
-    ET --> ESAM
+    ET --> EAM
     ET --> ETC
     ET --> ETP
     ET --> ETR
@@ -96,8 +98,8 @@ flowchart TD
     ETE -->|"reuses"| ETP
     ETE -->|"reuses"| ETR
     ETE -->|"reuses"| ETUI
-    ETE --> ESAM
-    EF --> ESAM
+    ETE --> EAM
+    EF --> EAM
     EF -->|"dispatch"| EFT
 
     ETI --> ETC
@@ -250,7 +252,7 @@ Two embedded fields:
   // encode_template_ui — order reflects embedded_artifacts sequence
   "_ui": { "order": ["title", "count"] },
 
-  // encode_schema_artifact_metadata — metadata keys merged at top level
+  // encode_artifact_metadata — metadata keys merged at top level
   "schema:name":        "Sample Record",
   "schema:description": "A minimal metadata template for biological samples",
   "pav:version":        "1.0.0",
@@ -288,7 +290,7 @@ Both fields are single-valued ([`is_multi`](#2-conventions) = false), so `encode
   "additionalProperties": false,
   "_valueConstraints": { "requiredValue": true },
   "_ui":   { "inputType": "textfield" },
-  // encode_schema_artifact_metadata for the field:
+  // encode_artifact_metadata for the field:
   "schema:name": "Title", "schema:description": null,
   "pav:version": "1.0.0", "bibo:status": "bibo:draft",
   "schema:schemaVersion": "1.6.0",
@@ -385,54 +387,49 @@ Both fields are single-valued ([`is_multi`](#2-conventions) = false), so `encode
 
 ## 5. Metadata Encoding Functions
 
-### `encode_schema_artifact_metadata(M: SchemaArtifactMetadata) → Object`
+### `encode_artifact_metadata(A: Artifact) → Object`
 
-CTM 1.6.0 schema artifacts (templates and fields) carry both human-readable metadata and versioning information at the top level of their JSON object. This function combines both concerns by delegating to `encode_artifact_metadata` for names and timestamps and to `encode_schema_artifact_versioning` for version and status, then merging the results into a single flat object.
+CTM 1.6.0 artifacts carry both human-readable metadata and (for schema artifacts) versioning information at the top level of their JSON object. The Structural Model factors these concerns differently: `CatalogMetadata` carries descriptive properties and lifecycle, `SchemaArtifactVersioning` is a parallel top-level slot on schema artifacts, and `Label`/`Title` are rendered-name slots that live as top-level slots on the artifact itself (`Field.label`, `Template.title`, optional `TemplateInstance.label`).
 
-```javascript
-merge(
-  encode_artifact_metadata(M.artifact_metadata),
-  encode_schema_artifact_versioning(M.schema_artifact_versioning)
-)
-```
-
-**Calls:** [`encode_artifact_metadata`](#encode_artifact_metadatam-artifactmetadata--object), [`encode_schema_artifact_versioning`](#encode_schema_artifact_versioningv-schemaartifactversioning--object)
-
----
-
-### `encode_artifact_metadata(M: ArtifactMetadata) → Object`
-
-Combines the descriptive metadata (name, description) and temporal provenance (creation and modification timestamps with actor IRIs) of an artifact into a single flat object. This is used both for schema artifacts and for template instances.
+The CTM 1.6.0 encoder flattens all of these into a single flat property set on the artifact's JSON object:
 
 ```javascript
 merge(
-  encode_descriptive_metadata(M.descriptive_metadata),
-  encode_temporal_provenance(M.temporal_provenance)
+  encode_catalog_metadata(A.catalog_metadata, rendered_name_of(A)),
+  encode_temporal_provenance(A.catalog_metadata.lifecycle),
+  A is SchemaArtifact ? encode_schema_artifact_versioning(A.versioning) : {}
 )
 ```
 
-**Calls:** [`encode_descriptive_metadata`](#encode_descriptive_metadatad-descriptivemetadata--object), [`encode_temporal_provenance`](#encode_temporal_provenancep-temporalprovenance--object)
+Where `rendered_name_of(A)` selects the artifact's rendered display name according to the artifact kind:
+
+- For a `Field`: `A.label` (always present).
+- For a `Template`: `A.title` (always present).
+- For a `TemplateInstance`: `A.label` if present, otherwise `A.catalog_metadata.preferred_label` if present, otherwise the artifact `id` slug.
+- For a `PresentationComponent`: `A.catalog_metadata.preferred_label` if present, otherwise the artifact `id` slug.
+
+**Calls:** [`encode_catalog_metadata`](#encode_catalog_metadatac-catalogmetadata-rendered-multilingualstring-or-null--object), [`encode_temporal_provenance`](#encode_temporal_provenancep-temporalprovenance--object), [`encode_schema_artifact_versioning`](#encode_schema_artifact_versioningv-schemaartifactversioning--object)
 
 ---
 
-### `encode_descriptive_metadata(D: DescriptiveMetadata) → Object`
+### `encode_catalog_metadata(C: CatalogMetadata, rendered: MultilingualString or null) → Object`
 
 Encodes the human-readable identity of an artifact. The `schema:name` and `schema:description` keys are always written; `schema:identifier` and `rdfs:label` appear only when set in the Structural Model.
 
-CTM 1.6.0 requires a single-string `schema:name`. The Structural Model no longer carries an artifact-level `Name`; `PreferredLabel` is the canonical human-readable display label. The encoder flattens `D.preferred_label` (a `MultilingualString`) to a single string by selecting the `en` localization if present, else the first localization entry. The same flattened string is also written to `rdfs:label` for round-trip stability.
+CTM 1.6.0 requires a single-string `schema:name`. The Structural Model carries multiple candidate sources for the artifact's display name (the rendered slot `Label`/`Title` on artifacts that have one, plus the optional catalog slot `CatalogMetadata.preferred_label`). The `rendered` parameter is the rendered name chosen for this artifact by `encode_artifact_metadata`'s `rendered_name_of` rule. The encoder flattens it to a single string by selecting the `en` localization if present, else the first localization entry. The same flattened string is also written to `rdfs:label` for round-trip stability.
 
 Returns a JSON object with the following keys:
 
 | Key | Value | Condition |
 |-----------------|---|---|
-| `"schema:name"` | `flatten_to_string(D.preferred_label)` — prefer `en`, else first entry | Always present |
-| `"schema:description"` | `D.description.unicode_string` | `null` if `D.description` absent |
-| `"schema:identifier"` | `D.identifier.unicode_string` | Omit if `D.identifier` absent |
-| `"rdfs:label"` | `flatten_to_string(D.preferred_label)` | Always present (mirrors `schema:name`) |
+| `"schema:name"` | `flatten_to_string(rendered)` — prefer `en`, else first entry | Always present; falls back to artifact `id` slug if `rendered` is null |
+| `"schema:description"` | `C.description.unicode_string` | `null` if `C.description` absent |
+| `"schema:identifier"` | `C.identifier.unicode_string` | Omit if `C.identifier` absent |
+| `"rdfs:label"` | `flatten_to_string(C.preferred_label)` if present, else `flatten_to_string(rendered)` | Always present |
 
-`AlternativeLabel` values on `DescriptiveMetadata` have no direct CTM 1.6.0 equivalent and are omitted on encode.
+`AlternativeLabel` values on `CatalogMetadata` have no direct CTM 1.6.0 equivalent and are omitted on encode.
 
-**Reverse direction (CTM 1.6.0 import).** When importing a CTM 1.6.0 document into the Structural Model, `schema:name` is **not** mapped to `PreferredLabel`: legacy `schema:name` values were not curated as the *preferred* display label, and promoting them would overstate their curatorial status. Instead, an importer appends `schema:name`'s value to `D.alternative_labels`, as a `MultilingualString` with a single `und`-tagged entry. If the legacy document carries a non-empty `rdfs:label`, the importer maps `rdfs:label` to `D.preferred_label`; otherwise `D.preferred_label` is initialized from `schema:name` so the Structural Model invariant (every artifact has a `PreferredLabel`) is preserved.
+**Reverse direction (CTM 1.6.0 import).** When importing a CTM 1.6.0 document into the Structural Model, the CTM 1.6.0 `schema:name` is mapped to the artifact's rendered slot — `label` for a `Field` or `TemplateInstance`, `title` for a `Template`. For a `PresentationComponent` (which has no rendered slot), `schema:name` is mapped to `CatalogMetadata.preferred_label`. If the legacy document carries a non-empty `rdfs:label` distinct from `schema:name`, the importer maps `rdfs:label` to `CatalogMetadata.preferred_label` so that the registry display name and the rendered display name can diverge after import; otherwise `preferred_label` is left absent.
 
 ---
 
@@ -513,11 +510,11 @@ merge(
     "additionalProperties": false,
     "_ui":    encode_template_ui(T)
   },
-  encode_schema_artifact_metadata(T.schema_artifact_metadata)
+  encode_artifact_metadata(T)
 )
 ```
 
-**Calls:** [`encode_template_context`](#encode_template_contextt-template--object), [`encode_template_properties`](#encode_template_propertiest-template--object), [`encode_template_required`](#encode_template_requiredt-template--array), [`encode_template_ui`](#encode_template_uit-template--object), [`encode_schema_artifact_metadata`](#encode_schema_artifact_metadatam-schemaartifactmetadata--object)
+**Calls:** [`encode_template_context`](#encode_template_contextt-template--object), [`encode_template_properties`](#encode_template_propertiest-template--object), [`encode_template_required`](#encode_template_requiredt-template--array), [`encode_template_ui`](#encode_template_uit-template--object), [`encode_artifact_metadata`](#encode_artifact_metadataa-artifact--object)
 
 ---
 
@@ -737,11 +734,11 @@ merge(
     "additionalProperties": false,
     "_ui":    encode_presentation_component_ui(PC)
   },
-  encode_schema_artifact_metadata(PC.schema_artifact_metadata)
+  encode_artifact_metadata(PC)
 )
 ```
 
-**Calls:** [`encode_presentation_component_ui`](#encode_presentation_component_uipc-presentationcomponent--object), [`encode_schema_artifact_metadata`](#encode_schema_artifact_metadatam-schemaartifactmetadata--object)
+**Calls:** [`encode_presentation_component_ui`](#encode_presentation_component_uipc-presentationcomponent--object), [`encode_artifact_metadata`](#encode_artifact_metadataa-artifact--object)
 
 ---
 
@@ -779,14 +776,14 @@ merge(
     "description": F.schema_artifact_metadata.artifact_metadata.descriptive_metadata.description.unicode_string
                    if description is present, else ""
   },
-  encode_schema_artifact_metadata(F.schema_artifact_metadata),
+  encode_artifact_metadata(F),
   encode_field_spec(F.field_spec, E)
 )
 ```
 
 `encode_field_spec(FT: FieldSpec, E: EmbeddedField) → Object` is defined per field spec in [Section 9](#9-field-spec-encoding) using a common skeleton with per-type value shape and constraint entries.
 
-**Calls:** [`encode_schema_artifact_metadata`](#encode_schema_artifact_metadatam-schemaartifactmetadata--object)
+**Calls:** [`encode_artifact_metadata`](#encode_artifact_metadataa-artifact--object)
 
 ---
 
@@ -1334,13 +1331,13 @@ merge(
     "additionalProperties": false,
     "_ui":    encode_template_ui(T)
   },
-  encode_schema_artifact_metadata(T.schema_artifact_metadata)
+  encode_artifact_metadata(T)
 )
 ```
 
 `encode_template_context`, `encode_template_properties`, `encode_template_required`, and `encode_template_ui` are as defined in Section 6 and operate identically on `Template` constructs whether they are top-level templates or nested template elements.
 
-**Calls:** [`encode_template_context`](#encode_template_contextt-template--object), [`encode_template_properties`](#encode_template_propertiest-template--object), [`encode_template_required`](#encode_template_requiredt-template--array), [`encode_template_ui`](#encode_template_uit-template--object), [`encode_schema_artifact_metadata`](#encode_schema_artifact_metadatam-schemaartifactmetadata--object)
+**Calls:** [`encode_template_context`](#encode_template_contextt-template--object), [`encode_template_properties`](#encode_template_propertiest-template--object), [`encode_template_required`](#encode_template_requiredt-template--array), [`encode_template_ui`](#encode_template_uit-template--object), [`encode_artifact_metadata`](#encode_artifact_metadataa-artifact--object)
 
 ---
 
@@ -1597,7 +1594,7 @@ else:
 
 ## 13. Annotations
 
-`Annotation` constructs on `ArtifactMetadata` have no standardised CTM 1.6.0 equivalent. They are encoded as top-level properties on the artifact object using the annotation name IRI as the JSON key.
+`Annotation` constructs on `CatalogMetadata` have no standardised CTM 1.6.0 equivalent. They are encoded as top-level properties on the artifact object using the annotation name IRI as the JSON key.
 
 ### `encode_annotation(A: Annotation) → { key: value }`
 
@@ -1617,7 +1614,7 @@ Implementations SHOULD confirm that annotation IRI keys are valid within the CTM
 
 ## 14. Known Gaps and Lossy Areas
 
-1. **`skos:prefLabel` on `StaticTemplateField`** — Real CTM 1.6.0 output includes a `skos:prefLabel` key at the top level of static field objects (presentation components). This is not currently produced by `encode_presentation_component` because `encode_schema_artifact_metadata` maps preferred labels to `rdfs:label`. The relationship between the Structural Model's `preferred_label` and CTM 1.6.0's `skos:prefLabel` on static fields needs clarification.
+1. **`skos:prefLabel` on `StaticTemplateField`** — Real CTM 1.6.0 output includes a `skos:prefLabel` key at the top level of static field objects (presentation components). This is not currently produced by `encode_presentation_component` because `encode_artifact_metadata` maps preferred labels to `rdfs:label`. The relationship between the Structural Model's `preferred_label` and CTM 1.6.0's `skos:prefLabel` on static fields needs clarification.
 
 2. **`propertyDescriptions` in `_ui`** — Real CTM 1.6.0 templates include a `"propertyDescriptions"` map inside `_ui`, keyed by embedded artifact key, containing the description/help text for each field. This is not currently produced by `encode_template_ui`. The source of these descriptions (whether from the `EmbeddedField` or the referenced `Field`) needs to be confirmed and the function updated accordingly.
 

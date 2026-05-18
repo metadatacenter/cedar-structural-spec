@@ -755,7 +755,7 @@ The override wins per the spec's two-layer precedence rule
 | Reusable artifact slot                       | Embedding-site override slot                  |
 |---|---|
 | `Field.fieldSpec.defaultValue`               | `EmbeddedXxxField.defaultValue`               |
-| `Field.metadata.preferredLabel` / `altLabels`| `EmbeddedXxxField.labelOverride.label` / `altLabels` |
+| `Field.label` / `Field.metadata.altLabels`   | `EmbeddedXxxField.labelOverride.label` / `altLabels` |
 | `Field.helpText`                             | `EmbeddedXxxField.helpTextOverride`           |
 
 **Binding guidance.** Bindings SHOULD expose a small convenience
@@ -838,8 +838,10 @@ class TextField(BaseModel):
     kind: Literal["TextField"] = "TextField"
     id: str
     model_version: str = Field(alias="modelVersion")
-    metadata: SchemaArtifactMetadata
+    metadata: CatalogMetadata
+    versioning: SchemaArtifactVersioning
     field_spec: TextFieldSpec = Field(alias="fieldSpec")
+    label: MultilingualString
 ```
 
 `model_version` is a top-level field on every concrete artifact class
@@ -906,8 +908,8 @@ without navigating across the codebase.
 
 Bindings MAY group cross-family abstractions (the `Field` union, the
 `EmbeddedField` union, the `Value` union, `Cardinality`,
-`SchemaArtifactMetadata`, etc.) however they like; only family-
-specific code is constrained by this guideline.
+`CatalogMetadata`, `SchemaArtifactVersioning`, etc.) however they
+like; only family-specific code is constrained by this guideline.
 
 ---
 
