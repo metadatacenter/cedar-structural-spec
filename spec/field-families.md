@@ -1,6 +1,6 @@
 # Field Families
 
-This is a navigation index for the 20 concrete field families defined by the spec. Each row links to the family's four principal productions in [`grammar.md`](grammar.md):
+This is a navigation index for the 21 concrete field families defined by the spec. Each row links to the family's four principal productions in [`grammar.md`](grammar.md):
 
 - **Field artifact** — the family's `XxxField`, a standalone reusable artifact.
 - **Field spec** — the family's `XxxFieldSpec`, carried by the standalone `Field` artifact.
@@ -52,6 +52,12 @@ The conformance fixture column points at the per-family Template + Instance pair
 | PubMed | [`PubMedIdField`](grammar.html#prod-PubMedIdField) | [`PubMedIdFieldSpec`](grammar.html#prod-PubMedIdFieldSpec) | [`PubMedIdValue`](grammar.html#prod-PubMedIdValue) | [`EmbeddedPubMedIdField`](grammar.html#prod-EmbeddedPubMedIdField) | [`41`–`42`](normative-tests/valid/41-pubmedid-template.json), [`69`](normative-tests/valid/69-pubmedid-field.json) |
 | RRID | [`RridField`](grammar.html#prod-RridField) | [`RridFieldSpec`](grammar.html#prod-RridFieldSpec) | [`RridValue`](grammar.html#prod-RridValue) | [`EmbeddedRridField`](grammar.html#prod-EmbeddedRridField) | [`43`–`44`](normative-tests/valid/43-rrid-template.json), [`70`](normative-tests/valid/70-rrid-field.json) |
 | NIH grant | [`NihGrantIdField`](grammar.html#prod-NihGrantIdField) | [`NihGrantIdFieldSpec`](grammar.html#prod-NihGrantIdFieldSpec) | [`NihGrantIdValue`](grammar.html#prod-NihGrantIdValue) | [`EmbeddedNihGrantIdField`](grammar.html#prod-EmbeddedNihGrantIdField) | [`45`–`46`](normative-tests/valid/45-nih-grant-id-template.json), [`71`](normative-tests/valid/71-nih-grant-id-field.json) |
+
+## Linguistic data
+
+| Family | Field artifact | Field spec | Value | Embedded form | Fixtures |
+|---|---|---|---|---|---|
+| Language | [`LanguageField`](grammar.html#prod-LanguageField) | [`LanguageFieldSpec`](grammar.html#prod-LanguageFieldSpec) | [`LanguageValue`](grammar.html#prod-LanguageValue) | [`EmbeddedLanguageField`](grammar.html#prod-EmbeddedLanguageField) | [`92`](normative-tests/valid/92-language-template.json), [`93`](normative-tests/valid/93-language-field.json) |
 
 ## Open-ended
 
