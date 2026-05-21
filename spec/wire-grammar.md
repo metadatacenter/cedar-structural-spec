@@ -379,7 +379,7 @@ Value ::: TextValue | NumericValue | BooleanValue
         | DateValue | TimeValue | DateTimeValue
         | ControlledTermValue | EnumValue | LinkValue
         | EmailValue | PhoneNumberValue | ExternalAuthorityValue
-        | AttributeValue
+        | LanguageValue | AttributeValue
   // discriminator: kind
   // NumericValue, DateValue, and ExternalAuthorityValue are themselves
   // unions; their members supply the kind discriminator directly
@@ -585,7 +585,19 @@ RridIri ::: Iri
 NihGrantIri ::: Iri
 ```
 
-### 3.8 Attribute value
+### 3.8 Language value
+
+```
+LanguageValue ::: object {
+  "kind": "LanguageValue"
+  value: LanguageTag
+}
+  // value is a canonical BCP 47 language tag (§2.x). No denormalized
+  // display label is carried; consumers render display names against
+  // the IANA Language Subtag Registry.
+```
+
+### 3.9 Attribute value
 
 ```
 AttributeName ::: string
@@ -633,6 +645,7 @@ DoiFieldId ::: Iri
 PubMedIdFieldId ::: Iri
 RridFieldId ::: Iri
 NihGrantIdFieldId ::: Iri
+LanguageFieldId ::: Iri
 AttributeValueFieldId ::: Iri
 
 TemplateId ::: Iri
@@ -854,6 +867,7 @@ carries a `kind` discriminator on the wire.
 | `EmbeddedPubMedIdField` | `PubMedIdValue`: `{ "kind": "PubMedIdValue", … }` |
 | `EmbeddedRridField` | `RridValue`: `{ "kind": "RridValue", … }` |
 | `EmbeddedNihGrantIdField` | `NihGrantIdValue`: `{ "kind": "NihGrantIdValue", … }` |
+| `EmbeddedLanguageField` | `LanguageValue`: `{ "kind": "LanguageValue", "value": … }` |
 
 `EmbeddedAttributeValueField` has no `defaultValue` slot (per §9).
 
@@ -883,6 +897,7 @@ above, with the following per-family details:
 - `PubMedIdFieldSpec.defaultValue?: PubMedIdValue`
 - `RridFieldSpec.defaultValue?: RridValue`
 - `NihGrantIdFieldSpec.defaultValue?: NihGrantIdValue`
+- `LanguageFieldSpec.defaultValue?: LanguageValue`
 
 - `SingleValuedEnumFieldSpec.defaultValue?: EnumValue` — a tagged
   `EnumValue` whose `value` MUST equal the `Token` of one of the
@@ -936,6 +951,7 @@ FieldSpec ::: TextFieldSpec | NumericFieldSpec | BooleanFieldSpec
             | TemporalFieldSpec
             | ControlledTermFieldSpec | EnumFieldSpec | LinkFieldSpec
             | ContactFieldSpec | ExternalAuthorityFieldSpec
+            | LanguageFieldSpec
             | AttributeValueFieldSpec
   // discriminator: kind
   // NumericFieldSpec, TemporalFieldSpec, EnumFieldSpec, ContactFieldSpec,
@@ -1191,6 +1207,16 @@ NihGrantIdFieldSpec ::: object {
   renderingHint?: NihGrantIdRenderingHint
 }
 
+LanguageFieldSpec ::: object {
+  "kind": "LanguageFieldSpec"
+  defaultValue?: LanguageValue
+  permittedLanguages?: LanguageTag[]
+  renderingHint?: LanguageRenderingHint
+}
+  // permittedLanguages, when present, MUST be a non-empty array.
+  // Tag matching is exact: an instance's LanguageValue.value MUST
+  // appear verbatim in permittedLanguages.
+
 AttributeValueFieldSpec ::: object {
   "kind": "AttributeValueFieldSpec"
 }
@@ -1292,6 +1318,7 @@ RenderingHint ::: TextRenderingHint | SingleValuedEnumRenderingHint
                 | OrcidRenderingHint | RorRenderingHint | DoiRenderingHint
                 | PubMedIdRenderingHint | RridRenderingHint
                 | NihGrantIdRenderingHint
+                | LanguageRenderingHint
   // discriminator: position
   // resolved by the renderingHint property of the enclosing FieldSpec
 
@@ -1327,6 +1354,8 @@ PubMedIdRenderingHint       ::: object { placeholder?: Placeholder }
 RridRenderingHint           ::: object { placeholder?: Placeholder }
 NihGrantIdRenderingHint     ::: object { placeholder?: Placeholder }
 
+LanguageRenderingHint       ::: "autocomplete" | "dropdown" | "radio"
+
 Placeholder ::: MultilingualString
 ```
 
@@ -1343,7 +1372,8 @@ Field ::: TextField | NumericField | BooleanField
         | SingleValuedEnumField | MultiValuedEnumField
         | LinkField | EmailField | PhoneNumberField
         | OrcidField | RorField | DoiField | PubMedIdField
-        | RridField | NihGrantIdField | AttributeValueField
+        | RridField | NihGrantIdField
+        | LanguageField | AttributeValueField
   // discriminator: kind
   // NumericField is itself a union of IntegerNumberField and RealNumberField
 
@@ -1592,6 +1622,18 @@ NihGrantIdField ::: object {
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
+LanguageField ::: object {
+  "kind": "LanguageField"
+  id: LanguageFieldId
+  modelVersion: ModelVersion
+  metadata: CatalogMetadata
+  versioning: SchemaArtifactVersioning
+  fieldSpec: LanguageFieldSpec
+  label: Label
+  helpText?: HelpText
+}
+  // modelVersion is a SemanticVersion 2.0.0 lexical form
+
 AttributeValueField ::: object {
   "kind": "AttributeValueField"
   id: AttributeValueFieldId
@@ -1643,6 +1685,7 @@ EmbeddedField ::: EmbeddedTextField
                 | EmbeddedOrcidField | EmbeddedRorField | EmbeddedDoiField
                 | EmbeddedPubMedIdField | EmbeddedRridField
                 | EmbeddedNihGrantIdField
+                | EmbeddedLanguageField
                 | EmbeddedAttributeValueField
   // discriminator: kind
 
@@ -1893,6 +1936,19 @@ EmbeddedNihGrantIdField ::: object {
   cardinality?: Cardinality
   visibility?: Visibility
   defaultValue?: NihGrantIdValue
+  labelOverride?: LabelOverride
+  helpTextOverride?: HelpTextOverride
+  property?: Property
+}
+
+EmbeddedLanguageField ::: object {
+  "kind": "EmbeddedLanguageField"
+  key: EmbeddedArtifactKey
+  artifactRef: LanguageFieldId
+  valueRequirement?: ValueRequirement
+  cardinality?: Cardinality
+  visibility?: Visibility
+  defaultValue?: LanguageValue
   labelOverride?: LabelOverride
   helpTextOverride?: HelpTextOverride
   property?: Property
@@ -2157,8 +2213,8 @@ with an optional seventh `HelpText` slot. For all of `TextField`,
 `TimeField`, `DateTimeField`, `ControlledTermField`,
 `SingleValuedEnumField`, `MultiValuedEnumField`, `LinkField`,
 `EmailField`, `PhoneNumberField`, `OrcidField`, `RorField`,
-`DoiField`, `PubMedIdField`, `RridField`, `NihGrantIdField`, and
-`AttributeValueField`:
+`DoiField`, `PubMedIdField`, `RridField`, `NihGrantIdField`,
+`LanguageField`, and `AttributeValueField`:
 
 0. `<Family>FieldId` → `id`
 1. `ModelVersion` → `modelVersion`
@@ -2332,6 +2388,9 @@ inside `metadata`.
 0. `NihGrantIri` → `iri`
 1. `[Label]` → `label?`
 
+**`LanguageValue`** (`language_value`):
+0. `LanguageTag` → `value`
+
 **`AttributeValue`** (`attribute_value`):
 0. `AttributeName` → `name`
 1. `Value` → `value`
@@ -2444,6 +2503,8 @@ The ten new rendering hints introduced for previously hint-less families each ca
 **`RridRenderingHint`** (`rrid_rendering_hint`): `[Placeholder]` → `placeholder?`
 **`NihGrantIdRenderingHint`** (`nih_grant_id_rendering_hint`): `[Placeholder]` → `placeholder?`
 
+`LanguageRenderingHint` encodes as one of the bare strings `"autocomplete"`, `"dropdown"`, or `"radio"` and has no property-name map.
+
 **`LinkFieldSpec`** (`link_field_spec`):
 0. `[LinkValue]` → `defaultValue?`
 1. `[LinkRenderingHint]` → `renderingHint?`
@@ -2479,6 +2540,11 @@ The ten new rendering hints introduced for previously hint-less families each ca
 **`NihGrantIdFieldSpec`** (`nih_grant_id_field_spec`):
 0. `[NihGrantIdValue]` → `defaultValue?`
 1. `[NihGrantIdRenderingHint]` → `renderingHint?`
+
+**`LanguageFieldSpec`** (`language_field_spec`):
+0. `[LanguageValue]` → `defaultValue?`
+1. `[PermittedLanguages]` → `permittedLanguages?`
+2. `[LanguageRenderingHint]` → `renderingHint?`
 
 `AttributeValueFieldSpec` carries no components and has no entry here.
 
@@ -2573,7 +2639,9 @@ IRIs, `Name`, `Description`, `PreferredLabel`, `AlternativeLabel`,
 `AttributeName`, `EmbeddedArtifactKey`, `ValidationRegex`, `Token`,
 `Header`, `Footer`, `Version`, `ModelVersion`, `CreatedOn`,
 `CreatedBy`, `ModifiedOn`, `ModifiedBy`, `PreviousVersion`,
-`DerivedFrom`, `PropertyIri`, and `HtmlContent` — collapse to their
-inner primitive on the wire and have no per-production property name.
+`DerivedFrom`, `PropertyIri`, `HtmlContent`, and `PermittedLanguages` —
+collapse to their inner primitive (or to a bare array, in the case of
+single-component sequence-bearing wrappers such as `PermittedLanguages`)
+on the wire and have no per-production property name.
 The single component appears directly at the slot in the enclosing
 production whose property name is given by that production's mapping.

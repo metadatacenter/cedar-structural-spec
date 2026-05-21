@@ -1284,6 +1284,18 @@ Returns the `inputType` string for the field spec kind:
 
 ---
 
+### `encode_language_field_spec(FT: LanguageFieldSpec, E: EmbeddedField) → Object`
+
+Language fields are new in CTM 2.0; CTM 1.6.0 has no native counterpart. The encoding degrades to a string-valued field carrying a BCP 47 language tag as its lexical form, with an `inputType` hint to allow round-tripping. `PermittedLanguages` is encoded as an `enum` constraint on the value's lexical form when present; otherwise no value-set constraint is emitted. The `LanguageRenderingHint` (`"autocomplete"`, `"dropdown"`, `"radio"`) is preserved in `_ui.inputType` only insofar as the broad `"language"` hint is emitted; the fine-grained widget choice is not round-trippable through CTM 1.6.0.
+
+**Value shape:** `STRING_VALUE_SHAPE` | **Required:** `[]` | **`_valueConstraints` extras:** when `FT.permitted_languages` is present, `{ "enum": FT.permitted_languages }` | **`_ui` extras:** `{ "inputType": "language" }`
+
+> **Caution:** The `inputType` string value `"language"` is not part of the published CTM 1.6.0 specification. Encoding with this value is a best-effort 2.0 → 1.6.0 degradation; consumers that do not recognise the hint will render the field as a generic text input.
+
+**Calls:** [`encode_embedding_constraints`](#encode_embedding_constraintse-embeddedfield--object), [`encode_embedding_ui`](#encode_embedding_uie-embeddedfield--object)
+
+---
+
 ### `encode_attribute_value_field_spec(FT: AttributeValueFieldSpec, E: EmbeddedField) → Object`
 
 Attribute-value fields hold dynamic key-value pairs whose attribute names are not known at schema definition time. CTM 1.6.0 represents this with a top-level array type and defers the dynamic key handling to the instance level via `additionalProperties`. This field spec does not follow the standard skeleton.
@@ -1366,6 +1378,7 @@ Dispatches to the encoding function for the `Value` kind:
 | `EmailValue` | `encode_email_value(V)` |
 | `PhoneNumberValue` | `encode_phone_number_value(V)` |
 | `ExternalAuthorityValue` | `encode_external_authority_value(V)` |
+| `LanguageValue` | `encode_language_value(V)` |
 | `AttributeValue` | `encode_attribute_value(V)` |
 
 **Calls:** [`encode_text_value`](#encode_text_valuev-textvalue--object), [`encode_integer_number_value`](#encode_integer_number_valuev-integernumbervalue--object), [`encode_real_number_value`](#encode_real_number_valuev-realnumbervalue--object), `encode_boolean_value`, [`encode_date_value`](#encode_date_valuev-datevalue--object), [`encode_time_value`](#encode_time_valuev-timevalue--object), [`encode_datetime_value`](#encode_datetime_valuev-datetimevalue--object), [`encode_controlled_term_value`](#encode_controlled_term_valuev-controlledtermvalue--object), [`encode_enum_value`](#encode_enum_valuev-enumvalue--object), [`encode_link_value`](#encode_link_valuev-linkvalue--object), [`encode_email_value`](#encode_email_valuev-emailvalue--object), [`encode_phone_number_value`](#encode_phone_number_valuev-phonenumbervalue--object), [`encode_external_authority_value`](#encode_external_authority_valuev-externalauthorityvalue--object), [`encode_attribute_value`](#encode_attribute_valuev-attributevalue--object)
@@ -1511,6 +1524,19 @@ Each kind produces `{ "@id": <iri>, "rdfs:label": <label> }` where `"rdfs:label"
 | `PubMedIdValue` | `iri(V.pub_med_iri.iri)` |
 | `RridValue` | `iri(V.rrid_iri.iri)` |
 | `NihGrantIdValue` | `iri(V.nih_grant_iri.iri)` |
+
+---
+
+### `encode_language_value(V: LanguageValue) → Object`
+
+Language values carry a BCP 47 language tag. The XSD datatype IRI is fixed at `"xsd:language"`.
+
+```javascript
+{
+  "@value": V.language_tag.bcp_47_tag,
+  "@type":  "xsd:language"
+}
+```
 
 ---
 

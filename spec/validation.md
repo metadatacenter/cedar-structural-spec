@@ -121,6 +121,7 @@ The contained values MUST follow the `FieldSpec`-to-`Value` correspondence defin
 | `PubMedIdFieldSpec` | `PubMedIdValue` |
 | `RridFieldSpec` | `RridValue` |
 | `NihGrantIdFieldSpec` | `NihGrantIdValue` |
+| `LanguageFieldSpec` | `LanguageValue` |
 | `AttributeValueFieldSpec` | `AttributeValue` |
 
 Additional well-formedness conditions apply per family, as described below.
@@ -205,6 +206,13 @@ For external authority values:
 - `RridValue` MUST include an `RridIri`
 - `NihGrantIdValue` MUST include a `NihGrantIri`
 - these values MAY additionally include a human-readable `Label`
+
+For language values:
+
+- `LanguageValue` MUST carry a `LanguageTag` that is well-formed according to BCP 47 (RFC 5646)
+- when a `LanguageFieldSpec` carries `PermittedLanguages`, every `LanguageValue` carried by an instance of that field — and any default value carried at either layer — MUST have a tag that appears verbatim in `PermittedLanguages` (exact match, no pattern matching or BCP 47 lookup/filtering)
+- `PermittedLanguages`, when present, MUST be a non-empty list
+- the entries of `PermittedLanguages` MUST themselves each be well-formed BCP 47 tags
 
 For string-bearing values generally:
 
@@ -430,9 +438,10 @@ For each step below, two failure modes are possible:
 17. If `embedded` is an `EmbeddedPubMedIdField`: verify `embedded.artifactRef` is a `PubMedIdFieldId` identifying an existing `PubMedIdField`.
 18. If `embedded` is an `EmbeddedRridField`: verify `embedded.artifactRef` is an `RridFieldId` identifying an existing `RridField`.
 19. If `embedded` is an `EmbeddedNihGrantIdField`: verify `embedded.artifactRef` is a `NihGrantIdFieldId` identifying an existing `NihGrantIdField`.
-20. If `embedded` is an `EmbeddedAttributeValueField`: verify `embedded.artifactRef` is an `AttributeValueFieldId` identifying an existing `AttributeValueField`.
-21. If `embedded` is an `EmbeddedTemplate`: verify `embedded.artifactRef` is a `TemplateId` identifying an existing `Template`.
-22. If `embedded` is an `EmbeddedPresentationComponent`: verify `embedded.artifactRef` is a `PresentationComponentId` identifying an existing `PresentationComponent`.
+20. If `embedded` is an `EmbeddedLanguageField`: verify `embedded.artifactRef` is a `LanguageFieldId` identifying an existing `LanguageField`.
+21. If `embedded` is an `EmbeddedAttributeValueField`: verify `embedded.artifactRef` is an `AttributeValueFieldId` identifying an existing `AttributeValueField`.
+22. If `embedded` is an `EmbeddedTemplate`: verify `embedded.artifactRef` is a `TemplateId` identifying an existing `Template`.
+23. If `embedded` is an `EmbeddedPresentationComponent`: verify `embedded.artifactRef` is a `PresentationComponentId` identifying an existing `PresentationComponent`.
 
 ---
 
@@ -462,6 +471,7 @@ Dispatch on the kind of `fieldSpec`:
 - If `fieldSpec` is `IntegerNumberFieldSpec`: run [`validate_integer_number_field_spec(fieldSpec)`](#fn-validate-integer-number-field-spec).
 - If `fieldSpec` is `RealNumberFieldSpec`: run [`validate_real_number_field_spec(fieldSpec)`](#fn-validate-real-number-field-spec).
 - If `fieldSpec` is `SingleValuedEnumFieldSpec` or `MultiValuedEnumFieldSpec`: run [`validate_enum_field_spec(fieldSpec)`](#fn-validate-enum-field-spec).
+- If `fieldSpec` is `LanguageFieldSpec`: run [`validate_language_field_spec(fieldSpec)`](#fn-validate-language-field-spec).
 - All other field specs have no additional schema-level well-formedness checks beyond structural grammar conformance.
 
 ---
@@ -508,13 +518,29 @@ Dispatch on the kind of `fieldSpec`:
 
 ---
 
+##### `validate_language_field_spec(fieldSpec: LanguageFieldSpec)` {#fn-validate-language-field-spec}
+
+1. If `fieldSpec.permitted_languages` is present: verify that it is a non-empty list.
+   *On failure:* `structural` at `<fieldSpec>/permittedLanguages`, production `LanguageFieldSpec`, message `"permittedLanguages, when present, must be a non-empty list"`.
+2. If `fieldSpec.permitted_languages` is present: verify that every entry is a well-formed BCP 47 language tag (RFC 5646).
+   *On failure:* `lexical` at `<fieldSpec>/permittedLanguages/<i>`, production `LanguageFieldSpec`, message `"permittedLanguages entry is not a well-formed BCP 47 language tag"`.
+3. If `fieldSpec.default_value` is present: verify that it is a `LanguageValue` whose `value` is a well-formed BCP 47 language tag.
+   *On failure (wireShape):* `wireShape` at `<fieldSpec>/defaultValue`, production `LanguageFieldSpec`, message `"defaultValue must be a LanguageValue"`.
+   *On failure (lexical):* `lexical` at `<fieldSpec>/defaultValue/value`, production `LanguageValue`, message `"defaultValue.value is not a well-formed BCP 47 language tag"`.
+4. If both `fieldSpec.default_value` and `fieldSpec.permitted_languages` are present: verify `fieldSpec.default_value.value` appears verbatim in `fieldSpec.permitted_languages`.
+   *On failure:* `structural` at `<fieldSpec>/defaultValue/value`, production `LanguageFieldSpec`, message `"defaultValue is not in permittedLanguages"`.
+5. If `fieldSpec.rendering_hint` is present: verify it is one of `"autocomplete"`, `"dropdown"`, `"radio"`.
+   *On failure:* `wireShape` at `<fieldSpec>/renderingHint`, production `LanguageRenderingHint`, message `"unknown LanguageRenderingHint value"`.
+
+---
+
 #### Default Value Validation
 
 ##### `validate_default_value(defaultValue: Value, embedded: EmbeddedArtifact)` {#fn-validate-default-value}
 
 Let `fieldSpec` = the `FieldSpec` of the `Field` referenced by `embedded`.
 
-1. Verify `defaultValue` is of the family-specific `Value` type for `fieldSpec`: `TextValue` for `TextFieldSpec`, `IntegerNumberValue` for `IntegerNumberFieldSpec`, `RealNumberValue` for `RealNumberFieldSpec`, `BooleanValue` for `BooleanFieldSpec`, `DateValue` for `DateFieldSpec`, `TimeValue` for `TimeFieldSpec`, `DateTimeValue` for `DateTimeFieldSpec`, `ControlledTermValue` for `ControlledTermFieldSpec`, `EnumValue` for `SingleValuedEnumFieldSpec`, a sequence of `EnumValue` for `MultiValuedEnumFieldSpec`, `LinkValue` for `LinkFieldSpec`, `EmailValue` for `EmailFieldSpec`, `PhoneNumberValue` for `PhoneNumberFieldSpec`, and the corresponding external-authority `Value` types for the external-authority field specs. `AttributeValueFieldSpec` does not admit a default value.
+1. Verify `defaultValue` is of the family-specific `Value` type for `fieldSpec`: `TextValue` for `TextFieldSpec`, `IntegerNumberValue` for `IntegerNumberFieldSpec`, `RealNumberValue` for `RealNumberFieldSpec`, `BooleanValue` for `BooleanFieldSpec`, `DateValue` for `DateFieldSpec`, `TimeValue` for `TimeFieldSpec`, `DateTimeValue` for `DateTimeFieldSpec`, `ControlledTermValue` for `ControlledTermFieldSpec`, `EnumValue` for `SingleValuedEnumFieldSpec`, a sequence of `EnumValue` for `MultiValuedEnumFieldSpec`, `LinkValue` for `LinkFieldSpec`, `EmailValue` for `EmailFieldSpec`, `PhoneNumberValue` for `PhoneNumberFieldSpec`, the corresponding external-authority `Value` types for the external-authority field specs, and `LanguageValue` for `LanguageFieldSpec`. `AttributeValueFieldSpec` does not admit a default value.
    *On failure:* `wireShape` at `<embedded>/defaultValue`, production naming `embedded`'s family, message `"defaultValue must be a <FamilyValue> (got <kind>)"`.
 2. Apply the family-specific `validate_xxx_value(defaultValue, fieldSpec)` procedure to `defaultValue`. The default value MUST satisfy every constraint that a `FieldValue` carrying the same `Value` would satisfy. Errors reported by the inner subroutine are surfaced verbatim, with the path rooted at `<embedded>/defaultValue`.
 3. If `embedded` is an `EmbeddedSingleValuedEnumField`: verify `defaultValue` is a single `EnumValue` (not a sequence).

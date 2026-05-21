@@ -1,0 +1,32 @@
+{
+  "kind": "LanguageField",
+  "id": "https://example.org/fields/language-1",
+  "modelVersion": "2.0.0",
+  "metadata": {
+    "lifecycle": {
+      "createdOn": "2026-01-15T09:30:00Z",
+      "createdBy": "https://example.org/users/alice",
+      "modifiedOn": "2026-01-15T09:30:00Z",
+      "modifiedBy": "https://example.org/users/alice"
+    }
+  },
+  "versioning": {
+    "version": "1.0.0",
+    "status": "draft"
+  },
+  "fieldSpec": {
+    "kind": "LanguageFieldSpec",
+    "defaultValue": {
+      "kind": "LanguageValue",
+      "value": "en"
+    },
+    "permittedLanguages": ["en", "es", "fr", "de", "zh-Hans"],
+    "renderingHint": "dropdown"
+  },
+  "label": [
+    {
+      "value": "Test",
+      "lang": "en"
+    }
+  ]
+}

@@ -193,7 +193,7 @@ Every artifact identifier is encoded as a plain JSON string carrying the IRI. Th
 "https://example.org/fields/title"
 ```
 
-A `FieldId` appears only in two grammar positions: as `Field.id` (the artifact's own identity) and as `EmbeddedField.artifactRef` (a reference to the embedded artifact). Both surrounding constructs carry a `kind` discriminator that conveys the field family. The twenty permitted family-bearing `kind` values for `Field` variants are: `"TextField"`, `"IntegerNumberField"`, `"RealNumberField"`, `"BooleanField"`, `"DateField"`, `"TimeField"`, `"DateTimeField"`, `"ControlledTermField"`, `"SingleValuedEnumField"`, `"MultiValuedEnumField"`, `"LinkField"`, `"EmailField"`, `"PhoneNumberField"`, `"OrcidField"`, `"RorField"`, `"DoiField"`, `"PubMedIdField"`, `"RridField"`, `"NihGrantIdField"`, or `"AttributeValueField"`. The corresponding `EmbeddedField` variants prefix `Embedded` (e.g. `"EmbeddedTextField"`).
+A `FieldId` appears only in two grammar positions: as `Field.id` (the artifact's own identity) and as `EmbeddedField.artifactRef` (a reference to the embedded artifact). Both surrounding constructs carry a `kind` discriminator that conveys the field family. The twenty-one permitted family-bearing `kind` values for `Field` variants are: `"TextField"`, `"IntegerNumberField"`, `"RealNumberField"`, `"BooleanField"`, `"DateField"`, `"TimeField"`, `"DateTimeField"`, `"ControlledTermField"`, `"SingleValuedEnumField"`, `"MultiValuedEnumField"`, `"LinkField"`, `"EmailField"`, `"PhoneNumberField"`, `"OrcidField"`, `"RorField"`, `"DoiField"`, `"PubMedIdField"`, `"RridField"`, `"NihGrantIdField"`, `"LanguageField"`, or `"AttributeValueField"`. The corresponding `EmbeddedField` variants prefix `Embedded` (e.g. `"EmbeddedTextField"`).
 
 The IRI placed at a `FieldId` position MUST belong to a field of the family declared by the surrounding `kind`. This is a structural-invariant constraint (per §9.1 category 3); a conforming encoder enforces it before emitting the wire form, and a conforming decoder reports a structural error against `path` if it is violated.
 
@@ -494,6 +494,9 @@ Examples by family — at every layer (field-level on `XxxFieldSpec.defaultValue
 }
 
 // RorValue / DoiValue / PubMedIdValue / RridValue / NihGrantIdValue — analogous, each tagged with its family's kind
+
+// LanguageValue
+"defaultValue": { "kind": "LanguageValue", "value": "en" }
 ```
 
 **Precedence.** When both a field-level default (on the referenced `Field`'s `FieldSpec`) and an embedding-level default (on the `EmbeddedXxxField`) are present for the same field, the embedding-level default wins. When only one is present, that one applies. When neither is present, the field has no default. There is no mechanism for an embedding to *unset* a field-level default; an embedding wishing to override with a different default supplies its own `defaultValue`, but cannot say "no default here." See `grammar.md` §Defaults for the full table.

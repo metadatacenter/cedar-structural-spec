@@ -859,12 +859,12 @@ PEP 8 conformance on the Python surface.
 
 Bindings SHOULD organise the source tree so that **everything specific
 to a single field family lives together**. A field family is the
-twenty-way grouping introduced in `grammar.md` §3.2: `TextField`,
+twenty-one-way grouping introduced in `grammar.md` §3.2: `TextField`,
 `IntegerNumberField`, `RealNumberField`, `BooleanField`, `DateField`,
 `TimeField`, `DateTimeField`, `ControlledTermField`,
 `SingleValuedEnumField`, `MultiValuedEnumField`, `LinkField`,
 `EmailField`, `PhoneNumberField`, `OrcidField`, `RorField`, `DoiField`,
-`PubMedIdField`, `RridField`, `NihGrantIdField`, and
+`PubMedIdField`, `RridField`, `NihGrantIdField`, `LanguageField`, and
 `AttributeValueField`.
 
 The "everything specific to a family" set comprises, at minimum, the

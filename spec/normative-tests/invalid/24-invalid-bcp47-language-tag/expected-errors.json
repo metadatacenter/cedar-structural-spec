@@ -1,0 +1,8 @@
+[
+  {
+    "category": "lexical",
+    "path": "/fieldSpec/defaultValue/value",
+    "production": "LanguageValue",
+    "messageRegex": "BCP\\s?47|RFC\\s?5646|language(\\s|-)?tag"
+  }
+]

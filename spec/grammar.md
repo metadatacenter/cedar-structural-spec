@@ -70,6 +70,7 @@ A conceptual overview of the model — describing the principal categories, thei
   - [Link Value](#link-value)
   - [Contact Values](#contact-values)
   - [External Authority Values](#external-authority-values)
+  - [Language Value](#language-value)
   - [Attribute Value](#attribute-value)
 - [Embedded Artifact Properties](#embedded-artifact-properties)
   - [Embedded Artifact Key](#embedded-artifact-key)
@@ -260,6 +261,7 @@ Field ::= TextField
         | LinkField
         | ContactField
         | ExternalAuthorityField
+        | LanguageField
         | AttributeValueField
 
 NumericField ::= IntegerNumberField
@@ -505,6 +507,22 @@ NihGrantIdField ::= nih_grant_id_field(
                    )
 ```
 
+`LanguageField` carries a natural-language designation as data — for example, the primary language of a document, a person's spoken language, or a community's language. Its value is a canonical BCP 47 language tag. Display-name rendering and authoring-time autocomplete are typically performed against the IANA Language Subtag Registry; the structural spec does not redistribute or version-lock the registry. The normative requirement on a `LanguageValue` is that the carried tag MUST be a well-formed BCP 47 language tag.
+
+`LanguageField` is distinct from the `LanguageTag` carried by `TextValue.lang` and `LangString.lang`. Those slots are *metadata about a text value* — what language a piece of text is in. `LanguageValue` is *a language as data itself* — what language is being recorded as the answer to a form question. The two carry the same lexical type but play different semantic roles, and a template may use both.
+
+```ebnf
+LanguageField ::= language_field(
+                    LanguageFieldId
+                    ModelVersion
+                    CatalogMetadata
+                    SchemaArtifactVersioning
+                    LanguageFieldSpec
+                    Label
+                    [HelpText]
+                  )
+```
+
 `AttributeValueField` supports open-ended name-value pair data whose attribute names are not fixed at schema definition time.
 
 ```ebnf
@@ -561,6 +579,7 @@ EmbeddedField ::= EmbeddedTextField
                 | EmbeddedPubMedIdField
                 | EmbeddedRridField
                 | EmbeddedNihGrantIdField
+                | EmbeddedLanguageField
                 | EmbeddedAttributeValueField
 ```
 
@@ -795,6 +814,18 @@ EmbeddedNihGrantIdField ::= embedded_nih_grant_id_field(
                                [Property]
                              )
 
+EmbeddedLanguageField ::= embedded_language_field(
+                            EmbeddedArtifactKey
+                            LanguageFieldId
+                            [ValueRequirement]
+                            [Cardinality]
+                            [Visibility]
+                            [LanguageValue]
+                            [LabelOverride]
+                            [HelpTextOverride]
+                            [Property]
+                          )
+
 EmbeddedAttributeValueField ::= embedded_attribute_value_field(
                                   EmbeddedArtifactKey
                                   AttributeValueFieldId
@@ -855,6 +886,7 @@ FieldId ::= TextFieldId
           | PubMedIdFieldId
           | RridFieldId
           | NihGrantIdFieldId
+          | LanguageFieldId
           | AttributeValueFieldId
 
 TextFieldId ::= text_field_id( Iri )
@@ -894,6 +926,8 @@ PubMedIdFieldId ::= pub_med_id_field_id( Iri )
 RridFieldId ::= rrid_field_id( Iri )
 
 NihGrantIdFieldId ::= nih_grant_id_field_id( Iri )
+
+LanguageFieldId ::= language_field_id( Iri )
 
 AttributeValueFieldId ::= attribute_value_field_id( Iri )
 
@@ -1213,6 +1247,7 @@ Value ::= TextValue
         | EmailValue
         | PhoneNumberValue
         | ExternalAuthorityValue
+        | LanguageValue
         | AttributeValue
 
 NumericValue ::= IntegerNumberValue
@@ -1410,6 +1445,18 @@ NihGrantIri ::= nih_grant_iri( Iri )
 
 The final character of an ORCID iD MAY be `X`, serving as an ISO 7064 Mod 11-2 check character.
 
+### Language Value
+
+A `LanguageValue` carries a single canonical BCP 47 language tag. The tag is the sole carried fact: no denormalized display label is stored alongside it. Conforming implementations are expected to render display names (and to drive authoring-time autocomplete) by consulting the IANA Language Subtag Registry; the structural spec does not redistribute or version-lock the registry. The normative requirement is that the carried tag MUST be a well-formed BCP 47 language tag.
+
+```ebnf
+LanguageValue ::= language_value(
+                    LanguageTag
+                  )
+```
+
+The lexical type `LanguageTag` is the same production used by `TextValue.lang` and `LangString.lang`; the role distinction is semantic, not lexical. See [`LanguageField`](#concrete-field-artifacts) for the contrast between language-as-metadata-about-text and language-as-data.
+
 ### Attribute Value
 
 An attribute value is a name-value pair used to represent arbitrary named properties whose names are not known at schema definition time. `AttributeName` carries the name of the attribute as a Unicode string. The value component is itself a `Value`, permitting attribute values to carry any value type including nested attribute values. Nesting depth is unbounded at the model level; concrete implementations MAY impose practical limits.
@@ -1522,6 +1569,7 @@ The two default-value types match: at each layer the slot is typed with the fami
 | PubMedId | `[PubMedIdValue]` | `[PubMedIdValue]` |
 | Rrid | `[RridValue]` | `[RridValue]` |
 | NihGrantId | `[NihGrantIdValue]` | `[NihGrantIdValue]` |
+| Language | `[LanguageValue]` | `[LanguageValue]` |
 | AttributeValue | (no default) | (no default) |
 
 The shape is uniform across layers: every default at every layer is the family's `Value` type. For the enum families this means the field-level default is an `EnumValue` (or sequence of `EnumValue`) — the same kind-tagged object form that appears at the embedding level. The `Token` carried inside each default `EnumValue` MUST equal the `Token` of one of the spec's `PermissibleValue+` entries; for `MultiValuedEnumFieldSpec` the sequence MUST NOT contain duplicate tokens.
@@ -1604,6 +1652,7 @@ FieldSpec ::= TextFieldSpec
             | LinkFieldSpec
             | ContactFieldSpec
             | ExternalAuthorityFieldSpec
+            | LanguageFieldSpec
             | AttributeValueFieldSpec
 
 NumericFieldSpec ::= IntegerNumberFieldSpec
@@ -1773,6 +1822,20 @@ NihGrantIdFieldSpec ::= nih_grant_id_field_spec(
                           [NihGrantIdRenderingHint]
                         )
 
+LanguageFieldSpec ::= language_field_spec(
+                        [LanguageValue]
+                        [PermittedLanguages]
+                        [LanguageRenderingHint]
+                      )
+
+PermittedLanguages ::= permitted_languages(
+                         LanguageTag+
+                       )
+
+LanguageRenderingHint ::= "autocomplete"
+                        | "dropdown"
+                        | "radio"
+
 AttributeValueFieldSpec ::= attribute_value_field_spec()
 ```
 
@@ -1791,6 +1854,18 @@ The two enum specs each carry a field-level default per the [Defaults](#defaults
 A `Meaning` carried by a `PermissibleValue` binds the token to a term IRI in an external vocabulary or ontology. A permissible value MAY carry zero, one, or several `Meaning` entries. Each `Meaning` MAY additionally carry an optional `Label` recording the bound term's human-readable label (in the same way `ControlledTermValue.Label` caches the term's label inline) so that consumers without ontology access can render the bound term's display name. The `Meaning.Label` is the label of the bound *term*, distinct from the surrounding `PermissibleValue.Label` which is the display label of the permissible value itself. When the RDF projection is applied (see [`rdf-projection.md`](rdf-projection.md)), an `EnumValue` whose token matches a `PermissibleValue` carrying one or more `Meaning` entries projects as the corresponding term IRIs; an `EnumValue` whose matching permissible value carries no `Meaning` projects as a plain string literal.
 
 `ControlledTermSource` is defined in [Controlled Term Sources](#controlled-term-sources).
+
+`LanguageFieldSpec` configures a `LanguageField`. It MAY carry an optional `[LanguageValue]` default (per the [Defaults](#defaults) section), an optional `PermittedLanguages` constraint, and an optional `LanguageRenderingHint`.
+
+`PermittedLanguages`, when present, is a non-empty list of `LanguageTag` values that constrains the set of tags an instance may carry. The constraint is exact: an instance's `LanguageValue` MUST carry a tag that appears verbatim in `PermittedLanguages`. No pattern matching, no BCP 47 lookup or filtering semantics, no macrolanguage / script subsumption — `zh` matches only `zh`, not `zh-Hans`. When `PermittedLanguages` is absent, any well-formed BCP 47 tag is permitted.
+
+`LanguageRenderingHint` is a single value drawn from the enumeration above:
+
+- `"autocomplete"` — typeahead picker; appropriate when no `PermittedLanguages` constraint is in effect or when the permitted set is large.
+- `"dropdown"` — closed-list selector; appropriate for small permitted sets.
+- `"radio"` — visible button group; appropriate for very small permitted sets (typically two to four).
+
+The hint expresses author intent and is not prescriptive: a renderer MAY substitute a different presentation when responsive or accessibility constraints dictate. A combobox-style free-text-with-suggestions variant is intentionally not provided, since the value MUST be a well-formed BCP 47 tag and free text would admit malformed input.
 
 ### Temporal Field Specs
 
@@ -2166,6 +2241,7 @@ The table below gives the complete correspondence. The Field Family column ident
 | `ExternalAuthorityField` | `PubMedIdFieldSpec` | `PubMedIdValue` |
 | `ExternalAuthorityField` | `RridFieldSpec` | `RridValue` |
 | `ExternalAuthorityField` | `NihGrantIdFieldSpec` | `NihGrantIdValue` |
+| | `LanguageFieldSpec` | `LanguageValue` |
 | | `AttributeValueFieldSpec` | `AttributeValue` |
 
 The two concrete enum field specs share a single value type, `EnumValue`. The cardinality distinction — single versus multiple — is not visible in the value type itself but in the count of values permitted per `FieldValue`: a `SingleValuedEnumFieldSpec` permits exactly one `EnumValue`, while a `MultiValuedEnumFieldSpec` permits one or more (subject to the embedding's `Cardinality`). This cardinality constraint is enforced at validation rather than through distinct value types.

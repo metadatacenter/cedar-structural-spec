@@ -1,0 +1,8 @@
+[
+  {
+    "category": "structural",
+    "path": "/fieldSpec/defaultValue/value",
+    "production": "LanguageFieldSpec",
+    "messageRegex": "permittedLanguages|not in permitted"
+  }
+]
