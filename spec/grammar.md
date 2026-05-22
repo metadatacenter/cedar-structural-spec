@@ -94,7 +94,9 @@ A conceptual overview of the model — describing the principal categories, thei
 
 The kernel grammar defines the primary abstract categories of the model and the core schema-level structure that connects them. It introduces reusable schema artifacts, templates, and the embedding constructs through which templates assemble fields, nested templates, and presentation components. Subsequent sections refine the metadata, field-spec families, instance structures, and supporting constructs referenced here.
 
-The diagram below gives an overview of the kernel. `Template` is the central container: it holds an ordered sequence of `EmbeddedArtifact` constructs, each of which contextualises a reusable artifact — a `Field`, a nested `Template`, or a `PresentationComponent` — within that specific template. A `TemplateInstance` records data conforming to a `Template`. Concrete `Field` variants and `FieldSpec` configurations are omitted for clarity.
+The diagram below gives an overview of the kernel. [`Template`](#prod-Template) is the central container: it holds an ordered sequence of [`EmbeddedArtifact`](#prod-EmbeddedArtifact) constructs, each of which contextualises a reusable artifact — a [`Field`](#prod-Field), a nested [`Template`](#prod-Template), or a [`PresentationComponent`](#prod-PresentationComponent) — within that specific template. The three concrete embedded constructs are [`EmbeddedField`](#prod-EmbeddedField), [`EmbeddedTemplate`](#prod-EmbeddedTemplate), and [`EmbeddedPresentationComponent`](#prod-EmbeddedPresentationComponent). A [`TemplateInstance`](#prod-TemplateInstance) records data conforming to a [`Template`](#prod-Template). Concrete `Field` variants and `FieldSpec` configurations are omitted from the diagram for clarity; they are defined in [Concrete Field Artifacts](#concrete-field-artifacts) and [Field Specs](#field-specs).
+
+The diagram is interactive: each named class in the rendered book links to the corresponding EBNF production below.
 
 ```mermaid
 %%{init: {'themeVariables': {'fontSize': '12px'}}}%%
@@ -181,11 +183,21 @@ classDiagram
   EmbeddedTemplate ..> Property : carries
 
   TemplateInstance --> Template : conforms to
+
+  click Field "#prod-Field"
+  click Template "#prod-Template"
+  click PresentationComponent "#prod-PresentationComponent"
+  click TemplateInstance "#prod-TemplateInstance"
+  click EmbeddedArtifact "#prod-EmbeddedArtifact"
+  click EmbeddedField "#prod-EmbeddedField"
+  click EmbeddedTemplate "#prod-EmbeddedTemplate"
+  click EmbeddedPresentationComponent "#prod-EmbeddedPresentationComponent"
+  click Property "#prod-Property"
 ```
 
 ### Core Structure
 
-This subsection establishes the top-level taxonomy of the model and introduces its two principal concrete schema artifacts. `Artifact` is the broadest category, encompassing reusable schema artifacts, presentation components, and template instances. `Template` is defined here as the central container that organises embedded artifacts into a structured form. `Field` is introduced as an abstract category whose concrete variants are defined in the following subsection.
+This subsection establishes the top-level taxonomy of the model and introduces its two principal concrete schema artifacts. [`Artifact`](#prod-Artifact) is the broadest category, encompassing reusable schema artifacts, presentation components, and template instances. [`Template`](#prod-Template) is defined here as the central container that organises embedded artifacts into a structured form. [`Field`](#prod-Field) is introduced as an abstract category whose concrete variants are defined in [Concrete Field Artifacts](#concrete-field-artifacts).
 
 ```ebnf
 Artifact ::= SchemaArtifact
@@ -196,7 +208,7 @@ SchemaArtifact ::= Field
                  | Template
 ```
 
-`Template` is a concrete schema artifact and the central container of the model. It assembles `EmbeddedArtifact` constructs into a structured form and defines the schema that `TemplateInstance` constructs conform to.
+[`Template`](#prod-Template) is a concrete schema artifact and the central container of the model. It assembles [`EmbeddedArtifact`](#prod-EmbeddedArtifact) constructs into a structured form and defines the schema that [`TemplateInstance`](#prod-TemplateInstance) constructs conform to.
 
 ```ebnf
 Template ::= template(
@@ -582,7 +594,7 @@ The carried `EmbeddedArtifactKey` is subject to the same lexical rules as any ot
 
 ### Embedded Artifacts
 
-An `EmbeddedArtifact` contextualises a reusable artifact within a specific `Template`, adding template-local properties that govern how the artifact participates in that context. There are three forms: `EmbeddedField`, which embeds a data-bearing field; `EmbeddedTemplate`, which nests a template within the containing template; and `EmbeddedPresentationComponent`, which contributes presentational structure without producing instance data.
+An [`EmbeddedArtifact`](#prod-EmbeddedArtifact) contextualises a reusable artifact within a specific [`Template`](#prod-Template), adding template-local properties that govern how the artifact participates in that context. There are three forms: [`EmbeddedField`](#prod-EmbeddedField), which embeds a data-bearing field; [`EmbeddedTemplate`](#prod-EmbeddedTemplate), which nests a template within the containing template; and [`EmbeddedPresentationComponent`](#prod-EmbeddedPresentationComponent), which contributes presentational structure without producing instance data.
 
 The sequence of `EmbeddedArtifact` constructs within a `Template` is significant. The order in which they appear determines the presentation order of embedded artifacts in a rendered template. Conforming implementations MUST preserve this order.
 
