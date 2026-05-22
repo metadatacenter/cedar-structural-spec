@@ -1,0 +1,36 @@
+{
+  "kind": "EmailField",
+  "id": "https://example.org/fields/contact-email",
+  "modelVersion": "2.0.0",
+  "metadata": {
+    "lifecycle": {
+      "createdOn": "2026-01-15T09:30:00Z",
+      "createdBy": "https://example.org/users/alice",
+      "modifiedOn": "2026-01-15T09:30:00Z",
+      "modifiedBy": "https://example.org/users/alice"
+    }
+  },
+  "versioning": {
+    "version": "1.0.0",
+    "status": "draft"
+  },
+  "fieldSpec": {
+    "kind": "EmailFieldSpec",
+    "examples": [
+      {
+        "kind": "EmailValue",
+        "value": "alice@example.org"
+      },
+      {
+        "kind": "EmailValue",
+        "value": "bob@example.org"
+      }
+    ]
+  },
+  "label": [
+    {
+      "value": "Contact email",
+      "lang": "en"
+    }
+  ]
+}

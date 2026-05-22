@@ -1,0 +1,8 @@
+[
+  {
+    "category": "structural",
+    "path": "/fieldSpec/examples/0/value",
+    "production": "SingleValuedEnumFieldSpec",
+    "messageRegex": "permissibleValues|examples|not (?:a |one of )?permissible"
+  }
+]

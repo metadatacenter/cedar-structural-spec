@@ -1,0 +1,50 @@
+{
+  "kind": "SingleValuedEnumField",
+  "id": "https://example.org/fields/sex-at-birth",
+  "modelVersion": "2.0.0",
+  "metadata": {
+    "lifecycle": {
+      "createdOn": "2026-01-15T09:30:00Z",
+      "createdBy": "https://example.org/users/alice",
+      "modifiedOn": "2026-01-15T09:30:00Z",
+      "modifiedBy": "https://example.org/users/alice"
+    }
+  },
+  "versioning": {
+    "version": "1.0.0",
+    "status": "draft"
+  },
+  "fieldSpec": {
+    "kind": "SingleValuedEnumFieldSpec",
+    "permissibleValues": [
+      {
+        "value": "female",
+        "label": [{ "value": "Female", "lang": "en" }]
+      },
+      {
+        "value": "male",
+        "label": [{ "value": "Male", "lang": "en" }]
+      },
+      {
+        "value": "intersex",
+        "label": [{ "value": "Intersex", "lang": "en" }]
+      }
+    ],
+    "examples": [
+      {
+        "kind": "EnumValue",
+        "value": "female"
+      },
+      {
+        "kind": "EnumValue",
+        "value": "male"
+      }
+    ]
+  },
+  "label": [
+    {
+      "value": "Sex at birth",
+      "lang": "en"
+    }
+  ]
+}

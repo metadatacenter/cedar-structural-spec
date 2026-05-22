@@ -1,0 +1,8 @@
+[
+  {
+    "category": "structural",
+    "path": "/fieldSpec/examples/0/value",
+    "production": "IntegerNumberFieldSpec",
+    "messageRegex": "minValue|maxValue|out of range|examples"
+  }
+]

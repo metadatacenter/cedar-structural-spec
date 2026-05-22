@@ -1,0 +1,48 @@
+{
+  "kind": "IntegerNumberField",
+  "id": "https://example.org/fields/age",
+  "modelVersion": "2.0.0",
+  "metadata": {
+    "lifecycle": {
+      "createdOn": "2026-01-15T09:30:00Z",
+      "createdBy": "https://example.org/users/alice",
+      "modifiedOn": "2026-01-15T09:30:00Z",
+      "modifiedBy": "https://example.org/users/alice"
+    }
+  },
+  "versioning": {
+    "version": "1.0.0",
+    "status": "draft"
+  },
+  "fieldSpec": {
+    "kind": "IntegerNumberFieldSpec",
+    "minValue": {
+      "kind": "IntegerNumberValue",
+      "value": "0"
+    },
+    "maxValue": {
+      "kind": "IntegerNumberValue",
+      "value": "120"
+    },
+    "examples": [
+      {
+        "kind": "IntegerNumberValue",
+        "value": "0"
+      },
+      {
+        "kind": "IntegerNumberValue",
+        "value": "42"
+      },
+      {
+        "kind": "IntegerNumberValue",
+        "value": "120"
+      }
+    ]
+  },
+  "label": [
+    {
+      "value": "Age (years)",
+      "lang": "en"
+    }
+  ]
+}

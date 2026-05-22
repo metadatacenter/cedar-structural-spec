@@ -1,0 +1,8 @@
+[
+  {
+    "category": "structural",
+    "path": "/fieldSpec/examples/0",
+    "production": "DateFieldSpec",
+    "messageRegex": "dateValueType|arm|FullDateValue|YearValue|examples"
+  }
+]

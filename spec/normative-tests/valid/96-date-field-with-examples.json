@@ -1,0 +1,37 @@
+{
+  "kind": "DateField",
+  "id": "https://example.org/fields/event-date",
+  "modelVersion": "2.0.0",
+  "metadata": {
+    "lifecycle": {
+      "createdOn": "2026-01-15T09:30:00Z",
+      "createdBy": "https://example.org/users/alice",
+      "modifiedOn": "2026-01-15T09:30:00Z",
+      "modifiedBy": "https://example.org/users/alice"
+    }
+  },
+  "versioning": {
+    "version": "1.0.0",
+    "status": "draft"
+  },
+  "fieldSpec": {
+    "kind": "DateFieldSpec",
+    "dateValueType": "fullDate",
+    "examples": [
+      {
+        "kind": "FullDateValue",
+        "value": "1985-04-12"
+      },
+      {
+        "kind": "FullDateValue",
+        "value": "2024-01-01"
+      }
+    ]
+  },
+  "label": [
+    {
+      "value": "Date of birth",
+      "lang": "en"
+    }
+  ]
+}
