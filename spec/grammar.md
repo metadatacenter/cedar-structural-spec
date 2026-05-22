@@ -1696,6 +1696,7 @@ TextFieldSpec ::= text_field_spec(
                     [ValidationRegex]
                     [LangTagRequirement]
                     [TextRenderingHint]
+                    TextValue*  // examples
                   )
 
 LangTagRequirement ::= "langTagRequired"
@@ -1708,6 +1709,7 @@ IntegerNumberFieldSpec ::= integer_number_field_spec(
                              [IntegerNumberMinValue]
                              [IntegerNumberMaxValue]
                              [NumericRenderingHint]
+                             IntegerNumberValue*  // examples
                            )
 
 RealNumberFieldSpec ::= real_number_field_spec(
@@ -1717,6 +1719,7 @@ RealNumberFieldSpec ::= real_number_field_spec(
                           [RealNumberMinValue]
                           [RealNumberMaxValue]
                           [NumericRenderingHint]
+                          RealNumberValue*  // examples
                         )
 
 Unit ::= unit(
@@ -1755,6 +1758,7 @@ RealNumberMaxValue ::= real_number_max_value(
 BooleanFieldSpec ::= boolean_field_spec(
                        [BooleanValue]
                        [BooleanRenderingHint]
+                       BooleanValue*  // examples
                      )
 
 TemporalFieldSpec ::= DateFieldSpec
@@ -1765,6 +1769,7 @@ ControlledTermFieldSpec ::= controlled_term_field_spec(
                               [ControlledTermValue]
                               ControlledTermSource+
                               [ControlledTermRenderingHint]
+                              ControlledTermValue*  // examples
                             )
 
 EnumFieldSpec ::= SingleValuedEnumFieldSpec
@@ -1774,12 +1779,14 @@ SingleValuedEnumFieldSpec ::= single_valued_enum_field_spec(
                                 PermissibleValue+
                                 [EnumValue]
                                 [SingleValuedEnumRenderingHint]
+                                EnumValue*  // examples
                               )
 
 MultiValuedEnumFieldSpec ::= multi_valued_enum_field_spec(
                                PermissibleValue+
-                               EnumValue*
+                               EnumValue*  // defaultValue
                                [MultiValuedEnumRenderingHint]
+                               EnumValue*  // examples
                              )
 
 PermissibleValue ::= permissible_value(
@@ -1801,6 +1808,7 @@ Meaning ::= meaning(
 LinkFieldSpec ::= link_field_spec(
                     [LinkValue]
                     [LinkRenderingHint]
+                    LinkValue*  // examples
                   )
 
 ContactFieldSpec ::= EmailFieldSpec
@@ -1809,11 +1817,13 @@ ContactFieldSpec ::= EmailFieldSpec
 EmailFieldSpec ::= email_field_spec(
                      [EmailValue]
                      [EmailRenderingHint]
+                     EmailValue*  // examples
                    )
 
 PhoneNumberFieldSpec ::= phone_number_field_spec(
                            [PhoneNumberValue]
                            [PhoneNumberRenderingHint]
+                           PhoneNumberValue*  // examples
                          )
 
 ExternalAuthorityFieldSpec ::= OrcidFieldSpec
@@ -1826,37 +1836,44 @@ ExternalAuthorityFieldSpec ::= OrcidFieldSpec
 OrcidFieldSpec ::= orcid_field_spec(
                      [OrcidValue]
                      [OrcidRenderingHint]
+                     OrcidValue*  // examples
                    )
 
 RorFieldSpec ::= ror_field_spec(
                    [RorValue]
                    [RorRenderingHint]
+                   RorValue*  // examples
                  )
 
 DoiFieldSpec ::= doi_field_spec(
                    [DoiValue]
                    [DoiRenderingHint]
+                   DoiValue*  // examples
                  )
 
 PubMedIdFieldSpec ::= pub_med_id_field_spec(
                         [PubMedIdValue]
                         [PubMedIdRenderingHint]
+                        PubMedIdValue*  // examples
                       )
 
 RridFieldSpec ::= rrid_field_spec(
                     [RridValue]
                     [RridRenderingHint]
+                    RridValue*  // examples
                   )
 
 NihGrantIdFieldSpec ::= nih_grant_id_field_spec(
                           [NihGrantIdValue]
                           [NihGrantIdRenderingHint]
+                          NihGrantIdValue*  // examples
                         )
 
 LanguageFieldSpec ::= language_field_spec(
                         [LanguageValue]
                         [PermittedLanguages]
                         [LanguageRenderingHint]
+                        LanguageValue*  // examples
                       )
 
 PermittedLanguages ::= permitted_languages(
@@ -1886,6 +1903,16 @@ A `Meaning` carried by a `PermissibleValue` binds the token to a term IRI in an 
 
 `ControlledTermSource` is defined in [Controlled Term Sources](#controlled-term-sources).
 
+Every concrete `XxxFieldSpec` (except `AttributeValueFieldSpec`) MAY carry zero or more *example values* — concrete sample values of the family's `Value` type, intended for display alongside the field at form-render time and for consumption by tooling that can benefit from concrete patterns (LLM-based form-fillers, JSON Schema projections, documentation generators). The example slot appears at the end of each `XxxFieldSpec` production. Examples are **typed**: each entry is a value of the family's `Value` production (`TextValue` for `TextFieldSpec`, `DateValue` for `DateFieldSpec`, and so on). They are not free-form prose; illustrative prose belongs in [`HelpText`](#concrete-field-artifacts).
+
+Each example MUST satisfy every constraint the spec imposes on values of that family (regex, length bounds, value bounds, date arms, language permission, permissible-value tokens, …) — the same rules that govern `defaultValue` apply. An example that violates the spec's own constraints is a malformed `XxxFieldSpec`.
+
+For `MultiValuedEnumFieldSpec`, each example is a single `EnumValue` (a single permitted token), not a sequence. The cardinality dimension is documented separately by the embedding's `Cardinality`; examples illustrate what a valid *individual* token looks like, regardless of how many a particular embedding selects.
+
+`AttributeValueFieldSpec` carries no examples, matching its absence of a `defaultValue`: an `AttributeValue` is a per-instance pairing of an attribute name and a value, and field-level examples are not meaningful here.
+
+Authors SHOULD NOT include identical entries within a single examples list. Duplicate examples are wasteful but not malformed; conforming validators MAY warn but MUST NOT reject.
+
 `LanguageFieldSpec` configures a `LanguageField`. It MAY carry an optional `[LanguageValue]` default (per the [Defaults](#defaults) section), an optional `PermittedLanguages` constraint, and an optional `LanguageRenderingHint`.
 
 `PermittedLanguages`, when present, is a non-empty list of `LanguageTag` values that constrains the set of tags an instance may carry. The constraint is exact: an instance's `LanguageValue` MUST carry a tag that appears verbatim in `PermittedLanguages`. No pattern matching, no BCP 47 lookup or filtering semantics, no macrolanguage / script subsumption — `zh` matches only `zh`, not `zh-Hans`. When `PermittedLanguages` is absent, any well-formed BCP 47 tag is permitted.
@@ -1907,6 +1934,7 @@ DateFieldSpec ::= date_field_spec(
                     DateValueType
                     [DateValue]
                     [DateRenderingHint]
+                    DateValue*  // examples
                   )
 
 DateValueType ::= "year" | "yearMonth" | "fullDate"
@@ -1918,6 +1946,7 @@ TimeFieldSpec ::= time_field_spec(
                     [TimePrecision]
                     [TimezoneRequirement]
                     [TimeRenderingHint]
+                    TimeValue*  // examples
                   )
 
 TimePrecision ::= "hourMinute" | "hourMinuteSecond" | "hourMinuteSecondFraction"
@@ -1951,6 +1980,7 @@ DateTimeFieldSpec ::= date_time_field_spec(
                         [DateTimeValue]
                         [TimezoneRequirement]
                         [DateTimeRenderingHint]
+                        DateTimeValue*  // examples
                       )
 
 DateTimeValueType ::= "dateHourMinute" | "dateHourMinuteSecond" | "dateHourMinuteSecondFraction"

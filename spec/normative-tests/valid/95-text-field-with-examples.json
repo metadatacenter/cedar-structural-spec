@@ -1,0 +1,37 @@
+{
+  "kind": "TextField",
+  "id": "https://example.org/fields/us-zip",
+  "modelVersion": "2.0.0",
+  "metadata": {
+    "lifecycle": {
+      "createdOn": "2026-01-15T09:30:00Z",
+      "createdBy": "https://example.org/users/alice",
+      "modifiedOn": "2026-01-15T09:30:00Z",
+      "modifiedBy": "https://example.org/users/alice"
+    }
+  },
+  "versioning": {
+    "version": "1.0.0",
+    "status": "draft"
+  },
+  "fieldSpec": {
+    "kind": "TextFieldSpec",
+    "validationRegex": "^[0-9]{5}(-[0-9]{4})?$",
+    "examples": [
+      {
+        "kind": "TextValue",
+        "value": "90210-1234"
+      },
+      {
+        "kind": "TextValue",
+        "value": "10001"
+      }
+    ]
+  },
+  "label": [
+    {
+      "value": "What is your ZIP code?",
+      "lang": "en"
+    }
+  ]
+}

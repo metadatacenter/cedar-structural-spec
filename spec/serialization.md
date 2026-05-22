@@ -360,6 +360,18 @@ A `SingleValuedEnumFieldSpec`'s `defaultValue` is a single tagged `EnumValue` wh
 
 The flat-string rendering hints (`TextRenderingHint`, `SingleValuedEnumRenderingHint`, `MultiValuedEnumRenderingHint`, `BooleanRenderingHint`) appear directly as JSON enum strings; the object-shaped rendering hints (`NumericRenderingHint`, `DateRenderingHint`, `TimeRenderingHint`, `DateTimeRenderingHint`) are JSON objects with optional configuration slots.
 
+Every `XxxFieldSpec` (except `AttributeValueFieldSpec`) MAY additionally carry an optional `examples` array of zero or more typed sample values of the family's `Value` type. Examples are illustrative — intended for display alongside the field at form-render time and for consumption by tooling that benefits from concrete patterns (LLM-based form-fillers, JSON Schema documentation generators, etc.). Each entry is a tagged `Value` of the family's type, just like the field's `defaultValue`, and each entry MUST satisfy the spec's own constraints (regex, value bounds, date arms, language permission, permissible-value tokens, …). The `examples` property SHOULD be omitted when empty.
+
+```json
+{ "kind": "TextFieldSpec",
+  "validationRegex": "^[0-9]{5}(-[0-9]{4})?$",
+  "examples": [
+    { "kind": "TextValue", "value": "90210-1234" },
+    { "kind": "TextValue", "value": "10001" }
+  ]
+}
+```
+
 ### 6.7 Field artifacts and embedded artifacts
 
 A `Field` artifact (shown for the text family; the other twenty families substitute `"IntegerNumberField"`, `"RealNumberField"`, `"BooleanField"`, `"DateField"`, etc. for `kind`):

@@ -474,6 +474,8 @@ Dispatch on the kind of `fieldSpec`:
 - If `fieldSpec` is `LanguageFieldSpec`: run [`validate_language_field_spec(fieldSpec)`](#fn-validate-language-field-spec).
 - All other field specs have no additional schema-level well-formedness checks beyond structural grammar conformance.
 
+After the family-specific dispatch, if `fieldSpec.examples` is present and `fieldSpec` is not an `AttributeValueFieldSpec`: run [`validate_examples(fieldSpec)`](#fn-validate-examples).
+
 ---
 
 ##### `validate_text_field_spec(fieldSpec: TextFieldSpec)` {#fn-validate-text-field-spec}
@@ -531,6 +533,28 @@ Dispatch on the kind of `fieldSpec`:
    *On failure:* `structural` at `<fieldSpec>/defaultValue/value`, production `LanguageFieldSpec`, message `"defaultValue is not in permittedLanguages"`.
 5. If `fieldSpec.rendering_hint` is present: verify it is one of `"autocomplete"`, `"dropdown"`, `"radio"`.
    *On failure:* `wireShape` at `<fieldSpec>/renderingHint`, production `LanguageRenderingHint`, message `"unknown LanguageRenderingHint value"`.
+
+---
+
+##### `validate_examples(fieldSpec: FieldSpec)` {#fn-validate-examples}
+
+Applies the example-list well-formedness rules. Run when `fieldSpec.examples` is present and `fieldSpec` is not an `AttributeValueFieldSpec` (which carries no examples by construction).
+
+Let `examples` = `fieldSpec.examples`.
+
+1. For each `example` in `examples`: verify `example` is of the family-specific `Value` type for `fieldSpec`: `TextValue` for `TextFieldSpec`, `IntegerNumberValue` for `IntegerNumberFieldSpec`, `RealNumberValue` for `RealNumberFieldSpec`, `BooleanValue` for `BooleanFieldSpec`, `DateValue` for `DateFieldSpec`, `TimeValue` for `TimeFieldSpec`, `DateTimeValue` for `DateTimeFieldSpec`, `ControlledTermValue` for `ControlledTermFieldSpec`, `EnumValue` for both `SingleValuedEnumFieldSpec` and `MultiValuedEnumFieldSpec`, `LinkValue` for `LinkFieldSpec`, `EmailValue` for `EmailFieldSpec`, `PhoneNumberValue` for `PhoneNumberFieldSpec`, the corresponding external-authority `Value` type for the external-authority field specs, and `LanguageValue` for `LanguageFieldSpec`.
+   *On failure:* `wireShape` at `<fieldSpec>/examples/<i>`, production naming `fieldSpec`'s kind, message `"examples entry must be a <FamilyValue> (got <kind>)"`.
+2. For each `example` in `examples`: verify it satisfies every constraint the spec imposes on values of its family. The same constraints that govern an instance value or a `defaultValue` apply here:
+   - For `TextFieldSpec`: each example's lexical form MUST match `validationRegex` (if present), and its length MUST fall within `[minLength, maxLength]` (if present). When `langTagRequirement` is present, each example's `TextValue.lang` MUST satisfy the requirement.
+   - For `IntegerNumberFieldSpec` / `RealNumberFieldSpec`: each example MUST fall within `[minValue, maxValue]` (if present).
+   - For `DateFieldSpec`: each example's `DateValue` arm MUST match `dateValueType`.
+   - For `TimeFieldSpec`: each example's lexical form MUST match the declared `timePrecision`.
+   - For `DateTimeFieldSpec`: each example's lexical form MUST match the declared `dateTimeValueType`.
+   - For `SingleValuedEnumFieldSpec` and `MultiValuedEnumFieldSpec`: each example MUST be a single `EnumValue` whose `value` equals the `Token` of one `PermissibleValue` in the spec. (For `MultiValuedEnumFieldSpec` this is *one* `EnumValue`, not a sequence — see [Field Specs](grammar.md#field-specs).)
+   - For `LanguageFieldSpec`: each example's tag MUST be a well-formed BCP 47 language tag, and when `permittedLanguages` is present, MUST appear verbatim in `permittedLanguages`.
+   - Errors from these inner checks are reported with `<fieldSpec>/examples/<i>` rooting the path of the family-specific value-validator.
+
+Duplicate entries within `examples` are not normatively forbidden. Authors SHOULD NOT include identical entries; conforming validators MAY emit a warning for duplicates but MUST NOT reject.
 
 ---
 

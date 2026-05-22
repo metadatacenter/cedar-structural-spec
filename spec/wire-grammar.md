@@ -969,6 +969,7 @@ TextFieldSpec ::: object {
   validationRegex?: ValidationRegex
   langTagRequirement?: LangTagRequirement
   renderingHint?: TextRenderingHint
+  examples?: array<TextValue>
 }
 
 LangTagRequirement ::: "langTagRequired" | "langTagOptional" | "langTagForbidden"
@@ -983,6 +984,7 @@ IntegerNumberFieldSpec ::: object {
   minValue?: IntegerNumberMinValue
   maxValue?: IntegerNumberMaxValue
   renderingHint?: NumericRenderingHint
+  examples?: array<IntegerNumberValue>
 }
 
 RealNumberFieldSpec ::: object {
@@ -993,12 +995,14 @@ RealNumberFieldSpec ::: object {
   minValue?: RealNumberMinValue
   maxValue?: RealNumberMaxValue
   renderingHint?: NumericRenderingHint
+  examples?: array<RealNumberValue>
 }
 
 BooleanFieldSpec ::: object {
   "kind": "BooleanFieldSpec"
   defaultValue?: BooleanValue
   renderingHint?: BooleanRenderingHint
+  examples?: array<BooleanValue>
 }
 
 Unit ::: object {
@@ -1027,6 +1031,7 @@ DateFieldSpec ::: object {
   dateValueType: DateValueType
   defaultValue?: DateValue
   renderingHint?: DateRenderingHint
+  examples?: array<DateValue>
 }
   // defaultValue, when present, MUST be a DateValue arm consistent
   // with dateValueType (e.g. dateValueType "year" admits only YearValue).
@@ -1039,6 +1044,7 @@ TimeFieldSpec ::: object {
   timePrecision?: TimePrecision
   timezoneRequirement?: TimezoneRequirement
   renderingHint?: TimeRenderingHint
+  examples?: array<TimeValue>
 }
 
 TimePrecision ::: "hourMinute" | "hourMinuteSecond" | "hourMinuteSecondFraction"
@@ -1051,6 +1057,7 @@ DateTimeFieldSpec ::: object {
   defaultValue?: DateTimeValue
   timezoneRequirement?: TimezoneRequirement
   renderingHint?: DateTimeRenderingHint
+  examples?: array<DateTimeValue>
 }
 
 DateTimeValueType ::: "dateHourMinute" | "dateHourMinuteSecond"
@@ -1084,6 +1091,7 @@ ControlledTermFieldSpec ::: object {
   defaultValue?: ControlledTermValue
   sources: nonEmptyArray<ControlledTermSource>
   renderingHint?: ControlledTermRenderingHint
+  examples?: array<ControlledTermValue>
 }
   // defaultValue.term, when present, SHOULD belong to one of the
   // declared sources, but the structural model does not enforce this
@@ -1100,6 +1108,7 @@ SingleValuedEnumFieldSpec ::: object {
   permissibleValues: nonEmptyArray<PermissibleValue>
   defaultValue?: EnumValue
   renderingHint?: SingleValuedEnumRenderingHint
+  examples?: array<EnumValue>
 }
   // defaultValue.value, when present, MUST equal the `value` of one
   // of the permissibleValues entries
@@ -1109,6 +1118,7 @@ MultiValuedEnumFieldSpec ::: object {
   permissibleValues: nonEmptyArray<PermissibleValue>
   defaultValues?: array<EnumValue>
   renderingHint?: MultiValuedEnumRenderingHint
+  examples?: array<EnumValue>
 }
   // defaultValues, when present, is a (possibly empty) array of
   // EnumValue entries; each defaultValues[i].value MUST equal the
@@ -1149,6 +1159,7 @@ LinkFieldSpec ::: object {
   "kind": "LinkFieldSpec"
   defaultValue?: LinkValue
   renderingHint?: LinkRenderingHint
+  examples?: array<LinkValue>
 }
 
 ContactFieldSpec ::: EmailFieldSpec | PhoneNumberFieldSpec
@@ -1158,12 +1169,14 @@ EmailFieldSpec ::: object {
   "kind": "EmailFieldSpec"
   defaultValue?: EmailValue
   renderingHint?: EmailRenderingHint
+  examples?: array<EmailValue>
 }
 
 PhoneNumberFieldSpec ::: object {
   "kind": "PhoneNumberFieldSpec"
   defaultValue?: PhoneNumberValue
   renderingHint?: PhoneNumberRenderingHint
+  examples?: array<PhoneNumberValue>
 }
 
 ExternalAuthorityFieldSpec ::: OrcidFieldSpec | RorFieldSpec | DoiFieldSpec
@@ -1175,36 +1188,42 @@ OrcidFieldSpec ::: object {
   "kind": "OrcidFieldSpec"
   defaultValue?: OrcidValue
   renderingHint?: OrcidRenderingHint
+  examples?: array<OrcidValue>
 }
 
 RorFieldSpec ::: object {
   "kind": "RorFieldSpec"
   defaultValue?: RorValue
   renderingHint?: RorRenderingHint
+  examples?: array<RorValue>
 }
 
 DoiFieldSpec ::: object {
   "kind": "DoiFieldSpec"
   defaultValue?: DoiValue
   renderingHint?: DoiRenderingHint
+  examples?: array<DoiValue>
 }
 
 PubMedIdFieldSpec ::: object {
   "kind": "PubMedIdFieldSpec"
   defaultValue?: PubMedIdValue
   renderingHint?: PubMedIdRenderingHint
+  examples?: array<PubMedIdValue>
 }
 
 RridFieldSpec ::: object {
   "kind": "RridFieldSpec"
   defaultValue?: RridValue
   renderingHint?: RridRenderingHint
+  examples?: array<RridValue>
 }
 
 NihGrantIdFieldSpec ::: object {
   "kind": "NihGrantIdFieldSpec"
   defaultValue?: NihGrantIdValue
   renderingHint?: NihGrantIdRenderingHint
+  examples?: array<NihGrantIdValue>
 }
 
 LanguageFieldSpec ::: object {
@@ -1212,6 +1231,7 @@ LanguageFieldSpec ::: object {
   defaultValue?: LanguageValue
   permittedLanguages?: LanguageTag[]
   renderingHint?: LanguageRenderingHint
+  examples?: array<LanguageValue>
 }
   // permittedLanguages, when present, MUST be a non-empty array.
   // Tag matching is exact: an instance's LanguageValue.value MUST
@@ -2427,6 +2447,7 @@ inside `metadata`.
 3. `[ValidationRegex]` → `validationRegex?`
 4. `[LangTagRequirement]` → `langTagRequirement?`
 5. `[TextRenderingHint]` → `renderingHint?`
+6. `TextValue*` → `examples?` (SHOULD-omitted when empty per §1.7 rule 4)
 
 **`IntegerNumberFieldSpec`** (`integer_number_field_spec`):
 0. `[IntegerNumberValue]` → `defaultValue?`
@@ -2434,6 +2455,7 @@ inside `metadata`.
 2. `[IntegerNumberMinValue]` → `minValue?`
 3. `[IntegerNumberMaxValue]` → `maxValue?`
 4. `[NumericRenderingHint]` → `renderingHint?`
+5. `IntegerNumberValue*` → `examples?` (SHOULD-omitted when empty per §1.7 rule 4)
 
 **`RealNumberFieldSpec`** (`real_number_field_spec`):
 0. `RealNumberDatatypeKind` → `datatype`
@@ -2442,10 +2464,12 @@ inside `metadata`.
 3. `[RealNumberMinValue]` → `minValue?`
 4. `[RealNumberMaxValue]` → `maxValue?`
 5. `[NumericRenderingHint]` → `renderingHint?`
+6. `RealNumberValue*` → `examples?` (SHOULD-omitted when empty per §1.7 rule 4)
 
 **`BooleanFieldSpec`** (`boolean_field_spec`):
 0. `[BooleanValue]` → `defaultValue?`
 1. `[BooleanRenderingHint]` → `renderingHint?`
+2. `BooleanValue*` → `examples?` (SHOULD-omitted when empty per §1.7 rule 4)
 
 **`Unit`** (`unit`):
 0. `Iri` → `iri`
@@ -2455,33 +2479,39 @@ inside `metadata`.
 0. `DateValueType` → `dateValueType`
 1. `[DateValue]` → `defaultValue?`
 2. `[DateRenderingHint]` → `renderingHint?`
+3. `DateValue*` → `examples?` (SHOULD-omitted when empty per §1.7 rule 4)
 
 **`TimeFieldSpec`** (`time_field_spec`):
 0. `[TimeValue]` → `defaultValue?`
 1. `[TimePrecision]` → `timePrecision?`
 2. `[TimezoneRequirement]` → `timezoneRequirement?`
 3. `[TimeRenderingHint]` → `renderingHint?`
+4. `TimeValue*` → `examples?` (SHOULD-omitted when empty per §1.7 rule 4)
 
 **`DateTimeFieldSpec`** (`date_time_field_spec`):
 0. `DateTimeValueType` → `dateTimeValueType`
 1. `[DateTimeValue]` → `defaultValue?`
 2. `[TimezoneRequirement]` → `timezoneRequirement?`
 3. `[DateTimeRenderingHint]` → `renderingHint?`
+4. `DateTimeValue*` → `examples?` (SHOULD-omitted when empty per §1.7 rule 4)
 
 **`ControlledTermFieldSpec`** (`controlled_term_field_spec`):
 0. `[ControlledTermValue]` → `defaultValue?`
 1. `ControlledTermSource+` → `sources`
 2. `[ControlledTermRenderingHint]` → `renderingHint?`
+3. `ControlledTermValue*` → `examples?` (SHOULD-omitted when empty per §1.7 rule 4)
 
 **`SingleValuedEnumFieldSpec`** (`single_valued_enum_field_spec`):
 0. `PermissibleValue+` → `permissibleValues`
 1. `[EnumValue]` → `defaultValue?`
 2. `[SingleValuedEnumRenderingHint]` → `renderingHint?`
+3. `EnumValue*` → `examples?` (SHOULD-omitted when empty per §1.7 rule 4)
 
 **`MultiValuedEnumFieldSpec`** (`multi_valued_enum_field_spec`):
 0. `PermissibleValue+` → `permissibleValues`
 1. `EnumValue*` → `defaultValues?` (SHOULD-omitted when empty per §1.7 rule 4)
 2. `[MultiValuedEnumRenderingHint]` → `renderingHint?`
+3. `EnumValue*` → `examples?` (SHOULD-omitted when empty per §1.7 rule 4)
 
 **`PermissibleValue`** (`permissible_value`):
 0. `Token` → `value`
@@ -2531,43 +2561,53 @@ The ten new rendering hints introduced for previously hint-less families each ca
 **`LinkFieldSpec`** (`link_field_spec`):
 0. `[LinkValue]` → `defaultValue?`
 1. `[LinkRenderingHint]` → `renderingHint?`
+2. `LinkValue*` → `examples?` (SHOULD-omitted when empty per §1.7 rule 4)
 
 **`EmailFieldSpec`** (`email_field_spec`):
 0. `[EmailValue]` → `defaultValue?`
 1. `[EmailRenderingHint]` → `renderingHint?`
+2. `EmailValue*` → `examples?` (SHOULD-omitted when empty per §1.7 rule 4)
 
 **`PhoneNumberFieldSpec`** (`phone_number_field_spec`):
 0. `[PhoneNumberValue]` → `defaultValue?`
 1. `[PhoneNumberRenderingHint]` → `renderingHint?`
+2. `PhoneNumberValue*` → `examples?` (SHOULD-omitted when empty per §1.7 rule 4)
 
 **`OrcidFieldSpec`** (`orcid_field_spec`):
 0. `[OrcidValue]` → `defaultValue?`
 1. `[OrcidRenderingHint]` → `renderingHint?`
+2. `OrcidValue*` → `examples?` (SHOULD-omitted when empty per §1.7 rule 4)
 
 **`RorFieldSpec`** (`ror_field_spec`):
 0. `[RorValue]` → `defaultValue?`
 1. `[RorRenderingHint]` → `renderingHint?`
+2. `RorValue*` → `examples?` (SHOULD-omitted when empty per §1.7 rule 4)
 
 **`DoiFieldSpec`** (`doi_field_spec`):
 0. `[DoiValue]` → `defaultValue?`
 1. `[DoiRenderingHint]` → `renderingHint?`
+2. `DoiValue*` → `examples?` (SHOULD-omitted when empty per §1.7 rule 4)
 
 **`PubMedIdFieldSpec`** (`pub_med_id_field_spec`):
 0. `[PubMedIdValue]` → `defaultValue?`
 1. `[PubMedIdRenderingHint]` → `renderingHint?`
+2. `PubMedIdValue*` → `examples?` (SHOULD-omitted when empty per §1.7 rule 4)
 
 **`RridFieldSpec`** (`rrid_field_spec`):
 0. `[RridValue]` → `defaultValue?`
 1. `[RridRenderingHint]` → `renderingHint?`
+2. `RridValue*` → `examples?` (SHOULD-omitted when empty per §1.7 rule 4)
 
 **`NihGrantIdFieldSpec`** (`nih_grant_id_field_spec`):
 0. `[NihGrantIdValue]` → `defaultValue?`
 1. `[NihGrantIdRenderingHint]` → `renderingHint?`
+2. `NihGrantIdValue*` → `examples?` (SHOULD-omitted when empty per §1.7 rule 4)
 
 **`LanguageFieldSpec`** (`language_field_spec`):
 0. `[LanguageValue]` → `defaultValue?`
 1. `[PermittedLanguages]` → `permittedLanguages?`
 2. `[LanguageRenderingHint]` → `renderingHint?`
+3. `LanguageValue*` → `examples?` (SHOULD-omitted when empty per §1.7 rule 4)
 
 `AttributeValueFieldSpec` carries no components and has no entry here.
 

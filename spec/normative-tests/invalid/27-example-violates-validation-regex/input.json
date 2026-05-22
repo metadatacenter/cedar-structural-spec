@@ -1,0 +1,33 @@
+{
+  "kind": "TextField",
+  "id": "https://example.org/fields/us-zip",
+  "modelVersion": "2.0.0",
+  "metadata": {
+    "lifecycle": {
+      "createdOn": "2026-01-15T09:30:00Z",
+      "createdBy": "https://example.org/u",
+      "modifiedOn": "2026-01-15T09:30:00Z",
+      "modifiedBy": "https://example.org/u"
+    }
+  },
+  "versioning": {
+    "version": "1.0.0",
+    "status": "draft"
+  },
+  "fieldSpec": {
+    "kind": "TextFieldSpec",
+    "validationRegex": "^[0-9]{5}(-[0-9]{4})?$",
+    "examples": [
+      {
+        "kind": "TextValue",
+        "value": "not-a-zip"
+      }
+    ]
+  },
+  "label": [
+    {
+      "value": "ZIP code",
+      "lang": "en"
+    }
+  ]
+}
