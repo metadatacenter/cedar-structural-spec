@@ -1,0 +1,8 @@
+[
+  {
+    "category": "lexical",
+    "path": "/recommendedKey",
+    "production": "EmbeddedArtifactKey",
+    "messageRegex": "ASCII identifier|EmbeddedArtifactKey|invalid"
+  }
+]

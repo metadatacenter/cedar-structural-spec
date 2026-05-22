@@ -362,7 +362,7 @@ The flat-string rendering hints (`TextRenderingHint`, `SingleValuedEnumRendering
 
 ### 6.7 Field artifacts and embedded artifacts
 
-A `Field` artifact (shown for the text family; the other nineteen families substitute `"IntegerNumberField"`, `"RealNumberField"`, `"BooleanField"`, `"DateField"`, etc. for `kind`):
+A `Field` artifact (shown for the text family; the other twenty families substitute `"IntegerNumberField"`, `"RealNumberField"`, `"BooleanField"`, `"DateField"`, etc. for `kind`):
 
 ```json
 {
@@ -380,7 +380,7 @@ The `modelVersion` property is a top-level property of every concrete artifact (
 
 The `kind` value MUST match the family of the nested `fieldSpec`. Conforming encoders MUST ensure that the IRI placed at `id` belongs to a field of the same family.
 
-An `EmbeddedField` (shown for the text family; substitute `"EmbeddedIntegerNumberField"`, `"EmbeddedRealNumberField"`, `"EmbeddedBooleanField"`, `"EmbeddedDateField"`, etc. for the other nineteen families):
+An `EmbeddedField` (shown for the text family; substitute `"EmbeddedIntegerNumberField"`, `"EmbeddedRealNumberField"`, `"EmbeddedBooleanField"`, `"EmbeddedDateField"`, etc. for the other twenty families):
 
 ```json
 {

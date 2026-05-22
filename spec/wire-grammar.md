@@ -1403,6 +1403,7 @@ TextField ::: object {
   fieldSpec: TextFieldSpec
   label: Label
   helpText?: HelpText
+  recommendedKey?: EmbeddedArtifactKey
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
@@ -1415,6 +1416,7 @@ IntegerNumberField ::: object {
   fieldSpec: IntegerNumberFieldSpec
   label: Label
   helpText?: HelpText
+  recommendedKey?: EmbeddedArtifactKey
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
@@ -1427,6 +1429,7 @@ RealNumberField ::: object {
   fieldSpec: RealNumberFieldSpec
   label: Label
   helpText?: HelpText
+  recommendedKey?: EmbeddedArtifactKey
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
@@ -1439,6 +1442,7 @@ BooleanField ::: object {
   fieldSpec: BooleanFieldSpec
   label: Label
   helpText?: HelpText
+  recommendedKey?: EmbeddedArtifactKey
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
@@ -1451,6 +1455,7 @@ DateField ::: object {
   fieldSpec: DateFieldSpec
   label: Label
   helpText?: HelpText
+  recommendedKey?: EmbeddedArtifactKey
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
@@ -1463,6 +1468,7 @@ TimeField ::: object {
   fieldSpec: TimeFieldSpec
   label: Label
   helpText?: HelpText
+  recommendedKey?: EmbeddedArtifactKey
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
@@ -1475,6 +1481,7 @@ DateTimeField ::: object {
   fieldSpec: DateTimeFieldSpec
   label: Label
   helpText?: HelpText
+  recommendedKey?: EmbeddedArtifactKey
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
@@ -1487,6 +1494,7 @@ ControlledTermField ::: object {
   fieldSpec: ControlledTermFieldSpec
   label: Label
   helpText?: HelpText
+  recommendedKey?: EmbeddedArtifactKey
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
@@ -1499,6 +1507,7 @@ SingleValuedEnumField ::: object {
   fieldSpec: SingleValuedEnumFieldSpec
   label: Label
   helpText?: HelpText
+  recommendedKey?: EmbeddedArtifactKey
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
@@ -1511,6 +1520,7 @@ MultiValuedEnumField ::: object {
   fieldSpec: MultiValuedEnumFieldSpec
   label: Label
   helpText?: HelpText
+  recommendedKey?: EmbeddedArtifactKey
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
@@ -1523,6 +1533,7 @@ LinkField ::: object {
   fieldSpec: LinkFieldSpec
   label: Label
   helpText?: HelpText
+  recommendedKey?: EmbeddedArtifactKey
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
@@ -1535,6 +1546,7 @@ EmailField ::: object {
   fieldSpec: EmailFieldSpec
   label: Label
   helpText?: HelpText
+  recommendedKey?: EmbeddedArtifactKey
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
@@ -1547,6 +1559,7 @@ PhoneNumberField ::: object {
   fieldSpec: PhoneNumberFieldSpec
   label: Label
   helpText?: HelpText
+  recommendedKey?: EmbeddedArtifactKey
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
@@ -1559,6 +1572,7 @@ OrcidField ::: object {
   fieldSpec: OrcidFieldSpec
   label: Label
   helpText?: HelpText
+  recommendedKey?: EmbeddedArtifactKey
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
@@ -1571,6 +1585,7 @@ RorField ::: object {
   fieldSpec: RorFieldSpec
   label: Label
   helpText?: HelpText
+  recommendedKey?: EmbeddedArtifactKey
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
@@ -1583,6 +1598,7 @@ DoiField ::: object {
   fieldSpec: DoiFieldSpec
   label: Label
   helpText?: HelpText
+  recommendedKey?: EmbeddedArtifactKey
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
@@ -1595,6 +1611,7 @@ PubMedIdField ::: object {
   fieldSpec: PubMedIdFieldSpec
   label: Label
   helpText?: HelpText
+  recommendedKey?: EmbeddedArtifactKey
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
@@ -1607,6 +1624,7 @@ RridField ::: object {
   fieldSpec: RridFieldSpec
   label: Label
   helpText?: HelpText
+  recommendedKey?: EmbeddedArtifactKey
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
@@ -1619,6 +1637,7 @@ NihGrantIdField ::: object {
   fieldSpec: NihGrantIdFieldSpec
   label: Label
   helpText?: HelpText
+  recommendedKey?: EmbeddedArtifactKey
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
@@ -1631,6 +1650,7 @@ LanguageField ::: object {
   fieldSpec: LanguageFieldSpec
   label: Label
   helpText?: HelpText
+  recommendedKey?: EmbeddedArtifactKey
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
@@ -1643,6 +1663,7 @@ AttributeValueField ::: object {
   fieldSpec: AttributeValueFieldSpec
   label: Label
   helpText?: HelpText
+  recommendedKey?: EmbeddedArtifactKey
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 ```
@@ -2208,7 +2229,8 @@ Conventions:
 
 Every concrete `Field` production has the same six-component shape:
 `(<Family>FieldId, ModelVersion, CatalogMetadata, SchemaArtifactVersioning, <Family>FieldSpec, Label)`,
-with an optional seventh `HelpText` slot. For all of `TextField`,
+with an optional `HelpText` slot and an optional advisory
+`RecommendedKey` slot. For all of `TextField`,
 `IntegerNumberField`, `RealNumberField`, `BooleanField`, `DateField`,
 `TimeField`, `DateTimeField`, `ControlledTermField`,
 `SingleValuedEnumField`, `MultiValuedEnumField`, `LinkField`,
@@ -2223,6 +2245,7 @@ with an optional seventh `HelpText` slot. For all of `TextField`,
 4. `<Family>FieldSpec` → `fieldSpec`
 5. `Label` → `label`
 6. `[HelpText]` → `helpText?`
+7. `[RecommendedKey]` → `recommendedKey?`
 
 ### 14.3 Embedded artifacts
 
@@ -2639,7 +2662,8 @@ IRIs, `Name`, `Description`, `PreferredLabel`, `AlternativeLabel`,
 `AttributeName`, `EmbeddedArtifactKey`, `ValidationRegex`, `Token`,
 `Header`, `Footer`, `Version`, `ModelVersion`, `CreatedOn`,
 `CreatedBy`, `ModifiedOn`, `ModifiedBy`, `PreviousVersion`,
-`DerivedFrom`, `PropertyIri`, `HtmlContent`, and `PermittedLanguages` —
+`DerivedFrom`, `PropertyIri`, `HtmlContent`, `PermittedLanguages`,
+and `RecommendedKey` —
 collapse to their inner primitive (or to a bare array, in the case of
 single-component sequence-bearing wrappers such as `PermittedLanguages`)
 on the wire and have no per-production property name.

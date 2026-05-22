@@ -287,7 +287,7 @@ ExternalAuthorityField ::= OrcidField
 
 ### Concrete Field Artifacts
 
-Each concrete `Field` variant carries six components: a typed artifact identifier that permanently identifies the reusable field; a `ModelVersion` identifying the version of the CEDAR structural model the artifact conforms to; `CatalogMetadata` providing the descriptive, lifecycle, and annotation metadata used in catalog and registry contexts; `SchemaArtifactVersioning` providing the version, status, and lineage information common to all schema artifacts; a typed `FieldSpec` that specifies the value semantics and configuration for that field category; and a `Label` that carries the rendered question text shown to users at data-entry time. The identifier, `FieldSpec`, and `Label` are specific to each concrete variant; `ModelVersion`, `CatalogMetadata`, and `SchemaArtifactVersioning` are uniform across all fields. Each concrete `Field` MAY additionally carry an optional `HelpText`. The groupings below mirror the abstract `Field` hierarchy defined in Core Structure.
+Each concrete `Field` variant carries six components: a typed artifact identifier that permanently identifies the reusable field; a `ModelVersion` identifying the version of the CEDAR structural model the artifact conforms to; `CatalogMetadata` providing the descriptive, lifecycle, and annotation metadata used in catalog and registry contexts; `SchemaArtifactVersioning` providing the version, status, and lineage information common to all schema artifacts; a typed `FieldSpec` that specifies the value semantics and configuration for that field category; and a `Label` that carries the rendered question text shown to users at data-entry time. The identifier, `FieldSpec`, and `Label` are specific to each concrete variant; `ModelVersion`, `CatalogMetadata`, and `SchemaArtifactVersioning` are uniform across all fields. Each concrete `Field` MAY additionally carry an optional `HelpText` and an optional advisory `RecommendedKey`. The groupings below mirror the abstract `Field` hierarchy defined in Core Structure.
 
 `TextField`, `BooleanField`, and the two numeric field families (`IntegerNumberField` and `RealNumberField`) are the simple scalar field specs. Each carries the most basic value semantics — free text, `true` / `false`, exact integer values, and real-valued numbers respectively.
 
@@ -300,6 +300,7 @@ TextField ::= text_field(
                TextFieldSpec
                Label
                [HelpText]
+               [RecommendedKey]
              )
 
 BooleanField ::= boolean_field(
@@ -310,6 +311,7 @@ BooleanField ::= boolean_field(
                   BooleanFieldSpec
                   Label
                   [HelpText]
+                  [RecommendedKey]
                 )
 ```
 
@@ -324,6 +326,7 @@ IntegerNumberField ::= integer_number_field(
                          IntegerNumberFieldSpec
                          Label
                          [HelpText]
+                         [RecommendedKey]
                        )
 
 RealNumberField ::= real_number_field(
@@ -334,6 +337,7 @@ RealNumberField ::= real_number_field(
                       RealNumberFieldSpec
                       Label
                       [HelpText]
+                      [RecommendedKey]
                     )
 ```
 
@@ -348,6 +352,7 @@ DateField ::= date_field(
                DateFieldSpec
                Label
                [HelpText]
+               [RecommendedKey]
              )
 
 TimeField ::= time_field(
@@ -358,6 +363,7 @@ TimeField ::= time_field(
                TimeFieldSpec
                Label
                [HelpText]
+               [RecommendedKey]
              )
 
 DateTimeField ::= date_time_field(
@@ -368,6 +374,7 @@ DateTimeField ::= date_time_field(
                    DateTimeFieldSpec
                    Label
                    [HelpText]
+                   [RecommendedKey]
                  )
 ```
 
@@ -382,6 +389,7 @@ ControlledTermField ::= controlled_term_field(
                           ControlledTermFieldSpec
                           Label
                           [HelpText]
+                          [RecommendedKey]
                         )
 
 LinkField ::= link_field(
@@ -392,6 +400,7 @@ LinkField ::= link_field(
                LinkFieldSpec
                Label
                [HelpText]
+               [RecommendedKey]
              )
 ```
 
@@ -406,6 +415,7 @@ SingleValuedEnumField ::= single_valued_enum_field(
                             SingleValuedEnumFieldSpec
                             Label
                             [HelpText]
+                            [RecommendedKey]
                           )
 
 MultiValuedEnumField ::= multi_valued_enum_field(
@@ -416,6 +426,7 @@ MultiValuedEnumField ::= multi_valued_enum_field(
                            MultiValuedEnumFieldSpec
                            Label
                            [HelpText]
+                           [RecommendedKey]
                          )
 ```
 
@@ -430,6 +441,7 @@ EmailField ::= email_field(
                 EmailFieldSpec
                 Label
                 [HelpText]
+                [RecommendedKey]
               )
 
 PhoneNumberField ::= phone_number_field(
@@ -440,6 +452,7 @@ PhoneNumberField ::= phone_number_field(
                       PhoneNumberFieldSpec
                       Label
                       [HelpText]
+                      [RecommendedKey]
                     )
 ```
 
@@ -454,6 +467,7 @@ OrcidField ::= orcid_field(
                 OrcidFieldSpec
                 Label
                 [HelpText]
+                [RecommendedKey]
               )
 
 RorField ::= ror_field(
@@ -464,6 +478,7 @@ RorField ::= ror_field(
               RorFieldSpec
               Label
               [HelpText]
+              [RecommendedKey]
             )
 
 DoiField ::= doi_field(
@@ -474,6 +489,7 @@ DoiField ::= doi_field(
               DoiFieldSpec
               Label
               [HelpText]
+              [RecommendedKey]
             )
 
 PubMedIdField ::= pub_med_id_field(
@@ -484,6 +500,7 @@ PubMedIdField ::= pub_med_id_field(
                     PubMedIdFieldSpec
                     Label
                     [HelpText]
+                    [RecommendedKey]
                   )
 
 RridField ::= rrid_field(
@@ -494,6 +511,7 @@ RridField ::= rrid_field(
                RridFieldSpec
                Label
                [HelpText]
+               [RecommendedKey]
              )
 
 NihGrantIdField ::= nih_grant_id_field(
@@ -504,6 +522,7 @@ NihGrantIdField ::= nih_grant_id_field(
                      NihGrantIdFieldSpec
                      Label
                      [HelpText]
+                     [RecommendedKey]
                    )
 ```
 
@@ -520,6 +539,7 @@ LanguageField ::= language_field(
                     LanguageFieldSpec
                     Label
                     [HelpText]
+                    [RecommendedKey]
                   )
 ```
 
@@ -534,6 +554,7 @@ AttributeValueField ::= attribute_value_field(
                           AttributeValueFieldSpec
                           Label
                           [HelpText]
+                          [RecommendedKey]
                         )
 ```
 
@@ -548,6 +569,16 @@ HelpText ::= help_text( MultilingualString )
 `HelpText` carries a [`MultilingualString`](#multilingual-strings) value: localized authored guidance that may be presented in one or more natural languages. The enclosing `Template`'s `HelpDisplayMode` selects the presentation; absence of `HelpDisplayMode` defaults to `"inline"` rendering. The `"none"` arm suppresses rendering but preserves the content in the model (visible to alternative renderers, RDF projection, and catalog displays).
 
 A per-embedding override is also defined: an `EmbeddedField` MAY carry an optional `HelpTextOverride` that replaces the field's canonical `HelpText` at that embedding site only, mirroring the existing `LabelOverride` precedent. See [Embedded Artifacts](#embedded-artifacts) for the embedding-site shape.
+
+Each concrete `Field` artifact MAY also carry an optional `RecommendedKey` slot. `RecommendedKey` is a non-binding suggestion the field's owner offers to template authors for the [`EmbeddedArtifactKey`](#embedded-artifact-key) of an embedding that references this field. Its purpose is to propagate a convention across the templates that embed the same field, so that downstream consumers (analytics, exports, joins) see a consistent instance-side identifier where possible.
+
+```ebnf
+RecommendedKey ::= recommended_key( EmbeddedArtifactKey )
+```
+
+`RecommendedKey` is **advisory only**. It does not constrain `EmbeddedField.EmbeddedArtifactKey` at validation time: an embedding referencing a field that carries `RecommendedKey` MAY use the recommended key as its own `EmbeddedArtifactKey`, or MAY pick a different key. Authoring tools MAY pre-fill the embedding's key with the field's recommendation, and MAY surface deviations from it as warnings; the spec requires neither. The authoritative key for instance data is always the one carried by the `EmbeddedField`, never the field's recommendation.
+
+The carried `EmbeddedArtifactKey` is subject to the same lexical rules as any other `EmbeddedArtifactKey` (see [Embedded Artifact Key](#embedded-artifact-key)), so a `RecommendedKey` is always a syntactically valid candidate for direct adoption by an embedding.
 
 ### Embedded Artifacts
 
