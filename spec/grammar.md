@@ -1,5 +1,7 @@
 # Abstract Grammar
 
+> **Read this in the rendered book, not on GitHub.** The published version at <https://metadatacenter.github.io/cedar-structural-spec/grammar.html> renders the EBNF cross-references and the interactive kernel-overview class diagram. Viewing this file directly on github.com shows the markdown source — production-anchor links (`#prod-Template`, etc.) and the mermaid `click` directives don't resolve there.
+
 This section defines the abstract structure of the CEDAR Template Model using an EBNF-style grammar.
 
 The grammar defines the abstract syntactic structure of the model. It specifies the kinds of constructs that exist and how they are composed, but it does not define a concrete textual or data serialization such as JSON, YAML, RDF, or a functional-style syntax.
@@ -49,8 +51,13 @@ A conceptual overview of the model — describing the principal categories, thei
 
 - [Kernel Grammar](#kernel-grammar)
   - [Core Structure](#core-structure)
+    - [Template](#template)
+    - [Field](#field)
   - [Concrete Field Artifacts](#concrete-field-artifacts)
   - [Embedded Artifacts](#embedded-artifacts)
+    - [EmbeddedField](#embeddedfield)
+    - [EmbeddedTemplate](#embeddedtemplate)
+    - [EmbeddedPresentationComponent](#embeddedpresentationcomponent)
 - [Artifact Identity](#artifact-identity)
 - [Artifact Metadata](#artifact-metadata)
   - [Aggregate Structure](#aggregate-structure)
@@ -208,6 +215,8 @@ SchemaArtifact ::= Field
                  | Template
 ```
 
+#### Template
+
 [`Template`](#prod-Template) is a concrete schema artifact and the central container of the model. It assembles [`EmbeddedArtifact`](#prod-EmbeddedArtifact) constructs into a structured form and defines the schema that [`TemplateInstance`](#prod-TemplateInstance) constructs conform to.
 
 ```ebnf
@@ -261,7 +270,9 @@ When `HelpDisplayMode` is absent — either because the `Template` carries no `T
 
 The cascade rule for nested templates is a rendering-time concern, not a structural validation constraint, and is normatively stated in [`presentation.md`](presentation.md): when a `Template` is embedded inside another `Template`, the inner template's `HelpDisplayMode` is ignored for help-text rendering; the enclosing template's setting applies to every field within the rendered form, including fields contributed by nested templates. The inner template's own `HelpDisplayMode` applies only when the template is rendered standalone.
 
-The following productions introduce the abstract field categories. `Field` remains an abstract category, while the intermediate categories group related concrete field artifacts for readability and shared semantics.
+#### Field
+
+The following productions introduce the abstract field categories. [`Field`](#prod-Field) remains an abstract category, while the intermediate categories group related concrete field artifacts for readability and shared semantics. Concrete `Field` variants are defined in [Concrete Field Artifacts](#concrete-field-artifacts) below.
 
 ```ebnf
 Field ::= TextField
@@ -602,7 +613,13 @@ The sequence of `EmbeddedArtifact` constructs within a `Template` is significant
 EmbeddedArtifact ::= EmbeddedField
                    | EmbeddedTemplate
                    | EmbeddedPresentationComponent
+```
 
+#### EmbeddedField
+
+[`EmbeddedField`](#prod-EmbeddedField) is the abstract category for embeddings of reusable `Field` artifacts. Its concrete variants are one-to-one with the concrete `Field` variants — `EmbeddedTextField` embeds a `TextField`, `EmbeddedDateField` embeds a `DateField`, and so on for all twenty-one field families.
+
+```ebnf
 EmbeddedField ::= EmbeddedTextField
                 | EmbeddedIntegerNumberField
                 | EmbeddedRealNumberField
@@ -881,7 +898,9 @@ EmbeddedAttributeValueField ::= embedded_attribute_value_field(
                                 )
 ```
 
-`EmbeddedTemplate` and `EmbeddedPresentationComponent` follow a similar pattern to embedded fields but differ in what embedding properties they carry. `EmbeddedTemplate` supports cardinality to permit multiple nested instances of the referenced template, carries no typed default value, and carries an optional `Property` associating a semantic property IRI with the embedding site. `EmbeddedPresentationComponent` carries neither a value requirement, cardinality, default value, label override, nor property, as it contributes no instance data and exists purely to contribute presentational structure. The only embedding-level property it carries is `Visibility`.
+#### EmbeddedTemplate
+
+[`EmbeddedTemplate`](#prod-EmbeddedTemplate) follows a similar pattern to the embedded-field family but differs in what embedding properties it carries. It supports cardinality to permit multiple nested instances of the referenced template, carries no typed default value (templates are not single-valued in the way scalar fields are), and carries an optional [`Property`](#prod-Property) associating a semantic property IRI with the embedding site.
 
 ```ebnf
 EmbeddedTemplate ::= embedded_template(
@@ -893,7 +912,13 @@ EmbeddedTemplate ::= embedded_template(
                        [LabelOverride]
                        [Property]
                      )
+```
 
+#### EmbeddedPresentationComponent
+
+[`EmbeddedPresentationComponent`](#prod-EmbeddedPresentationComponent) carries neither a value requirement, cardinality, default value, label override, nor property, as it contributes no instance data and exists purely to contribute presentational structure. The only embedding-level property it carries is [`Visibility`](#prod-Visibility).
+
+```ebnf
 EmbeddedPresentationComponent ::= embedded_presentation_component(
                                     EmbeddedArtifactKey
                                     PresentationComponentId
