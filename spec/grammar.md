@@ -191,15 +191,15 @@ classDiagram
 
   TemplateInstance --> Template : conforms to
 
-  click Field "#prod-Field"
-  click Template "#prod-Template"
-  click PresentationComponent "#prod-PresentationComponent"
-  click TemplateInstance "#prod-TemplateInstance"
-  click EmbeddedArtifact "#prod-EmbeddedArtifact"
-  click EmbeddedField "#prod-EmbeddedField"
-  click EmbeddedTemplate "#prod-EmbeddedTemplate"
-  click EmbeddedPresentationComponent "#prod-EmbeddedPresentationComponent"
-  click Property "#prod-Property"
+  click Field href "#prod-Field"
+  click Template href "#prod-Template"
+  click PresentationComponent href "#prod-PresentationComponent"
+  click TemplateInstance href "#prod-TemplateInstance"
+  click EmbeddedArtifact href "#prod-EmbeddedArtifact"
+  click EmbeddedField href "#prod-EmbeddedField"
+  click EmbeddedTemplate href "#prod-EmbeddedTemplate"
+  click EmbeddedPresentationComponent href "#prod-EmbeddedPresentationComponent"
+  click Property href "#prod-Property"
 ```
 
 ### Core Structure
