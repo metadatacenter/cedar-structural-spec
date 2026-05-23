@@ -58,6 +58,7 @@ A conceptual overview of the model — describing the principal categories, thei
     - [EmbeddedTemplate](#embeddedtemplate)
     - [EmbeddedPresentationComponent](#embeddedpresentationcomponent)
 - [Concrete Field Artifacts](#concrete-field-artifacts)
+- [Concrete Embedded Fields](#concrete-embedded-fields)
 - [Artifact Identity](#artifact-identity)
 - [Artifact Metadata](#artifact-metadata)
   - [Aggregate Structure](#aggregate-structure)
@@ -322,7 +323,7 @@ EmbeddedArtifact ::= EmbeddedField
 
 #### EmbeddedField
 
-[`EmbeddedField`](#prod-EmbeddedField) is the abstract category for embeddings of reusable `Field` artifacts. Its concrete variants are one-to-one with the concrete `Field` variants — `EmbeddedTextField` embeds a `TextField`, `EmbeddedDateField` embeds a `DateField`, and so on for all twenty-one field families.
+[`EmbeddedField`](#prod-EmbeddedField) is the abstract category for embeddings of reusable `Field` artifacts. Its concrete variants are one-to-one with the concrete `Field` variants — `EmbeddedTextField` embeds a `TextField`, `EmbeddedDateField` embeds a `DateField`, and so on for all twenty-one field families. The concrete variants are defined in [Concrete Embedded Fields](#concrete-embedded-fields) below.
 
 ```ebnf
 EmbeddedField ::= EmbeddedTextField
@@ -346,261 +347,6 @@ EmbeddedField ::= EmbeddedTextField
                 | EmbeddedNihGrantIdField
                 | EmbeddedLanguageField
                 | EmbeddedAttributeValueField
-```
-
-Every concrete `EmbeddedField` variant follows the same structural pattern. Each carries: an `EmbeddedArtifactKey` uniquely identifying the embedding site within the containing `Template`; a typed field reference identifying the reusable `Field` being embedded; an optional `ValueRequirement` specifying whether a value is required, recommended, or optional; an optional `Cardinality` bounding the permitted number of values; an optional `Visibility` controlling whether the field is shown in rendered interfaces; an optional `defaultValue` providing an embedding-specific default whose type is the family-specific `Value` type (e.g. `TextValue` for `EmbeddedTextField`, `DateValue` for `EmbeddedDateField`); an optional `LabelOverride` allowing the template to override the field's label in this context; and an optional `Property` associating a semantic property IRI with the embedding site. The only variation across concrete `EmbeddedField` variants is the typed field reference and the typed default value, both of which match the value family of the referenced field.
-
-`EmbeddedBooleanField` and `EmbeddedSingleValuedEnumField` are the two exceptions to this pattern: each omits the `[Cardinality]` slot. A boolean field is inherently single-valued — its `ValueRequirement` slot already distinguishes the meaningful states (required, recommended, optional). A `SingleValuedEnumField` is similarly single-valued by construction; multi-valued enum embedding is expressed only through `EmbeddedMultiValuedEnumField`. `EmbeddedMultiValuedEnumField` further differs in that its embedding-level default is a sequence (`EnumValue*`) rather than a single optional value, parallel to how multi-valued enum instance values appear as a sequence in `FieldValue`.
-
-```ebnf
-EmbeddedTextField ::= embedded_text_field(
-                        EmbeddedArtifactKey
-                        TextFieldId
-                        [ValueRequirement]
-                        [Cardinality]
-                        [Visibility]
-                        [TextValue]
-                        [LabelOverride]
-                        [HelpTextOverride]
-                        [Property]
-                      )
-
-EmbeddedIntegerNumberField ::= embedded_integer_number_field(
-                                 EmbeddedArtifactKey
-                                 IntegerNumberFieldId
-                                 [ValueRequirement]
-                                 [Cardinality]
-                                 [Visibility]
-                                 [IntegerNumberValue]
-                                 [LabelOverride]
-                                 [HelpTextOverride]
-                                 [Property]
-                               )
-
-EmbeddedRealNumberField ::= embedded_real_number_field(
-                              EmbeddedArtifactKey
-                              RealNumberFieldId
-                              [ValueRequirement]
-                              [Cardinality]
-                              [Visibility]
-                              [RealNumberValue]
-                              [LabelOverride]
-                              [HelpTextOverride]
-                              [Property]
-                            )
-
-EmbeddedBooleanField ::= embedded_boolean_field(
-                           EmbeddedArtifactKey
-                           BooleanFieldId
-                           [ValueRequirement]
-                           [Visibility]
-                           [BooleanValue]
-                           [LabelOverride]
-                           [HelpTextOverride]
-                           [Property]
-                         )
-
-EmbeddedDateField ::= embedded_date_field(
-                        EmbeddedArtifactKey
-                        DateFieldId
-                        [ValueRequirement]
-                        [Cardinality]
-                        [Visibility]
-                        [DateValue]
-                        [LabelOverride]
-                        [HelpTextOverride]
-                        [Property]
-                      )
-
-EmbeddedTimeField ::= embedded_time_field(
-                        EmbeddedArtifactKey
-                        TimeFieldId
-                        [ValueRequirement]
-                        [Cardinality]
-                        [Visibility]
-                        [TimeValue]
-                        [LabelOverride]
-                        [HelpTextOverride]
-                        [Property]
-                      )
-
-EmbeddedDateTimeField ::= embedded_date_time_field(
-                            EmbeddedArtifactKey
-                            DateTimeFieldId
-                            [ValueRequirement]
-                            [Cardinality]
-                            [Visibility]
-                            [DateTimeValue]
-                            [LabelOverride]
-                            [HelpTextOverride]
-                            [Property]
-                          )
-
-EmbeddedControlledTermField ::= embedded_controlled_term_field(
-                                  EmbeddedArtifactKey
-                                  ControlledTermFieldId
-                                  [ValueRequirement]
-                                  [Cardinality]
-                                  [Visibility]
-                                  [ControlledTermValue]
-                                  [LabelOverride]
-                                  [HelpTextOverride]
-                                  [Property]
-                                )
-
-EmbeddedSingleValuedEnumField ::= embedded_single_valued_enum_field(
-                                    EmbeddedArtifactKey
-                                    SingleValuedEnumFieldId
-                                    [ValueRequirement]
-                                    [Visibility]
-                                    [EnumValue]
-                                    [LabelOverride]
-                                    [HelpTextOverride]
-                                    [Property]
-                                  )
-
-EmbeddedMultiValuedEnumField ::= embedded_multi_valued_enum_field(
-                                   EmbeddedArtifactKey
-                                   MultiValuedEnumFieldId
-                                   [ValueRequirement]
-                                   [Cardinality]
-                                   [Visibility]
-                                   EnumValue*
-                                   [LabelOverride]
-                                   [HelpTextOverride]
-                                   [Property]
-                                 )
-
-EmbeddedLinkField ::= embedded_link_field(
-                        EmbeddedArtifactKey
-                        LinkFieldId
-                        [ValueRequirement]
-                        [Cardinality]
-                        [Visibility]
-                        [LinkValue]
-                        [LabelOverride]
-                        [HelpTextOverride]
-                        [Property]
-                      )
-
-EmbeddedEmailField ::= embedded_email_field(
-                         EmbeddedArtifactKey
-                         EmailFieldId
-                         [ValueRequirement]
-                         [Cardinality]
-                         [Visibility]
-                         [EmailValue]
-                         [LabelOverride]
-                         [HelpTextOverride]
-                         [Property]
-                       )
-
-EmbeddedPhoneNumberField ::= embedded_phone_number_field(
-                               EmbeddedArtifactKey
-                               PhoneNumberFieldId
-                               [ValueRequirement]
-                               [Cardinality]
-                               [Visibility]
-                               [PhoneNumberValue]
-                               [LabelOverride]
-                               [HelpTextOverride]
-                               [Property]
-                             )
-
-EmbeddedOrcidField ::= embedded_orcid_field(
-                         EmbeddedArtifactKey
-                         OrcidFieldId
-                         [ValueRequirement]
-                         [Cardinality]
-                         [Visibility]
-                         [OrcidValue]
-                         [LabelOverride]
-                         [HelpTextOverride]
-                         [Property]
-                       )
-
-EmbeddedRorField ::= embedded_ror_field(
-                       EmbeddedArtifactKey
-                       RorFieldId
-                       [ValueRequirement]
-                       [Cardinality]
-                       [Visibility]
-                       [RorValue]
-                       [LabelOverride]
-                       [HelpTextOverride]
-                       [Property]
-                     )
-
-EmbeddedDoiField ::= embedded_doi_field(
-                       EmbeddedArtifactKey
-                       DoiFieldId
-                       [ValueRequirement]
-                       [Cardinality]
-                       [Visibility]
-                       [DoiValue]
-                       [LabelOverride]
-                       [HelpTextOverride]
-                       [Property]
-                     )
-
-EmbeddedPubMedIdField ::= embedded_pub_med_id_field(
-                            EmbeddedArtifactKey
-                            PubMedIdFieldId
-                            [ValueRequirement]
-                            [Cardinality]
-                            [Visibility]
-                            [PubMedIdValue]
-                            [LabelOverride]
-                            [HelpTextOverride]
-                            [Property]
-                          )
-
-EmbeddedRridField ::= embedded_rrid_field(
-                        EmbeddedArtifactKey
-                        RridFieldId
-                        [ValueRequirement]
-                        [Cardinality]
-                        [Visibility]
-                        [RridValue]
-                        [LabelOverride]
-                        [HelpTextOverride]
-                        [Property]
-                      )
-
-EmbeddedNihGrantIdField ::= embedded_nih_grant_id_field(
-                               EmbeddedArtifactKey
-                               NihGrantIdFieldId
-                               [ValueRequirement]
-                               [Cardinality]
-                               [Visibility]
-                               [NihGrantIdValue]
-                               [LabelOverride]
-                               [HelpTextOverride]
-                               [Property]
-                             )
-
-EmbeddedLanguageField ::= embedded_language_field(
-                            EmbeddedArtifactKey
-                            LanguageFieldId
-                            [ValueRequirement]
-                            [Cardinality]
-                            [Visibility]
-                            [LanguageValue]
-                            [LabelOverride]
-                            [HelpTextOverride]
-                            [Property]
-                          )
-
-EmbeddedAttributeValueField ::= embedded_attribute_value_field(
-                                  EmbeddedArtifactKey
-                                  AttributeValueFieldId
-                                  [ValueRequirement]
-                                  [Cardinality]
-                                  [Visibility]
-                                  [LabelOverride]
-                                  [HelpTextOverride]
-                                  [Property]
-                                )
 ```
 
 #### EmbeddedTemplate
@@ -925,6 +671,263 @@ RecommendedKey ::= recommended_key( EmbeddedArtifactKey )
 `RecommendedKey` is **advisory only**. It does not constrain `EmbeddedField.EmbeddedArtifactKey` at validation time: an embedding referencing a field that carries `RecommendedKey` MAY use the recommended key as its own `EmbeddedArtifactKey`, or MAY pick a different key. Authoring tools MAY pre-fill the embedding's key with the field's recommendation, and MAY surface deviations from it as warnings; the spec requires neither. The authoritative key for instance data is always the one carried by the `EmbeddedField`, never the field's recommendation.
 
 The carried `EmbeddedArtifactKey` is subject to the same lexical rules as any other `EmbeddedArtifactKey` (see [Embedded Artifact Key](#embedded-artifact-key)), so a `RecommendedKey` is always a syntactically valid candidate for direct adoption by an embedding.
+
+## Concrete Embedded Fields
+
+Every concrete `EmbeddedField` variant follows the same structural pattern. Each carries: an `EmbeddedArtifactKey` uniquely identifying the embedding site within the containing `Template`; a typed field reference identifying the reusable `Field` being embedded; an optional `ValueRequirement` specifying whether a value is required, recommended, or optional; an optional `Cardinality` bounding the permitted number of values; an optional `Visibility` controlling whether the field is shown in rendered interfaces; an optional `defaultValue` providing an embedding-specific default whose type is the family-specific `Value` type (e.g. `TextValue` for `EmbeddedTextField`, `DateValue` for `EmbeddedDateField`); an optional `LabelOverride` allowing the template to override the field's label in this context; and an optional `Property` associating a semantic property IRI with the embedding site. The only variation across concrete `EmbeddedField` variants is the typed field reference and the typed default value, both of which match the value family of the referenced field.
+
+`EmbeddedBooleanField` and `EmbeddedSingleValuedEnumField` are the two exceptions to this pattern: each omits the `[Cardinality]` slot. A boolean field is inherently single-valued — its `ValueRequirement` slot already distinguishes the meaningful states (required, recommended, optional). A `SingleValuedEnumField` is similarly single-valued by construction; multi-valued enum embedding is expressed only through `EmbeddedMultiValuedEnumField`. `EmbeddedMultiValuedEnumField` further differs in that its embedding-level default is a sequence (`EnumValue*`) rather than a single optional value, parallel to how multi-valued enum instance values appear as a sequence in `FieldValue`.
+
+```ebnf
+EmbeddedTextField ::= embedded_text_field(
+                        EmbeddedArtifactKey
+                        TextFieldId
+                        [ValueRequirement]
+                        [Cardinality]
+                        [Visibility]
+                        [TextValue]
+                        [LabelOverride]
+                        [HelpTextOverride]
+                        [Property]
+                      )
+
+EmbeddedIntegerNumberField ::= embedded_integer_number_field(
+                                 EmbeddedArtifactKey
+                                 IntegerNumberFieldId
+                                 [ValueRequirement]
+                                 [Cardinality]
+                                 [Visibility]
+                                 [IntegerNumberValue]
+                                 [LabelOverride]
+                                 [HelpTextOverride]
+                                 [Property]
+                               )
+
+EmbeddedRealNumberField ::= embedded_real_number_field(
+                              EmbeddedArtifactKey
+                              RealNumberFieldId
+                              [ValueRequirement]
+                              [Cardinality]
+                              [Visibility]
+                              [RealNumberValue]
+                              [LabelOverride]
+                              [HelpTextOverride]
+                              [Property]
+                            )
+
+EmbeddedBooleanField ::= embedded_boolean_field(
+                           EmbeddedArtifactKey
+                           BooleanFieldId
+                           [ValueRequirement]
+                           [Visibility]
+                           [BooleanValue]
+                           [LabelOverride]
+                           [HelpTextOverride]
+                           [Property]
+                         )
+
+EmbeddedDateField ::= embedded_date_field(
+                        EmbeddedArtifactKey
+                        DateFieldId
+                        [ValueRequirement]
+                        [Cardinality]
+                        [Visibility]
+                        [DateValue]
+                        [LabelOverride]
+                        [HelpTextOverride]
+                        [Property]
+                      )
+
+EmbeddedTimeField ::= embedded_time_field(
+                        EmbeddedArtifactKey
+                        TimeFieldId
+                        [ValueRequirement]
+                        [Cardinality]
+                        [Visibility]
+                        [TimeValue]
+                        [LabelOverride]
+                        [HelpTextOverride]
+                        [Property]
+                      )
+
+EmbeddedDateTimeField ::= embedded_date_time_field(
+                            EmbeddedArtifactKey
+                            DateTimeFieldId
+                            [ValueRequirement]
+                            [Cardinality]
+                            [Visibility]
+                            [DateTimeValue]
+                            [LabelOverride]
+                            [HelpTextOverride]
+                            [Property]
+                          )
+
+EmbeddedControlledTermField ::= embedded_controlled_term_field(
+                                  EmbeddedArtifactKey
+                                  ControlledTermFieldId
+                                  [ValueRequirement]
+                                  [Cardinality]
+                                  [Visibility]
+                                  [ControlledTermValue]
+                                  [LabelOverride]
+                                  [HelpTextOverride]
+                                  [Property]
+                                )
+
+EmbeddedSingleValuedEnumField ::= embedded_single_valued_enum_field(
+                                    EmbeddedArtifactKey
+                                    SingleValuedEnumFieldId
+                                    [ValueRequirement]
+                                    [Visibility]
+                                    [EnumValue]
+                                    [LabelOverride]
+                                    [HelpTextOverride]
+                                    [Property]
+                                  )
+
+EmbeddedMultiValuedEnumField ::= embedded_multi_valued_enum_field(
+                                   EmbeddedArtifactKey
+                                   MultiValuedEnumFieldId
+                                   [ValueRequirement]
+                                   [Cardinality]
+                                   [Visibility]
+                                   EnumValue*
+                                   [LabelOverride]
+                                   [HelpTextOverride]
+                                   [Property]
+                                 )
+
+EmbeddedLinkField ::= embedded_link_field(
+                        EmbeddedArtifactKey
+                        LinkFieldId
+                        [ValueRequirement]
+                        [Cardinality]
+                        [Visibility]
+                        [LinkValue]
+                        [LabelOverride]
+                        [HelpTextOverride]
+                        [Property]
+                      )
+
+EmbeddedEmailField ::= embedded_email_field(
+                         EmbeddedArtifactKey
+                         EmailFieldId
+                         [ValueRequirement]
+                         [Cardinality]
+                         [Visibility]
+                         [EmailValue]
+                         [LabelOverride]
+                         [HelpTextOverride]
+                         [Property]
+                       )
+
+EmbeddedPhoneNumberField ::= embedded_phone_number_field(
+                               EmbeddedArtifactKey
+                               PhoneNumberFieldId
+                               [ValueRequirement]
+                               [Cardinality]
+                               [Visibility]
+                               [PhoneNumberValue]
+                               [LabelOverride]
+                               [HelpTextOverride]
+                               [Property]
+                             )
+
+EmbeddedOrcidField ::= embedded_orcid_field(
+                         EmbeddedArtifactKey
+                         OrcidFieldId
+                         [ValueRequirement]
+                         [Cardinality]
+                         [Visibility]
+                         [OrcidValue]
+                         [LabelOverride]
+                         [HelpTextOverride]
+                         [Property]
+                       )
+
+EmbeddedRorField ::= embedded_ror_field(
+                       EmbeddedArtifactKey
+                       RorFieldId
+                       [ValueRequirement]
+                       [Cardinality]
+                       [Visibility]
+                       [RorValue]
+                       [LabelOverride]
+                       [HelpTextOverride]
+                       [Property]
+                     )
+
+EmbeddedDoiField ::= embedded_doi_field(
+                       EmbeddedArtifactKey
+                       DoiFieldId
+                       [ValueRequirement]
+                       [Cardinality]
+                       [Visibility]
+                       [DoiValue]
+                       [LabelOverride]
+                       [HelpTextOverride]
+                       [Property]
+                     )
+
+EmbeddedPubMedIdField ::= embedded_pub_med_id_field(
+                            EmbeddedArtifactKey
+                            PubMedIdFieldId
+                            [ValueRequirement]
+                            [Cardinality]
+                            [Visibility]
+                            [PubMedIdValue]
+                            [LabelOverride]
+                            [HelpTextOverride]
+                            [Property]
+                          )
+
+EmbeddedRridField ::= embedded_rrid_field(
+                        EmbeddedArtifactKey
+                        RridFieldId
+                        [ValueRequirement]
+                        [Cardinality]
+                        [Visibility]
+                        [RridValue]
+                        [LabelOverride]
+                        [HelpTextOverride]
+                        [Property]
+                      )
+
+EmbeddedNihGrantIdField ::= embedded_nih_grant_id_field(
+                               EmbeddedArtifactKey
+                               NihGrantIdFieldId
+                               [ValueRequirement]
+                               [Cardinality]
+                               [Visibility]
+                               [NihGrantIdValue]
+                               [LabelOverride]
+                               [HelpTextOverride]
+                               [Property]
+                             )
+
+EmbeddedLanguageField ::= embedded_language_field(
+                            EmbeddedArtifactKey
+                            LanguageFieldId
+                            [ValueRequirement]
+                            [Cardinality]
+                            [Visibility]
+                            [LanguageValue]
+                            [LabelOverride]
+                            [HelpTextOverride]
+                            [Property]
+                          )
+
+EmbeddedAttributeValueField ::= embedded_attribute_value_field(
+                                  EmbeddedArtifactKey
+                                  AttributeValueFieldId
+                                  [ValueRequirement]
+                                  [Cardinality]
+                                  [Visibility]
+                                  [LabelOverride]
+                                  [HelpTextOverride]
+                                  [Property]
+                                )
+```
 
 ## Artifact Identity
 
