@@ -53,11 +53,11 @@ A conceptual overview of the model — describing the principal categories, thei
   - [Core Structure](#core-structure)
     - [Template](#template)
     - [Field](#field)
-  - [Concrete Field Artifacts](#concrete-field-artifacts)
   - [Embedded Artifacts](#embedded-artifacts)
     - [EmbeddedField](#embeddedfield)
     - [EmbeddedTemplate](#embeddedtemplate)
     - [EmbeddedPresentationComponent](#embeddedpresentationcomponent)
+- [Concrete Field Artifacts](#concrete-field-artifacts)
 - [Artifact Identity](#artifact-identity)
 - [Artifact Metadata](#artifact-metadata)
   - [Aggregate Structure](#aggregate-structure)
@@ -307,301 +307,6 @@ ExternalAuthorityField ::= OrcidField
                          | RridField
                          | NihGrantIdField
 ```
-
-### Concrete Field Artifacts
-
-Each concrete `Field` variant carries six components: a typed artifact identifier that permanently identifies the reusable field; a `ModelVersion` identifying the version of the CEDAR structural model the artifact conforms to; `CatalogMetadata` providing the descriptive, lifecycle, and annotation metadata used in catalog and registry contexts; `SchemaArtifactVersioning` providing the version, status, and lineage information common to all schema artifacts; a typed `FieldSpec` that specifies the value semantics and configuration for that field category; and a `Label` that carries the rendered question text shown to users at data-entry time. The identifier, `FieldSpec`, and `Label` are specific to each concrete variant; `ModelVersion`, `CatalogMetadata`, and `SchemaArtifactVersioning` are uniform across all fields. Each concrete `Field` MAY additionally carry an optional `HelpText` and an optional advisory `RecommendedKey`. The groupings below mirror the abstract `Field` hierarchy defined in Core Structure.
-
-`TextField`, `BooleanField`, and the two numeric field families (`IntegerNumberField` and `RealNumberField`) are the simple scalar field specs. Each carries the most basic value semantics — free text, `true` / `false`, exact integer values, and real-valued numbers respectively.
-
-```ebnf
-TextField ::= text_field(
-               TextFieldId
-               ModelVersion
-               CatalogMetadata
-               SchemaArtifactVersioning
-               TextFieldSpec
-               Label
-               [HelpText]
-               [RecommendedKey]
-             )
-
-BooleanField ::= boolean_field(
-                  BooleanFieldId
-                  ModelVersion
-                  CatalogMetadata
-                  SchemaArtifactVersioning
-                  BooleanFieldSpec
-                  Label
-                  [HelpText]
-                  [RecommendedKey]
-                )
-```
-
-The numeric field variants correspond to the `NumericField` abstract category. They share the broader concept of numeric content but split semantically: `IntegerNumberField` carries arbitrary-precision integer values (no fractional part); `RealNumberField` carries real-valued numbers (decimal arbitrary precision, or IEEE 754 single- or double-precision floating point). The split is principled: integer arithmetic is exact and closed under the usual operations, whereas real-valued arithmetic carries approximation concerns. See [Field Specs](#field-specs) for the per-family configuration.
-
-```ebnf
-IntegerNumberField ::= integer_number_field(
-                         IntegerNumberFieldId
-                         ModelVersion
-                         CatalogMetadata
-                         SchemaArtifactVersioning
-                         IntegerNumberFieldSpec
-                         Label
-                         [HelpText]
-                         [RecommendedKey]
-                       )
-
-RealNumberField ::= real_number_field(
-                      RealNumberFieldId
-                      ModelVersion
-                      CatalogMetadata
-                      SchemaArtifactVersioning
-                      RealNumberFieldSpec
-                      Label
-                      [HelpText]
-                      [RecommendedKey]
-                    )
-```
-
-The temporal field variants correspond to the `TemporalField` abstract category. Each is typed to a distinct temporal semantic — date, time of day, or combined date-time — and carries its own `FieldSpec` with precision and rendering options appropriate to that category.
-
-```ebnf
-DateField ::= date_field(
-               DateFieldId
-               ModelVersion
-               CatalogMetadata
-               SchemaArtifactVersioning
-               DateFieldSpec
-               Label
-               [HelpText]
-               [RecommendedKey]
-             )
-
-TimeField ::= time_field(
-               TimeFieldId
-               ModelVersion
-               CatalogMetadata
-               SchemaArtifactVersioning
-               TimeFieldSpec
-               Label
-               [HelpText]
-               [RecommendedKey]
-             )
-
-DateTimeField ::= date_time_field(
-                   DateTimeFieldId
-                   ModelVersion
-                   CatalogMetadata
-                   SchemaArtifactVersioning
-                   DateTimeFieldSpec
-                   Label
-                   [HelpText]
-                   [RecommendedKey]
-                 )
-```
-
-`ControlledTermField` supports values drawn from declared ontology sources. `LinkField` carries a single IRI-valued hyperlink.
-
-```ebnf
-ControlledTermField ::= controlled_term_field(
-                          ControlledTermFieldId
-                          ModelVersion
-                          CatalogMetadata
-                          SchemaArtifactVersioning
-                          ControlledTermFieldSpec
-                          Label
-                          [HelpText]
-                          [RecommendedKey]
-                        )
-
-LinkField ::= link_field(
-               LinkFieldId
-               ModelVersion
-               CatalogMetadata
-               SchemaArtifactVersioning
-               LinkFieldSpec
-               Label
-               [HelpText]
-               [RecommendedKey]
-             )
-```
-
-`SingleValuedEnumField` and `MultiValuedEnumField` correspond to the `EnumField` abstract category and are the two concrete enum field variants. They differ in whether they permit exactly one or multiple simultaneous selections from a declared set of permissible values. The permitted values are declared in the corresponding `EnumFieldSpec` and are validated against at the instance level.
-
-```ebnf
-SingleValuedEnumField ::= single_valued_enum_field(
-                            SingleValuedEnumFieldId
-                            ModelVersion
-                            CatalogMetadata
-                            SchemaArtifactVersioning
-                            SingleValuedEnumFieldSpec
-                            Label
-                            [HelpText]
-                            [RecommendedKey]
-                          )
-
-MultiValuedEnumField ::= multi_valued_enum_field(
-                           MultiValuedEnumFieldId
-                           ModelVersion
-                           CatalogMetadata
-                           SchemaArtifactVersioning
-                           MultiValuedEnumFieldSpec
-                           Label
-                           [HelpText]
-                           [RecommendedKey]
-                         )
-```
-
-The contact field variants correspond to the `ContactField` abstract category and represent human contact identifiers.
-
-```ebnf
-EmailField ::= email_field(
-                EmailFieldId
-                ModelVersion
-                CatalogMetadata
-                SchemaArtifactVersioning
-                EmailFieldSpec
-                Label
-                [HelpText]
-                [RecommendedKey]
-              )
-
-PhoneNumberField ::= phone_number_field(
-                      PhoneNumberFieldId
-                      ModelVersion
-                      CatalogMetadata
-                      SchemaArtifactVersioning
-                      PhoneNumberFieldSpec
-                      Label
-                      [HelpText]
-                      [RecommendedKey]
-                    )
-```
-
-The external authority field variants correspond to the `ExternalAuthorityField` abstract category. Each represents an identifier issued by a specific external authority system, as described in the [External Authority Values](#external-authority-values) section. Each external authority field is associated with format validation specific to its identifier scheme and supports integration with the corresponding resolution service for identifier lookup and verification.
-
-```ebnf
-OrcidField ::= orcid_field(
-                OrcidFieldId
-                ModelVersion
-                CatalogMetadata
-                SchemaArtifactVersioning
-                OrcidFieldSpec
-                Label
-                [HelpText]
-                [RecommendedKey]
-              )
-
-RorField ::= ror_field(
-              RorFieldId
-              ModelVersion
-              CatalogMetadata
-              SchemaArtifactVersioning
-              RorFieldSpec
-              Label
-              [HelpText]
-              [RecommendedKey]
-            )
-
-DoiField ::= doi_field(
-              DoiFieldId
-              ModelVersion
-              CatalogMetadata
-              SchemaArtifactVersioning
-              DoiFieldSpec
-              Label
-              [HelpText]
-              [RecommendedKey]
-            )
-
-PubMedIdField ::= pub_med_id_field(
-                    PubMedIdFieldId
-                    ModelVersion
-                    CatalogMetadata
-                    SchemaArtifactVersioning
-                    PubMedIdFieldSpec
-                    Label
-                    [HelpText]
-                    [RecommendedKey]
-                  )
-
-RridField ::= rrid_field(
-               RridFieldId
-               ModelVersion
-               CatalogMetadata
-               SchemaArtifactVersioning
-               RridFieldSpec
-               Label
-               [HelpText]
-               [RecommendedKey]
-             )
-
-NihGrantIdField ::= nih_grant_id_field(
-                     NihGrantIdFieldId
-                     ModelVersion
-                     CatalogMetadata
-                     SchemaArtifactVersioning
-                     NihGrantIdFieldSpec
-                     Label
-                     [HelpText]
-                     [RecommendedKey]
-                   )
-```
-
-`LanguageField` carries a natural-language designation as data — for example, the primary language of a document, a person's spoken language, or a community's language. Its value is a canonical BCP 47 language tag. Display-name rendering and authoring-time autocomplete are typically performed against the IANA Language Subtag Registry; the structural spec does not redistribute or version-lock the registry. The normative requirement on a `LanguageValue` is that the carried tag MUST be a well-formed BCP 47 language tag.
-
-`LanguageField` is distinct from the `LanguageTag` carried by `TextValue.lang` and `LangString.lang`. Those slots are *metadata about a text value* — what language a piece of text is in. `LanguageValue` is *a language as data itself* — what language is being recorded as the answer to a form question. The two carry the same lexical type but play different semantic roles, and a template may use both.
-
-```ebnf
-LanguageField ::= language_field(
-                    LanguageFieldId
-                    ModelVersion
-                    CatalogMetadata
-                    SchemaArtifactVersioning
-                    LanguageFieldSpec
-                    Label
-                    [HelpText]
-                    [RecommendedKey]
-                  )
-```
-
-`AttributeValueField` supports open-ended name-value pair data whose attribute names are not fixed at schema definition time.
-
-```ebnf
-AttributeValueField ::= attribute_value_field(
-                          AttributeValueFieldId
-                          ModelVersion
-                          CatalogMetadata
-                          SchemaArtifactVersioning
-                          AttributeValueFieldSpec
-                          Label
-                          [HelpText]
-                          [RecommendedKey]
-                        )
-```
-
-The concrete field artifacts defined above are reusable schema-level constructs. A reusable `Field` deliberately does not carry template-local keying, cardinality, visibility, or label override — those properties belong to the embedding context, not to the reusable artifact. To appear within a `Template`, each field must be included via an [Embedded Artifacts](#embedded-artifacts) construct, which adds that template-local context and governs how the field participates in that specific template.
-
-Each concrete `Field` artifact MAY carry an optional `HelpText` slot. `HelpText` is authored guidance about what the field is asking for and how to answer — text typically rendered alongside the field at form-render time as inline help, as a hover tooltip, or both, controlled by the enclosing `Template`'s [`HelpDisplayMode`](#template-rendering-hint). `HelpText` is distinct from [`Description`](#descriptive-metadata): `Description` is the artifact-catalog explanation seen when browsing the field registry; `HelpText` is the form-author-facing guidance seen at data-entry time. The two roles often share text but serve different audiences.
-
-```ebnf
-HelpText ::= help_text( MultilingualString )
-```
-
-`HelpText` carries a [`MultilingualString`](#multilingual-strings) value: localized authored guidance that may be presented in one or more natural languages. The enclosing `Template`'s `HelpDisplayMode` selects the presentation; absence of `HelpDisplayMode` defaults to `"inline"` rendering. The `"none"` arm suppresses rendering but preserves the content in the model (visible to alternative renderers, RDF projection, and catalog displays).
-
-A per-embedding override is also defined: an `EmbeddedField` MAY carry an optional `HelpTextOverride` that replaces the field's canonical `HelpText` at that embedding site only, mirroring the existing `LabelOverride` precedent. See [Embedded Artifacts](#embedded-artifacts) for the embedding-site shape.
-
-Each concrete `Field` artifact MAY also carry an optional `RecommendedKey` slot. `RecommendedKey` is a non-binding suggestion the field's owner offers to template authors for the [`EmbeddedArtifactKey`](#embedded-artifact-key) of an embedding that references this field. Its purpose is to propagate a convention across the templates that embed the same field, so that downstream consumers (analytics, exports, joins) see a consistent instance-side identifier where possible.
-
-```ebnf
-RecommendedKey ::= recommended_key( EmbeddedArtifactKey )
-```
-
-`RecommendedKey` is **advisory only**. It does not constrain `EmbeddedField.EmbeddedArtifactKey` at validation time: an embedding referencing a field that carries `RecommendedKey` MAY use the recommended key as its own `EmbeddedArtifactKey`, or MAY pick a different key. Authoring tools MAY pre-fill the embedding's key with the field's recommendation, and MAY surface deviations from it as warnings; the spec requires neither. The authoritative key for instance data is always the one carried by the `EmbeddedField`, never the field's recommendation.
-
-The carried `EmbeddedArtifactKey` is subject to the same lexical rules as any other `EmbeddedArtifactKey` (see [Embedded Artifact Key](#embedded-artifact-key)), so a `RecommendedKey` is always a syntactically valid candidate for direct adoption by an embedding.
 
 ### Embedded Artifacts
 
@@ -925,6 +630,301 @@ EmbeddedPresentationComponent ::= embedded_presentation_component(
                                     [Visibility]
                                   )
 ```
+
+## Concrete Field Artifacts
+
+Each concrete `Field` variant carries six components: a typed artifact identifier that permanently identifies the reusable field; a `ModelVersion` identifying the version of the CEDAR structural model the artifact conforms to; `CatalogMetadata` providing the descriptive, lifecycle, and annotation metadata used in catalog and registry contexts; `SchemaArtifactVersioning` providing the version, status, and lineage information common to all schema artifacts; a typed `FieldSpec` that specifies the value semantics and configuration for that field category; and a `Label` that carries the rendered question text shown to users at data-entry time. The identifier, `FieldSpec`, and `Label` are specific to each concrete variant; `ModelVersion`, `CatalogMetadata`, and `SchemaArtifactVersioning` are uniform across all fields. Each concrete `Field` MAY additionally carry an optional `HelpText` and an optional advisory `RecommendedKey`. The groupings below mirror the abstract `Field` hierarchy defined in Core Structure.
+
+`TextField`, `BooleanField`, and the two numeric field families (`IntegerNumberField` and `RealNumberField`) are the simple scalar field specs. Each carries the most basic value semantics — free text, `true` / `false`, exact integer values, and real-valued numbers respectively.
+
+```ebnf
+TextField ::= text_field(
+               TextFieldId
+               ModelVersion
+               CatalogMetadata
+               SchemaArtifactVersioning
+               TextFieldSpec
+               Label
+               [HelpText]
+               [RecommendedKey]
+             )
+
+BooleanField ::= boolean_field(
+                  BooleanFieldId
+                  ModelVersion
+                  CatalogMetadata
+                  SchemaArtifactVersioning
+                  BooleanFieldSpec
+                  Label
+                  [HelpText]
+                  [RecommendedKey]
+                )
+```
+
+The numeric field variants correspond to the `NumericField` abstract category. They share the broader concept of numeric content but split semantically: `IntegerNumberField` carries arbitrary-precision integer values (no fractional part); `RealNumberField` carries real-valued numbers (decimal arbitrary precision, or IEEE 754 single- or double-precision floating point). The split is principled: integer arithmetic is exact and closed under the usual operations, whereas real-valued arithmetic carries approximation concerns. See [Field Specs](#field-specs) for the per-family configuration.
+
+```ebnf
+IntegerNumberField ::= integer_number_field(
+                         IntegerNumberFieldId
+                         ModelVersion
+                         CatalogMetadata
+                         SchemaArtifactVersioning
+                         IntegerNumberFieldSpec
+                         Label
+                         [HelpText]
+                         [RecommendedKey]
+                       )
+
+RealNumberField ::= real_number_field(
+                      RealNumberFieldId
+                      ModelVersion
+                      CatalogMetadata
+                      SchemaArtifactVersioning
+                      RealNumberFieldSpec
+                      Label
+                      [HelpText]
+                      [RecommendedKey]
+                    )
+```
+
+The temporal field variants correspond to the `TemporalField` abstract category. Each is typed to a distinct temporal semantic — date, time of day, or combined date-time — and carries its own `FieldSpec` with precision and rendering options appropriate to that category.
+
+```ebnf
+DateField ::= date_field(
+               DateFieldId
+               ModelVersion
+               CatalogMetadata
+               SchemaArtifactVersioning
+               DateFieldSpec
+               Label
+               [HelpText]
+               [RecommendedKey]
+             )
+
+TimeField ::= time_field(
+               TimeFieldId
+               ModelVersion
+               CatalogMetadata
+               SchemaArtifactVersioning
+               TimeFieldSpec
+               Label
+               [HelpText]
+               [RecommendedKey]
+             )
+
+DateTimeField ::= date_time_field(
+                   DateTimeFieldId
+                   ModelVersion
+                   CatalogMetadata
+                   SchemaArtifactVersioning
+                   DateTimeFieldSpec
+                   Label
+                   [HelpText]
+                   [RecommendedKey]
+                 )
+```
+
+`ControlledTermField` supports values drawn from declared ontology sources. `LinkField` carries a single IRI-valued hyperlink.
+
+```ebnf
+ControlledTermField ::= controlled_term_field(
+                          ControlledTermFieldId
+                          ModelVersion
+                          CatalogMetadata
+                          SchemaArtifactVersioning
+                          ControlledTermFieldSpec
+                          Label
+                          [HelpText]
+                          [RecommendedKey]
+                        )
+
+LinkField ::= link_field(
+               LinkFieldId
+               ModelVersion
+               CatalogMetadata
+               SchemaArtifactVersioning
+               LinkFieldSpec
+               Label
+               [HelpText]
+               [RecommendedKey]
+             )
+```
+
+`SingleValuedEnumField` and `MultiValuedEnumField` correspond to the `EnumField` abstract category and are the two concrete enum field variants. They differ in whether they permit exactly one or multiple simultaneous selections from a declared set of permissible values. The permitted values are declared in the corresponding `EnumFieldSpec` and are validated against at the instance level.
+
+```ebnf
+SingleValuedEnumField ::= single_valued_enum_field(
+                            SingleValuedEnumFieldId
+                            ModelVersion
+                            CatalogMetadata
+                            SchemaArtifactVersioning
+                            SingleValuedEnumFieldSpec
+                            Label
+                            [HelpText]
+                            [RecommendedKey]
+                          )
+
+MultiValuedEnumField ::= multi_valued_enum_field(
+                           MultiValuedEnumFieldId
+                           ModelVersion
+                           CatalogMetadata
+                           SchemaArtifactVersioning
+                           MultiValuedEnumFieldSpec
+                           Label
+                           [HelpText]
+                           [RecommendedKey]
+                         )
+```
+
+The contact field variants correspond to the `ContactField` abstract category and represent human contact identifiers.
+
+```ebnf
+EmailField ::= email_field(
+                EmailFieldId
+                ModelVersion
+                CatalogMetadata
+                SchemaArtifactVersioning
+                EmailFieldSpec
+                Label
+                [HelpText]
+                [RecommendedKey]
+              )
+
+PhoneNumberField ::= phone_number_field(
+                      PhoneNumberFieldId
+                      ModelVersion
+                      CatalogMetadata
+                      SchemaArtifactVersioning
+                      PhoneNumberFieldSpec
+                      Label
+                      [HelpText]
+                      [RecommendedKey]
+                    )
+```
+
+The external authority field variants correspond to the `ExternalAuthorityField` abstract category. Each represents an identifier issued by a specific external authority system, as described in the [External Authority Values](#external-authority-values) section. Each external authority field is associated with format validation specific to its identifier scheme and supports integration with the corresponding resolution service for identifier lookup and verification.
+
+```ebnf
+OrcidField ::= orcid_field(
+                OrcidFieldId
+                ModelVersion
+                CatalogMetadata
+                SchemaArtifactVersioning
+                OrcidFieldSpec
+                Label
+                [HelpText]
+                [RecommendedKey]
+              )
+
+RorField ::= ror_field(
+              RorFieldId
+              ModelVersion
+              CatalogMetadata
+              SchemaArtifactVersioning
+              RorFieldSpec
+              Label
+              [HelpText]
+              [RecommendedKey]
+            )
+
+DoiField ::= doi_field(
+              DoiFieldId
+              ModelVersion
+              CatalogMetadata
+              SchemaArtifactVersioning
+              DoiFieldSpec
+              Label
+              [HelpText]
+              [RecommendedKey]
+            )
+
+PubMedIdField ::= pub_med_id_field(
+                    PubMedIdFieldId
+                    ModelVersion
+                    CatalogMetadata
+                    SchemaArtifactVersioning
+                    PubMedIdFieldSpec
+                    Label
+                    [HelpText]
+                    [RecommendedKey]
+                  )
+
+RridField ::= rrid_field(
+               RridFieldId
+               ModelVersion
+               CatalogMetadata
+               SchemaArtifactVersioning
+               RridFieldSpec
+               Label
+               [HelpText]
+               [RecommendedKey]
+             )
+
+NihGrantIdField ::= nih_grant_id_field(
+                     NihGrantIdFieldId
+                     ModelVersion
+                     CatalogMetadata
+                     SchemaArtifactVersioning
+                     NihGrantIdFieldSpec
+                     Label
+                     [HelpText]
+                     [RecommendedKey]
+                   )
+```
+
+`LanguageField` carries a natural-language designation as data — for example, the primary language of a document, a person's spoken language, or a community's language. Its value is a canonical BCP 47 language tag. Display-name rendering and authoring-time autocomplete are typically performed against the IANA Language Subtag Registry; the structural spec does not redistribute or version-lock the registry. The normative requirement on a `LanguageValue` is that the carried tag MUST be a well-formed BCP 47 language tag.
+
+`LanguageField` is distinct from the `LanguageTag` carried by `TextValue.lang` and `LangString.lang`. Those slots are *metadata about a text value* — what language a piece of text is in. `LanguageValue` is *a language as data itself* — what language is being recorded as the answer to a form question. The two carry the same lexical type but play different semantic roles, and a template may use both.
+
+```ebnf
+LanguageField ::= language_field(
+                    LanguageFieldId
+                    ModelVersion
+                    CatalogMetadata
+                    SchemaArtifactVersioning
+                    LanguageFieldSpec
+                    Label
+                    [HelpText]
+                    [RecommendedKey]
+                  )
+```
+
+`AttributeValueField` supports open-ended name-value pair data whose attribute names are not fixed at schema definition time.
+
+```ebnf
+AttributeValueField ::= attribute_value_field(
+                          AttributeValueFieldId
+                          ModelVersion
+                          CatalogMetadata
+                          SchemaArtifactVersioning
+                          AttributeValueFieldSpec
+                          Label
+                          [HelpText]
+                          [RecommendedKey]
+                        )
+```
+
+The concrete field artifacts defined above are reusable schema-level constructs. A reusable `Field` deliberately does not carry template-local keying, cardinality, visibility, or label override — those properties belong to the embedding context, not to the reusable artifact. To appear within a `Template`, each field must be included via an [Embedded Artifacts](#embedded-artifacts) construct, which adds that template-local context and governs how the field participates in that specific template.
+
+Each concrete `Field` artifact MAY carry an optional `HelpText` slot. `HelpText` is authored guidance about what the field is asking for and how to answer — text typically rendered alongside the field at form-render time as inline help, as a hover tooltip, or both, controlled by the enclosing `Template`'s [`HelpDisplayMode`](#template-rendering-hint). `HelpText` is distinct from [`Description`](#descriptive-metadata): `Description` is the artifact-catalog explanation seen when browsing the field registry; `HelpText` is the form-author-facing guidance seen at data-entry time. The two roles often share text but serve different audiences.
+
+```ebnf
+HelpText ::= help_text( MultilingualString )
+```
+
+`HelpText` carries a [`MultilingualString`](#multilingual-strings) value: localized authored guidance that may be presented in one or more natural languages. The enclosing `Template`'s `HelpDisplayMode` selects the presentation; absence of `HelpDisplayMode` defaults to `"inline"` rendering. The `"none"` arm suppresses rendering but preserves the content in the model (visible to alternative renderers, RDF projection, and catalog displays).
+
+A per-embedding override is also defined: an `EmbeddedField` MAY carry an optional `HelpTextOverride` that replaces the field's canonical `HelpText` at that embedding site only, mirroring the existing `LabelOverride` precedent. See [Embedded Artifacts](#embedded-artifacts) for the embedding-site shape.
+
+Each concrete `Field` artifact MAY also carry an optional `RecommendedKey` slot. `RecommendedKey` is a non-binding suggestion the field's owner offers to template authors for the [`EmbeddedArtifactKey`](#embedded-artifact-key) of an embedding that references this field. Its purpose is to propagate a convention across the templates that embed the same field, so that downstream consumers (analytics, exports, joins) see a consistent instance-side identifier where possible.
+
+```ebnf
+RecommendedKey ::= recommended_key( EmbeddedArtifactKey )
+```
+
+`RecommendedKey` is **advisory only**. It does not constrain `EmbeddedField.EmbeddedArtifactKey` at validation time: an embedding referencing a field that carries `RecommendedKey` MAY use the recommended key as its own `EmbeddedArtifactKey`, or MAY pick a different key. Authoring tools MAY pre-fill the embedding's key with the field's recommendation, and MAY surface deviations from it as warnings; the spec requires neither. The authoritative key for instance data is always the one carried by the `EmbeddedField`, never the field's recommendation.
+
+The carried `EmbeddedArtifactKey` is subject to the same lexical rules as any other `EmbeddedArtifactKey` (see [Embedded Artifact Key](#embedded-artifact-key)), so a `RecommendedKey` is always a syntactically valid candidate for direct adoption by an embedding.
 
 ## Artifact Identity
 
