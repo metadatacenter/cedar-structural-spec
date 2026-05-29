@@ -1,0 +1,29 @@
+{
+  "kind": "TextField",
+  "id": "https://example.org/fields/patient-dob",
+  "modelVersion": "2.0.0",
+  "metadata": {
+    "lifecycle": {
+      "createdOn": "2026-01-15T09:30:00Z",
+      "createdBy": "https://example.org/u",
+      "modifiedOn": "2026-01-15T09:30:00Z",
+      "modifiedBy": "https://example.org/u"
+    }
+  },
+  "versioning": {
+    "version": "1.0.0",
+    "status": "draft"
+  },
+  "fieldSpec": {
+    "kind": "TextFieldSpec"
+  },
+  "label": [
+    {
+      "value": "What is the patient's date of birth?",
+      "lang": "en"
+    }
+  ],
+  "recommendedProperty": {
+    "iri": "not-a-valid-iri"
+  }
+}

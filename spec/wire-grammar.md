@@ -1424,6 +1424,7 @@ TextField ::: object {
   label: Label
   helpText?: HelpText
   recommendedKey?: EmbeddedArtifactKey
+  recommendedProperty?: Property
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
@@ -1437,6 +1438,7 @@ IntegerNumberField ::: object {
   label: Label
   helpText?: HelpText
   recommendedKey?: EmbeddedArtifactKey
+  recommendedProperty?: Property
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
@@ -1450,6 +1452,7 @@ RealNumberField ::: object {
   label: Label
   helpText?: HelpText
   recommendedKey?: EmbeddedArtifactKey
+  recommendedProperty?: Property
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
@@ -1463,6 +1466,7 @@ BooleanField ::: object {
   label: Label
   helpText?: HelpText
   recommendedKey?: EmbeddedArtifactKey
+  recommendedProperty?: Property
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
@@ -1476,6 +1480,7 @@ DateField ::: object {
   label: Label
   helpText?: HelpText
   recommendedKey?: EmbeddedArtifactKey
+  recommendedProperty?: Property
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
@@ -1489,6 +1494,7 @@ TimeField ::: object {
   label: Label
   helpText?: HelpText
   recommendedKey?: EmbeddedArtifactKey
+  recommendedProperty?: Property
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
@@ -1502,6 +1508,7 @@ DateTimeField ::: object {
   label: Label
   helpText?: HelpText
   recommendedKey?: EmbeddedArtifactKey
+  recommendedProperty?: Property
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
@@ -1515,6 +1522,7 @@ ControlledTermField ::: object {
   label: Label
   helpText?: HelpText
   recommendedKey?: EmbeddedArtifactKey
+  recommendedProperty?: Property
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
@@ -1528,6 +1536,7 @@ SingleValuedEnumField ::: object {
   label: Label
   helpText?: HelpText
   recommendedKey?: EmbeddedArtifactKey
+  recommendedProperty?: Property
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
@@ -1541,6 +1550,7 @@ MultiValuedEnumField ::: object {
   label: Label
   helpText?: HelpText
   recommendedKey?: EmbeddedArtifactKey
+  recommendedProperty?: Property
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
@@ -1554,6 +1564,7 @@ LinkField ::: object {
   label: Label
   helpText?: HelpText
   recommendedKey?: EmbeddedArtifactKey
+  recommendedProperty?: Property
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
@@ -1567,6 +1578,7 @@ EmailField ::: object {
   label: Label
   helpText?: HelpText
   recommendedKey?: EmbeddedArtifactKey
+  recommendedProperty?: Property
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
@@ -1580,6 +1592,7 @@ PhoneNumberField ::: object {
   label: Label
   helpText?: HelpText
   recommendedKey?: EmbeddedArtifactKey
+  recommendedProperty?: Property
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
@@ -1593,6 +1606,7 @@ OrcidField ::: object {
   label: Label
   helpText?: HelpText
   recommendedKey?: EmbeddedArtifactKey
+  recommendedProperty?: Property
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
@@ -1606,6 +1620,7 @@ RorField ::: object {
   label: Label
   helpText?: HelpText
   recommendedKey?: EmbeddedArtifactKey
+  recommendedProperty?: Property
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
@@ -1619,6 +1634,7 @@ DoiField ::: object {
   label: Label
   helpText?: HelpText
   recommendedKey?: EmbeddedArtifactKey
+  recommendedProperty?: Property
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
@@ -1632,6 +1648,7 @@ PubMedIdField ::: object {
   label: Label
   helpText?: HelpText
   recommendedKey?: EmbeddedArtifactKey
+  recommendedProperty?: Property
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
@@ -1645,6 +1662,7 @@ RridField ::: object {
   label: Label
   helpText?: HelpText
   recommendedKey?: EmbeddedArtifactKey
+  recommendedProperty?: Property
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
@@ -1658,6 +1676,7 @@ NihGrantIdField ::: object {
   label: Label
   helpText?: HelpText
   recommendedKey?: EmbeddedArtifactKey
+  recommendedProperty?: Property
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
@@ -1671,6 +1690,7 @@ LanguageField ::: object {
   label: Label
   helpText?: HelpText
   recommendedKey?: EmbeddedArtifactKey
+  recommendedProperty?: Property
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
@@ -1684,6 +1704,7 @@ AttributeValueField ::: object {
   label: Label
   helpText?: HelpText
   recommendedKey?: EmbeddedArtifactKey
+  recommendedProperty?: Property
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 ```
@@ -2249,8 +2270,8 @@ Conventions:
 
 Every concrete `Field` production has the same six-component shape:
 `(<Family>FieldId, ModelVersion, CatalogMetadata, SchemaArtifactVersioning, <Family>FieldSpec, Label)`,
-with an optional `HelpText` slot and an optional advisory
-`RecommendedKey` slot. For all of `TextField`,
+with an optional `HelpText` slot and two optional advisory slots,
+`RecommendedKey` and `RecommendedProperty`. For all of `TextField`,
 `IntegerNumberField`, `RealNumberField`, `BooleanField`, `DateField`,
 `TimeField`, `DateTimeField`, `ControlledTermField`,
 `SingleValuedEnumField`, `MultiValuedEnumField`, `LinkField`,
@@ -2266,6 +2287,7 @@ with an optional `HelpText` slot and an optional advisory
 5. `Label` → `label`
 6. `[HelpText]` → `helpText?`
 7. `[RecommendedKey]` → `recommendedKey?`
+8. `[RecommendedProperty]` → `recommendedProperty?`
 
 ### 14.3 Embedded artifacts
 

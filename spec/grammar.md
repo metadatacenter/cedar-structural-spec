@@ -379,7 +379,7 @@ EmbeddedPresentationComponent ::= embedded_presentation_component(
 
 ## Concrete Field Artifacts
 
-Each concrete `Field` variant carries six components: a typed artifact identifier that permanently identifies the reusable field; a `ModelVersion` identifying the version of the CEDAR structural model the artifact conforms to; `CatalogMetadata` providing the descriptive, lifecycle, and annotation metadata used in catalog and registry contexts; `SchemaArtifactVersioning` providing the version, status, and lineage information common to all schema artifacts; a typed `FieldSpec` that specifies the value semantics and configuration for that field category; and a `Label` that carries the rendered question text shown to users at data-entry time. The identifier, `FieldSpec`, and `Label` are specific to each concrete variant; `ModelVersion`, `CatalogMetadata`, and `SchemaArtifactVersioning` are uniform across all fields. Each concrete `Field` MAY additionally carry an optional `HelpText` and an optional advisory `RecommendedKey`. The groupings below mirror the abstract `Field` hierarchy defined in Core Structure.
+Each concrete `Field` variant carries six components: a typed artifact identifier that permanently identifies the reusable field; a `ModelVersion` identifying the version of the CEDAR structural model the artifact conforms to; `CatalogMetadata` providing the descriptive, lifecycle, and annotation metadata used in catalog and registry contexts; `SchemaArtifactVersioning` providing the version, status, and lineage information common to all schema artifacts; a typed `FieldSpec` that specifies the value semantics and configuration for that field category; and a `Label` that carries the rendered question text shown to users at data-entry time. The identifier, `FieldSpec`, and `Label` are specific to each concrete variant; `ModelVersion`, `CatalogMetadata`, and `SchemaArtifactVersioning` are uniform across all fields. Each concrete `Field` MAY additionally carry an optional `HelpText` and two optional advisory slots, `RecommendedKey` and `RecommendedProperty`. The groupings below mirror the abstract `Field` hierarchy defined in Core Structure.
 
 `TextField`, `BooleanField`, and the two numeric field families (`IntegerNumberField` and `RealNumberField`) are the simple scalar field specs. Each carries the most basic value semantics — free text, `true` / `false`, exact integer values, and real-valued numbers respectively.
 
@@ -393,6 +393,7 @@ TextField ::= text_field(
                Label
                [HelpText]
                [RecommendedKey]
+               [RecommendedProperty]
              )
 
 BooleanField ::= boolean_field(
@@ -404,6 +405,7 @@ BooleanField ::= boolean_field(
                   Label
                   [HelpText]
                   [RecommendedKey]
+                  [RecommendedProperty]
                 )
 ```
 
@@ -419,6 +421,7 @@ IntegerNumberField ::= integer_number_field(
                          Label
                          [HelpText]
                          [RecommendedKey]
+                         [RecommendedProperty]
                        )
 
 RealNumberField ::= real_number_field(
@@ -430,6 +433,7 @@ RealNumberField ::= real_number_field(
                       Label
                       [HelpText]
                       [RecommendedKey]
+                      [RecommendedProperty]
                     )
 ```
 
@@ -445,6 +449,7 @@ DateField ::= date_field(
                Label
                [HelpText]
                [RecommendedKey]
+               [RecommendedProperty]
              )
 
 TimeField ::= time_field(
@@ -456,6 +461,7 @@ TimeField ::= time_field(
                Label
                [HelpText]
                [RecommendedKey]
+               [RecommendedProperty]
              )
 
 DateTimeField ::= date_time_field(
@@ -467,6 +473,7 @@ DateTimeField ::= date_time_field(
                    Label
                    [HelpText]
                    [RecommendedKey]
+                   [RecommendedProperty]
                  )
 ```
 
@@ -482,6 +489,7 @@ ControlledTermField ::= controlled_term_field(
                           Label
                           [HelpText]
                           [RecommendedKey]
+                          [RecommendedProperty]
                         )
 
 LinkField ::= link_field(
@@ -493,6 +501,7 @@ LinkField ::= link_field(
                Label
                [HelpText]
                [RecommendedKey]
+               [RecommendedProperty]
              )
 ```
 
@@ -508,6 +517,7 @@ SingleValuedEnumField ::= single_valued_enum_field(
                             Label
                             [HelpText]
                             [RecommendedKey]
+                            [RecommendedProperty]
                           )
 
 MultiValuedEnumField ::= multi_valued_enum_field(
@@ -519,6 +529,7 @@ MultiValuedEnumField ::= multi_valued_enum_field(
                            Label
                            [HelpText]
                            [RecommendedKey]
+                           [RecommendedProperty]
                          )
 ```
 
@@ -534,6 +545,7 @@ EmailField ::= email_field(
                 Label
                 [HelpText]
                 [RecommendedKey]
+                [RecommendedProperty]
               )
 
 PhoneNumberField ::= phone_number_field(
@@ -545,6 +557,7 @@ PhoneNumberField ::= phone_number_field(
                       Label
                       [HelpText]
                       [RecommendedKey]
+                      [RecommendedProperty]
                     )
 ```
 
@@ -560,6 +573,7 @@ OrcidField ::= orcid_field(
                 Label
                 [HelpText]
                 [RecommendedKey]
+                [RecommendedProperty]
               )
 
 RorField ::= ror_field(
@@ -571,6 +585,7 @@ RorField ::= ror_field(
               Label
               [HelpText]
               [RecommendedKey]
+              [RecommendedProperty]
             )
 
 DoiField ::= doi_field(
@@ -582,6 +597,7 @@ DoiField ::= doi_field(
               Label
               [HelpText]
               [RecommendedKey]
+              [RecommendedProperty]
             )
 
 PubMedIdField ::= pub_med_id_field(
@@ -593,6 +609,7 @@ PubMedIdField ::= pub_med_id_field(
                     Label
                     [HelpText]
                     [RecommendedKey]
+                    [RecommendedProperty]
                   )
 
 RridField ::= rrid_field(
@@ -604,6 +621,7 @@ RridField ::= rrid_field(
                Label
                [HelpText]
                [RecommendedKey]
+               [RecommendedProperty]
              )
 
 NihGrantIdField ::= nih_grant_id_field(
@@ -615,6 +633,7 @@ NihGrantIdField ::= nih_grant_id_field(
                      Label
                      [HelpText]
                      [RecommendedKey]
+                     [RecommendedProperty]
                    )
 ```
 
@@ -632,6 +651,7 @@ LanguageField ::= language_field(
                     Label
                     [HelpText]
                     [RecommendedKey]
+                    [RecommendedProperty]
                   )
 ```
 
@@ -647,6 +667,7 @@ AttributeValueField ::= attribute_value_field(
                           Label
                           [HelpText]
                           [RecommendedKey]
+                          [RecommendedProperty]
                         )
 ```
 
@@ -671,6 +692,16 @@ RecommendedKey ::= recommended_key( EmbeddedArtifactKey )
 `RecommendedKey` is **advisory only**. It does not constrain `EmbeddedField.EmbeddedArtifactKey` at validation time: an embedding referencing a field that carries `RecommendedKey` MAY use the recommended key as its own `EmbeddedArtifactKey`, or MAY pick a different key. Authoring tools MAY pre-fill the embedding's key with the field's recommendation, and MAY surface deviations from it as warnings; the spec requires neither. The authoritative key for instance data is always the one carried by the `EmbeddedField`, never the field's recommendation.
 
 The carried `EmbeddedArtifactKey` is subject to the same lexical rules as any other `EmbeddedArtifactKey` (see [Embedded Artifact Key](#embedded-artifact-key)), so a `RecommendedKey` is always a syntactically valid candidate for direct adoption by an embedding.
+
+Each concrete `Field` artifact MAY also carry an optional `RecommendedProperty` slot. `RecommendedProperty` is a non-binding suggestion the field's owner offers to template authors for the [`Property`](#prod-Property) of an embedding that references this field. Its purpose is to propagate a semantic-predicate convention across the templates that embed the same field, so that RDF projections of nominally-equivalent data points use a consistent predicate where possible.
+
+```ebnf
+RecommendedProperty ::= recommended_property( Property )
+```
+
+`RecommendedProperty` is **advisory only**. It does not constrain `EmbeddedField.Property` at validation time: an embedding referencing a field that carries `RecommendedProperty` MAY use the recommended `Property` as its own, MAY pick a different one, or MAY omit `Property` entirely. Authoring tools MAY pre-fill the embedding's `Property` from the field's recommendation, and MAY surface deviations from it as warnings; the spec requires neither. The authoritative `Property` for an embedding's RDF projection is always the one carried by the `EmbeddedField`, never the field's recommendation.
+
+The carried `Property` is subject to the same well-formedness rules as any other `Property` (a syntactically valid `PropertyIri`, an optional `PropertyLabel`; see [Properties](#properties)), so a `RecommendedProperty` is always a valid candidate for direct adoption by an embedding.
 
 ## Concrete Embedded Fields
 
