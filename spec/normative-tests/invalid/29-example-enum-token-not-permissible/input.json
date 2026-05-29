@@ -17,14 +17,36 @@
   "fieldSpec": {
     "kind": "SingleValuedEnumFieldSpec",
     "permissibleValues": [
-      { "value": "female", "label": [{ "value": "Female", "lang": "en" }] },
-      { "value": "male",   "label": [{ "value": "Male",   "lang": "en" }] }
+      {
+        "value": "female",
+        "label": [
+          {
+            "value": "Female",
+            "lang": "en"
+          }
+        ]
+      },
+      {
+        "value": "male",
+        "label": [
+          {
+            "value": "Male",
+            "lang": "en"
+          }
+        ]
+      }
     ],
     "examples": [
-      { "kind": "EnumValue", "value": "unknown" }
+      {
+        "kind": "EnumValue",
+        "value": "unknown"
+      }
     ]
   },
-  "label": [
-    { "value": "Sex", "lang": "en" }
+  "prompt": [
+    {
+      "value": "Sex",
+      "lang": "en"
+    }
   ]
 }

@@ -87,7 +87,7 @@ A conceptual overview of the model — describing the principal categories, thei
   - [Cardinality](#cardinality)
   - [Visibility](#visibility)
   - [Defaults](#defaults)
-  - [Label Override](#label-override)
+  - [Prompt Override](#prompt-override)
   - [Properties](#properties)
 - [Field Specs](#field-specs)
   - [Temporal Field Specs](#temporal-field-specs)
@@ -148,7 +148,7 @@ classDiagram
     [Cardinality]
     [Visibility]
     [defaultValue]
-    [LabelOverride]
+    [PromptOverride]
     [HelpTextOverride]
     [Property]
   }
@@ -157,13 +157,13 @@ classDiagram
     [ValueRequirement]
     [Cardinality]
     [Visibility]
-    [LabelOverride]
+    [PromptOverride]
     [Property]
   }
   class EmbeddedPresentationComponent {
     EmbeddedArtifactKey
     [Visibility]
-    [LabelOverride]
+    [PromptOverride]
   }
   class Property {
     PropertyIri
@@ -240,6 +240,10 @@ Title ::= title(
 Label ::= label(
             MultilingualString
           )
+
+Prompt ::= prompt(
+             MultilingualString
+           )
 
 Header ::= header(
              MultilingualString
@@ -360,14 +364,14 @@ EmbeddedTemplate ::= embedded_template(
                        [ValueRequirement]
                        [Cardinality]
                        [Visibility]
-                       [LabelOverride]
+                       [PromptOverride]
                        [Property]
                      )
 ```
 
 #### EmbeddedPresentationComponent
 
-[`EmbeddedPresentationComponent`](#prod-EmbeddedPresentationComponent) carries neither a value requirement, cardinality, default value, label override, nor property, as it contributes no instance data and exists purely to contribute presentational structure. The only embedding-level property it carries is [`Visibility`](#prod-Visibility).
+[`EmbeddedPresentationComponent`](#prod-EmbeddedPresentationComponent) carries neither a value requirement, cardinality, default value, prompt override, nor property, as it contributes no instance data and exists purely to contribute presentational structure. The only embedding-level property it carries is [`Visibility`](#prod-Visibility).
 
 ```ebnf
 EmbeddedPresentationComponent ::= embedded_presentation_component(
@@ -379,7 +383,7 @@ EmbeddedPresentationComponent ::= embedded_presentation_component(
 
 ## Concrete Field Artifacts
 
-Each concrete `Field` variant carries six components: a typed artifact identifier that permanently identifies the reusable field; a `ModelVersion` identifying the version of the CEDAR structural model the artifact conforms to; `CatalogMetadata` providing the descriptive, lifecycle, and annotation metadata used in catalog and registry contexts; `SchemaArtifactVersioning` providing the version, status, and lineage information common to all schema artifacts; a typed `FieldSpec` that specifies the value semantics and configuration for that field category; and a `Label` that carries the rendered question text shown to users at data-entry time. The identifier, `FieldSpec`, and `Label` are specific to each concrete variant; `ModelVersion`, `CatalogMetadata`, and `SchemaArtifactVersioning` are uniform across all fields. Each concrete `Field` MAY additionally carry an optional `HelpText` and two optional advisory slots, `RecommendedKey` and `RecommendedProperty`. The groupings below mirror the abstract `Field` hierarchy defined in Core Structure.
+Each concrete `Field` variant carries six components: a typed artifact identifier that permanently identifies the reusable field; a `ModelVersion` identifying the version of the CEDAR structural model the artifact conforms to; `CatalogMetadata` providing the descriptive, lifecycle, and annotation metadata used in catalog and registry contexts; `SchemaArtifactVersioning` providing the version, status, and lineage information common to all schema artifacts; a typed `FieldSpec` that specifies the value semantics and configuration for that field category; and a `Prompt` that carries the rendered question text shown to users at data-entry time. The identifier, `FieldSpec`, and `Prompt` are specific to each concrete variant; `ModelVersion`, `CatalogMetadata`, and `SchemaArtifactVersioning` are uniform across all fields. Each concrete `Field` MAY additionally carry an optional `HelpText` and two optional advisory slots, `RecommendedKey` and `RecommendedProperty`. The groupings below mirror the abstract `Field` hierarchy defined in Core Structure.
 
 `TextField`, `BooleanField`, and the two numeric field families (`IntegerNumberField` and `RealNumberField`) are the simple scalar field specs. Each carries the most basic value semantics — free text, `true` / `false`, exact integer values, and real-valued numbers respectively.
 
@@ -390,7 +394,7 @@ TextField ::= text_field(
                CatalogMetadata
                SchemaArtifactVersioning
                TextFieldSpec
-               Label
+               Prompt
                [HelpText]
                [RecommendedKey]
                [RecommendedProperty]
@@ -402,7 +406,7 @@ BooleanField ::= boolean_field(
                   CatalogMetadata
                   SchemaArtifactVersioning
                   BooleanFieldSpec
-                  Label
+                  Prompt
                   [HelpText]
                   [RecommendedKey]
                   [RecommendedProperty]
@@ -418,7 +422,7 @@ IntegerNumberField ::= integer_number_field(
                          CatalogMetadata
                          SchemaArtifactVersioning
                          IntegerNumberFieldSpec
-                         Label
+                         Prompt
                          [HelpText]
                          [RecommendedKey]
                          [RecommendedProperty]
@@ -430,7 +434,7 @@ RealNumberField ::= real_number_field(
                       CatalogMetadata
                       SchemaArtifactVersioning
                       RealNumberFieldSpec
-                      Label
+                      Prompt
                       [HelpText]
                       [RecommendedKey]
                       [RecommendedProperty]
@@ -446,7 +450,7 @@ DateField ::= date_field(
                CatalogMetadata
                SchemaArtifactVersioning
                DateFieldSpec
-               Label
+               Prompt
                [HelpText]
                [RecommendedKey]
                [RecommendedProperty]
@@ -458,7 +462,7 @@ TimeField ::= time_field(
                CatalogMetadata
                SchemaArtifactVersioning
                TimeFieldSpec
-               Label
+               Prompt
                [HelpText]
                [RecommendedKey]
                [RecommendedProperty]
@@ -470,7 +474,7 @@ DateTimeField ::= date_time_field(
                    CatalogMetadata
                    SchemaArtifactVersioning
                    DateTimeFieldSpec
-                   Label
+                   Prompt
                    [HelpText]
                    [RecommendedKey]
                    [RecommendedProperty]
@@ -486,7 +490,7 @@ ControlledTermField ::= controlled_term_field(
                           CatalogMetadata
                           SchemaArtifactVersioning
                           ControlledTermFieldSpec
-                          Label
+                          Prompt
                           [HelpText]
                           [RecommendedKey]
                           [RecommendedProperty]
@@ -498,7 +502,7 @@ LinkField ::= link_field(
                CatalogMetadata
                SchemaArtifactVersioning
                LinkFieldSpec
-               Label
+               Prompt
                [HelpText]
                [RecommendedKey]
                [RecommendedProperty]
@@ -514,7 +518,7 @@ SingleValuedEnumField ::= single_valued_enum_field(
                             CatalogMetadata
                             SchemaArtifactVersioning
                             SingleValuedEnumFieldSpec
-                            Label
+                            Prompt
                             [HelpText]
                             [RecommendedKey]
                             [RecommendedProperty]
@@ -526,7 +530,7 @@ MultiValuedEnumField ::= multi_valued_enum_field(
                            CatalogMetadata
                            SchemaArtifactVersioning
                            MultiValuedEnumFieldSpec
-                           Label
+                           Prompt
                            [HelpText]
                            [RecommendedKey]
                            [RecommendedProperty]
@@ -542,7 +546,7 @@ EmailField ::= email_field(
                 CatalogMetadata
                 SchemaArtifactVersioning
                 EmailFieldSpec
-                Label
+                Prompt
                 [HelpText]
                 [RecommendedKey]
                 [RecommendedProperty]
@@ -554,7 +558,7 @@ PhoneNumberField ::= phone_number_field(
                       CatalogMetadata
                       SchemaArtifactVersioning
                       PhoneNumberFieldSpec
-                      Label
+                      Prompt
                       [HelpText]
                       [RecommendedKey]
                       [RecommendedProperty]
@@ -570,7 +574,7 @@ OrcidField ::= orcid_field(
                 CatalogMetadata
                 SchemaArtifactVersioning
                 OrcidFieldSpec
-                Label
+                Prompt
                 [HelpText]
                 [RecommendedKey]
                 [RecommendedProperty]
@@ -582,7 +586,7 @@ RorField ::= ror_field(
               CatalogMetadata
               SchemaArtifactVersioning
               RorFieldSpec
-              Label
+              Prompt
               [HelpText]
               [RecommendedKey]
               [RecommendedProperty]
@@ -594,7 +598,7 @@ DoiField ::= doi_field(
               CatalogMetadata
               SchemaArtifactVersioning
               DoiFieldSpec
-              Label
+              Prompt
               [HelpText]
               [RecommendedKey]
               [RecommendedProperty]
@@ -606,7 +610,7 @@ PubMedIdField ::= pub_med_id_field(
                     CatalogMetadata
                     SchemaArtifactVersioning
                     PubMedIdFieldSpec
-                    Label
+                    Prompt
                     [HelpText]
                     [RecommendedKey]
                     [RecommendedProperty]
@@ -618,7 +622,7 @@ RridField ::= rrid_field(
                CatalogMetadata
                SchemaArtifactVersioning
                RridFieldSpec
-               Label
+               Prompt
                [HelpText]
                [RecommendedKey]
                [RecommendedProperty]
@@ -630,7 +634,7 @@ NihGrantIdField ::= nih_grant_id_field(
                      CatalogMetadata
                      SchemaArtifactVersioning
                      NihGrantIdFieldSpec
-                     Label
+                     Prompt
                      [HelpText]
                      [RecommendedKey]
                      [RecommendedProperty]
@@ -648,7 +652,7 @@ LanguageField ::= language_field(
                     CatalogMetadata
                     SchemaArtifactVersioning
                     LanguageFieldSpec
-                    Label
+                    Prompt
                     [HelpText]
                     [RecommendedKey]
                     [RecommendedProperty]
@@ -664,14 +668,14 @@ AttributeValueField ::= attribute_value_field(
                           CatalogMetadata
                           SchemaArtifactVersioning
                           AttributeValueFieldSpec
-                          Label
+                          Prompt
                           [HelpText]
                           [RecommendedKey]
                           [RecommendedProperty]
                         )
 ```
 
-The concrete field artifacts defined above are reusable schema-level constructs. A reusable `Field` deliberately does not carry template-local keying, cardinality, visibility, or label override — those properties belong to the embedding context, not to the reusable artifact. To appear within a `Template`, each field must be included via an [Embedded Artifacts](#embedded-artifacts) construct, which adds that template-local context and governs how the field participates in that specific template.
+The concrete field artifacts defined above are reusable schema-level constructs. A reusable `Field` deliberately does not carry template-local keying, cardinality, visibility, or prompt override — those properties belong to the embedding context, not to the reusable artifact. To appear within a `Template`, each field must be included via an [Embedded Artifacts](#embedded-artifacts) construct, which adds that template-local context and governs how the field participates in that specific template.
 
 Each concrete `Field` artifact MAY carry an optional `HelpText` slot. `HelpText` is authored guidance about what the field is asking for and how to answer — text typically rendered alongside the field at form-render time as inline help, as a hover tooltip, or both, controlled by the enclosing `Template`'s [`HelpDisplayMode`](#template-rendering-hint). `HelpText` is distinct from [`Description`](#descriptive-metadata): `Description` is the artifact-catalog explanation seen when browsing the field registry; `HelpText` is the form-author-facing guidance seen at data-entry time. The two roles often share text but serve different audiences.
 
@@ -681,7 +685,7 @@ HelpText ::= help_text( MultilingualString )
 
 `HelpText` carries a [`MultilingualString`](#multilingual-strings) value: localized authored guidance that may be presented in one or more natural languages. The enclosing `Template`'s `HelpDisplayMode` selects the presentation; absence of `HelpDisplayMode` defaults to `"inline"` rendering. The `"none"` arm suppresses rendering but preserves the content in the model (visible to alternative renderers, RDF projection, and catalog displays).
 
-A per-embedding override is also defined: an `EmbeddedField` MAY carry an optional `HelpTextOverride` that replaces the field's canonical `HelpText` at that embedding site only, mirroring the existing `LabelOverride` precedent. See [Embedded Artifacts](#embedded-artifacts) for the embedding-site shape.
+A per-embedding override is also defined: an `EmbeddedField` MAY carry an optional `HelpTextOverride` that replaces the field's canonical `HelpText` at that embedding site only, mirroring the existing `PromptOverride` precedent. See [Embedded Artifacts](#embedded-artifacts) for the embedding-site shape.
 
 Each concrete `Field` artifact MAY also carry an optional `RecommendedKey` slot. `RecommendedKey` is a non-binding suggestion the field's owner offers to template authors for the [`EmbeddedArtifactKey`](#embedded-artifact-key) of an embedding that references this field. Its purpose is to propagate a convention across the templates that embed the same field, so that downstream consumers (analytics, exports, joins) see a consistent instance-side identifier where possible.
 
@@ -705,7 +709,7 @@ The carried `Property` is subject to the same well-formedness rules as any other
 
 ## Concrete Embedded Fields
 
-Every concrete `EmbeddedField` variant follows the same structural pattern. Each carries: an `EmbeddedArtifactKey` uniquely identifying the embedding site within the containing `Template`; a typed field reference identifying the reusable `Field` being embedded; an optional `ValueRequirement` specifying whether a value is required, recommended, or optional; an optional `Cardinality` bounding the permitted number of values; an optional `Visibility` controlling whether the field is shown in rendered interfaces; an optional `defaultValue` providing an embedding-specific default whose type is the family-specific `Value` type (e.g. `TextValue` for `EmbeddedTextField`, `DateValue` for `EmbeddedDateField`); an optional `LabelOverride` allowing the template to override the field's label in this context; and an optional `Property` associating a semantic property IRI with the embedding site. The only variation across concrete `EmbeddedField` variants is the typed field reference and the typed default value, both of which match the value family of the referenced field.
+Every concrete `EmbeddedField` variant follows the same structural pattern. Each carries: an `EmbeddedArtifactKey` uniquely identifying the embedding site within the containing `Template`; a typed field reference identifying the reusable `Field` being embedded; an optional `ValueRequirement` specifying whether a value is required, recommended, or optional; an optional `Cardinality` bounding the permitted number of values; an optional `Visibility` controlling whether the field is shown in rendered interfaces; an optional `defaultValue` providing an embedding-specific default whose type is the family-specific `Value` type (e.g. `TextValue` for `EmbeddedTextField`, `DateValue` for `EmbeddedDateField`); an optional `PromptOverride` allowing the template to override the field's prompt at this embedding site; and an optional `Property` associating a semantic property IRI with the embedding site. The only variation across concrete `EmbeddedField` variants is the typed field reference and the typed default value, both of which match the value family of the referenced field.
 
 `EmbeddedBooleanField` and `EmbeddedSingleValuedEnumField` are the two exceptions to this pattern: each omits the `[Cardinality]` slot. A boolean field is inherently single-valued — its `ValueRequirement` slot already distinguishes the meaningful states (required, recommended, optional). A `SingleValuedEnumField` is similarly single-valued by construction; multi-valued enum embedding is expressed only through `EmbeddedMultiValuedEnumField`. `EmbeddedMultiValuedEnumField` further differs in that its embedding-level default is a sequence (`EnumValue*`) rather than a single optional value, parallel to how multi-valued enum instance values appear as a sequence in `FieldValue`.
 
@@ -717,7 +721,7 @@ EmbeddedTextField ::= embedded_text_field(
                         [Cardinality]
                         [Visibility]
                         [TextValue]
-                        [LabelOverride]
+                        [PromptOverride]
                         [HelpTextOverride]
                         [Property]
                       )
@@ -729,7 +733,7 @@ EmbeddedIntegerNumberField ::= embedded_integer_number_field(
                                  [Cardinality]
                                  [Visibility]
                                  [IntegerNumberValue]
-                                 [LabelOverride]
+                                 [PromptOverride]
                                  [HelpTextOverride]
                                  [Property]
                                )
@@ -741,7 +745,7 @@ EmbeddedRealNumberField ::= embedded_real_number_field(
                               [Cardinality]
                               [Visibility]
                               [RealNumberValue]
-                              [LabelOverride]
+                              [PromptOverride]
                               [HelpTextOverride]
                               [Property]
                             )
@@ -752,7 +756,7 @@ EmbeddedBooleanField ::= embedded_boolean_field(
                            [ValueRequirement]
                            [Visibility]
                            [BooleanValue]
-                           [LabelOverride]
+                           [PromptOverride]
                            [HelpTextOverride]
                            [Property]
                          )
@@ -764,7 +768,7 @@ EmbeddedDateField ::= embedded_date_field(
                         [Cardinality]
                         [Visibility]
                         [DateValue]
-                        [LabelOverride]
+                        [PromptOverride]
                         [HelpTextOverride]
                         [Property]
                       )
@@ -776,7 +780,7 @@ EmbeddedTimeField ::= embedded_time_field(
                         [Cardinality]
                         [Visibility]
                         [TimeValue]
-                        [LabelOverride]
+                        [PromptOverride]
                         [HelpTextOverride]
                         [Property]
                       )
@@ -788,7 +792,7 @@ EmbeddedDateTimeField ::= embedded_date_time_field(
                             [Cardinality]
                             [Visibility]
                             [DateTimeValue]
-                            [LabelOverride]
+                            [PromptOverride]
                             [HelpTextOverride]
                             [Property]
                           )
@@ -800,7 +804,7 @@ EmbeddedControlledTermField ::= embedded_controlled_term_field(
                                   [Cardinality]
                                   [Visibility]
                                   [ControlledTermValue]
-                                  [LabelOverride]
+                                  [PromptOverride]
                                   [HelpTextOverride]
                                   [Property]
                                 )
@@ -811,7 +815,7 @@ EmbeddedSingleValuedEnumField ::= embedded_single_valued_enum_field(
                                     [ValueRequirement]
                                     [Visibility]
                                     [EnumValue]
-                                    [LabelOverride]
+                                    [PromptOverride]
                                     [HelpTextOverride]
                                     [Property]
                                   )
@@ -823,7 +827,7 @@ EmbeddedMultiValuedEnumField ::= embedded_multi_valued_enum_field(
                                    [Cardinality]
                                    [Visibility]
                                    EnumValue*
-                                   [LabelOverride]
+                                   [PromptOverride]
                                    [HelpTextOverride]
                                    [Property]
                                  )
@@ -835,7 +839,7 @@ EmbeddedLinkField ::= embedded_link_field(
                         [Cardinality]
                         [Visibility]
                         [LinkValue]
-                        [LabelOverride]
+                        [PromptOverride]
                         [HelpTextOverride]
                         [Property]
                       )
@@ -847,7 +851,7 @@ EmbeddedEmailField ::= embedded_email_field(
                          [Cardinality]
                          [Visibility]
                          [EmailValue]
-                         [LabelOverride]
+                         [PromptOverride]
                          [HelpTextOverride]
                          [Property]
                        )
@@ -859,7 +863,7 @@ EmbeddedPhoneNumberField ::= embedded_phone_number_field(
                                [Cardinality]
                                [Visibility]
                                [PhoneNumberValue]
-                               [LabelOverride]
+                               [PromptOverride]
                                [HelpTextOverride]
                                [Property]
                              )
@@ -871,7 +875,7 @@ EmbeddedOrcidField ::= embedded_orcid_field(
                          [Cardinality]
                          [Visibility]
                          [OrcidValue]
-                         [LabelOverride]
+                         [PromptOverride]
                          [HelpTextOverride]
                          [Property]
                        )
@@ -883,7 +887,7 @@ EmbeddedRorField ::= embedded_ror_field(
                        [Cardinality]
                        [Visibility]
                        [RorValue]
-                       [LabelOverride]
+                       [PromptOverride]
                        [HelpTextOverride]
                        [Property]
                      )
@@ -895,7 +899,7 @@ EmbeddedDoiField ::= embedded_doi_field(
                        [Cardinality]
                        [Visibility]
                        [DoiValue]
-                       [LabelOverride]
+                       [PromptOverride]
                        [HelpTextOverride]
                        [Property]
                      )
@@ -907,7 +911,7 @@ EmbeddedPubMedIdField ::= embedded_pub_med_id_field(
                             [Cardinality]
                             [Visibility]
                             [PubMedIdValue]
-                            [LabelOverride]
+                            [PromptOverride]
                             [HelpTextOverride]
                             [Property]
                           )
@@ -919,7 +923,7 @@ EmbeddedRridField ::= embedded_rrid_field(
                         [Cardinality]
                         [Visibility]
                         [RridValue]
-                        [LabelOverride]
+                        [PromptOverride]
                         [HelpTextOverride]
                         [Property]
                       )
@@ -931,7 +935,7 @@ EmbeddedNihGrantIdField ::= embedded_nih_grant_id_field(
                                [Cardinality]
                                [Visibility]
                                [NihGrantIdValue]
-                               [LabelOverride]
+                               [PromptOverride]
                                [HelpTextOverride]
                                [Property]
                              )
@@ -943,7 +947,7 @@ EmbeddedLanguageField ::= embedded_language_field(
                             [Cardinality]
                             [Visibility]
                             [LanguageValue]
-                            [LabelOverride]
+                            [PromptOverride]
                             [HelpTextOverride]
                             [Property]
                           )
@@ -954,7 +958,7 @@ EmbeddedAttributeValueField ::= embedded_attribute_value_field(
                                   [ValueRequirement]
                                   [Cardinality]
                                   [Visibility]
-                                  [LabelOverride]
+                                  [PromptOverride]
                                   [HelpTextOverride]
                                   [Property]
                                 )
@@ -1054,7 +1058,7 @@ This subsection identifies how the metadata categories are grouped at the artifa
 
 The schema artifacts (`Field` and `Template`) additionally carry [`SchemaArtifactVersioning`](#versioning) as a separate top-level slot on the artifact itself; non-schema artifacts (`PresentationComponent`, `TemplateInstance`) do not carry versioning.
 
-`CatalogMetadata` is distinct from an artifact's **rendered display name**. A `Field` carries a top-level `Label` slot (the rendered question text); a `Template` carries a top-level `Title` slot (the rendered form title); a `TemplateInstance` MAY carry an optional `Label` (a user-supplied instance name); a `PresentationComponent` carries no rendered display name at all. These rendered slots are defined on the per-artifact productions in [Field Artifacts](#field-artifacts), [Core Structure](#core-structure), [Instances](#instances), and [Presentation Components](#presentation-components) respectively.
+`CatalogMetadata` is distinct from an artifact's **rendered display name**. A `Field` carries a top-level `Prompt` slot (the rendered question text); a `Template` carries a top-level `Title` slot (the rendered form title); a `TemplateInstance` MAY carry an optional `Label` (a user-supplied instance name); a `PresentationComponent` carries no rendered display name at all. These rendered slots are defined on the per-artifact productions in [Field Artifacts](#field-artifacts), [Core Structure](#core-structure), [Instances](#instances), and [Presentation Components](#presentation-components) respectively.
 
 ```ebnf
 CatalogMetadata ::= catalog_metadata(
@@ -1069,7 +1073,7 @@ CatalogMetadata ::= catalog_metadata(
 
 ### Descriptive Metadata
 
-The descriptive metadata of an artifact comprises a set of human-oriented properties carried directly by `CatalogMetadata`. These properties support naming, explanatory text, and external or local identifiers used for cataloging. `PreferredLabel`, when present, is the artifact's preferred display name in catalog and registry contexts (e.g., browsing the field registry or listing templates) — distinct from the artifact's *rendered* display name, which lives in a top-level slot on the artifact itself (`Field.label`, `Template.title`, `TemplateInstance.label`). Authors typically populate `PreferredLabel` with the same text as the rendered slot; the two are separate so they MAY differ when needed (for example, a field whose registry name is `"Comment field (v1.2)"` may render in forms as just `"Comment"`). `Description`, when present, is an extended textual explanation of the artifact's purpose and content, intended for catalog display. `Identifier`, when present, is a user-specified external identifier intended for integration with institutional or external systems. `AlternativeLabel`, when present, provides additional display labels for the artifact (synonyms, abbreviations, legacy labels carried forward from prior versions of the model).
+The descriptive metadata of an artifact comprises a set of human-oriented properties carried directly by `CatalogMetadata`. These properties support naming, explanatory text, and external or local identifiers used for cataloging. `PreferredLabel`, when present, is the artifact's preferred display name in catalog and registry contexts (e.g., browsing the field registry or listing templates) — distinct from the artifact's *rendered* display name, which lives in a top-level slot on the artifact itself (`Field.prompt`, `Template.title`, `TemplateInstance.label`). Authors typically populate `PreferredLabel` with the same text as the rendered slot; the two are separate so they MAY differ when needed (for example, a field whose registry name is `"Comment field (v1.2)"` may render in forms as just `"Comment"`). `Description`, when present, is an extended textual explanation of the artifact's purpose and content, intended for catalog display. `Identifier`, when present, is a user-specified external identifier intended for integration with institutional or external systems. `AlternativeLabel`, when present, provides additional display labels for the artifact (synonyms, abbreviations, legacy labels carried forward from prior versions of the model).
 
 ```ebnf
 Description ::= description(
@@ -1079,9 +1083,13 @@ Description ::= description(
 Identifier ::= identifier(
                  string
                )
+
+AlternativeLabel ::= alternative_label(
+                       MultilingualString
+                     )
 ```
 
-`Description` carries a [`MultilingualString`](#multilingual-strings) value: human-readable text that may be presented in one or more natural languages. `Identifier` carries an arbitrary Unicode string value: it is a technical user-supplied key intended for integration with external systems and is not a human-display label, so it is not multilingual. `PreferredLabel` is defined in the [Controlled Term Value](#controlled-term-value) section; `AlternativeLabel` is defined in the [Label Override](#label-override) section. Both are `MultilingualString`-valued.
+`Description` carries a [`MultilingualString`](#multilingual-strings) value: human-readable text that may be presented in one or more natural languages. `Identifier` carries an arbitrary Unicode string value: it is a technical user-supplied key intended for integration with external systems and is not a human-display label, so it is not multilingual. `PreferredLabel` is defined in the [Controlled Term Value](#controlled-term-value) section. `AlternativeLabel` is a [`MultilingualString`](#multilingual-strings): each entry is itself a localization set for one alternative phrasing of the artifact's catalog-discovery label.
 
 ### Lifecycle Metadata
 
@@ -1576,7 +1584,7 @@ AttributeValue ::= attribute_value(
 
 ## Embedded Artifact Properties
 
-Embedded artifact properties define the contextual information carried by an `EmbeddedArtifact` within a `Template`. These properties govern how a referenced reusable artifact is used in that template context, including key, reference, requirement, cardinality, visibility, defaults, and label override, and they are distinct from the intrinsic properties of the referenced reusable artifact itself.
+Embedded artifact properties define the contextual information carried by an `EmbeddedArtifact` within a `Template`. These properties govern how a referenced reusable artifact is used in that template context, including key, reference, requirement, cardinality, visibility, defaults, and prompt override, and they are distinct from the intrinsic properties of the referenced reusable artifact itself.
 
 ### Embedded Artifact Key
 
@@ -1689,22 +1697,17 @@ There is no mechanism for an embedding to *unset* a field-level default. An embe
 
 **Defaults are UI/UX initialisation only.** A default value's sole role is to seed an instance's value at creation time, so that a user-facing form can pre-fill the corresponding input. Defaults do not appear in the wire form of `TemplateInstance` artifacts and do not affect the [RDF projection](rdf-projection.md). When an instance is created and the user accepts the default without modification, the resulting `FieldValue` carries the default value as if the user had typed it in by hand; from the instance's perspective the default and a user-supplied identical value are indistinguishable. When an instance is created and the user does not supply a value (and the field is not required), the corresponding `FieldValue` is omitted entirely — the default does not appear by virtue of having existed.
 
-### Label Override
+### Prompt Override
 
-`LabelOverride` provides template-specific labeling for an embedded artifact. This allows a template to override the default label of the referenced reusable artifact in that embedding context.
+`PromptOverride` provides a template-specific rendered question text for an embedded artifact. When present, it replaces the referenced reusable `Field`'s `Prompt` at that embedding site only.
 
 ```ebnf
-AlternativeLabel ::= alternative_label(
-                       MultilingualString
-                     )
-
-LabelOverride ::= label_override(
-                    Label
-                    AlternativeLabel*
-                  )
+PromptOverride ::= prompt_override(
+                     Prompt
+                   )
 ```
 
-`AlternativeLabel` is a [`MultilingualString`](#multilingual-strings): each entry is itself a localization set for one alternative phrasing of the artifact's display label.
+`PromptOverride` is a single-component wrapper around a `Prompt`: it carries the same kind of localized rendered text as `Field.Prompt`, scoped to one embedding. The precedence rule is straightforward: at an embedding site, the renderer displays the embedding's `PromptOverride` if present, otherwise the referenced `Field`'s `Prompt`. The override is *replace*, not *merge*: localizations present in the field's `Prompt` but absent from the embedding's `PromptOverride` do not fall back.
 
 ### Help Text Override
 
@@ -1740,7 +1743,7 @@ PropertyLabel ::= property_label( MultilingualString )
 
 A `FieldSpec` is the semantic configuration block carried by a concrete `Field` artifact. It specifies what kind of value the field accepts, any constraints on that value, and any compatible rendering hints for presentation. Each concrete `Field` variant carries exactly one `FieldSpec` that matches its kind: a `TextField` carries a `TextFieldSpec`, a `DateField` carries a `DateFieldSpec`, and so on. The correspondence between each `FieldSpec` and its permitted `Value` form is given in the [Field Spec And Value Correspondence](#field-spec-and-value-correspondence) section.
 
-One might ask why `FieldSpec` exists as a separate construct rather than folding its content directly into the concrete `Field` artifact. The answer is separation of concerns: the concrete field artifact — `TextField`, `DateField`, and so on — answers the question "what kind of reusable field is this?" and carries the artifact's identity, catalog metadata, versioning, and the rendered question-text label. The `FieldSpec` answers the separate question "what are the value rules and rendering-compatible properties for this kind of field?" Keeping these concerns distinct means that artifact identity, catalog metadata, and lifecycle/versioning information remain uniform across all field kinds, while value semantics and field-specific configuration vary per family through `FieldSpec`.
+One might ask why `FieldSpec` exists as a separate construct rather than folding its content directly into the concrete `Field` artifact. The answer is separation of concerns: the concrete field artifact — `TextField`, `DateField`, and so on — answers the question "what kind of reusable field is this?" and carries the artifact's identity, catalog metadata, versioning, and the rendered question-text prompt. The `FieldSpec` answers the separate question "what are the value rules and rendering-compatible properties for this kind of field?" Keeping these concerns distinct means that artifact identity, catalog metadata, and lifecycle/versioning information remain uniform across all field kinds, while value semantics and field-specific configuration vary per family through `FieldSpec`.
 
 `FieldSpec` productions are grouped here by field family, mirroring the abstract `Field` hierarchy in the Kernel Grammar. Temporal field specs, which carry additional precision and rendering configuration, are detailed in the [Temporal Field Specs](#temporal-field-specs) subsection. Controlled term source declarations, which specify the ontological authorities from which controlled-term values may be drawn, are covered in the [Controlled Term Sources](#controlled-term-sources) subsection. Rendering hints for all field families are defined in the [Rendering Hints](#rendering-hints) subsection, with the exception of temporal rendering hints which are defined alongside their field specs.
 

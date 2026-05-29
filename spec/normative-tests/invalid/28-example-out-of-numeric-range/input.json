@@ -16,13 +16,25 @@
   },
   "fieldSpec": {
     "kind": "IntegerNumberFieldSpec",
-    "minValue": { "kind": "IntegerNumberValue", "value": "0" },
-    "maxValue": { "kind": "IntegerNumberValue", "value": "120" },
+    "minValue": {
+      "kind": "IntegerNumberValue",
+      "value": "0"
+    },
+    "maxValue": {
+      "kind": "IntegerNumberValue",
+      "value": "120"
+    },
     "examples": [
-      { "kind": "IntegerNumberValue", "value": "999" }
+      {
+        "kind": "IntegerNumberValue",
+        "value": "999"
+      }
     ]
   },
-  "label": [
-    { "value": "Age", "lang": "en" }
+  "prompt": [
+    {
+      "value": "Age",
+      "lang": "en"
+    }
   ]
 }

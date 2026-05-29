@@ -110,7 +110,7 @@ A JSON object's discriminator presence depends on its **production**, not on the
 
 **Polymorphic-union members** — productions that appear as alternatives in a `discriminator: kind` union (e.g. `Value`, `FieldSpec`, `Annotation.body: AnnotationValue`, `EmbeddedField`, `EmbeddedArtifact`, every `Field` family, every `Value` family) — MUST encode as a tagged JSON object carrying `"kind": "<ProductionName>"`. The discriminator is present even when the surrounding context (the enclosing object's `kind` and property name) would already determine the family — for example, `EmbeddedTextField.defaultValue` carries `"kind": "TextValue"` even though `EmbeddedTextField.kind` already pins the family. Uniformity of the rule is preferred over the small wire-size saving.
 
-**Singleton-only productions** — productions that never appear as members of any `discriminator: kind` union (`Cardinality`, `Property`, `LabelOverride`, `CatalogMetadata`, `LifecycleMetadata`, `SchemaArtifactVersioning`, `Annotation`, `Unit`, `OntologyReference`, `OntologyDisplayHint`, `ControlledTermClass`, `PermissibleValue`, `Meaning`, and the temporal `RenderingHint` object variants) — MUST encode as untagged JSON objects whose properties correspond to the production's components. A `"kind"` property MUST NOT appear.
+**Singleton-only productions** — productions that never appear as members of any `discriminator: kind` union (`Cardinality`, `Property`, `CatalogMetadata`, `LifecycleMetadata`, `SchemaArtifactVersioning`, `Annotation`, `Unit`, `OntologyReference`, `OntologyDisplayHint`, `ControlledTermClass`, `PermissibleValue`, `Meaning`, and the temporal `RenderingHint` object variants) — MUST encode as untagged JSON objects whose properties correspond to the production's components. A `"kind"` property MUST NOT appear.
 
 The rule applies recursively: a tagged object whose own components include further composite objects follows the same rule for each of those components, with the encoding determined by each inner production's own discriminator-union membership.
 
@@ -152,7 +152,7 @@ A literal translation would encode each such production as a tagged JSON object 
 
 A production carries information beyond its payload, and so MUST be encoded as a tagged object, when at least one of the following holds:
 
-- **(a) Composite structure.** The production has more than one named component (e.g. `Cardinality`, `Property`, `LabelOverride`, every `Value` family).
+- **(a) Composite structure.** The production has more than one named component (e.g. `Cardinality`, `Property`, every `Value` family).
 
 - **(b) Discriminated union membership.** The production participates in a union where alternatives must be distinguished at decode time (e.g. `Value`, every artifact's `kind`, the twenty `Field` family variants). The discriminator is `"kind"`.
 
@@ -162,7 +162,7 @@ A production that satisfies none of these is encoded *flat*: the JSON value at t
 
 The full list of productions that collapse this way is given in §1.6 of [`wire-grammar.md`](wire-grammar.md). At a glance:
 
-- All `MultilingualString`-typed wrappers (`Header`, `Footer`, `Name`, `Description`, `PreferredLabel`, `AlternativeLabel`, `Label`, `PropertyLabel`, `OntologyName`, `RootTermLabel`, `ValueSetName`) flatten to a JSON array of `LangString` entries.
+- All `MultilingualString`-typed wrappers (`Header`, `Footer`, `Name`, `Description`, `PreferredLabel`, `AlternativeLabel`, `Label`, `Prompt`, `PromptOverride`, `PropertyLabel`, `OntologyName`, `RootTermLabel`, `ValueSetName`) flatten to a JSON array of `LangString` entries.
 - All single-`Iri` wrappers (artifact identifiers and references, `PropertyIri`, the typed external-authority IRIs, `OntologyIri`, etc.) flatten to a plain JSON string.
 - All single-`NonNegativeInteger` wrappers (`MinLength`, `MaxLength`, `MinCardinality`, `MaxCardinality`, `DecimalPlaces`, `MaxTraversalDepth`) flatten to a plain JSON number.
 - Plain-`string` wrappers (`Identifier`, `Notation`, `OntologyAcronym`, `ValueSetIdentifier`, `HtmlContent`) flatten to a plain JSON string.
@@ -300,7 +300,7 @@ The `AnnotationValue` variant family is open to extension: future revisions of t
 
 ### 6.5 Embedded artifact properties
 
-`Cardinality`, `Property`, `LabelOverride`, and `Unit` are singleton-only productions (per §4.4) and encode as untagged JSON objects. `EmbeddedArtifactKey` flattens to a plain JSON string. `ValueRequirement` and `Visibility` flatten to JSON enum strings.
+`Cardinality`, `Property`, and `Unit` are singleton-only productions (per §4.4) and encode as untagged JSON objects. `EmbeddedArtifactKey` flattens to a plain JSON string. `PromptOverride`, `ValueRequirement`, and `Visibility` flatten on the wire — `PromptOverride` to a `MultilingualString` array (per §1.6), the latter two to JSON enum strings.
 
 ```json
 { "min": 0, "max": 5 }
@@ -309,7 +309,7 @@ The `AnnotationValue` variant family is open to extension: future revisions of t
 { "iri": "https://schema.org/name", "label": [{ "value": "name", "lang": "en" }] }
 ```
 ```json
-{ "label": [{ "value": "Custom Label", "lang": "en" }], "altLabels": [] }
+[{ "value": "Custom Label", "lang": "en" }]
 ```
 ```json
 "required"
@@ -384,7 +384,7 @@ A `Field` artifact (shown for the text family; the other twenty families substit
   "metadata": "<CatalogMetadata>",
   "versioning": "<SchemaArtifactVersioning>",
   "fieldSpec": "<FieldSpec>",
-  "label": "<MultilingualString>"
+  "prompt": "<MultilingualString>"
 }
 ```
 
@@ -730,7 +730,7 @@ element of the array is itself a tagged `EnumValue`:
 ]
 ```
 
-By contrast, `Cardinality`, `Annotation`, `LabelOverride`, `Property`,
+By contrast, `Cardinality`, `Annotation`, `Property`,
 and the other singleton-only productions enumerated in §1.5 are
 **not** members of any `discriminator: kind` union, so they never
 carry `"kind"` regardless of position. `Cardinality` is always

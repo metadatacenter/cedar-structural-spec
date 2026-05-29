@@ -16,7 +16,13 @@
   },
   "fieldSpec": {
     "kind": "LanguageFieldSpec",
-    "permittedLanguages": ["en", "es", "fr", "de", "zh-Hans"],
+    "permittedLanguages": [
+      "en",
+      "es",
+      "fr",
+      "de",
+      "zh-Hans"
+    ],
     "examples": [
       {
         "kind": "LanguageValue",
@@ -28,7 +34,7 @@
       }
     ]
   },
-  "label": [
+  "prompt": [
     {
       "value": "Primary language",
       "lang": "en"

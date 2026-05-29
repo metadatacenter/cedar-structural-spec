@@ -34,15 +34,12 @@
         "max": 1
       },
       "visibility": "visible",
-      "labelOverride": {
-        "label": [
-          {
-            "value": "Surgeon's notes",
-            "lang": "en"
-          }
-        ],
-        "altLabels": []
-      },
+      "promptOverride": [
+        {
+          "value": "Surgeon's notes",
+          "lang": "en"
+        }
+      ],
       "helpTextOverride": [
         {
           "value": "Free-text post-operative observations specific to this surgical workflow. Use the structured fields above where they apply.",

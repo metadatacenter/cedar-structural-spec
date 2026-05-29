@@ -20,10 +20,16 @@
       "kind": "LanguageValue",
       "value": "en"
     },
-    "permittedLanguages": ["en", "es", "fr", "de", "zh-Hans"],
+    "permittedLanguages": [
+      "en",
+      "es",
+      "fr",
+      "de",
+      "zh-Hans"
+    ],
     "renderingHint": "dropdown"
   },
-  "label": [
+  "prompt": [
     {
       "value": "Test",
       "lang": "en"

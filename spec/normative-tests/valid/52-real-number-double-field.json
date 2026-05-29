@@ -33,7 +33,7 @@
       "datatype": "double"
     }
   },
-  "label": [
+  "prompt": [
     {
       "value": "Test",
       "lang": "en"

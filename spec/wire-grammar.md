@@ -103,7 +103,7 @@ if its abstract grammar production is a member of some
 `discriminator: kind` union — regardless of the position the object
 occupies in the wire form. Productions that are not members of any
 `discriminator: kind` union (`Cardinality`, `Annotation`,
-`LabelOverride`, `Property`, `CatalogMetadata`,
+`Property`, `CatalogMetadata`,
 `LifecycleMetadata`, `SchemaArtifactVersioning`,
 `Unit`, `OntologyReference`, `OntologyDisplayHint`,
 `ControlledTermClass`, `PermissibleValue`, `Meaning`, and the
@@ -129,7 +129,7 @@ small wire-size saving.
 - **Singleton-only production** — an abstract production that appears
   *only* at singleton positions and is never a member of a
   `discriminator: kind` union (e.g. `Cardinality`, `Annotation`,
-  `LabelOverride`). Equivalently: the productions enumerated in the
+  `Property`). Equivalently: the productions enumerated in the
   Rule above.
 
 **Worked examples.** Two cases illustrate the rule.
@@ -237,8 +237,8 @@ The wrappers fall into four groups by inner type:
   encoded as a `nonEmptyArray<LangString>` per the `MultilingualString`
   wire production; the wrapper carries no additional wire shape):
   `Name`, `Description`, `PreferredLabel`, `AlternativeLabel`, `Label`,
-  `PropertyLabel`, `OntologyName`, `ValueSetName`, `RootTermLabel`,
-  `Header`, `Footer`.
+  `Prompt`, `PromptOverride`, `PropertyLabel`, `OntologyName`,
+  `ValueSetName`, `RootTermLabel`, `Header`, `Footer`.
 
 `Version` and `ModelVersion` carry SemanticVersion 2.0.0 lexical
 strings. `CreatedOn` and `ModifiedOn` carry ISO 8601 date-time
@@ -295,9 +295,8 @@ produce when applied to the corresponding `::=` production in
 7. **The kind rule.** A `kind: "X"` literal property appears on a
    wire object if and only if its production is a member of some
    `discriminator: kind` union, regardless of position. Productions
-   not so used (`Cardinality`, `Annotation`, `LabelOverride`,
-   `Property`, etc.) never carry `kind`. See §1.5 for the full
-   statement.
+   not so used (`Cardinality`, `Annotation`, `Property`, etc.)
+   never carry `kind`. See §1.5 for the full statement.
 
 8. **Primitive bottom-out.** Where the abstract grammar uses a bare
    primitive type (`string`, `boolean`, `number`) without a typed
@@ -910,15 +909,13 @@ above, with the following per-family details:
 
 `AttributeValueFieldSpec` carries no field-level default.
 
-### 6.6 Label override
+### 6.6 Prompt override
 
 ```
-LabelOverride ::: object {
-  label: Label
-  altLabels: array<AlternativeLabel>
-}
-  // altLabels MAY be empty
+PromptOverride ::: MultilingualString
 ```
+
+`PromptOverride` is a single-component wrapper of `Prompt` and collapses on the wire (§1.6 / §14.12) to the same form as `Prompt` itself — a `nonEmptyArray<LangString>` per the `MultilingualString` wire production. An embedding's `promptOverride?` slot therefore carries a bare `MultilingualString` array, identical in shape to `Field.prompt`. This matches `HelpTextOverride`'s wire form.
 
 ### 6.7 Help text
 
@@ -1421,7 +1418,7 @@ TextField ::: object {
   metadata: CatalogMetadata
   versioning: SchemaArtifactVersioning
   fieldSpec: TextFieldSpec
-  label: Label
+  prompt: Prompt
   helpText?: HelpText
   recommendedKey?: EmbeddedArtifactKey
   recommendedProperty?: Property
@@ -1435,7 +1432,7 @@ IntegerNumberField ::: object {
   metadata: CatalogMetadata
   versioning: SchemaArtifactVersioning
   fieldSpec: IntegerNumberFieldSpec
-  label: Label
+  prompt: Prompt
   helpText?: HelpText
   recommendedKey?: EmbeddedArtifactKey
   recommendedProperty?: Property
@@ -1449,7 +1446,7 @@ RealNumberField ::: object {
   metadata: CatalogMetadata
   versioning: SchemaArtifactVersioning
   fieldSpec: RealNumberFieldSpec
-  label: Label
+  prompt: Prompt
   helpText?: HelpText
   recommendedKey?: EmbeddedArtifactKey
   recommendedProperty?: Property
@@ -1463,7 +1460,7 @@ BooleanField ::: object {
   metadata: CatalogMetadata
   versioning: SchemaArtifactVersioning
   fieldSpec: BooleanFieldSpec
-  label: Label
+  prompt: Prompt
   helpText?: HelpText
   recommendedKey?: EmbeddedArtifactKey
   recommendedProperty?: Property
@@ -1477,7 +1474,7 @@ DateField ::: object {
   metadata: CatalogMetadata
   versioning: SchemaArtifactVersioning
   fieldSpec: DateFieldSpec
-  label: Label
+  prompt: Prompt
   helpText?: HelpText
   recommendedKey?: EmbeddedArtifactKey
   recommendedProperty?: Property
@@ -1491,7 +1488,7 @@ TimeField ::: object {
   metadata: CatalogMetadata
   versioning: SchemaArtifactVersioning
   fieldSpec: TimeFieldSpec
-  label: Label
+  prompt: Prompt
   helpText?: HelpText
   recommendedKey?: EmbeddedArtifactKey
   recommendedProperty?: Property
@@ -1505,7 +1502,7 @@ DateTimeField ::: object {
   metadata: CatalogMetadata
   versioning: SchemaArtifactVersioning
   fieldSpec: DateTimeFieldSpec
-  label: Label
+  prompt: Prompt
   helpText?: HelpText
   recommendedKey?: EmbeddedArtifactKey
   recommendedProperty?: Property
@@ -1519,7 +1516,7 @@ ControlledTermField ::: object {
   metadata: CatalogMetadata
   versioning: SchemaArtifactVersioning
   fieldSpec: ControlledTermFieldSpec
-  label: Label
+  prompt: Prompt
   helpText?: HelpText
   recommendedKey?: EmbeddedArtifactKey
   recommendedProperty?: Property
@@ -1533,7 +1530,7 @@ SingleValuedEnumField ::: object {
   metadata: CatalogMetadata
   versioning: SchemaArtifactVersioning
   fieldSpec: SingleValuedEnumFieldSpec
-  label: Label
+  prompt: Prompt
   helpText?: HelpText
   recommendedKey?: EmbeddedArtifactKey
   recommendedProperty?: Property
@@ -1547,7 +1544,7 @@ MultiValuedEnumField ::: object {
   metadata: CatalogMetadata
   versioning: SchemaArtifactVersioning
   fieldSpec: MultiValuedEnumFieldSpec
-  label: Label
+  prompt: Prompt
   helpText?: HelpText
   recommendedKey?: EmbeddedArtifactKey
   recommendedProperty?: Property
@@ -1561,7 +1558,7 @@ LinkField ::: object {
   metadata: CatalogMetadata
   versioning: SchemaArtifactVersioning
   fieldSpec: LinkFieldSpec
-  label: Label
+  prompt: Prompt
   helpText?: HelpText
   recommendedKey?: EmbeddedArtifactKey
   recommendedProperty?: Property
@@ -1575,7 +1572,7 @@ EmailField ::: object {
   metadata: CatalogMetadata
   versioning: SchemaArtifactVersioning
   fieldSpec: EmailFieldSpec
-  label: Label
+  prompt: Prompt
   helpText?: HelpText
   recommendedKey?: EmbeddedArtifactKey
   recommendedProperty?: Property
@@ -1589,7 +1586,7 @@ PhoneNumberField ::: object {
   metadata: CatalogMetadata
   versioning: SchemaArtifactVersioning
   fieldSpec: PhoneNumberFieldSpec
-  label: Label
+  prompt: Prompt
   helpText?: HelpText
   recommendedKey?: EmbeddedArtifactKey
   recommendedProperty?: Property
@@ -1603,7 +1600,7 @@ OrcidField ::: object {
   metadata: CatalogMetadata
   versioning: SchemaArtifactVersioning
   fieldSpec: OrcidFieldSpec
-  label: Label
+  prompt: Prompt
   helpText?: HelpText
   recommendedKey?: EmbeddedArtifactKey
   recommendedProperty?: Property
@@ -1617,7 +1614,7 @@ RorField ::: object {
   metadata: CatalogMetadata
   versioning: SchemaArtifactVersioning
   fieldSpec: RorFieldSpec
-  label: Label
+  prompt: Prompt
   helpText?: HelpText
   recommendedKey?: EmbeddedArtifactKey
   recommendedProperty?: Property
@@ -1631,7 +1628,7 @@ DoiField ::: object {
   metadata: CatalogMetadata
   versioning: SchemaArtifactVersioning
   fieldSpec: DoiFieldSpec
-  label: Label
+  prompt: Prompt
   helpText?: HelpText
   recommendedKey?: EmbeddedArtifactKey
   recommendedProperty?: Property
@@ -1645,7 +1642,7 @@ PubMedIdField ::: object {
   metadata: CatalogMetadata
   versioning: SchemaArtifactVersioning
   fieldSpec: PubMedIdFieldSpec
-  label: Label
+  prompt: Prompt
   helpText?: HelpText
   recommendedKey?: EmbeddedArtifactKey
   recommendedProperty?: Property
@@ -1659,7 +1656,7 @@ RridField ::: object {
   metadata: CatalogMetadata
   versioning: SchemaArtifactVersioning
   fieldSpec: RridFieldSpec
-  label: Label
+  prompt: Prompt
   helpText?: HelpText
   recommendedKey?: EmbeddedArtifactKey
   recommendedProperty?: Property
@@ -1673,7 +1670,7 @@ NihGrantIdField ::: object {
   metadata: CatalogMetadata
   versioning: SchemaArtifactVersioning
   fieldSpec: NihGrantIdFieldSpec
-  label: Label
+  prompt: Prompt
   helpText?: HelpText
   recommendedKey?: EmbeddedArtifactKey
   recommendedProperty?: Property
@@ -1687,7 +1684,7 @@ LanguageField ::: object {
   metadata: CatalogMetadata
   versioning: SchemaArtifactVersioning
   fieldSpec: LanguageFieldSpec
-  label: Label
+  prompt: Prompt
   helpText?: HelpText
   recommendedKey?: EmbeddedArtifactKey
   recommendedProperty?: Property
@@ -1701,7 +1698,7 @@ AttributeValueField ::: object {
   metadata: CatalogMetadata
   versioning: SchemaArtifactVersioning
   fieldSpec: AttributeValueFieldSpec
-  label: Label
+  prompt: Prompt
   helpText?: HelpText
   recommendedKey?: EmbeddedArtifactKey
   recommendedProperty?: Property
@@ -1715,7 +1712,7 @@ AttributeValueField ::: object {
 
 Most embedded-field productions follow the same eight-property template
 — `kind`, `key`, `artifactRef`, `valueRequirement?`, `cardinality?`,
-`visibility?`, `defaultValue?`, `labelOverride?`, `property?` — with
+`visibility?`, `defaultValue?`, `promptOverride?`, `property?` — with
 the per-family typing applied at `artifactRef` and `defaultValue`.
 Four families deviate from this template; the deviations are listed
 here so an implementer can scan them in one place rather than spotting
@@ -1759,7 +1756,7 @@ EmbeddedTextField ::: object {
   cardinality?: Cardinality
   visibility?: Visibility
   defaultValue?: TextValue
-  labelOverride?: LabelOverride
+  promptOverride?: PromptOverride
   helpTextOverride?: HelpTextOverride
   property?: Property
 }
@@ -1772,7 +1769,7 @@ EmbeddedIntegerNumberField ::: object {
   cardinality?: Cardinality
   visibility?: Visibility
   defaultValue?: IntegerNumberValue
-  labelOverride?: LabelOverride
+  promptOverride?: PromptOverride
   helpTextOverride?: HelpTextOverride
   property?: Property
 }
@@ -1785,7 +1782,7 @@ EmbeddedRealNumberField ::: object {
   cardinality?: Cardinality
   visibility?: Visibility
   defaultValue?: RealNumberValue
-  labelOverride?: LabelOverride
+  promptOverride?: PromptOverride
   helpTextOverride?: HelpTextOverride
   property?: Property
 }
@@ -1797,7 +1794,7 @@ EmbeddedBooleanField ::: object {
   valueRequirement?: ValueRequirement
   visibility?: Visibility
   defaultValue?: BooleanValue
-  labelOverride?: LabelOverride
+  promptOverride?: PromptOverride
   helpTextOverride?: HelpTextOverride
   property?: Property
 }
@@ -1812,7 +1809,7 @@ EmbeddedDateField ::: object {
   cardinality?: Cardinality
   visibility?: Visibility
   defaultValue?: DateValue
-  labelOverride?: LabelOverride
+  promptOverride?: PromptOverride
   helpTextOverride?: HelpTextOverride
   property?: Property
 }
@@ -1825,7 +1822,7 @@ EmbeddedTimeField ::: object {
   cardinality?: Cardinality
   visibility?: Visibility
   defaultValue?: TimeValue
-  labelOverride?: LabelOverride
+  promptOverride?: PromptOverride
   helpTextOverride?: HelpTextOverride
   property?: Property
 }
@@ -1838,7 +1835,7 @@ EmbeddedDateTimeField ::: object {
   cardinality?: Cardinality
   visibility?: Visibility
   defaultValue?: DateTimeValue
-  labelOverride?: LabelOverride
+  promptOverride?: PromptOverride
   helpTextOverride?: HelpTextOverride
   property?: Property
 }
@@ -1851,7 +1848,7 @@ EmbeddedControlledTermField ::: object {
   cardinality?: Cardinality
   visibility?: Visibility
   defaultValue?: ControlledTermValue
-  labelOverride?: LabelOverride
+  promptOverride?: PromptOverride
   helpTextOverride?: HelpTextOverride
   property?: Property
 }
@@ -1863,7 +1860,7 @@ EmbeddedSingleValuedEnumField ::: object {
   valueRequirement?: ValueRequirement
   visibility?: Visibility
   defaultValue?: EnumValue
-  labelOverride?: LabelOverride
+  promptOverride?: PromptOverride
   helpTextOverride?: HelpTextOverride
   property?: Property
 }
@@ -1878,7 +1875,7 @@ EmbeddedMultiValuedEnumField ::: object {
   cardinality?: Cardinality
   visibility?: Visibility
   defaultValue?: array<EnumValue>
-  labelOverride?: LabelOverride
+  promptOverride?: PromptOverride
   helpTextOverride?: HelpTextOverride
   property?: Property
 }
@@ -1894,7 +1891,7 @@ EmbeddedLinkField ::: object {
   cardinality?: Cardinality
   visibility?: Visibility
   defaultValue?: LinkValue
-  labelOverride?: LabelOverride
+  promptOverride?: PromptOverride
   helpTextOverride?: HelpTextOverride
   property?: Property
 }
@@ -1907,7 +1904,7 @@ EmbeddedEmailField ::: object {
   cardinality?: Cardinality
   visibility?: Visibility
   defaultValue?: EmailValue
-  labelOverride?: LabelOverride
+  promptOverride?: PromptOverride
   helpTextOverride?: HelpTextOverride
   property?: Property
 }
@@ -1920,7 +1917,7 @@ EmbeddedPhoneNumberField ::: object {
   cardinality?: Cardinality
   visibility?: Visibility
   defaultValue?: PhoneNumberValue
-  labelOverride?: LabelOverride
+  promptOverride?: PromptOverride
   helpTextOverride?: HelpTextOverride
   property?: Property
 }
@@ -1933,7 +1930,7 @@ EmbeddedOrcidField ::: object {
   cardinality?: Cardinality
   visibility?: Visibility
   defaultValue?: OrcidValue
-  labelOverride?: LabelOverride
+  promptOverride?: PromptOverride
   helpTextOverride?: HelpTextOverride
   property?: Property
 }
@@ -1946,7 +1943,7 @@ EmbeddedRorField ::: object {
   cardinality?: Cardinality
   visibility?: Visibility
   defaultValue?: RorValue
-  labelOverride?: LabelOverride
+  promptOverride?: PromptOverride
   helpTextOverride?: HelpTextOverride
   property?: Property
 }
@@ -1959,7 +1956,7 @@ EmbeddedDoiField ::: object {
   cardinality?: Cardinality
   visibility?: Visibility
   defaultValue?: DoiValue
-  labelOverride?: LabelOverride
+  promptOverride?: PromptOverride
   helpTextOverride?: HelpTextOverride
   property?: Property
 }
@@ -1972,7 +1969,7 @@ EmbeddedPubMedIdField ::: object {
   cardinality?: Cardinality
   visibility?: Visibility
   defaultValue?: PubMedIdValue
-  labelOverride?: LabelOverride
+  promptOverride?: PromptOverride
   helpTextOverride?: HelpTextOverride
   property?: Property
 }
@@ -1985,7 +1982,7 @@ EmbeddedRridField ::: object {
   cardinality?: Cardinality
   visibility?: Visibility
   defaultValue?: RridValue
-  labelOverride?: LabelOverride
+  promptOverride?: PromptOverride
   helpTextOverride?: HelpTextOverride
   property?: Property
 }
@@ -1998,7 +1995,7 @@ EmbeddedNihGrantIdField ::: object {
   cardinality?: Cardinality
   visibility?: Visibility
   defaultValue?: NihGrantIdValue
-  labelOverride?: LabelOverride
+  promptOverride?: PromptOverride
   helpTextOverride?: HelpTextOverride
   property?: Property
 }
@@ -2011,7 +2008,7 @@ EmbeddedLanguageField ::: object {
   cardinality?: Cardinality
   visibility?: Visibility
   defaultValue?: LanguageValue
-  labelOverride?: LabelOverride
+  promptOverride?: PromptOverride
   helpTextOverride?: HelpTextOverride
   property?: Property
 }
@@ -2023,7 +2020,7 @@ EmbeddedAttributeValueField ::: object {
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
-  labelOverride?: LabelOverride
+  promptOverride?: PromptOverride
   helpTextOverride?: HelpTextOverride
   property?: Property
 }
@@ -2036,7 +2033,7 @@ EmbeddedTemplate ::: object {
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
-  labelOverride?: LabelOverride
+  promptOverride?: PromptOverride
   property?: Property
 }
 
@@ -2152,6 +2149,8 @@ TemplateRenderingHint ::: object {
 HelpDisplayMode ::: "inline" | "tooltip" | "both" | "none"
 
 Title ::: MultilingualString
+
+Prompt ::: MultilingualString
 
 Header ::: MultilingualString
 Footer ::: MultilingualString
@@ -2269,7 +2268,7 @@ Conventions:
 ### 14.2 Field artifacts
 
 Every concrete `Field` production has the same six-component shape:
-`(<Family>FieldId, ModelVersion, CatalogMetadata, SchemaArtifactVersioning, <Family>FieldSpec, Label)`,
+`(<Family>FieldId, ModelVersion, CatalogMetadata, SchemaArtifactVersioning, <Family>FieldSpec, Prompt)`,
 with an optional `HelpText` slot and two optional advisory slots,
 `RecommendedKey` and `RecommendedProperty`. For all of `TextField`,
 `IntegerNumberField`, `RealNumberField`, `BooleanField`, `DateField`,
@@ -2284,7 +2283,7 @@ with an optional `HelpText` slot and two optional advisory slots,
 2. `CatalogMetadata` → `metadata`
 3. `SchemaArtifactVersioning` → `versioning`
 4. `<Family>FieldSpec` → `fieldSpec`
-5. `Label` → `label`
+5. `Prompt` → `prompt`
 6. `[HelpText]` → `helpText?`
 7. `[RecommendedKey]` → `recommendedKey?`
 8. `[RecommendedProperty]` → `recommendedProperty?`
@@ -2300,7 +2299,7 @@ with the per-family typed-id and typed-default-value slots:
 3. `[Cardinality]` → `cardinality?` (omitted on `EmbeddedBooleanField` and `EmbeddedSingleValuedEnumField`)
 4. `[Visibility]` → `visibility?`
 5. `[<Family>Value]` → `defaultValue?` (omitted on `EmbeddedAttributeValueField`; on `EmbeddedMultiValuedEnumField` the slot is `EnumValue*` → `defaultValue?: array<EnumValue>`)
-6. `[LabelOverride]` → `labelOverride?`
+6. `[PromptOverride]` → `promptOverride?`
 7. `[HelpTextOverride]` → `helpTextOverride?`
 8. `[Property]` → `property?`
 
@@ -2314,7 +2313,7 @@ canonical ordering common to the family.)
 2. `[ValueRequirement]` → `valueRequirement?`
 3. `[Cardinality]` → `cardinality?`
 4. `[Visibility]` → `visibility?`
-5. `[LabelOverride]` → `labelOverride?`
+5. `[PromptOverride]` → `promptOverride?`
 6. `[Property]` → `property?`
 
 **`EmbeddedPresentationComponent`** (`embedded_presentation_component`):
@@ -2364,10 +2363,6 @@ inside `metadata`.
 **`Cardinality`** (`cardinality`):
 0. `MinCardinality` → `min`
 1. `[MaxCardinality]` → `max?`
-
-**`LabelOverride`** (`label_override`):
-0. `Label` → `label`
-1. `AlternativeLabel*` → `altLabels`
 
 **`Property`** (`property`):
 0. `PropertyIri` → `iri`
@@ -2718,7 +2713,7 @@ The single-component wrapper productions enumerated in §1.6 — every
 `MinCardinality`, `MaxCardinality`, `MinLength`, `MaxLength`,
 `DecimalPlaces`, `MaxTraversalDepth`, the typed external-authority
 IRIs, `Name`, `Description`, `PreferredLabel`, `AlternativeLabel`,
-`Label`, `PropertyLabel`, `OntologyName`, `OntologyAcronym`,
+`Label`, `Prompt`, `PromptOverride`, `PropertyLabel`, `OntologyName`, `OntologyAcronym`,
 `OntologyIri`, `RootTermIri`, `RootTermLabel`, `ValueSetIdentifier`,
 `ValueSetName`, `ValueSetIri`, `Notation`, `Identifier`,
 `AttributeName`, `EmbeddedArtifactKey`, `ValidationRegex`, `Token`,

@@ -79,15 +79,12 @@
         "max": 1
       },
       "visibility": "visible",
-      "labelOverride": {
-        "label": [
-          {
-            "value": "Free-text comment",
-            "lang": "en"
-          }
-        ],
-        "altLabels": []
-      },
+      "promptOverride": [
+        {
+          "value": "Free-text comment",
+          "lang": "en"
+        }
+      ],
       "property": {
         "iri": "https://schema.org/comment"
       }

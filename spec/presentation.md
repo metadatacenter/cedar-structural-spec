@@ -39,7 +39,7 @@ An `EmbeddedPresentationComponent` carries:
 - `PresentationComponentId` — the `artifactRef` to the reusable `PresentationComponent` being embedded.
 - optional `Visibility` — the rendering visibility of the embedded component.
 
-It does **not** carry a value requirement, cardinality, default value, label override, or semantic property IRI: the component contributes no instance data and exists purely to contribute presentational structure.
+It does **not** carry a value requirement, cardinality, default value, prompt override, or semantic property IRI: the component contributes no instance data and exists purely to contribute presentational structure.
 
 ## Instance Semantics
 

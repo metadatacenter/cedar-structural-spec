@@ -21,7 +21,7 @@
       "iri": "https://www.ncbi.nlm.nih.gov/pubmed/0"
     }
   },
-  "label": [
+  "prompt": [
     {
       "value": "Test",
       "lang": "en"

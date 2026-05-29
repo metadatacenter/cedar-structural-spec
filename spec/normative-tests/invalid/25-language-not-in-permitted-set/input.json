@@ -20,9 +20,13 @@
       "kind": "LanguageValue",
       "value": "de"
     },
-    "permittedLanguages": ["en", "es", "fr"]
+    "permittedLanguages": [
+      "en",
+      "es",
+      "fr"
+    ]
   },
-  "label": [
+  "prompt": [
     {
       "value": "Primary language",
       "lang": "en"

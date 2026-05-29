@@ -17,7 +17,7 @@
   "fieldSpec": {
     "kind": "AttributeValueFieldSpec"
   },
-  "label": [
+  "prompt": [
     {
       "value": "Test",
       "lang": "en"

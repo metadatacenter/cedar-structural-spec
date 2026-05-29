@@ -21,7 +21,7 @@
       "iri": "https://scicrunch.org/resolver/RRID:AB_0000000"
     }
   },
-  "label": [
+  "prompt": [
     {
       "value": "Test",
       "lang": "en"

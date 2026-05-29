@@ -131,7 +131,7 @@ Within the projection itself, CEDAR-side identity is preserved: two CEDAR `Value
 The following CEDAR information is **not** carried by the projection:
 
 - the `kind` discriminator of each `Value` variant — it is not preserved as an RDF triple. Variants whose RDF terms coincide (for example, `EmailValue` and `PhoneNumberValue` both projecting to `xsd:string` literals) cannot be distinguished from RDF alone,
-- presentation hints, label overrides, visibility, and other embedding-level configuration carried by `EmbeddedField` properties — the projection covers `Value` content only,
+- presentation hints, prompt overrides, visibility, and other embedding-level configuration carried by `EmbeddedField` properties — the projection covers `Value` content only,
 - field-spec metadata such as units, validation regexes, or rendering hints — these are properties of the schema, not of the value,
 - **default values** at either layer (`XxxFieldSpec.defaultValue` and `EmbeddedXxxField.defaultValue`) — defaults are UI/UX initialisation only and never appear in `TemplateInstance` artifacts (see [`grammar.md` §Defaults](grammar.md#defaults) and [`instances.md`](instances.md)). The projection sees only the values an instance actually carries; defaults that were accepted are projected as the chosen value (indistinguishable from a user-typed identical value), and defaults that were not accepted are simply absent.
 

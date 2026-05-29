@@ -84,7 +84,7 @@ with no `"kind": "..."` literal property. These are the
 never appear as alternatives in any `discriminator: kind` union, and
 therefore never carry `kind` on the wire (per the kind rule,
 [`wire-grammar.md`](wire-grammar.md) §1.5). Examples: `Cardinality`,
-`Property`, `LabelOverride`, `LifecycleMetadata`,
+`Property`, `LifecycleMetadata`,
 `SchemaArtifactVersioning`, `Annotation`, `Unit`, `OntologyReference`,
 `OntologyDisplayHint`, `ControlledTermClass`, `PermissibleValue`,
 `Meaning`.
@@ -755,7 +755,7 @@ The override wins per the spec's two-layer precedence rule
 | Reusable artifact slot                       | Embedding-site override slot                  |
 |---|---|
 | `Field.fieldSpec.defaultValue`               | `EmbeddedXxxField.defaultValue`               |
-| `Field.label` / `Field.metadata.altLabels`   | `EmbeddedXxxField.labelOverride.label` / `altLabels` |
+| `Field.prompt`                               | `EmbeddedXxxField.promptOverride`             |
 | `Field.helpText`                             | `EmbeddedXxxField.helpTextOverride`           |
 
 **Binding guidance.** Bindings SHOULD expose a small convenience
@@ -790,7 +790,7 @@ def resolved_help_text(
     return embedded.help_text_override or field.help_text
 ```
 
-The same pattern applies to `defaultValue` and `labelOverride.label`,
+The same pattern applies to `defaultValue` and `promptOverride`,
 each with its own accessor. Replace, not merge: the override
 *replaces* the canonical value at the embedding site; partial
 localization fallback (e.g., one language overridden, others falling
@@ -841,7 +841,7 @@ class TextField(BaseModel):
     metadata: CatalogMetadata
     versioning: SchemaArtifactVersioning
     field_spec: TextFieldSpec = Field(alias="fieldSpec")
-    label: MultilingualString
+    prompt: MultilingualString
 ```
 
 `model_version` is a top-level field on every concrete artifact class
@@ -936,7 +936,7 @@ High-level structure (the `src/` tree mirrors the grammar layering):
 - `fields.ts` — `Field` family.
 - `embedded/` — `EmbeddedField`, `EmbeddedTemplate`,
   `EmbeddedPresentationComponent`, plus `Cardinality`, `Property`,
-  `LabelOverride`, `Visibility`, `ValueRequirement`.
+  `PromptOverride`, `Visibility`, `ValueRequirement`.
 - `presentation/` — `PresentationComponent` family.
 - `instances/` — `TemplateInstance`, `FieldValue`,
   `NestedTemplateInstance`.

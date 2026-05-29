@@ -21,7 +21,7 @@
       "iri": "https://doi.org/10.0000/example"
     }
   },
-  "label": [
+  "prompt": [
     {
       "value": "Test",
       "lang": "en"

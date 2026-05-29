@@ -26,13 +26,13 @@
           "lang": "en"
         },
         {
-          "value": "p. ej. Juana Pérez",
+          "value": "p. ej. Juana P\u00e9rez",
           "lang": "es"
         }
       ]
     }
   },
-  "label": [
+  "prompt": [
     {
       "value": "Full name",
       "lang": "en"

@@ -514,15 +514,11 @@ classes:
         description: >-
           Whether the embedded artifact is shown in rendered interfaces.
           Defaults to Visible when absent.
-      label_override:
+      prompt_override:
         range: string
         description: >-
-          Template-specific label that overrides the referenced artifact's
-          default label at this embedding site.
-      alternative_labels:
-        range: string
-        multivalued: true
-        description: Additional alternative labels for this embedding site.
+          Template-specific prompt that overrides the referenced artifact's
+          default prompt at this embedding site.
 
   EmbeddedField:
     is_a: EmbeddedArtifact

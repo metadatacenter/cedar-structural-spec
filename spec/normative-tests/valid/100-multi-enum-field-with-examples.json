@@ -19,15 +19,30 @@
     "permissibleValues": [
       {
         "value": "fever",
-        "label": [{ "value": "Fever", "lang": "en" }]
+        "label": [
+          {
+            "value": "Fever",
+            "lang": "en"
+          }
+        ]
       },
       {
         "value": "cough",
-        "label": [{ "value": "Cough", "lang": "en" }]
+        "label": [
+          {
+            "value": "Cough",
+            "lang": "en"
+          }
+        ]
       },
       {
         "value": "fatigue",
-        "label": [{ "value": "Fatigue", "lang": "en" }]
+        "label": [
+          {
+            "value": "Fatigue",
+            "lang": "en"
+          }
+        ]
       }
     ],
     "examples": [
@@ -41,7 +56,7 @@
       }
     ]
   },
-  "label": [
+  "prompt": [
     {
       "value": "Symptoms",
       "lang": "en"

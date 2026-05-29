@@ -19,7 +19,7 @@
   "fieldSpec": {
     "kind": "TextFieldSpec"
   },
-  "label": [
+  "prompt": [
     {
       "value": "Note",
       "lang": "en"

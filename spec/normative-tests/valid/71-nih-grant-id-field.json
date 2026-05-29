@@ -21,7 +21,7 @@
       "iri": "https://reporter.nih.gov/project/0000000"
     }
   },
-  "label": [
+  "prompt": [
     {
       "value": "Test",
       "lang": "en"

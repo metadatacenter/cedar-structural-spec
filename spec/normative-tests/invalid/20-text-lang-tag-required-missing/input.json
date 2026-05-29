@@ -22,7 +22,7 @@
     },
     "langTagRequirement": "langTagRequired"
   },
-  "label": [
+  "prompt": [
     {
       "value": "Title",
       "lang": "en"

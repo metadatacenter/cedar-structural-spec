@@ -16,12 +16,22 @@
   },
   "fieldSpec": {
     "kind": "LanguageFieldSpec",
-    "permittedLanguages": ["en", "es", "fr"],
+    "permittedLanguages": [
+      "en",
+      "es",
+      "fr"
+    ],
     "examples": [
-      { "kind": "LanguageValue", "value": "de" }
+      {
+        "kind": "LanguageValue",
+        "value": "de"
+      }
     ]
   },
-  "label": [
-    { "value": "Primary language", "lang": "en" }
+  "prompt": [
+    {
+      "value": "Primary language",
+      "lang": "en"
+    }
   ]
 }

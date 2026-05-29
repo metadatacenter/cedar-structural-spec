@@ -21,7 +21,7 @@
       "iri": "https://ror.org/00000000a"
     }
   },
-  "label": [
+  "prompt": [
     {
       "value": "Test",
       "lang": "en"

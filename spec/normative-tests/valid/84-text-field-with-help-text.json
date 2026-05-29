@@ -19,7 +19,7 @@
     "minLength": 0,
     "maxLength": 1000
   },
-  "label": [
+  "prompt": [
     {
       "value": "Patient comment",
       "lang": "en"
@@ -31,7 +31,7 @@
       "lang": "en"
     },
     {
-      "value": "Geben Sie zusätzliche Beobachtungen ein, die nicht durch strukturierte Felder erfasst werden.",
+      "value": "Geben Sie zus\u00e4tzliche Beobachtungen ein, die nicht durch strukturierte Felder erfasst werden.",
       "lang": "de"
     }
   ]

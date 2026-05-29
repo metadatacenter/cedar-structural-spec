@@ -18,7 +18,7 @@ The CEDAR Structural Model (`spec/grammar.md`) is the authoritative, format-inde
 
 **Templates and fields are separate reusable artifacts.** In the Structural Model, a `Template` does not contain `Field` objects directly — it contains `EmbeddedField` references that point to separately-defined `Field` artifacts. When encoding, information from both the embedding (`EmbeddedField`) and the referenced definition (`Field`) must be combined. Most field schema content (value shape, value constraints, UI hints) ends up inside the template's `"properties"` object, keyed by the embedding's key identifier.
 
-**Embedded artifact information is distributed across four top-level keys.** For each field or nested template in a template, there is no single output key that corresponds to it. Instead its information is spread across `"properties"` (the field schema), `"required"` (whether it is mandatory), `"_ui"` (display order and label overrides), and `"@context"` (the property IRI mapping for JSON-LD). Understanding this distribution is essential to reading the encoding functions correctly.
+**Embedded artifact information is distributed across four top-level keys.** For each field or nested template in a template, there is no single output key that corresponds to it. Instead its information is spread across `"properties"` (the field schema), `"required"` (whether it is mandatory), `"_ui"` (display order and prompt overrides), and `"@context"` (the property IRI mapping for JSON-LD). Understanding this distribution is essential to reading the encoding functions correctly.
 
 **The field object carries both schema structure and rendering hints.** Each field's entry inside `"properties"` is itself a JSON object that combines JSON Schema structure (what type of value the field holds, expressed via `"properties"`, `"required"`, `"additionalProperties"`) with CTM-specific keys (`"_valueConstraints"` for validation rules such as required/optional, numeric type, or controlled term sources; `"_ui"` for rendering instructions such as input type and visibility). These are merged into a single flat field object.
 
@@ -389,7 +389,7 @@ Both fields are single-valued ([`is_multi`](#2-conventions) = false), so `encode
 
 ### `encode_artifact_metadata(A: Artifact) → Object`
 
-CTM 1.6.0 artifacts carry both human-readable metadata and (for schema artifacts) versioning information at the top level of their JSON object. The Structural Model factors these concerns differently: `CatalogMetadata` carries descriptive properties and lifecycle, `SchemaArtifactVersioning` is a parallel top-level slot on schema artifacts, and `Label`/`Title` are rendered-name slots that live as top-level slots on the artifact itself (`Field.label`, `Template.title`, optional `TemplateInstance.label`).
+CTM 1.6.0 artifacts carry both human-readable metadata and (for schema artifacts) versioning information at the top level of their JSON object. The Structural Model factors these concerns differently: `CatalogMetadata` carries descriptive properties and lifecycle, `SchemaArtifactVersioning` is a parallel top-level slot on schema artifacts, and `Prompt`/`Title`/`Label` are rendered-name slots that live as top-level slots on the artifact itself (`Field.prompt`, `Template.title`, optional `TemplateInstance.label`).
 
 The CTM 1.6.0 encoder flattens all of these into a single flat property set on the artifact's JSON object:
 
@@ -403,7 +403,7 @@ merge(
 
 Where `rendered_name_of(A)` selects the artifact's rendered display name according to the artifact kind:
 
-- For a `Field`: `A.label` (always present).
+- For a `Field`: `A.prompt` (always present).
 - For a `Template`: `A.title` (always present).
 - For a `TemplateInstance`: `A.label` if present, otherwise `A.catalog_metadata.preferred_label` if present, otherwise the artifact `id` slug.
 - For a `PresentationComponent`: `A.catalog_metadata.preferred_label` if present, otherwise the artifact `id` slug.
@@ -416,7 +416,7 @@ Where `rendered_name_of(A)` selects the artifact's rendered display name accordi
 
 Encodes the human-readable identity of an artifact. The `schema:name` and `schema:description` keys are always written; `schema:identifier` and `rdfs:label` appear only when set in the Structural Model.
 
-CTM 1.6.0 requires a single-string `schema:name`. The Structural Model carries multiple candidate sources for the artifact's display name (the rendered slot `Label`/`Title` on artifacts that have one, plus the optional catalog slot `CatalogMetadata.preferred_label`). The `rendered` parameter is the rendered name chosen for this artifact by `encode_artifact_metadata`'s `rendered_name_of` rule. The encoder flattens it to a single string by selecting the `en` localization if present, else the first localization entry. The same flattened string is also written to `rdfs:label` for round-trip stability.
+CTM 1.6.0 requires a single-string `schema:name`. The Structural Model carries multiple candidate sources for the artifact's display name (the rendered slot `Prompt`/`Title`/`Label` on artifacts that have one, plus the optional catalog slot `CatalogMetadata.preferred_label`). The `rendered` parameter is the rendered name chosen for this artifact by `encode_artifact_metadata`'s `rendered_name_of` rule. The encoder flattens it to a single string by selecting the `en` localization if present, else the first localization entry. The same flattened string is also written to `rdfs:label` for round-trip stability.
 
 Returns a JSON object with the following keys:
 
@@ -429,7 +429,7 @@ Returns a JSON object with the following keys:
 
 `AlternativeLabel` values on `CatalogMetadata` have no direct CTM 1.6.0 equivalent and are omitted on encode.
 
-**Reverse direction (CTM 1.6.0 import).** When importing a CTM 1.6.0 document into the Structural Model, the CTM 1.6.0 `schema:name` is mapped to the artifact's rendered slot — `label` for a `Field` or `TemplateInstance`, `title` for a `Template`. For a `PresentationComponent` (which has no rendered slot), `schema:name` is mapped to `CatalogMetadata.preferred_label`. If the legacy document carries a non-empty `rdfs:label` distinct from `schema:name`, the importer maps `rdfs:label` to `CatalogMetadata.preferred_label` so that the registry display name and the rendered display name can diverge after import; otherwise `preferred_label` is left absent.
+**Reverse direction (CTM 1.6.0 import).** When importing a CTM 1.6.0 document into the Structural Model, the CTM 1.6.0 `schema:name` is mapped to the artifact's rendered slot — `prompt` for a `Field`, `label` for a `TemplateInstance`, `title` for a `Template`. For a `PresentationComponent` (which has no rendered slot), `schema:name` is mapped to `CatalogMetadata.preferred_label`. If the legacy document carries a non-empty `rdfs:label` distinct from `schema:name`, the importer maps `rdfs:label` to `CatalogMetadata.preferred_label` so that the registry display name and the rendered display name can diverge after import; otherwise `preferred_label` is left absent.
 
 ---
 
@@ -600,16 +600,16 @@ let required_embs = [ E in T.embedded_artifacts
 
 ### `encode_template_ui(T: Template) → Object`
 
-Encodes the `_ui` object for the template. The `order` entry lists all embedded artifact keys in their sequence order, controlling display order in rendering tools. When any embedding carries a label override, a `propertyLabels` map is also included. `Header` and `Footer` on the template are encoded as `"header"` and `"footer"` string keys when present.
+Encodes the `_ui` object for the template. The `order` entry lists all embedded artifact keys in their sequence order, controlling display order in rendering tools. When any embedding carries a prompt override, a `propertyLabels` map is also included (the legacy CTM 1.6.0 key name is preserved on the wire). `Header` and `Footer` on the template are encoded as `"header"` and `"footer"` string keys when present.
 
 ```javascript
-let label_embs = [ E in T.embedded_artifacts | E.label_override is present ]
+let prompt_embs = [ E in T.embedded_artifacts | E.prompt_override is present ]
 
 merge(
   { "order": [ key(E) for each E in T.embedded_artifacts ] },
-  if label_embs is non-empty:
+  if prompt_embs is non-empty:
   {
-    "propertyLabels": { key(E): E.label_override.label.unicode_string for each E in label_embs }
+    "propertyLabels": { key(E): flatten_to_string(E.prompt_override) for each E in prompt_embs }
   },
   if T.header is present: { "header": T.header.unicode_string },
   if T.footer is present: { "footer": T.footer.unicode_string }

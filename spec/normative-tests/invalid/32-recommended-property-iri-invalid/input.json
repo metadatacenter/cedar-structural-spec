@@ -17,7 +17,7 @@
   "fieldSpec": {
     "kind": "TextFieldSpec"
   },
-  "label": [
+  "prompt": [
     {
       "value": "What is the patient's date of birth?",
       "lang": "en"

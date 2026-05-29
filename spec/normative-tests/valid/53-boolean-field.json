@@ -22,7 +22,7 @@
     },
     "renderingHint": "checkbox"
   },
-  "label": [
+  "prompt": [
     {
       "value": "Test",
       "lang": "en"

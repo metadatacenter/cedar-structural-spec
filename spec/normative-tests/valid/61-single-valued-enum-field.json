@@ -68,7 +68,7 @@
     },
     "renderingHint": "dropdown"
   },
-  "label": [
+  "prompt": [
     {
       "value": "Test",
       "lang": "en"

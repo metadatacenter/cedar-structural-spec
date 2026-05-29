@@ -39,7 +39,7 @@
       }
     ]
   },
-  "label": [
+  "prompt": [
     {
       "value": "Age (years)",
       "lang": "en"

@@ -19,15 +19,30 @@
     "permissibleValues": [
       {
         "value": "female",
-        "label": [{ "value": "Female", "lang": "en" }]
+        "label": [
+          {
+            "value": "Female",
+            "lang": "en"
+          }
+        ]
       },
       {
         "value": "male",
-        "label": [{ "value": "Male", "lang": "en" }]
+        "label": [
+          {
+            "value": "Male",
+            "lang": "en"
+          }
+        ]
       },
       {
         "value": "intersex",
-        "label": [{ "value": "Intersex", "lang": "en" }]
+        "label": [
+          {
+            "value": "Intersex",
+            "lang": "en"
+          }
+        ]
       }
     ],
     "examples": [
@@ -41,7 +56,7 @@
       }
     ]
   },
-  "label": [
+  "prompt": [
     {
       "value": "Sex at birth",
       "lang": "en"

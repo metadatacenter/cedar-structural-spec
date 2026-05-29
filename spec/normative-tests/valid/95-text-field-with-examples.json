@@ -28,7 +28,7 @@
       }
     ]
   },
-  "label": [
+  "prompt": [
     {
       "value": "What is your ZIP code?",
       "lang": "en"

@@ -21,7 +21,7 @@
       "value": "default@example.org"
     }
   },
-  "label": [
+  "prompt": [
     {
       "value": "Test",
       "lang": "en"

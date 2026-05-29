@@ -55,7 +55,7 @@
       }
     ]
   },
-  "label": [
+  "prompt": [
     {
       "value": "Severity",
       "lang": "en"

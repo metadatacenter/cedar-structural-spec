@@ -23,7 +23,7 @@
     },
     "langTagRequirement": "langTagForbidden"
   },
-  "label": [
+  "prompt": [
     {
       "value": "Slug",
       "lang": "en"

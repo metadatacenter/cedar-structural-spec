@@ -26,7 +26,7 @@
       "timeFormat": "twelveHour"
     }
   },
-  "label": [
+  "prompt": [
     {
       "value": "Test",
       "lang": "en"
