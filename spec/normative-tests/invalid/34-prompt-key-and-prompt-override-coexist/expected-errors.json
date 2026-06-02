@@ -1,0 +1,8 @@
+[
+  {
+    "category": "structural",
+    "path": "/members/0/promptKey",
+    "production": "EmbeddedTextField",
+    "messageRegex": "MUST NOT|both|promptOverride|promptKey"
+  }
+]

@@ -1,0 +1,8 @@
+[
+  {
+    "category": "lexical",
+    "path": "/altPrompts/0/key",
+    "production": "PromptKey",
+    "messageRegex": "ASCII identifier|AsciiIdentifier|PromptKey|invalid"
+  }
+]

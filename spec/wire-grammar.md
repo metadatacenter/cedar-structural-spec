@@ -939,6 +939,23 @@ PropertyIri ::: Iri
 PropertyLabel ::: MultilingualString
 ```
 
+### 6.9 Alternative prompts
+
+```
+AlternativePrompt ::: object {
+  key: PromptKey
+  prompt: Prompt
+}
+  // key carries the PromptKey; prompt is the alternative's MultilingualString
+
+PromptKey ::: string
+  // pattern: [A-Za-z][A-Za-z0-9_-]*  (an AsciiIdentifier)
+```
+
+`AlternativePrompt` is a two-component object and therefore does **not** collapse on the wire (contrast `PromptOverride`, which is a single-component wrapper and collapses to a bare `MultilingualString` array). Its `prompt` component carries the same shape as `Field.prompt` — a `nonEmptyArray<LangString>` per `MultilingualString` — because an alternative wording is the same kind of thing as the preferred prompt, just keyed and curated; that is why the wire key is `prompt` rather than `label`. Its `key` component projects the `PromptKey` to the wire key `key`, mirroring how `EmbeddedArtifactKey` projects to `key` on every embedded artifact (both are stable local ASCII identifiers scoped to a parent construct).
+
+The `Field`-side slot `altPrompts?: array<AlternativePrompt>` carries the curated set. Like `altLabels?`, it SHOULD be omitted from the wire when empty (§1.7). The `EmbeddedField`-side slot `promptKey?: PromptKey` carries a bare string referencing one of the referenced field's `AlternativePrompt` keys; the closed-set membership and the mutual exclusion with `promptOverride?` are enforced at validation (see [Validation](validation.md)), not by the wire grammar.
+
 ---
 
 ## 7. Field Specs
@@ -1420,6 +1437,7 @@ TextField ::: object {
   fieldSpec: TextFieldSpec
   prompt: Prompt
   helpText?: HelpText
+  altPrompts?: array<AlternativePrompt>
   recommendedKey?: EmbeddedArtifactKey
   recommendedProperty?: Property
 }
@@ -1434,6 +1452,7 @@ IntegerNumberField ::: object {
   fieldSpec: IntegerNumberFieldSpec
   prompt: Prompt
   helpText?: HelpText
+  altPrompts?: array<AlternativePrompt>
   recommendedKey?: EmbeddedArtifactKey
   recommendedProperty?: Property
 }
@@ -1448,6 +1467,7 @@ RealNumberField ::: object {
   fieldSpec: RealNumberFieldSpec
   prompt: Prompt
   helpText?: HelpText
+  altPrompts?: array<AlternativePrompt>
   recommendedKey?: EmbeddedArtifactKey
   recommendedProperty?: Property
 }
@@ -1462,6 +1482,7 @@ BooleanField ::: object {
   fieldSpec: BooleanFieldSpec
   prompt: Prompt
   helpText?: HelpText
+  altPrompts?: array<AlternativePrompt>
   recommendedKey?: EmbeddedArtifactKey
   recommendedProperty?: Property
 }
@@ -1476,6 +1497,7 @@ DateField ::: object {
   fieldSpec: DateFieldSpec
   prompt: Prompt
   helpText?: HelpText
+  altPrompts?: array<AlternativePrompt>
   recommendedKey?: EmbeddedArtifactKey
   recommendedProperty?: Property
 }
@@ -1490,6 +1512,7 @@ TimeField ::: object {
   fieldSpec: TimeFieldSpec
   prompt: Prompt
   helpText?: HelpText
+  altPrompts?: array<AlternativePrompt>
   recommendedKey?: EmbeddedArtifactKey
   recommendedProperty?: Property
 }
@@ -1504,6 +1527,7 @@ DateTimeField ::: object {
   fieldSpec: DateTimeFieldSpec
   prompt: Prompt
   helpText?: HelpText
+  altPrompts?: array<AlternativePrompt>
   recommendedKey?: EmbeddedArtifactKey
   recommendedProperty?: Property
 }
@@ -1518,6 +1542,7 @@ ControlledTermField ::: object {
   fieldSpec: ControlledTermFieldSpec
   prompt: Prompt
   helpText?: HelpText
+  altPrompts?: array<AlternativePrompt>
   recommendedKey?: EmbeddedArtifactKey
   recommendedProperty?: Property
 }
@@ -1532,6 +1557,7 @@ SingleValuedEnumField ::: object {
   fieldSpec: SingleValuedEnumFieldSpec
   prompt: Prompt
   helpText?: HelpText
+  altPrompts?: array<AlternativePrompt>
   recommendedKey?: EmbeddedArtifactKey
   recommendedProperty?: Property
 }
@@ -1546,6 +1572,7 @@ MultiValuedEnumField ::: object {
   fieldSpec: MultiValuedEnumFieldSpec
   prompt: Prompt
   helpText?: HelpText
+  altPrompts?: array<AlternativePrompt>
   recommendedKey?: EmbeddedArtifactKey
   recommendedProperty?: Property
 }
@@ -1560,6 +1587,7 @@ LinkField ::: object {
   fieldSpec: LinkFieldSpec
   prompt: Prompt
   helpText?: HelpText
+  altPrompts?: array<AlternativePrompt>
   recommendedKey?: EmbeddedArtifactKey
   recommendedProperty?: Property
 }
@@ -1574,6 +1602,7 @@ EmailField ::: object {
   fieldSpec: EmailFieldSpec
   prompt: Prompt
   helpText?: HelpText
+  altPrompts?: array<AlternativePrompt>
   recommendedKey?: EmbeddedArtifactKey
   recommendedProperty?: Property
 }
@@ -1588,6 +1617,7 @@ PhoneNumberField ::: object {
   fieldSpec: PhoneNumberFieldSpec
   prompt: Prompt
   helpText?: HelpText
+  altPrompts?: array<AlternativePrompt>
   recommendedKey?: EmbeddedArtifactKey
   recommendedProperty?: Property
 }
@@ -1602,6 +1632,7 @@ OrcidField ::: object {
   fieldSpec: OrcidFieldSpec
   prompt: Prompt
   helpText?: HelpText
+  altPrompts?: array<AlternativePrompt>
   recommendedKey?: EmbeddedArtifactKey
   recommendedProperty?: Property
 }
@@ -1616,6 +1647,7 @@ RorField ::: object {
   fieldSpec: RorFieldSpec
   prompt: Prompt
   helpText?: HelpText
+  altPrompts?: array<AlternativePrompt>
   recommendedKey?: EmbeddedArtifactKey
   recommendedProperty?: Property
 }
@@ -1630,6 +1662,7 @@ DoiField ::: object {
   fieldSpec: DoiFieldSpec
   prompt: Prompt
   helpText?: HelpText
+  altPrompts?: array<AlternativePrompt>
   recommendedKey?: EmbeddedArtifactKey
   recommendedProperty?: Property
 }
@@ -1644,6 +1677,7 @@ PubMedIdField ::: object {
   fieldSpec: PubMedIdFieldSpec
   prompt: Prompt
   helpText?: HelpText
+  altPrompts?: array<AlternativePrompt>
   recommendedKey?: EmbeddedArtifactKey
   recommendedProperty?: Property
 }
@@ -1658,6 +1692,7 @@ RridField ::: object {
   fieldSpec: RridFieldSpec
   prompt: Prompt
   helpText?: HelpText
+  altPrompts?: array<AlternativePrompt>
   recommendedKey?: EmbeddedArtifactKey
   recommendedProperty?: Property
 }
@@ -1672,6 +1707,7 @@ NihGrantIdField ::: object {
   fieldSpec: NihGrantIdFieldSpec
   prompt: Prompt
   helpText?: HelpText
+  altPrompts?: array<AlternativePrompt>
   recommendedKey?: EmbeddedArtifactKey
   recommendedProperty?: Property
 }
@@ -1686,6 +1722,7 @@ LanguageField ::: object {
   fieldSpec: LanguageFieldSpec
   prompt: Prompt
   helpText?: HelpText
+  altPrompts?: array<AlternativePrompt>
   recommendedKey?: EmbeddedArtifactKey
   recommendedProperty?: Property
 }
@@ -1700,6 +1737,7 @@ AttributeValueField ::: object {
   fieldSpec: AttributeValueFieldSpec
   prompt: Prompt
   helpText?: HelpText
+  altPrompts?: array<AlternativePrompt>
   recommendedKey?: EmbeddedArtifactKey
   recommendedProperty?: Property
 }
@@ -1759,6 +1797,7 @@ EmbeddedTextField ::: object {
   promptOverride?: PromptOverride
   helpTextOverride?: HelpTextOverride
   property?: Property
+  promptKey?: PromptKey
 }
 
 EmbeddedIntegerNumberField ::: object {
@@ -1772,6 +1811,7 @@ EmbeddedIntegerNumberField ::: object {
   promptOverride?: PromptOverride
   helpTextOverride?: HelpTextOverride
   property?: Property
+  promptKey?: PromptKey
 }
 
 EmbeddedRealNumberField ::: object {
@@ -1785,6 +1825,7 @@ EmbeddedRealNumberField ::: object {
   promptOverride?: PromptOverride
   helpTextOverride?: HelpTextOverride
   property?: Property
+  promptKey?: PromptKey
 }
 
 EmbeddedBooleanField ::: object {
@@ -1797,6 +1838,7 @@ EmbeddedBooleanField ::: object {
   promptOverride?: PromptOverride
   helpTextOverride?: HelpTextOverride
   property?: Property
+  promptKey?: PromptKey
 }
   // boolean embeddings carry no cardinality slot per grammar.md
   // (booleans are inherently single-valued)
@@ -1812,6 +1854,7 @@ EmbeddedDateField ::: object {
   promptOverride?: PromptOverride
   helpTextOverride?: HelpTextOverride
   property?: Property
+  promptKey?: PromptKey
 }
 
 EmbeddedTimeField ::: object {
@@ -1825,6 +1868,7 @@ EmbeddedTimeField ::: object {
   promptOverride?: PromptOverride
   helpTextOverride?: HelpTextOverride
   property?: Property
+  promptKey?: PromptKey
 }
 
 EmbeddedDateTimeField ::: object {
@@ -1838,6 +1882,7 @@ EmbeddedDateTimeField ::: object {
   promptOverride?: PromptOverride
   helpTextOverride?: HelpTextOverride
   property?: Property
+  promptKey?: PromptKey
 }
 
 EmbeddedControlledTermField ::: object {
@@ -1851,6 +1896,7 @@ EmbeddedControlledTermField ::: object {
   promptOverride?: PromptOverride
   helpTextOverride?: HelpTextOverride
   property?: Property
+  promptKey?: PromptKey
 }
 
 EmbeddedSingleValuedEnumField ::: object {
@@ -1863,6 +1909,7 @@ EmbeddedSingleValuedEnumField ::: object {
   promptOverride?: PromptOverride
   helpTextOverride?: HelpTextOverride
   property?: Property
+  promptKey?: PromptKey
 }
   // single-valued enum embeddings carry no cardinality slot per
   // grammar.md (single-valued enum is implicit, parallel to boolean)
@@ -1878,6 +1925,7 @@ EmbeddedMultiValuedEnumField ::: object {
   promptOverride?: PromptOverride
   helpTextOverride?: HelpTextOverride
   property?: Property
+  promptKey?: PromptKey
 }
   // defaultValue is a (possibly empty) array of EnumValue entries;
   // each element is a tagged EnumValue per the kind rule (§1.5).
@@ -1894,6 +1942,7 @@ EmbeddedLinkField ::: object {
   promptOverride?: PromptOverride
   helpTextOverride?: HelpTextOverride
   property?: Property
+  promptKey?: PromptKey
 }
 
 EmbeddedEmailField ::: object {
@@ -1907,6 +1956,7 @@ EmbeddedEmailField ::: object {
   promptOverride?: PromptOverride
   helpTextOverride?: HelpTextOverride
   property?: Property
+  promptKey?: PromptKey
 }
 
 EmbeddedPhoneNumberField ::: object {
@@ -1920,6 +1970,7 @@ EmbeddedPhoneNumberField ::: object {
   promptOverride?: PromptOverride
   helpTextOverride?: HelpTextOverride
   property?: Property
+  promptKey?: PromptKey
 }
 
 EmbeddedOrcidField ::: object {
@@ -1933,6 +1984,7 @@ EmbeddedOrcidField ::: object {
   promptOverride?: PromptOverride
   helpTextOverride?: HelpTextOverride
   property?: Property
+  promptKey?: PromptKey
 }
 
 EmbeddedRorField ::: object {
@@ -1946,6 +1998,7 @@ EmbeddedRorField ::: object {
   promptOverride?: PromptOverride
   helpTextOverride?: HelpTextOverride
   property?: Property
+  promptKey?: PromptKey
 }
 
 EmbeddedDoiField ::: object {
@@ -1959,6 +2012,7 @@ EmbeddedDoiField ::: object {
   promptOverride?: PromptOverride
   helpTextOverride?: HelpTextOverride
   property?: Property
+  promptKey?: PromptKey
 }
 
 EmbeddedPubMedIdField ::: object {
@@ -1972,6 +2026,7 @@ EmbeddedPubMedIdField ::: object {
   promptOverride?: PromptOverride
   helpTextOverride?: HelpTextOverride
   property?: Property
+  promptKey?: PromptKey
 }
 
 EmbeddedRridField ::: object {
@@ -1985,6 +2040,7 @@ EmbeddedRridField ::: object {
   promptOverride?: PromptOverride
   helpTextOverride?: HelpTextOverride
   property?: Property
+  promptKey?: PromptKey
 }
 
 EmbeddedNihGrantIdField ::: object {
@@ -1998,6 +2054,7 @@ EmbeddedNihGrantIdField ::: object {
   promptOverride?: PromptOverride
   helpTextOverride?: HelpTextOverride
   property?: Property
+  promptKey?: PromptKey
 }
 
 EmbeddedLanguageField ::: object {
@@ -2011,6 +2068,7 @@ EmbeddedLanguageField ::: object {
   promptOverride?: PromptOverride
   helpTextOverride?: HelpTextOverride
   property?: Property
+  promptKey?: PromptKey
 }
 
 EmbeddedAttributeValueField ::: object {
@@ -2023,6 +2081,7 @@ EmbeddedAttributeValueField ::: object {
   promptOverride?: PromptOverride
   helpTextOverride?: HelpTextOverride
   property?: Property
+  promptKey?: PromptKey
 }
   // attribute-value embeddings carry no defaultValue per grammar.md
 
@@ -2269,8 +2328,9 @@ Conventions:
 
 Every concrete `Field` production has the same six-component shape:
 `(<Family>FieldId, ModelVersion, CatalogMetadata, SchemaArtifactVersioning, <Family>FieldSpec, Prompt)`,
-with an optional `HelpText` slot and two optional advisory slots,
-`RecommendedKey` and `RecommendedProperty`. For all of `TextField`,
+with an optional `HelpText` slot, an optional repeated `AlternativePrompt*`
+slot, and two optional advisory slots, `RecommendedKey` and
+`RecommendedProperty`. For all of `TextField`,
 `IntegerNumberField`, `RealNumberField`, `BooleanField`, `DateField`,
 `TimeField`, `DateTimeField`, `ControlledTermField`,
 `SingleValuedEnumField`, `MultiValuedEnumField`, `LinkField`,
@@ -2285,8 +2345,9 @@ with an optional `HelpText` slot and two optional advisory slots,
 4. `<Family>FieldSpec` → `fieldSpec`
 5. `Prompt` → `prompt`
 6. `[HelpText]` → `helpText?`
-7. `[RecommendedKey]` → `recommendedKey?`
-8. `[RecommendedProperty]` → `recommendedProperty?`
+7. `AlternativePrompt*` → `altPrompts?` (SHOULD-omitted when empty per §1.7)
+8. `[RecommendedKey]` → `recommendedKey?`
+9. `[RecommendedProperty]` → `recommendedProperty?`
 
 ### 14.3 Embedded artifacts
 
@@ -2302,6 +2363,7 @@ with the per-family typed-id and typed-default-value slots:
 6. `[PromptOverride]` → `promptOverride?`
 7. `[HelpTextOverride]` → `helpTextOverride?`
 8. `[Property]` → `property?`
+9. `[PromptKey]` → `promptKey?`
 
 (Component indices are renumbered to skip slots a particular family
 omits, per the per-family abstract production. The list above gives the
@@ -2367,6 +2429,13 @@ inside `metadata`.
 **`Property`** (`property`):
 0. `PropertyIri` → `iri`
 1. `[PropertyLabel]` → `label?`
+
+**`AlternativePrompt`** (`alternative_prompt`):
+0. `PromptKey` → `key`
+1. `MultilingualString` → `prompt`
+
+**`PromptKey`** (`prompt_key`):
+0. `AsciiIdentifier` → (scalar; encoded as a bare string, no wrapping object)
 
 ### 14.6 Multilingual strings
 
@@ -2720,7 +2789,7 @@ IRIs, `Name`, `Description`, `PreferredLabel`, `AlternativeLabel`,
 `Header`, `Footer`, `Version`, `ModelVersion`, `CreatedOn`,
 `CreatedBy`, `ModifiedOn`, `ModifiedBy`, `PreviousVersion`,
 `DerivedFrom`, `PropertyIri`, `HtmlContent`, `PermittedLanguages`,
-and `RecommendedKey` —
+`RecommendedKey`, and `PromptKey` —
 collapse to their inner primitive (or to a bare array, in the case of
 single-component sequence-bearing wrappers such as `PermittedLanguages`)
 on the wire and have no per-production property name.

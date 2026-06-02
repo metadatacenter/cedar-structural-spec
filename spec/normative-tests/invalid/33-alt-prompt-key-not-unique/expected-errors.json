@@ -1,0 +1,8 @@
+[
+  {
+    "category": "structural",
+    "path": "/altPrompts",
+    "production": "AlternativePrompt",
+    "messageRegex": "unique|PromptKey|duplicate"
+  }
+]

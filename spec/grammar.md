@@ -245,6 +245,15 @@ Prompt ::= prompt(
              MultilingualString
            )
 
+AlternativePrompt ::= alternative_prompt(
+                        PromptKey
+                        MultilingualString
+                      )
+
+PromptKey ::= prompt_key(
+                AsciiIdentifier
+              )
+
 Header ::= header(
              MultilingualString
            )
@@ -383,7 +392,7 @@ EmbeddedPresentationComponent ::= embedded_presentation_component(
 
 ## Concrete Field Artifacts
 
-Each concrete `Field` variant carries six components: a typed artifact identifier that permanently identifies the reusable field; a `ModelVersion` identifying the version of the CEDAR structural model the artifact conforms to; `CatalogMetadata` providing the descriptive, lifecycle, and annotation metadata used in catalog and registry contexts; `SchemaArtifactVersioning` providing the version, status, and lineage information common to all schema artifacts; a typed `FieldSpec` that specifies the value semantics and configuration for that field category; and a `Prompt` that carries the rendered question text shown to users at data-entry time. The identifier, `FieldSpec`, and `Prompt` are specific to each concrete variant; `ModelVersion`, `CatalogMetadata`, and `SchemaArtifactVersioning` are uniform across all fields. Each concrete `Field` MAY additionally carry an optional `HelpText` and two optional advisory slots, `RecommendedKey` and `RecommendedProperty`. The groupings below mirror the abstract `Field` hierarchy defined in Core Structure.
+Each concrete `Field` variant carries six components: a typed artifact identifier that permanently identifies the reusable field; a `ModelVersion` identifying the version of the CEDAR structural model the artifact conforms to; `CatalogMetadata` providing the descriptive, lifecycle, and annotation metadata used in catalog and registry contexts; `SchemaArtifactVersioning` providing the version, status, and lineage information common to all schema artifacts; a typed `FieldSpec` that specifies the value semantics and configuration for that field category; and a `Prompt` that carries the rendered question text shown to users at data-entry time. The identifier, `FieldSpec`, and `Prompt` are specific to each concrete variant; `ModelVersion`, `CatalogMetadata`, and `SchemaArtifactVersioning` are uniform across all fields. Each concrete `Field` MAY additionally carry an optional `HelpText`, an optional repeated `AlternativePrompt*` slot carrying a field-owner-curated set of alternative question wordings (see [Alternative Prompts](#alternative-prompts)), and two optional advisory slots, `RecommendedKey` and `RecommendedProperty`. The groupings below mirror the abstract `Field` hierarchy defined in Core Structure.
 
 `TextField`, `BooleanField`, and the two numeric field families (`IntegerNumberField` and `RealNumberField`) are the simple scalar field specs. Each carries the most basic value semantics — free text, `true` / `false`, exact integer values, and real-valued numbers respectively.
 
@@ -396,6 +405,7 @@ TextField ::= text_field(
                TextFieldSpec
                Prompt
                [HelpText]
+               AlternativePrompt*
                [RecommendedKey]
                [RecommendedProperty]
              )
@@ -408,6 +418,7 @@ BooleanField ::= boolean_field(
                   BooleanFieldSpec
                   Prompt
                   [HelpText]
+                  AlternativePrompt*
                   [RecommendedKey]
                   [RecommendedProperty]
                 )
@@ -424,6 +435,7 @@ IntegerNumberField ::= integer_number_field(
                          IntegerNumberFieldSpec
                          Prompt
                          [HelpText]
+                         AlternativePrompt*
                          [RecommendedKey]
                          [RecommendedProperty]
                        )
@@ -436,6 +448,7 @@ RealNumberField ::= real_number_field(
                       RealNumberFieldSpec
                       Prompt
                       [HelpText]
+                      AlternativePrompt*
                       [RecommendedKey]
                       [RecommendedProperty]
                     )
@@ -452,6 +465,7 @@ DateField ::= date_field(
                DateFieldSpec
                Prompt
                [HelpText]
+               AlternativePrompt*
                [RecommendedKey]
                [RecommendedProperty]
              )
@@ -464,6 +478,7 @@ TimeField ::= time_field(
                TimeFieldSpec
                Prompt
                [HelpText]
+               AlternativePrompt*
                [RecommendedKey]
                [RecommendedProperty]
              )
@@ -476,6 +491,7 @@ DateTimeField ::= date_time_field(
                    DateTimeFieldSpec
                    Prompt
                    [HelpText]
+                   AlternativePrompt*
                    [RecommendedKey]
                    [RecommendedProperty]
                  )
@@ -492,6 +508,7 @@ ControlledTermField ::= controlled_term_field(
                           ControlledTermFieldSpec
                           Prompt
                           [HelpText]
+                          AlternativePrompt*
                           [RecommendedKey]
                           [RecommendedProperty]
                         )
@@ -504,6 +521,7 @@ LinkField ::= link_field(
                LinkFieldSpec
                Prompt
                [HelpText]
+               AlternativePrompt*
                [RecommendedKey]
                [RecommendedProperty]
              )
@@ -520,6 +538,7 @@ SingleValuedEnumField ::= single_valued_enum_field(
                             SingleValuedEnumFieldSpec
                             Prompt
                             [HelpText]
+                            AlternativePrompt*
                             [RecommendedKey]
                             [RecommendedProperty]
                           )
@@ -532,6 +551,7 @@ MultiValuedEnumField ::= multi_valued_enum_field(
                            MultiValuedEnumFieldSpec
                            Prompt
                            [HelpText]
+                           AlternativePrompt*
                            [RecommendedKey]
                            [RecommendedProperty]
                          )
@@ -548,6 +568,7 @@ EmailField ::= email_field(
                 EmailFieldSpec
                 Prompt
                 [HelpText]
+                AlternativePrompt*
                 [RecommendedKey]
                 [RecommendedProperty]
               )
@@ -560,6 +581,7 @@ PhoneNumberField ::= phone_number_field(
                       PhoneNumberFieldSpec
                       Prompt
                       [HelpText]
+                      AlternativePrompt*
                       [RecommendedKey]
                       [RecommendedProperty]
                     )
@@ -576,6 +598,7 @@ OrcidField ::= orcid_field(
                 OrcidFieldSpec
                 Prompt
                 [HelpText]
+                AlternativePrompt*
                 [RecommendedKey]
                 [RecommendedProperty]
               )
@@ -588,6 +611,7 @@ RorField ::= ror_field(
               RorFieldSpec
               Prompt
               [HelpText]
+              AlternativePrompt*
               [RecommendedKey]
               [RecommendedProperty]
             )
@@ -600,6 +624,7 @@ DoiField ::= doi_field(
               DoiFieldSpec
               Prompt
               [HelpText]
+              AlternativePrompt*
               [RecommendedKey]
               [RecommendedProperty]
             )
@@ -612,6 +637,7 @@ PubMedIdField ::= pub_med_id_field(
                     PubMedIdFieldSpec
                     Prompt
                     [HelpText]
+                    AlternativePrompt*
                     [RecommendedKey]
                     [RecommendedProperty]
                   )
@@ -624,6 +650,7 @@ RridField ::= rrid_field(
                RridFieldSpec
                Prompt
                [HelpText]
+               AlternativePrompt*
                [RecommendedKey]
                [RecommendedProperty]
              )
@@ -636,6 +663,7 @@ NihGrantIdField ::= nih_grant_id_field(
                      NihGrantIdFieldSpec
                      Prompt
                      [HelpText]
+                     AlternativePrompt*
                      [RecommendedKey]
                      [RecommendedProperty]
                    )
@@ -654,6 +682,7 @@ LanguageField ::= language_field(
                     LanguageFieldSpec
                     Prompt
                     [HelpText]
+                    AlternativePrompt*
                     [RecommendedKey]
                     [RecommendedProperty]
                   )
@@ -670,6 +699,7 @@ AttributeValueField ::= attribute_value_field(
                           AttributeValueFieldSpec
                           Prompt
                           [HelpText]
+                          AlternativePrompt*
                           [RecommendedKey]
                           [RecommendedProperty]
                         )
@@ -709,7 +739,7 @@ The carried `Property` is subject to the same well-formedness rules as any other
 
 ## Concrete Embedded Fields
 
-Every concrete `EmbeddedField` variant follows the same structural pattern. Each carries: an `EmbeddedArtifactKey` uniquely identifying the embedding site within the containing `Template`; a typed field reference identifying the reusable `Field` being embedded; an optional `ValueRequirement` specifying whether a value is required, recommended, or optional; an optional `Cardinality` bounding the permitted number of values; an optional `Visibility` controlling whether the field is shown in rendered interfaces; an optional `defaultValue` providing an embedding-specific default whose type is the family-specific `Value` type (e.g. `TextValue` for `EmbeddedTextField`, `DateValue` for `EmbeddedDateField`); an optional `PromptOverride` allowing the template to override the field's prompt at this embedding site; and an optional `Property` associating a semantic property IRI with the embedding site. The only variation across concrete `EmbeddedField` variants is the typed field reference and the typed default value, both of which match the value family of the referenced field.
+Every concrete `EmbeddedField` variant follows the same structural pattern. Each carries: an `EmbeddedArtifactKey` uniquely identifying the embedding site within the containing `Template`; a typed field reference identifying the reusable `Field` being embedded; an optional `ValueRequirement` specifying whether a value is required, recommended, or optional; an optional `Cardinality` bounding the permitted number of values; an optional `Visibility` controlling whether the field is shown in rendered interfaces; an optional `defaultValue` providing an embedding-specific default whose type is the family-specific `Value` type (e.g. `TextValue` for `EmbeddedTextField`, `DateValue` for `EmbeddedDateField`); an optional `PromptOverride` allowing the template to override the field's prompt at this embedding site; an optional `Property` associating a semantic property IRI with the embedding site; and an optional `PromptKey` selecting one of the referenced field's curated `AlternativePrompt` entries (see [Alternative Prompts](#alternative-prompts)). The only variation across concrete `EmbeddedField` variants is the typed field reference and the typed default value, both of which match the value family of the referenced field.
 
 `EmbeddedBooleanField` and `EmbeddedSingleValuedEnumField` are the two exceptions to this pattern: each omits the `[Cardinality]` slot. A boolean field is inherently single-valued — its `ValueRequirement` slot already distinguishes the meaningful states (required, recommended, optional). A `SingleValuedEnumField` is similarly single-valued by construction; multi-valued enum embedding is expressed only through `EmbeddedMultiValuedEnumField`. `EmbeddedMultiValuedEnumField` further differs in that its embedding-level default is a sequence (`EnumValue*`) rather than a single optional value, parallel to how multi-valued enum instance values appear as a sequence in `FieldValue`.
 
@@ -724,6 +754,7 @@ EmbeddedTextField ::= embedded_text_field(
                         [PromptOverride]
                         [HelpTextOverride]
                         [Property]
+                        [PromptKey]
                       )
 
 EmbeddedIntegerNumberField ::= embedded_integer_number_field(
@@ -736,6 +767,7 @@ EmbeddedIntegerNumberField ::= embedded_integer_number_field(
                                  [PromptOverride]
                                  [HelpTextOverride]
                                  [Property]
+                                 [PromptKey]
                                )
 
 EmbeddedRealNumberField ::= embedded_real_number_field(
@@ -748,6 +780,7 @@ EmbeddedRealNumberField ::= embedded_real_number_field(
                               [PromptOverride]
                               [HelpTextOverride]
                               [Property]
+                              [PromptKey]
                             )
 
 EmbeddedBooleanField ::= embedded_boolean_field(
@@ -759,6 +792,7 @@ EmbeddedBooleanField ::= embedded_boolean_field(
                            [PromptOverride]
                            [HelpTextOverride]
                            [Property]
+                           [PromptKey]
                          )
 
 EmbeddedDateField ::= embedded_date_field(
@@ -771,6 +805,7 @@ EmbeddedDateField ::= embedded_date_field(
                         [PromptOverride]
                         [HelpTextOverride]
                         [Property]
+                        [PromptKey]
                       )
 
 EmbeddedTimeField ::= embedded_time_field(
@@ -783,6 +818,7 @@ EmbeddedTimeField ::= embedded_time_field(
                         [PromptOverride]
                         [HelpTextOverride]
                         [Property]
+                        [PromptKey]
                       )
 
 EmbeddedDateTimeField ::= embedded_date_time_field(
@@ -795,6 +831,7 @@ EmbeddedDateTimeField ::= embedded_date_time_field(
                             [PromptOverride]
                             [HelpTextOverride]
                             [Property]
+                            [PromptKey]
                           )
 
 EmbeddedControlledTermField ::= embedded_controlled_term_field(
@@ -807,6 +844,7 @@ EmbeddedControlledTermField ::= embedded_controlled_term_field(
                                   [PromptOverride]
                                   [HelpTextOverride]
                                   [Property]
+                                  [PromptKey]
                                 )
 
 EmbeddedSingleValuedEnumField ::= embedded_single_valued_enum_field(
@@ -818,6 +856,7 @@ EmbeddedSingleValuedEnumField ::= embedded_single_valued_enum_field(
                                     [PromptOverride]
                                     [HelpTextOverride]
                                     [Property]
+                                    [PromptKey]
                                   )
 
 EmbeddedMultiValuedEnumField ::= embedded_multi_valued_enum_field(
@@ -830,6 +869,7 @@ EmbeddedMultiValuedEnumField ::= embedded_multi_valued_enum_field(
                                    [PromptOverride]
                                    [HelpTextOverride]
                                    [Property]
+                                   [PromptKey]
                                  )
 
 EmbeddedLinkField ::= embedded_link_field(
@@ -842,6 +882,7 @@ EmbeddedLinkField ::= embedded_link_field(
                         [PromptOverride]
                         [HelpTextOverride]
                         [Property]
+                        [PromptKey]
                       )
 
 EmbeddedEmailField ::= embedded_email_field(
@@ -854,6 +895,7 @@ EmbeddedEmailField ::= embedded_email_field(
                          [PromptOverride]
                          [HelpTextOverride]
                          [Property]
+                         [PromptKey]
                        )
 
 EmbeddedPhoneNumberField ::= embedded_phone_number_field(
@@ -866,6 +908,7 @@ EmbeddedPhoneNumberField ::= embedded_phone_number_field(
                                [PromptOverride]
                                [HelpTextOverride]
                                [Property]
+                               [PromptKey]
                              )
 
 EmbeddedOrcidField ::= embedded_orcid_field(
@@ -878,6 +921,7 @@ EmbeddedOrcidField ::= embedded_orcid_field(
                          [PromptOverride]
                          [HelpTextOverride]
                          [Property]
+                         [PromptKey]
                        )
 
 EmbeddedRorField ::= embedded_ror_field(
@@ -890,6 +934,7 @@ EmbeddedRorField ::= embedded_ror_field(
                        [PromptOverride]
                        [HelpTextOverride]
                        [Property]
+                       [PromptKey]
                      )
 
 EmbeddedDoiField ::= embedded_doi_field(
@@ -902,6 +947,7 @@ EmbeddedDoiField ::= embedded_doi_field(
                        [PromptOverride]
                        [HelpTextOverride]
                        [Property]
+                       [PromptKey]
                      )
 
 EmbeddedPubMedIdField ::= embedded_pub_med_id_field(
@@ -914,6 +960,7 @@ EmbeddedPubMedIdField ::= embedded_pub_med_id_field(
                             [PromptOverride]
                             [HelpTextOverride]
                             [Property]
+                            [PromptKey]
                           )
 
 EmbeddedRridField ::= embedded_rrid_field(
@@ -926,6 +973,7 @@ EmbeddedRridField ::= embedded_rrid_field(
                         [PromptOverride]
                         [HelpTextOverride]
                         [Property]
+                        [PromptKey]
                       )
 
 EmbeddedNihGrantIdField ::= embedded_nih_grant_id_field(
@@ -938,6 +986,7 @@ EmbeddedNihGrantIdField ::= embedded_nih_grant_id_field(
                                [PromptOverride]
                                [HelpTextOverride]
                                [Property]
+                               [PromptKey]
                              )
 
 EmbeddedLanguageField ::= embedded_language_field(
@@ -950,6 +999,7 @@ EmbeddedLanguageField ::= embedded_language_field(
                             [PromptOverride]
                             [HelpTextOverride]
                             [Property]
+                            [PromptKey]
                           )
 
 EmbeddedAttributeValueField ::= embedded_attribute_value_field(
@@ -961,6 +1011,7 @@ EmbeddedAttributeValueField ::= embedded_attribute_value_field(
                                   [PromptOverride]
                                   [HelpTextOverride]
                                   [Property]
+                                  [PromptKey]
                                 )
 ```
 
@@ -1709,6 +1760,8 @@ PromptOverride ::= prompt_override(
 
 `PromptOverride` is a single-component wrapper around a `Prompt`: it carries the same kind of localized rendered text as `Field.Prompt`, scoped to one embedding. The precedence rule is straightforward: at an embedding site, the renderer displays the embedding's `PromptOverride` if present, otherwise the referenced `Field`'s `Prompt`. The override is *replace*, not *merge*: localizations present in the field's `Prompt` but absent from the embedding's `PromptOverride` do not fall back.
 
+`PromptOverride` is the *escape hatch*: free-form, unconstrained rendered text supplied by the template author when no sanctioned wording fits. It is distinct from the embedding's [`PromptKey`](#alternative-prompts) slot, which is the *governance path*: a keyed selection from the closed set of wordings the field's owner curated as `AlternativePrompt` entries. The two slots express contradictory intents — overriding with one's own wording versus selecting a sanctioned one — and an embedding MUST NOT carry both (see [Validation](validation.md)).
+
 ### Help Text Override
 
 `HelpTextOverride` provides template-specific authored guidance for an embedded field. When present, it replaces the field's canonical [`HelpText`](#field-artifacts) for that embedding context only. The reusable `Field`'s `HelpText` remains the canonical content for all other embedding contexts (and for the field rendered standalone).
@@ -1738,6 +1791,51 @@ PropertyLabel ::= property_label( MultilingualString )
 ```
 
 `PropertyLabel` is a [`MultilingualString`](#multilingual-strings) carrying one or more language-tagged localizations of the property's human-readable label.
+
+### Alternative Prompts
+
+A `Field`'s `Prompt` carries its single preferred question wording. `AlternativePrompt` lets the field's owner curate a closed set of *additional* sanctioned wordings, each addressable by a stable key, so that templates embedding the field select from that set rather than inventing their own. This supports curated-vocabulary governance — the motivating case is NIH/CADSR Common Data Elements (CDEs), where a field carries the CDE's preferred wording plus its other sanctioned alternatives — but the mechanism is general: any field owner may offer style variants (formal vs. casual, long vs. short) and constrain template authors to the offered set.
+
+```ebnf
+AlternativePrompt ::= alternative_prompt(
+                        PromptKey
+                        MultilingualString
+                      )
+
+PromptKey ::= prompt_key(
+                AsciiIdentifier
+              )
+```
+
+Each concrete `Field` variant carries an optional repeated `AlternativePrompt*` slot. Each `AlternativePrompt` pairs a stable `PromptKey` with a [`MultilingualString`](#multilingual-strings) wording. The production name parallels the `Label` / `AlternativeLabel*` distinction in [`CatalogMetadata`](#descriptive-metadata): just as `AlternativeLabel*` curates alternatives to the catalog-discovery label, `AlternativePrompt*` curates alternatives to the rendered `Prompt`. The two roles are kept as distinct productions rather than reusing `Prompt` with a second shape, so the single-component preferred wording and the two-component keyed alternative remain visibly separate.
+
+`PromptKey` is a stable, opaque local identifier — an [`AsciiIdentifier`](#prod-AsciiIdentifier) the field owner chooses. It is given its own production rather than reusing `EmbeddedArtifactKey` or `Token` so the role stays separable in the vocabulary, following the same reasoning as `RecommendedKey` and `RecommendedProperty`.
+
+The semantic union — `{ Field.Prompt } ∪ { each AlternativePrompt's MultilingualString }` — is the complete set of wordings a conforming embedding may render. Each concrete `EmbeddedField` variant carries an optional `PromptKey` slot referencing one of the referenced field's `AlternativePrompt` keys. There are three render-time states:
+
+- `PromptKey` absent → render the referenced field's `Prompt` (the preferred wording).
+- `PromptKey` present and equal to one of the referenced field's `AlternativePrompt.PromptKey` values → render that alternative's `MultilingualString`.
+- `PromptKey` present and matching none → validation error (see [Validation](validation.md)).
+
+The model does not reserve a `PromptKey` (such as `"preferred"`) for selecting `Field.Prompt`; an embedding selects the preferred wording simply by omitting the slot.
+
+#### Identification by key, not by content
+
+The embedding references an alternative by its `PromptKey`, never by the literal wording. This mirrors two existing decisions in the model: every embedding is identified within its template by an [`EmbeddedArtifactKey`](#embedded-artifact-key) rather than by content, and an `EnumValue` references a [`PermissibleValue`](#prod-PermissibleValue) by its `Token` rather than by its `Label`. The rationale is robustness under composition: templates outlive the fields they reference, and keys decouple identity from content. A content-match design (selecting by the full `MultilingualString` tuple) would be more self-describing on the wire, but every wording edit — fixing a typo, adjusting punctuation, adding a localization — would silently break the embeddings that selected it. Keys are stable across all such edits.
+
+#### How alternative prompts relate to other text-bearing surfaces
+
+The model carries several rendered-text surfaces in this neighbourhood. The distinguishing axis is *who controls the wording* and *whether the set is open or closed*:
+
+| Slot (abstract) | Wire-form key | Role | Controlled by |
+|---|---|---|---|
+| `Field.Prompt` | `prompt` | Rendered question text — the preferred wording shown when an embedding does not select otherwise | Field author |
+| `CatalogMetadata.AlternativeLabel*` | `altLabels` | Synonyms for catalog discovery and search | Field author |
+| `EmbeddedField.[PromptOverride]` | `promptOverride` | Free-form override of the rendered wording at the embedding site — the *escape hatch* | Template author |
+| `Field.AlternativePrompt*` | `altPrompts` | Curated alternative question wordings, keyed by `PromptKey`; the closed set the field owner sanctioned | Field author |
+| `EmbeddedField.[PromptKey]` | `promptKey` | Keyed selection of one `AlternativePrompt` — the *governance path* | Template author |
+
+`PromptOverride` and `PromptKey` are the two mutually exclusive ways an embedding may change the rendered wording: the former invents a wording outside the curated set, the latter selects one within it. An embedding MUST NOT carry both (see [Validation](validation.md)).
 
 ## Field Specs
 

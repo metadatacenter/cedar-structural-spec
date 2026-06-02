@@ -10,6 +10,7 @@ Validation in the CEDAR Template Model consists of structural conformance to the
 - [Well-Formedness Conditions](#well-formedness-conditions)
   - [EmbeddedArtifactKey Uniqueness](#embeddedartifactkey-uniqueness)
   - [Embedding References](#embedding-references)
+  - [Alternative Prompts](#alternative-prompts)
   - [Cardinality Consistency](#cardinality-consistency)
   - [Cardinality Defaults and Multiplicity](#cardinality-defaults-and-multiplicity)
   - [Versioning](#versioning)
@@ -54,6 +55,18 @@ Each `EmbeddedField` MUST reference a `Field`.
 Each `EmbeddedTemplate` MUST reference a `Template`.
 
 Each `EmbeddedPresentationComponent` MUST reference a `PresentationComponent`.
+
+### Alternative Prompts
+
+These rules govern the curated alternative question wordings introduced by [grammar.md §Alternative Prompts](grammar.md#alternative-prompts).
+
+Within a single `Field`'s `AlternativePrompt*` slot, the `PromptKey` components MUST be unique: no two `AlternativePrompt` entries on the same field may share the same key.
+
+Each `PromptKey` MUST conform to the `AsciiIdentifier` lexical form (per [grammar.md](grammar.md#primitive-string-types)) — the regular expression `^[A-Za-z][A-Za-z0-9_-]*$`.
+
+When an `EmbeddedField` carries a `PromptKey`, that key MUST equal the `PromptKey` component of one `AlternativePrompt` in the referenced `Field`'s `AlternativePrompt*` slot. A `PromptKey` that matches none of the referenced field's curated alternatives is a validation error. (This is a closed-set membership check against the *referenced field*, so it is only performed when a resolver is available, in the same manner as the embedding-reference checks.)
+
+An `EmbeddedField` MUST NOT carry both a `PromptKey` and a `PromptOverride`. The two slots express contradictory intents — selecting a sanctioned wording from the curated set versus overriding with a free-form wording — and only one may be present at a given embedding site. This check is purely structural and does not require a resolver.
 
 ### Cardinality Consistency
 
@@ -349,14 +362,14 @@ Entry point for schema validation.
 1. Run [`validate_model_version(template.model_version)`](#fn-validate-model-version) and [`validate_schema_artifact_versioning(template.versioning)`](#fn-validate-schema-artifact-versioning).
 2. If `template.template_rendering_hint` is present: run [`validate_template_rendering_hint(template.template_rendering_hint)`](#fn-validate-template-rendering-hint).
 3. Let `fields` = the set of `Field` artifacts referenced by `EmbeddedField` constructs in `template`.
-4. For each `field` in `fields`: run [`validate_model_version(field.model_version)`](#fn-validate-model-version), [`validate_schema_artifact_versioning(field.versioning)`](#fn-validate-schema-artifact-versioning), and [`validate_field_spec(field.field_spec)`](#fn-validate-field-spec).
+4. For each `field` in `fields`: run [`validate_model_version(field.model_version)`](#fn-validate-model-version), [`validate_schema_artifact_versioning(field.versioning)`](#fn-validate-schema-artifact-versioning), [`validate_field_spec(field.field_spec)`](#fn-validate-field-spec), and [`validate_alternative_prompt_keys(field)`](#fn-validate-alternative-prompt-keys).
 5. Let `pcs` = the set of `PresentationComponent` artifacts referenced by `EmbeddedPresentationComponent` constructs in `template`.
 6. For each `component` in `pcs`: run [`validate_model_version(component.model_version)`](#fn-validate-model-version). `PresentationComponent` does not carry `SchemaArtifactVersioning`, so no versioning validation step applies.
 7. Run [`validate_embedded_artifact_keys(template)`](#fn-validate-embedded-artifact-keys).
 8. For each `embedded` in `template.embedded_artifacts`:
    1. Run [`validate_embedding_reference(embedded)`](#fn-validate-embedding-reference).
    2. Run [`validate_cardinality_consistency(embedded)`](#fn-validate-cardinality-consistency).
-   3. If `embedded` is an `EmbeddedField`: run [`validate_rendering_hints(embedded)`](#fn-validate-rendering-hints).
+   3. If `embedded` is an `EmbeddedField`: run [`validate_prompt_key(embedded)`](#fn-validate-prompt-key) and [`validate_rendering_hints(embedded)`](#fn-validate-rendering-hints).
    4. If `embedded.default_value` is present: run [`validate_default_value(embedded.default_value, embedded)`](#fn-validate-default-value).
    5. If `embedded` is an `EmbeddedTemplate`: run [`validate_schema(embedded.referenced_template)`](#fn-validate-schema).
 
@@ -456,6 +469,28 @@ Applies the [Cardinality Consistency](#cardinality-consistency) rules.
 4. Let `req` = `embedded.value_requirement` if present, else `"optional"`.
 5. If `req = "required"`: verify `min ≥ 1`.
    *On failure:* `structural` at `<embedded>/cardinality/min`, production `Cardinality`, message `"required embedding must have min cardinality of at least 1"`.
+
+---
+
+##### `validate_alternative_prompt_keys(field: Field)` {#fn-validate-alternative-prompt-keys}
+
+Applies the per-field [Alternative Prompts](#alternative-prompts) rules. If `field.alternative_prompts` is absent or empty, this subroutine is a no-op.
+
+1. For each `AlternativePrompt` `ap` in `field.alternative_prompts`: verify `ap.prompt_key` conforms to the `AsciiIdentifier` lexical form (`^[A-Za-z][A-Za-z0-9_-]*$`).
+   *On failure:* `lexical` at `<field>/altPrompts/<i>/key`, production `PromptKey`, message `"PromptKey is not a valid AsciiIdentifier"`.
+2. Verify the `prompt_key` values across `field.alternative_prompts` are pairwise distinct.
+   *On failure:* `structural` at `<field>/altPrompts`, production `AlternativePrompt`, message `"PromptKey values within a field's altPrompts MUST be unique"`.
+
+---
+
+##### `validate_prompt_key(embedded: EmbeddedField)` {#fn-validate-prompt-key}
+
+Applies the embedding-side [Alternative Prompts](#alternative-prompts) rules.
+
+1. If `embedded.prompt_key` is present and `embedded.prompt_override` is present: report a failure.
+   *On failure:* `structural` at `<embedded>/promptKey`, production naming `embedded`'s family, message `"an embedding MUST NOT carry both promptKey and promptOverride"`.
+2. If `embedded.prompt_key` is present: resolve `embedded.artifactRef` via `resolve(iri)` (see [External resolution](#external-resolution)). If no resolver is available, SKIP this step. Otherwise verify that `embedded.prompt_key` equals the `prompt_key` of one `AlternativePrompt` in the resolved field's `alternative_prompts`.
+   *On failure (no match):* `structural` at `<embedded>/promptKey`, production naming `embedded`'s family, message `"promptKey does not match any AlternativePrompt key on the referenced field"`.
 
 ---
 
