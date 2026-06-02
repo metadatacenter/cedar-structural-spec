@@ -49,7 +49,6 @@ A cross-language [conformance test suite](normative-tests/README.md) accompanies
 
 ## Open Questions
 
-- Should the model support template-local (on-the-fly) fields without identity or versioning? See [issue #1](https://github.com/metadatacenter/cedar-structural-spec/issues/1).
 - Are the `Name`, `Description`, `PreferredLabel`, and `AlternativeLabel` properties on `ArtifactMetadata` all pulling their weight, or is there redundancy worth simplifying? See [issue #2](https://github.com/metadatacenter/cedar-structural-spec/issues/2).
 - Should instance structures eventually allow path-based keys in addition to `EmbeddedArtifactKey`?
 - Should option sets for some `FieldSpec` variants become reusable artifacts?
