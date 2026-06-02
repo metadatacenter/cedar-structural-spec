@@ -1,0 +1,66 @@
+{
+  "kind": "TemplateInstance",
+  "id": "https://example.org/instances/patient-intake-1",
+  "modelVersion": "2.0.0",
+  "metadata": {
+    "preferredLabel": [
+      {
+        "value": "Patient intake instance",
+        "lang": "en"
+      }
+    ],
+    "lifecycle": {
+      "createdOn": "2026-04-15T10:22:00Z",
+      "createdBy": "https://example.org/users/alice",
+      "modifiedOn": "2026-04-15T10:22:00Z",
+      "modifiedBy": "https://example.org/users/alice"
+    }
+  },
+  "templateRef": "https://example.org/templates/patient-intake",
+  "values": [
+    {
+      "kind": "FieldValue",
+      "key": "given_name",
+      "values": [
+        {
+          "kind": "TextValue",
+          "value": "Jane",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "kind": "FieldValue",
+      "key": "family_name",
+      "values": [
+        {
+          "kind": "TextValue",
+          "value": "Doe",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "kind": "FieldValue",
+      "key": "primary_diagnosis",
+      "values": [
+        {
+          "kind": "TextValue",
+          "value": "Type 2 diabetes",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "kind": "FieldValue",
+      "key": "medication_name",
+      "values": [
+        {
+          "kind": "TextValue",
+          "value": "Metformin",
+          "lang": "en"
+        }
+      ]
+    }
+  ]
+}

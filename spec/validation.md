@@ -11,6 +11,7 @@ Validation in the CEDAR Template Model consists of structural conformance to the
   - [EmbeddedArtifactKey Uniqueness](#embeddedartifactkey-uniqueness)
   - [Embedding References](#embedding-references)
   - [Alternative Prompts](#alternative-prompts)
+  - [Sections](#sections)
   - [Cardinality Consistency](#cardinality-consistency)
   - [Cardinality Defaults and Multiplicity](#cardinality-defaults-and-multiplicity)
   - [Versioning](#versioning)
@@ -44,7 +45,9 @@ The conditions below are organised by structural concern. Each subsection corres
 
 ### EmbeddedArtifactKey Uniqueness
 
-Within a single `Template`, each `EmbeddedArtifact` MUST have a unique `EmbeddedArtifactKey`. The uniqueness constraint is local to that template level and does not extend across nested template boundaries. Accordingly, an embedded template MAY contain `EmbeddedArtifactKey` values that are identical to keys used in its containing template, because each template defines its own local key space.
+Within a single `Template`, each `EmbeddedArtifact` MUST have a unique `EmbeddedArtifactKey`. The constraint is scoped to one template's member tree: keys MUST be pairwise distinct across every `EmbeddedArtifact` reachable from the template's `members`, **recursing into [`Section`](grammar.md#sections) bodies** — not merely among immediate siblings. Sections group members but introduce no key scope of their own; two embedded artifacts in different sections of the same template still share one key space. This template-global scope is what makes instance matching unambiguous, since a `TemplateInstance` records values keyed only by `EmbeddedArtifactKey` with no record of section membership.
+
+The constraint does not extend across nested template boundaries. An embedded template MAY contain `EmbeddedArtifactKey` values identical to keys used in its containing template, because each template defines its own local key space.
 
 Each `EmbeddedArtifactKey` MUST conform to the `AsciiIdentifier` lexical form (per [grammar.md](grammar.md#primitive-string-types)) — the regular expression `^[A-Za-z][A-Za-z0-9_-]*$`.
 
@@ -67,6 +70,18 @@ Each `PromptKey` MUST conform to the `AsciiIdentifier` lexical form (per [gramma
 When an `EmbeddedField` carries a `PromptKey`, that key MUST equal the `PromptKey` component of one `AlternativePrompt` in the referenced `Field`'s `AlternativePrompt*` slot. A `PromptKey` that matches none of the referenced field's curated alternatives is a validation error. (This is a closed-set membership check against the *referenced field*, so it is only performed when a resolver is available, in the same manner as the embedding-reference checks.)
 
 An `EmbeddedField` MUST NOT carry both a `PromptKey` and a `PromptOverride`. The two slots express contradictory intents — selecting a sanctioned wording from the curated set versus overriding with a free-form wording — and only one may be present at a given embedding site. This check is purely structural and does not require a resolver.
+
+### Sections
+
+These rules govern the [`Section`](grammar.md#sections) grouping member.
+
+Each `Section` MUST carry a `Label`. Standard `MultilingualString` well-formedness rules apply to it (and to the optional `Description`).
+
+A `Section`'s body MAY be empty. There is no "at least one member" rule — authoring tools commonly create empty sections as scaffolding.
+
+The grammar imposes no nesting-depth limit on sections; the canonical algorithm enforces none. Renderers MAY impose their own limits.
+
+The template-global scope of [EmbeddedArtifactKey Uniqueness](#embeddedartifactkey-uniqueness) is the rule that makes section nesting safe for instance matching; it is stated there rather than repeated here.
 
 ### Cardinality Consistency
 
@@ -361,12 +376,13 @@ Entry point for schema validation.
 
 1. Run [`validate_model_version(template.model_version)`](#fn-validate-model-version) and [`validate_schema_artifact_versioning(template.versioning)`](#fn-validate-schema-artifact-versioning).
 2. If `template.template_rendering_hint` is present: run [`validate_template_rendering_hint(template.template_rendering_hint)`](#fn-validate-template-rendering-hint).
-3. Let `fields` = the set of `Field` artifacts referenced by `EmbeddedField` constructs in `template`.
-4. For each `field` in `fields`: run [`validate_model_version(field.model_version)`](#fn-validate-model-version), [`validate_schema_artifact_versioning(field.versioning)`](#fn-validate-schema-artifact-versioning), [`validate_field_spec(field.field_spec)`](#fn-validate-field-spec), and [`validate_alternative_prompt_keys(field)`](#fn-validate-alternative-prompt-keys).
-5. Let `pcs` = the set of `PresentationComponent` artifacts referenced by `EmbeddedPresentationComponent` constructs in `template`.
-6. For each `component` in `pcs`: run [`validate_model_version(component.model_version)`](#fn-validate-model-version). `PresentationComponent` does not carry `SchemaArtifactVersioning`, so no versioning validation step applies.
-7. Run [`validate_embedded_artifact_keys(template)`](#fn-validate-embedded-artifact-keys).
-8. For each `embedded` in `template.embedded_artifacts`:
+3. Let `embeddings` = the sequence of `EmbeddedArtifact` constructs obtained by walking `template`'s member tree in document order, recursing into every `Section` body (`Section` constructs are traversed but contribute no embedding). Every step below that iterates "the embedded artifacts" iterates `embeddings`.
+4. Let `fields` = the set of `Field` artifacts referenced by the `EmbeddedField` constructs in `embeddings`.
+5. For each `field` in `fields`: run [`validate_model_version(field.model_version)`](#fn-validate-model-version), [`validate_schema_artifact_versioning(field.versioning)`](#fn-validate-schema-artifact-versioning), [`validate_field_spec(field.field_spec)`](#fn-validate-field-spec), and [`validate_alternative_prompt_keys(field)`](#fn-validate-alternative-prompt-keys).
+6. Let `pcs` = the set of `PresentationComponent` artifacts referenced by the `EmbeddedPresentationComponent` constructs in `embeddings`.
+7. For each `component` in `pcs`: run [`validate_model_version(component.model_version)`](#fn-validate-model-version). `PresentationComponent` does not carry `SchemaArtifactVersioning`, so no versioning validation step applies.
+8. Run [`validate_embedded_artifact_keys(template)`](#fn-validate-embedded-artifact-keys).
+9. For each `embedded` in `embeddings`:
    1. Run [`validate_embedding_reference(embedded)`](#fn-validate-embedding-reference).
    2. Run [`validate_cardinality_consistency(embedded)`](#fn-validate-cardinality-consistency).
    3. If `embedded` is an `EmbeddedField`: run [`validate_prompt_key(embedded)`](#fn-validate-prompt-key) and [`validate_rendering_hints(embedded)`](#fn-validate-rendering-hints).
@@ -410,11 +426,13 @@ Applies the [Versioning](#versioning) rules to the artifact-level `ModelVersion`
 
 Applies the [EmbeddedArtifactKey Uniqueness](#embeddedartifactkey-uniqueness) rules.
 
-1. Let `keys` = the sequence of `EmbeddedArtifactKey` values across all `EmbeddedArtifact` constructs in `template`.
+1. Let `keys` = the sequence of `EmbeddedArtifactKey` values collected by walking `template`'s member tree in document order, recursing into every `Section` body and collecting the key of each `EmbeddedArtifact` encountered. `Section` constructs contribute no key (they have none) but their bodies are traversed.
 2. For each key `k` in `keys`: verify `k` conforms to the `AsciiIdentifier` lexical form (regex `^[A-Za-z][A-Za-z0-9_-]*$`).
-   *On failure:* `lexical` at `<template>/members/<i>/key`, production naming the embedded artifact at index `<i>`, message `"EmbeddedArtifactKey does not match the AsciiIdentifier pattern"`.
-3. Verify all values in `keys` are distinct: for each pair `(k₁, k₂)` where `k₁ ≠ k₂` as positions but `k₁ = k₂` as values, report a duplicate-key error. Key uniqueness is scoped to `template`; the same key may appear in a nested template without conflict.
-   *On failure:* `structural` at `<template>/members/<j>/key` (the second occurrence), production `Template`, message `"EmbeddedArtifact.key is not unique within the enclosing Template (also at /members/<i>/key)"`.
+   *On failure:* `lexical` at the JSON Pointer of the embedded artifact's `key` (e.g. `<template>/members/<i>/key`, or `<template>/members/<i>/members/<j>/key` for a member nested in a section), production naming the embedded artifact, message `"EmbeddedArtifactKey does not match the AsciiIdentifier pattern"`.
+3. Verify all values in `keys` are distinct across the whole tree: for any two distinct embedded artifacts carrying the same key value, report a duplicate-key error. Uniqueness is scoped to `template` as a whole (across all sections); the same key may appear in a nested template without conflict.
+   *On failure:* `structural` at the JSON Pointer of the second occurrence's `key`, production `Template`, message `"EmbeddedArtifact.key is not unique within the enclosing Template (also at <first occurrence>)"`.
+4. For each `Section` encountered during the walk: verify `Section.label` is present.
+   *On failure:* `structural` at the section's `<section>/label`, production `Section`, message `"Section.label is required"`.
 
 ---
 

@@ -1,0 +1,94 @@
+{
+  "kind": "Template",
+  "id": "https://example.org/templates/patient-intake",
+  "modelVersion": "2.0.0",
+  "metadata": {
+    "lifecycle": {
+      "createdOn": "2026-01-15T09:30:00Z",
+      "createdBy": "https://example.org/users/alice",
+      "modifiedOn": "2026-01-15T09:30:00Z",
+      "modifiedBy": "https://example.org/users/alice"
+    }
+  },
+  "versioning": {
+    "version": "1.0.0",
+    "status": "draft"
+  },
+  "title": [
+    {
+      "value": "Patient Intake",
+      "lang": "en"
+    }
+  ],
+  "members": [
+    {
+      "kind": "Section",
+      "label": [
+        {
+          "value": "Demographics",
+          "lang": "en"
+        }
+      ],
+      "description": [
+        {
+          "value": "Basic information about the patient.",
+          "lang": "en"
+        }
+      ],
+      "members": [
+        {
+          "kind": "EmbeddedTextField",
+          "key": "given_name",
+          "artifactRef": "https://example.org/fields/given-name",
+          "valueRequirement": "required",
+          "visibility": "visible"
+        },
+        {
+          "kind": "EmbeddedTextField",
+          "key": "family_name",
+          "artifactRef": "https://example.org/fields/family-name",
+          "valueRequirement": "required",
+          "visibility": "visible"
+        }
+      ]
+    },
+    {
+      "kind": "Section",
+      "label": [
+        {
+          "value": "Medical History",
+          "lang": "en"
+        }
+      ],
+      "collapsibility": "startsCollapsed",
+      "members": [
+        {
+          "kind": "EmbeddedTextField",
+          "key": "primary_diagnosis",
+          "artifactRef": "https://example.org/fields/diagnosis",
+          "valueRequirement": "required",
+          "visibility": "visible"
+        },
+        {
+          "kind": "Section",
+          "label": [
+            {
+              "value": "Current Medications",
+              "lang": "en"
+            }
+          ],
+          "collapsibility": "startsExpanded",
+          "members": [
+            {
+              "kind": "EmbeddedTextField",
+              "key": "medication_name",
+              "artifactRef": "https://example.org/fields/medication-name",
+              "valueRequirement": "optional",
+              "visibility": "visible"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

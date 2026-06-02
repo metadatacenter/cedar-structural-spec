@@ -1,0 +1,61 @@
+{
+  "kind": "Template",
+  "id": "https://example.org/templates/patient-intake",
+  "modelVersion": "2.0.0",
+  "metadata": {
+    "lifecycle": {
+      "createdOn": "2026-01-15T09:30:00Z",
+      "createdBy": "https://example.org/u",
+      "modifiedOn": "2026-01-15T09:30:00Z",
+      "modifiedBy": "https://example.org/u"
+    }
+  },
+  "versioning": {
+    "version": "1.0.0",
+    "status": "draft"
+  },
+  "title": [
+    {
+      "value": "Patient Intake",
+      "lang": "en"
+    }
+  ],
+  "members": [
+    {
+      "kind": "Section",
+      "label": [
+        {
+          "value": "Demographics",
+          "lang": "en"
+        }
+      ],
+      "members": [
+        {
+          "kind": "EmbeddedTextField",
+          "key": "notes",
+          "artifactRef": "https://example.org/fields/notes",
+          "valueRequirement": "optional",
+          "visibility": "visible"
+        }
+      ]
+    },
+    {
+      "kind": "Section",
+      "label": [
+        {
+          "value": "Medical History",
+          "lang": "en"
+        }
+      ],
+      "members": [
+        {
+          "kind": "EmbeddedTextField",
+          "key": "notes",
+          "artifactRef": "https://example.org/fields/clinical-notes",
+          "valueRequirement": "optional",
+          "visibility": "visible"
+        }
+      ]
+    }
+  ]
+}

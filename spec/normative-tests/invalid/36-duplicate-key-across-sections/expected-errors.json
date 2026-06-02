@@ -1,0 +1,8 @@
+[
+  {
+    "category": "structural",
+    "path": "/members/1/members/0/key",
+    "production": "Template",
+    "messageRegex": "not unique|unique|duplicate"
+  }
+]

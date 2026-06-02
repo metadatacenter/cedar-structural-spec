@@ -2194,12 +2194,32 @@ Template ::: object {
   renderingHint?: TemplateRenderingHint
   header?: Header
   footer?: Footer
-  members: array<EmbeddedArtifact>
+  members: array<TemplateMember>
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
-  // EmbeddedArtifact keys (each member's `key` property) MUST be unique
-  // within `members` (per grammar.md §Embedded Artifact Key)
+  // EmbeddedArtifact keys (each embedded member's `key` property) MUST be
+  // unique across the entire member tree, recursing into Section bodies
+  // (per grammar.md §Sections and validation.md)
   // the order of `members` MUST be preserved
+
+TemplateMember ::: EmbeddedArtifact | Section
+  // discriminator: kind
+  // a Section is a grouping member; it carries no `key` and no instance data
+
+Section ::: object {
+  "kind": "Section"
+  label: Label
+  description?: Description
+  collapsibility?: Collapsibility
+  members: array<TemplateMember>
+}
+  // label and description are MultilingualString (carried in full, not
+  // collapsed, since they sit at named object slots)
+  // members may be empty; Section bodies nest recursively
+  // the order of `members` MUST be preserved
+
+Collapsibility ::: "none" | "startsExpanded" | "startsCollapsed"
+  // absent ≡ "none"
 
 TemplateRenderingHint ::: object {
   helpDisplayMode?: HelpDisplayMode
@@ -2311,7 +2331,13 @@ Conventions:
 5. `[TemplateRenderingHint]` → `renderingHint?`
 6. `[Header]` → `header?`
 7. `[Footer]` → `footer?`
-8. `EmbeddedArtifact*` → `members`
+8. `TemplateMember*` → `members` (each member is an `EmbeddedArtifact` or a `Section`)
+
+**`Section`** (`section`):
+0. `Label` → `label`
+1. `[Description]` → `description?`
+2. `[Collapsibility]` → `collapsibility?`
+3. `TemplateMember*` → `members`
 
 **`TemplateRenderingHint`** (`template_rendering_hint`):
 0. `[HelpDisplayMode]` → `helpDisplayMode?`

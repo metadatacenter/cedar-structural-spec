@@ -39,7 +39,7 @@ Template ::= template(
                SchemaArtifactVersioning
                Title
                [TemplateRenderingHint]
-               EmbeddedArtifact*
+               TemplateMember*
              )
 ```
 
@@ -102,7 +102,7 @@ A conceptual overview of the model — describing the principal categories, thei
 
 The kernel grammar defines the primary abstract categories of the model and the core schema-level structure that connects them. It introduces reusable schema artifacts, templates, and the embedding constructs through which templates assemble fields, nested templates, and presentation components. Subsequent sections refine the metadata, field-spec families, instance structures, and supporting constructs referenced here.
 
-The diagram below gives an overview of the kernel. [`Template`](#prod-Template) is the central container: it holds an ordered sequence of [`EmbeddedArtifact`](#prod-EmbeddedArtifact) constructs, each of which contextualises a reusable artifact — a [`Field`](#prod-Field), a nested [`Template`](#prod-Template), or a [`PresentationComponent`](#prod-PresentationComponent) — within that specific template. The three concrete embedded constructs are [`EmbeddedField`](#prod-EmbeddedField), [`EmbeddedTemplate`](#prod-EmbeddedTemplate), and [`EmbeddedPresentationComponent`](#prod-EmbeddedPresentationComponent). A [`TemplateInstance`](#prod-TemplateInstance) records data conforming to a [`Template`](#prod-Template). Concrete `Field` variants and `FieldSpec` configurations are omitted from the diagram for clarity; they are defined in [Concrete Field Artifacts](#concrete-field-artifacts) and [Field Specs](#field-specs).
+The diagram below gives an overview of the kernel. [`Template`](#prod-Template) is the central container: it holds an ordered sequence of [`TemplateMember`](#prod-TemplateMember) constructs. A `TemplateMember` is either an [`EmbeddedArtifact`](#prod-EmbeddedArtifact), which contextualises a reusable artifact — a [`Field`](#prod-Field), a nested [`Template`](#prod-Template), or a [`PresentationComponent`](#prod-PresentationComponent) — within that specific template, or a [`Section`](#prod-Section), which groups members under a heading. The three concrete embedded constructs are [`EmbeddedField`](#prod-EmbeddedField), [`EmbeddedTemplate`](#prod-EmbeddedTemplate), and [`EmbeddedPresentationComponent`](#prod-EmbeddedPresentationComponent); a `Section` recursively contains further `TemplateMember` constructs. A [`TemplateInstance`](#prod-TemplateInstance) records data conforming to a [`Template`](#prod-Template). Concrete `Field` variants and `FieldSpec` configurations are omitted from the diagram for clarity; they are defined in [Concrete Field Artifacts](#concrete-field-artifacts) and [Field Specs](#field-specs).
 
 The diagram is interactive: each named class in the rendered book links to the corresponding EBNF production below.
 
@@ -139,8 +139,16 @@ classDiagram
     CatalogMetadata
   }
 
+  class TemplateMember {
+    <<abstract>>
+  }
   class EmbeddedArtifact {
     <<abstract>>
+  }
+  class Section {
+    Label
+    [Description]
+    [Collapsibility]
   }
   class EmbeddedField {
     EmbeddedArtifactKey
@@ -177,7 +185,11 @@ classDiagram
   SchemaArtifact <|-- Field
   SchemaArtifact <|-- Template
 
-  Template "1" *-- "0..*" EmbeddedArtifact : contains ordered
+  Template "1" *-- "0..*" TemplateMember : contains ordered
+
+  TemplateMember <|-- EmbeddedArtifact
+  TemplateMember <|-- Section
+  Section "1" *-- "0..*" TemplateMember : groups ordered
 
   EmbeddedArtifact <|-- EmbeddedField
   EmbeddedArtifact <|-- EmbeddedTemplate
@@ -196,7 +208,9 @@ classDiagram
   click Template href "#prod-Template"
   click PresentationComponent href "#prod-PresentationComponent"
   click TemplateInstance href "#prod-TemplateInstance"
+  click TemplateMember href "#prod-TemplateMember"
   click EmbeddedArtifact href "#prod-EmbeddedArtifact"
+  click Section href "#prod-Section"
   click EmbeddedField href "#prod-EmbeddedField"
   click EmbeddedTemplate href "#prod-EmbeddedTemplate"
   click EmbeddedPresentationComponent href "#prod-EmbeddedPresentationComponent"
@@ -218,7 +232,7 @@ SchemaArtifact ::= Field
 
 #### Template
 
-[`Template`](#prod-Template) is a concrete schema artifact and the central container of the model. It assembles [`EmbeddedArtifact`](#prod-EmbeddedArtifact) constructs into a structured form and defines the schema that [`TemplateInstance`](#prod-TemplateInstance) constructs conform to.
+[`Template`](#prod-Template) is a concrete schema artifact and the central container of the model. It assembles [`TemplateMember`](#prod-TemplateMember) constructs — [`EmbeddedArtifact`](#prod-EmbeddedArtifact) embeddings and [`Section`](#prod-Section) groupings — into a structured form and defines the schema that [`TemplateInstance`](#prod-TemplateInstance) constructs conform to.
 
 ```ebnf
 Template ::= template(
@@ -322,11 +336,20 @@ ExternalAuthorityField ::= OrcidField
                          | NihGrantIdField
 ```
 
+### Template Members
+
+A [`Template`](#prod-Template) holds an ordered sequence of [`TemplateMember`](#prod-TemplateMember) constructs. A `TemplateMember` is either an [`EmbeddedArtifact`](#prod-EmbeddedArtifact) — a reusable artifact contextualised within the template — or a [`Section`](#prod-Section), which groups members under a heading without itself contributing instance data.
+
+```ebnf
+TemplateMember ::= EmbeddedArtifact
+                 | Section
+```
+
+The sequence of `TemplateMember` constructs within a `Template` (and within a `Section`) is significant. The order in which they appear determines the presentation order in a rendered template. Conforming implementations MUST preserve this order.
+
 ### Embedded Artifacts
 
 An [`EmbeddedArtifact`](#prod-EmbeddedArtifact) contextualises a reusable artifact within a specific [`Template`](#prod-Template), adding template-local properties that govern how the artifact participates in that context. There are three forms: [`EmbeddedField`](#prod-EmbeddedField), which embeds a data-bearing field; [`EmbeddedTemplate`](#prod-EmbeddedTemplate), which nests a template within the containing template; and [`EmbeddedPresentationComponent`](#prod-EmbeddedPresentationComponent), which contributes presentational structure without producing instance data.
-
-The sequence of `EmbeddedArtifact` constructs within a `Template` is significant. The order in which they appear determines the presentation order of embedded artifacts in a rendered template. Conforming implementations MUST preserve this order.
 
 ```ebnf
 EmbeddedArtifact ::= EmbeddedField
@@ -389,6 +412,33 @@ EmbeddedPresentationComponent ::= embedded_presentation_component(
                                     [Visibility]
                                   )
 ```
+
+### Sections
+
+A [`Section`](#prod-Section) groups [`TemplateMember`](#prod-TemplateMember) constructs under a heading. Sectioning is *semantic* organisation, not presentation: the decision that a field belongs with one group of members rather than another is an authoring decision about the form's meaning, and it survives across renderers, exports, and downstream transformations. (Presentational *layout* — columns, rows, responsive arrangement — is a separate concern, not modelled by `Section`.)
+
+```ebnf
+Section ::= section(
+              Label
+              [Description]
+              [Collapsibility]
+              TemplateMember*
+            )
+
+Collapsibility ::= "none" | "startsExpanded" | "startsCollapsed"
+```
+
+A `Section` carries a required [`Label`](#prod-Label) heading, an optional [`Description`](#prod-Description) for short prose shown beneath the heading, an optional `Collapsibility`, and its own ordered sequence of `TemplateMember` constructs. Because a `Section`'s body is again `TemplateMember*`, sections nest: a section may contain embedded artifacts, further sections, or both. The body MAY be empty. The grammar imposes no nesting-depth limit; renderers MAY impose sensible limits.
+
+`Collapsibility` declares how a section behaves with respect to expand/collapse — author intent about the form's information hierarchy, which a non-interactive renderer (PDF, paper form, linear screen-reader traversal) MAY ignore:
+
+- `"none"` (the default when the slot is absent) — the section is not collapsible; no toggle is exposed and the section is always shown open.
+- `"startsExpanded"` — the section is collapsible and starts expanded.
+- `"startsCollapsed"` — the section is collapsible and starts collapsed (the "advanced settings" / "supplementary information" pattern).
+
+A `Section` does **not** carry an [`EmbeddedArtifactKey`](#embedded-artifact-key). Sections are not referenced from `TemplateInstance` constructs, from override mechanisms, or from anywhere else in the model, so a key would be unused. (If a future feature requires referencing sections — conditional logic, deep linking — a key slot can be added then as a scoped change.)
+
+Sections carry no instance data and are **transparent** to instance matching. A `TemplateInstance` records values keyed only by `EmbeddedArtifactKey`, with no record of section membership; re-sectioning a template — moving an embedded artifact from one section to another — therefore does not migrate any instance data. To match instance values against the template, an implementation walks the member tree, recursing through `Section` bodies, and collects every `EmbeddedArtifact` into a flat map keyed by `EmbeddedArtifactKey`. For this to be unambiguous, `EmbeddedArtifactKey` values MUST be unique across the entire member tree of a `Template`, not merely among sibling members (see [Validation](validation.md)).
 
 ## Concrete Field Artifacts
 
