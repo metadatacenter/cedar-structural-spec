@@ -1,0 +1,8 @@
+[
+  {
+    "category": "structural",
+    "path": "/members/0/editability",
+    "production": "EmbeddedTextField",
+    "messageRegex": "readOnly|required|defaultValue|default"
+  }
+]

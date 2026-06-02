@@ -829,6 +829,14 @@ MaxCardinality ::: number
 Visibility ::: "visible" | "hidden"
 ```
 
+### 6.4.1 Editability
+
+```
+Editability ::: "editable" | "readOnly"
+```
+
+`editability` is carried only by `EmbeddedXxxField` wire objects (not by `EmbeddedTemplate` or `EmbeddedPresentationComponent`), encoded as a bare string exactly like `visibility`. Absent ≡ `"editable"`.
+
 ### 6.5 Defaults
 
 Defaults are specified at two layers, with parallel typing per
@@ -1798,6 +1806,7 @@ EmbeddedTextField ::: object {
   helpTextOverride?: HelpTextOverride
   property?: Property
   promptKey?: PromptKey
+  editability?: Editability
 }
 
 EmbeddedIntegerNumberField ::: object {
@@ -1812,6 +1821,7 @@ EmbeddedIntegerNumberField ::: object {
   helpTextOverride?: HelpTextOverride
   property?: Property
   promptKey?: PromptKey
+  editability?: Editability
 }
 
 EmbeddedRealNumberField ::: object {
@@ -1826,6 +1836,7 @@ EmbeddedRealNumberField ::: object {
   helpTextOverride?: HelpTextOverride
   property?: Property
   promptKey?: PromptKey
+  editability?: Editability
 }
 
 EmbeddedBooleanField ::: object {
@@ -1839,6 +1850,7 @@ EmbeddedBooleanField ::: object {
   helpTextOverride?: HelpTextOverride
   property?: Property
   promptKey?: PromptKey
+  editability?: Editability
 }
   // boolean embeddings carry no cardinality slot per grammar.md
   // (booleans are inherently single-valued)
@@ -1855,6 +1867,7 @@ EmbeddedDateField ::: object {
   helpTextOverride?: HelpTextOverride
   property?: Property
   promptKey?: PromptKey
+  editability?: Editability
 }
 
 EmbeddedTimeField ::: object {
@@ -1869,6 +1882,7 @@ EmbeddedTimeField ::: object {
   helpTextOverride?: HelpTextOverride
   property?: Property
   promptKey?: PromptKey
+  editability?: Editability
 }
 
 EmbeddedDateTimeField ::: object {
@@ -1883,6 +1897,7 @@ EmbeddedDateTimeField ::: object {
   helpTextOverride?: HelpTextOverride
   property?: Property
   promptKey?: PromptKey
+  editability?: Editability
 }
 
 EmbeddedControlledTermField ::: object {
@@ -1897,6 +1912,7 @@ EmbeddedControlledTermField ::: object {
   helpTextOverride?: HelpTextOverride
   property?: Property
   promptKey?: PromptKey
+  editability?: Editability
 }
 
 EmbeddedSingleValuedEnumField ::: object {
@@ -1910,6 +1926,7 @@ EmbeddedSingleValuedEnumField ::: object {
   helpTextOverride?: HelpTextOverride
   property?: Property
   promptKey?: PromptKey
+  editability?: Editability
 }
   // single-valued enum embeddings carry no cardinality slot per
   // grammar.md (single-valued enum is implicit, parallel to boolean)
@@ -1926,6 +1943,7 @@ EmbeddedMultiValuedEnumField ::: object {
   helpTextOverride?: HelpTextOverride
   property?: Property
   promptKey?: PromptKey
+  editability?: Editability
 }
   // defaultValue is a (possibly empty) array of EnumValue entries;
   // each element is a tagged EnumValue per the kind rule (§1.5).
@@ -1943,6 +1961,7 @@ EmbeddedLinkField ::: object {
   helpTextOverride?: HelpTextOverride
   property?: Property
   promptKey?: PromptKey
+  editability?: Editability
 }
 
 EmbeddedEmailField ::: object {
@@ -1957,6 +1976,7 @@ EmbeddedEmailField ::: object {
   helpTextOverride?: HelpTextOverride
   property?: Property
   promptKey?: PromptKey
+  editability?: Editability
 }
 
 EmbeddedPhoneNumberField ::: object {
@@ -1971,6 +1991,7 @@ EmbeddedPhoneNumberField ::: object {
   helpTextOverride?: HelpTextOverride
   property?: Property
   promptKey?: PromptKey
+  editability?: Editability
 }
 
 EmbeddedOrcidField ::: object {
@@ -1985,6 +2006,7 @@ EmbeddedOrcidField ::: object {
   helpTextOverride?: HelpTextOverride
   property?: Property
   promptKey?: PromptKey
+  editability?: Editability
 }
 
 EmbeddedRorField ::: object {
@@ -1999,6 +2021,7 @@ EmbeddedRorField ::: object {
   helpTextOverride?: HelpTextOverride
   property?: Property
   promptKey?: PromptKey
+  editability?: Editability
 }
 
 EmbeddedDoiField ::: object {
@@ -2013,6 +2036,7 @@ EmbeddedDoiField ::: object {
   helpTextOverride?: HelpTextOverride
   property?: Property
   promptKey?: PromptKey
+  editability?: Editability
 }
 
 EmbeddedPubMedIdField ::: object {
@@ -2027,6 +2051,7 @@ EmbeddedPubMedIdField ::: object {
   helpTextOverride?: HelpTextOverride
   property?: Property
   promptKey?: PromptKey
+  editability?: Editability
 }
 
 EmbeddedRridField ::: object {
@@ -2041,6 +2066,7 @@ EmbeddedRridField ::: object {
   helpTextOverride?: HelpTextOverride
   property?: Property
   promptKey?: PromptKey
+  editability?: Editability
 }
 
 EmbeddedNihGrantIdField ::: object {
@@ -2055,6 +2081,7 @@ EmbeddedNihGrantIdField ::: object {
   helpTextOverride?: HelpTextOverride
   property?: Property
   promptKey?: PromptKey
+  editability?: Editability
 }
 
 EmbeddedLanguageField ::: object {
@@ -2069,6 +2096,7 @@ EmbeddedLanguageField ::: object {
   helpTextOverride?: HelpTextOverride
   property?: Property
   promptKey?: PromptKey
+  editability?: Editability
 }
 
 EmbeddedAttributeValueField ::: object {
@@ -2082,6 +2110,7 @@ EmbeddedAttributeValueField ::: object {
   helpTextOverride?: HelpTextOverride
   property?: Property
   promptKey?: PromptKey
+  editability?: Editability
 }
   // attribute-value embeddings carry no defaultValue per grammar.md
 
@@ -2390,6 +2419,7 @@ with the per-family typed-id and typed-default-value slots:
 7. `[HelpTextOverride]` → `helpTextOverride?`
 8. `[Property]` → `property?`
 9. `[PromptKey]` → `promptKey?`
+10. `[Editability]` → `editability?`
 
 (Component indices are renumbered to skip slots a particular family
 omits, per the per-family abstract production. The list above gives the

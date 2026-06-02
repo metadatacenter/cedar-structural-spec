@@ -12,6 +12,7 @@ Validation in the CEDAR Template Model consists of structural conformance to the
   - [Embedding References](#embedding-references)
   - [Alternative Prompts](#alternative-prompts)
   - [Sections](#sections)
+  - [Editability](#editability)
   - [Cardinality Consistency](#cardinality-consistency)
   - [Cardinality Defaults and Multiplicity](#cardinality-defaults-and-multiplicity)
   - [Versioning](#versioning)
@@ -82,6 +83,16 @@ A `Section`'s body MAY be empty. There is no "at least one member" rule — auth
 The grammar imposes no nesting-depth limit on sections; the canonical algorithm enforces none. Renderers MAY impose their own limits.
 
 The template-global scope of [EmbeddedArtifactKey Uniqueness](#embeddedartifactkey-uniqueness) is the rule that makes section nesting safe for instance matching; it is stated there rather than repeated here.
+
+### Editability
+
+This rule governs the [`Editability`](grammar.md#editability) slot on an `EmbeddedField`.
+
+An `EmbeddedField` whose `Editability` is `"readOnly"` and whose `ValueRequirement` is `"required"` MUST have a default value available — either an embedding-level `defaultValue` on the `EmbeddedField`, or a field-level default on the referenced `Field`'s `FieldSpec`. Otherwise the embedding is unsatisfiable: a required field must hold a value, but a read-only field cannot receive one from the user, and with no default there is no value to stand in. This is a hard structural error.
+
+The rule is scoped to `"required"`. `"recommended"` and `"optional"` embeddings impose no presence obligation (a `"readOnly"` recommended/optional field with no default is simply a field that renders empty and stays empty), so they are unaffected.
+
+Checking the *field-level* default requires resolving `EmbeddedField.artifactRef`; when no resolver is available the check is performed against the embedding-level `defaultValue` only, in the same manner as the other resolver-gated checks.
 
 ### Cardinality Consistency
 
@@ -385,7 +396,7 @@ Entry point for schema validation.
 9. For each `embedded` in `embeddings`:
    1. Run [`validate_embedding_reference(embedded)`](#fn-validate-embedding-reference).
    2. Run [`validate_cardinality_consistency(embedded)`](#fn-validate-cardinality-consistency).
-   3. If `embedded` is an `EmbeddedField`: run [`validate_prompt_key(embedded)`](#fn-validate-prompt-key) and [`validate_rendering_hints(embedded)`](#fn-validate-rendering-hints).
+   3. If `embedded` is an `EmbeddedField`: run [`validate_prompt_key(embedded)`](#fn-validate-prompt-key), [`validate_editability(embedded)`](#fn-validate-editability), and [`validate_rendering_hints(embedded)`](#fn-validate-rendering-hints).
    4. If `embedded.default_value` is present: run [`validate_default_value(embedded.default_value, embedded)`](#fn-validate-default-value).
    5. If `embedded` is an `EmbeddedTemplate`: run [`validate_schema(embedded.referenced_template)`](#fn-validate-schema).
 
@@ -509,6 +520,18 @@ Applies the embedding-side [Alternative Prompts](#alternative-prompts) rules.
    *On failure:* `structural` at `<embedded>/promptKey`, production naming `embedded`'s family, message `"an embedding MUST NOT carry both promptKey and promptOverride"`.
 2. If `embedded.prompt_key` is present: resolve `embedded.artifactRef` via `resolve(iri)` (see [External resolution](#external-resolution)). If no resolver is available, SKIP this step. Otherwise verify that `embedded.prompt_key` equals the `prompt_key` of one `AlternativePrompt` in the resolved field's `alternative_prompts`.
    *On failure (no match):* `structural` at `<embedded>/promptKey`, production naming `embedded`'s family, message `"promptKey does not match any AlternativePrompt key on the referenced field"`.
+
+---
+
+##### `validate_editability(embedded: EmbeddedField)` {#fn-validate-editability}
+
+Applies the [Editability](#editability) rule.
+
+1. If `embedded.editability` is not `"readOnly"`, or `embedded.value_requirement` is not `"required"`: this subroutine is a no-op (the rule applies only to read-only required embeddings).
+2. If `embedded.default_value` is present: the rule is satisfied (an embedding-level default supplies the value); stop.
+3. Resolve `embedded.artifactRef` via `resolve(iri)` (see [External resolution](#external-resolution)). If a resolver is available and the referenced `Field`'s `FieldSpec` carries a field-level default value, the rule is satisfied; stop. If no resolver is available, the field-level default cannot be observed and this step is treated as "no default available".
+4. Otherwise report a failure: a read-only required embedding has no default value to satisfy the requirement.
+   *On failure:* `structural` at `<embedded>/editability`, production naming `embedded`'s family, message `"a readOnly required embedding MUST carry a defaultValue (none found on the embedding or the referenced field)"`.
 
 ---
 

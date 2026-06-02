@@ -86,6 +86,7 @@ A conceptual overview of the model — describing the principal categories, thei
   - [Requirements](#requirements)
   - [Cardinality](#cardinality)
   - [Visibility](#visibility)
+  - [Editability](#editability)
   - [Defaults](#defaults)
   - [Prompt Override](#prompt-override)
   - [Properties](#properties)
@@ -155,6 +156,7 @@ classDiagram
     [ValueRequirement]
     [Cardinality]
     [Visibility]
+    [Editability]
     [defaultValue]
     [PromptOverride]
     [HelpTextOverride]
@@ -789,7 +791,7 @@ The carried `Property` is subject to the same well-formedness rules as any other
 
 ## Concrete Embedded Fields
 
-Every concrete `EmbeddedField` variant follows the same structural pattern. Each carries: an `EmbeddedArtifactKey` uniquely identifying the embedding site within the containing `Template`; a typed field reference identifying the reusable `Field` being embedded; an optional `ValueRequirement` specifying whether a value is required, recommended, or optional; an optional `Cardinality` bounding the permitted number of values; an optional `Visibility` controlling whether the field is shown in rendered interfaces; an optional `defaultValue` providing an embedding-specific default whose type is the family-specific `Value` type (e.g. `TextValue` for `EmbeddedTextField`, `DateValue` for `EmbeddedDateField`); an optional `PromptOverride` allowing the template to override the field's prompt at this embedding site; an optional `Property` associating a semantic property IRI with the embedding site; and an optional `PromptKey` selecting one of the referenced field's curated `AlternativePrompt` entries (see [Alternative Prompts](#alternative-prompts)). The only variation across concrete `EmbeddedField` variants is the typed field reference and the typed default value, both of which match the value family of the referenced field.
+Every concrete `EmbeddedField` variant follows the same structural pattern. Each carries: an `EmbeddedArtifactKey` uniquely identifying the embedding site within the containing `Template`; a typed field reference identifying the reusable `Field` being embedded; an optional `ValueRequirement` specifying whether a value is required, recommended, or optional; an optional `Cardinality` bounding the permitted number of values; an optional `Visibility` controlling whether the field is shown in rendered interfaces; an optional `defaultValue` providing an embedding-specific default whose type is the family-specific `Value` type (e.g. `TextValue` for `EmbeddedTextField`, `DateValue` for `EmbeddedDateField`); an optional `PromptOverride` allowing the template to override the field's prompt at this embedding site; an optional `Property` associating a semantic property IRI with the embedding site; an optional `PromptKey` selecting one of the referenced field's curated `AlternativePrompt` entries (see [Alternative Prompts](#alternative-prompts)); and an optional `Editability` controlling whether the field's value may be edited (see [Editability](#editability)). The only variation across concrete `EmbeddedField` variants is the typed field reference and the typed default value, both of which match the value family of the referenced field.
 
 `EmbeddedBooleanField` and `EmbeddedSingleValuedEnumField` are the two exceptions to this pattern: each omits the `[Cardinality]` slot. A boolean field is inherently single-valued — its `ValueRequirement` slot already distinguishes the meaningful states (required, recommended, optional). A `SingleValuedEnumField` is similarly single-valued by construction; multi-valued enum embedding is expressed only through `EmbeddedMultiValuedEnumField`. `EmbeddedMultiValuedEnumField` further differs in that its embedding-level default is a sequence (`EnumValue*`) rather than a single optional value, parallel to how multi-valued enum instance values appear as a sequence in `FieldValue`.
 
@@ -805,6 +807,7 @@ EmbeddedTextField ::= embedded_text_field(
                         [HelpTextOverride]
                         [Property]
                         [PromptKey]
+                        [Editability]
                       )
 
 EmbeddedIntegerNumberField ::= embedded_integer_number_field(
@@ -818,6 +821,7 @@ EmbeddedIntegerNumberField ::= embedded_integer_number_field(
                                  [HelpTextOverride]
                                  [Property]
                                  [PromptKey]
+                                 [Editability]
                                )
 
 EmbeddedRealNumberField ::= embedded_real_number_field(
@@ -831,6 +835,7 @@ EmbeddedRealNumberField ::= embedded_real_number_field(
                               [HelpTextOverride]
                               [Property]
                               [PromptKey]
+                              [Editability]
                             )
 
 EmbeddedBooleanField ::= embedded_boolean_field(
@@ -843,6 +848,7 @@ EmbeddedBooleanField ::= embedded_boolean_field(
                            [HelpTextOverride]
                            [Property]
                            [PromptKey]
+                           [Editability]
                          )
 
 EmbeddedDateField ::= embedded_date_field(
@@ -856,6 +862,7 @@ EmbeddedDateField ::= embedded_date_field(
                         [HelpTextOverride]
                         [Property]
                         [PromptKey]
+                        [Editability]
                       )
 
 EmbeddedTimeField ::= embedded_time_field(
@@ -869,6 +876,7 @@ EmbeddedTimeField ::= embedded_time_field(
                         [HelpTextOverride]
                         [Property]
                         [PromptKey]
+                        [Editability]
                       )
 
 EmbeddedDateTimeField ::= embedded_date_time_field(
@@ -882,6 +890,7 @@ EmbeddedDateTimeField ::= embedded_date_time_field(
                             [HelpTextOverride]
                             [Property]
                             [PromptKey]
+                            [Editability]
                           )
 
 EmbeddedControlledTermField ::= embedded_controlled_term_field(
@@ -895,6 +904,7 @@ EmbeddedControlledTermField ::= embedded_controlled_term_field(
                                   [HelpTextOverride]
                                   [Property]
                                   [PromptKey]
+                                  [Editability]
                                 )
 
 EmbeddedSingleValuedEnumField ::= embedded_single_valued_enum_field(
@@ -907,6 +917,7 @@ EmbeddedSingleValuedEnumField ::= embedded_single_valued_enum_field(
                                     [HelpTextOverride]
                                     [Property]
                                     [PromptKey]
+                                    [Editability]
                                   )
 
 EmbeddedMultiValuedEnumField ::= embedded_multi_valued_enum_field(
@@ -920,6 +931,7 @@ EmbeddedMultiValuedEnumField ::= embedded_multi_valued_enum_field(
                                    [HelpTextOverride]
                                    [Property]
                                    [PromptKey]
+                                   [Editability]
                                  )
 
 EmbeddedLinkField ::= embedded_link_field(
@@ -933,6 +945,7 @@ EmbeddedLinkField ::= embedded_link_field(
                         [HelpTextOverride]
                         [Property]
                         [PromptKey]
+                        [Editability]
                       )
 
 EmbeddedEmailField ::= embedded_email_field(
@@ -946,6 +959,7 @@ EmbeddedEmailField ::= embedded_email_field(
                          [HelpTextOverride]
                          [Property]
                          [PromptKey]
+                         [Editability]
                        )
 
 EmbeddedPhoneNumberField ::= embedded_phone_number_field(
@@ -959,6 +973,7 @@ EmbeddedPhoneNumberField ::= embedded_phone_number_field(
                                [HelpTextOverride]
                                [Property]
                                [PromptKey]
+                               [Editability]
                              )
 
 EmbeddedOrcidField ::= embedded_orcid_field(
@@ -972,6 +987,7 @@ EmbeddedOrcidField ::= embedded_orcid_field(
                          [HelpTextOverride]
                          [Property]
                          [PromptKey]
+                         [Editability]
                        )
 
 EmbeddedRorField ::= embedded_ror_field(
@@ -985,6 +1001,7 @@ EmbeddedRorField ::= embedded_ror_field(
                        [HelpTextOverride]
                        [Property]
                        [PromptKey]
+                       [Editability]
                      )
 
 EmbeddedDoiField ::= embedded_doi_field(
@@ -998,6 +1015,7 @@ EmbeddedDoiField ::= embedded_doi_field(
                        [HelpTextOverride]
                        [Property]
                        [PromptKey]
+                       [Editability]
                      )
 
 EmbeddedPubMedIdField ::= embedded_pub_med_id_field(
@@ -1011,6 +1029,7 @@ EmbeddedPubMedIdField ::= embedded_pub_med_id_field(
                             [HelpTextOverride]
                             [Property]
                             [PromptKey]
+                            [Editability]
                           )
 
 EmbeddedRridField ::= embedded_rrid_field(
@@ -1024,6 +1043,7 @@ EmbeddedRridField ::= embedded_rrid_field(
                         [HelpTextOverride]
                         [Property]
                         [PromptKey]
+                        [Editability]
                       )
 
 EmbeddedNihGrantIdField ::= embedded_nih_grant_id_field(
@@ -1037,6 +1057,7 @@ EmbeddedNihGrantIdField ::= embedded_nih_grant_id_field(
                                [HelpTextOverride]
                                [Property]
                                [PromptKey]
+                               [Editability]
                              )
 
 EmbeddedLanguageField ::= embedded_language_field(
@@ -1050,6 +1071,7 @@ EmbeddedLanguageField ::= embedded_language_field(
                             [HelpTextOverride]
                             [Property]
                             [PromptKey]
+                            [Editability]
                           )
 
 EmbeddedAttributeValueField ::= embedded_attribute_value_field(
@@ -1062,6 +1084,7 @@ EmbeddedAttributeValueField ::= embedded_attribute_value_field(
                                   [HelpTextOverride]
                                   [Property]
                                   [PromptKey]
+                                  [Editability]
                                 )
 ```
 
@@ -1749,6 +1772,22 @@ Visibility ::= "visible" | "hidden"
 ```
 
 When `Visibility` is absent from an `EmbeddedArtifact`, the default is `"visible"`.
+
+### Editability
+
+`Editability` determines whether the value of an embedded field may be edited by the user. It is orthogonal to [`Visibility`](#visibility): visibility answers "is the field shown?", editability answers "may the shown value be changed?". The two are independent slots rather than arms of a single enum, so that modelling one does not constrain the other.
+
+```ebnf
+Editability ::= "editable" | "readOnly"
+```
+
+When `Editability` is absent from an `EmbeddedField`, the default is `"editable"`. A `"readOnly"` field is shown with its value (typically a `defaultValue` or a value supplied by the runtime) but the user cannot change it; the canonical use cases are system-populated identifiers and derived or computed values displayed for confirmation.
+
+`Editability` is carried only by [`EmbeddedField`](#prod-EmbeddedField) variants, not by [`EmbeddedTemplate`](#prod-EmbeddedTemplate) or [`EmbeddedPresentationComponent`](#prod-EmbeddedPresentationComponent): it governs the editability of a field's value, and only embedded fields bear values. Pairing `"readOnly"` with `"hidden"` [`Visibility`](#visibility) is permitted but redundant — a hidden field is trivially non-editable — and is not a validation error.
+
+A `"readOnly"` embedded field whose `ValueRequirement` is `"required"` MUST carry a `defaultValue` (at the embedding or on the referenced field's `FieldSpec`); otherwise the instance can never satisfy the requirement, since the user cannot supply the value and no default stands in (see [Validation](validation.md)).
+
+`Editability` declares author intent about the schema; runtime concerns such as workflow-state lockdown ("editable in draft, read-only once published") and role-based locks are out of scope for the model and are not expressed by this slot.
 
 ### Defaults
 
