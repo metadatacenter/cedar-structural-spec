@@ -1653,6 +1653,8 @@ EmbeddedArtifactKey ::= embedded_artifact_key(
 
 `EmbeddedArtifactKey` is distinct from artifact identifiers such as `FieldId` and `TemplateId`. It identifies the embedding site within a template rather than the reusable artifact being referenced. The same reusable `Field` may be embedded more than once in a `Template` under different keys, and each key independently identifies that embedding site in both the template structure and any corresponding `TemplateInstance`.
 
+The restriction to the `AsciiIdentifier` lexical form is deliberate: it lets the key serve directly as an identifier in the contexts that consume template data. Because a key is a syntactically valid identifier, a tool projecting a template into code may use it verbatim as a programming-language variable or field name, and a tabular export may use it verbatim as a column name in the header row of a CSV — in both cases without escaping, quoting, or remapping. These are illustrative uses, not requirements; the spec constrains only the lexical form of the key, not how downstream tools consume it.
+
 ### Requirements
 
 `ValueRequirement` identifies whether a value is required, recommended, or optional in the embedding context. `Required` means that a value must be supplied for conformance. `Recommended` and `Optional` are identical for conformance purposes: absence of a value MUST NOT cause conformance failure in either case. The distinction is one of authoring guidance only: implementations SHOULD encourage entry for `Recommended` fields and MAY issue warnings when such fields are left empty.
