@@ -321,7 +321,7 @@ ExternalAuthorityField ::= OrcidField
 
 ### Template Members
 
-A [`Template`](#prod-Template) holds an ordered sequence of [`TemplateMember`](#prod-TemplateMember) constructs. A `TemplateMember` is either an [`EmbeddedArtifact`](#prod-EmbeddedArtifact) — a reusable artifact contextualised within the template — or a [`Section`](#prod-Section), which groups members under a heading without itself contributing instance data.
+A [`Template`](#prod-Template) holds an ordered sequence of [`TemplateMember`](#prod-TemplateMember) constructs. A `TemplateMember` is either an [`EmbeddedArtifact`](#prod-EmbeddedArtifact) or a [`Section`](#prod-Section). An `EmbeddedArtifact` places a reusable field, template, or presentation component into this template; a `Section` groups members under a heading without itself contributing instance data.
 
 ```ebnf
 TemplateMember ::= EmbeddedArtifact
