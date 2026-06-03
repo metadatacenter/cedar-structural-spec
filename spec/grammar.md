@@ -101,11 +101,9 @@ A conceptual overview of the model — describing the principal categories, thei
 
 ## Kernel Grammar
 
-The kernel grammar defines the primary abstract categories of the model and the core schema-level structure that connects them. It introduces reusable schema artifacts, templates, and the embedding constructs through which templates assemble fields, nested templates, and presentation components. Subsequent sections refine the metadata, field-spec families, instance structures, and supporting constructs referenced here.
+The kernel grammar is the heart of the model. It defines the handful of constructs everything else builds on: reusable field and template definitions, and the embedding constructs that let a template assemble fields, nested templates, and presentation components. Later sections fill in the metadata, field-spec families, instance structures, and supporting constructs introduced here.
 
-The diagram below gives an overview of the kernel. [`Template`](#prod-Template) is the central container: it holds an ordered sequence of [`TemplateMember`](#prod-TemplateMember) constructs. A `TemplateMember` is either an [`EmbeddedArtifact`](#prod-EmbeddedArtifact), which contextualises a reusable artifact — a [`Field`](#prod-Field), a nested [`Template`](#prod-Template), or a [`PresentationComponent`](#prod-PresentationComponent) — within that specific template, or a [`Section`](#prod-Section), which groups members under a heading. The three concrete embedded constructs are [`EmbeddedField`](#prod-EmbeddedField), [`EmbeddedTemplate`](#prod-EmbeddedTemplate), and [`EmbeddedPresentationComponent`](#prod-EmbeddedPresentationComponent); a `Section` recursively contains further `TemplateMember` constructs. A [`TemplateInstance`](#prod-TemplateInstance) records data conforming to a [`Template`](#prod-Template). Concrete `Field` variants and `FieldSpec` configurations are omitted from the diagram for clarity; they are defined in [Concrete Field Artifacts](#concrete-field-artifacts) and [Field Specs](#field-specs).
-
-The diagram is interactive: each named class in the rendered book links to the corresponding EBNF production below.
+The diagram below gives an overview of the kernel. [`Template`](#prod-Template) is the central container: it holds an ordered sequence of [`TemplateMember`](#prod-TemplateMember) constructs. A `TemplateMember` is either an [`EmbeddedArtifact`](#prod-EmbeddedArtifact), which contextualises a reusable artifact (a [`Field`](#prod-Field), a nested [`Template`](#prod-Template), or a [`PresentationComponent`](#prod-PresentationComponent)) within that specific template, or a [`Section`](#prod-Section), which groups members under a heading. The three concrete embedded constructs are [`EmbeddedField`](#prod-EmbeddedField), [`EmbeddedTemplate`](#prod-EmbeddedTemplate), and [`EmbeddedPresentationComponent`](#prod-EmbeddedPresentationComponent); a `Section` recursively contains further `TemplateMember` constructs. A [`TemplateInstance`](#prod-TemplateInstance) records data conforming to a [`Template`](#prod-Template). Concrete `Field` variants are omitted from the diagram for clarity; they are defined in [Concrete Field Artifacts](#concrete-field-artifacts).
 
 ```mermaid
 %%{init: {'themeVariables': {'fontSize': '12px'}}}%%
@@ -234,7 +232,7 @@ SchemaArtifact ::= Field
 
 #### Template
 
-[`Template`](#prod-Template) is a concrete schema artifact and the central container of the model. It assembles [`TemplateMember`](#prod-TemplateMember) constructs — [`EmbeddedArtifact`](#prod-EmbeddedArtifact) embeddings and [`Section`](#prod-Section) groupings — into a structured form and defines the schema that [`TemplateInstance`](#prod-TemplateInstance) constructs conform to.
+[`Template`](#prod-Template) is a concrete schema artifact and the central container of the model. It assembles [`TemplateMember`](#prod-TemplateMember) constructs into a structured form: [`EmbeddedArtifact`](#prod-EmbeddedArtifact) embeddings and [`Section`](#prod-Section) groupings. The embedded artifacts define the schema that [`TemplateInstance`](#prod-TemplateInstance) constructs conform to; sections only organise members for presentation and carry no instance data.
 
 ```ebnf
 Template ::= template(
@@ -253,23 +251,6 @@ Title ::= title(
             MultilingualString
           )
 
-Label ::= label(
-            MultilingualString
-          )
-
-Prompt ::= prompt(
-             MultilingualString
-           )
-
-AlternativePrompt ::= alternative_prompt(
-                        PromptKey
-                        MultilingualString
-                      )
-
-PromptKey ::= prompt_key(
-                AsciiIdentifier
-              )
-
 Header ::= header(
              MultilingualString
            )
@@ -287,7 +268,7 @@ HelpDisplayMode ::= "inline" | "tooltip" | "both" | "none"
 
 `Header` and `Footer` denote optional human-readable textual content displayed at the top and bottom of a rendered template respectively. Each is a [`MultilingualString`](#multilingual-strings) carrying one or more language-tagged localizations of the same conceptual text.
 
-`TemplateRenderingHint` carries form-level UX configuration. Distinct from the per-field-spec [`RenderingHint`](#rendering-hints) family, which configures how a single field is rendered, `TemplateRenderingHint` configures behaviour that applies to the form as a whole. Currently the only slot is `HelpDisplayMode`; future revisions may add further form-level UX switches, each with its own cascade rule for embedded templates.
+`TemplateRenderingHint` carries form-level UX configuration. Distinct from the per-field-spec [`RenderingHint`](#rendering-hints) family, which configures how a single field is rendered, `TemplateRenderingHint` configures behaviour that applies to the form as a whole. Currently the only slot is `HelpDisplayMode`; future revisions may add further form-level UX switches, each defining how it applies when one template is embedded inside another.
 
 `HelpDisplayMode` selects how field [`HelpText`](#field-artifacts) — and any per-embedding [`HelpTextOverride`](#help-text-override) — is presented at form-render time:
 
@@ -1888,6 +1869,10 @@ PropertyLabel ::= property_label( MultilingualString )
 A `Field`'s `Prompt` carries its single preferred question wording. `AlternativePrompt` lets the field's owner curate a closed set of *additional* sanctioned wordings, each addressable by a stable key, so that templates embedding the field select from that set rather than inventing their own. This supports curated-vocabulary governance — the motivating case is NIH/CADSR Common Data Elements (CDEs), where a field carries the CDE's preferred wording plus its other sanctioned alternatives — but the mechanism is general: any field owner may offer style variants (formal vs. casual, long vs. short) and constrain template authors to the offered set.
 
 ```ebnf
+Prompt ::= prompt(
+             MultilingualString
+           )
+
 AlternativePrompt ::= alternative_prompt(
                         PromptKey
                         MultilingualString
