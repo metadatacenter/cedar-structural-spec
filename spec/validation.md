@@ -62,7 +62,7 @@ Each `EmbeddedPresentationComponent` MUST reference a `PresentationComponent`.
 
 ### Alternative Prompts
 
-These rules govern the curated alternative question wordings introduced by [grammar.md §Alternative Prompts](grammar.md#alternative-prompts).
+These rules govern the curated alternative prompt wordings introduced by [grammar.md §Alternative Prompts](grammar.md#alternative-prompts).
 
 Within a single `Field`'s `AlternativePrompt*` slot, the `PromptKey` components MUST be unique: no two `AlternativePrompt` entries on the same field may share the same key.
 
