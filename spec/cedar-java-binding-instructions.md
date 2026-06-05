@@ -12,28 +12,109 @@ Create a Java 17+ binding for the CEDAR structural specification.
 
 - Do not expose artifacts as Jackson `JsonNode` wrappers.
 - Public model types must be Java records, enums, and sealed interfaces.
-- Use one top-level Java file per public record, interface, or enum.
-- Do not create one large nested namespace class.
+- Use one top-level Java file per public record, interface, or enum, named for that type. One public type per file.
+- Do not create one large nested namespace class, and do not create aggregate files that bundle several types (no `FieldRecords`, `EmbeddedRecords`, `Values`, or similar). Each record/interface/enum is its own file in its family or sub-package.
 - `JsonNode` may only be used internally inside mapper and validator code.
 
 ## Code Organization
 
-- Do not put all model types in one flat package.
-- There are 21 field families; cover all of them. They are enumerated in `grammar.md` (Concrete Field Artifacts) and listed in `bindings.md`: Text, IntegerNumber, RealNumber, Boolean, Date, Time, DateTime, ControlledTerm, SingleValuedEnum, MultiValuedEnum, Link, Email, PhoneNumber, Orcid, Ror, Doi, PubMedId, Rrid, NihGrantId, Language, and AttributeValue.
-- Honour the per-family structural exceptions: `EmbeddedBooleanField` and `EmbeddedSingleValuedEnumField` omit `[Cardinality]`; `EmbeddedMultiValuedEnumField`'s embedding default is a sequence of `EnumValue`; `AttributeValueField` carries no default value at either layer.
-- Use one Java package per field family, for example:
-    - `org.metadatacenter.cedar.model.field.text`
-    - `org.metadatacenter.cedar.model.field.integernumber`
-    - `org.metadatacenter.cedar.model.field.controlledterm`
-- Each family package must contain that family's:
-    - typed field id
-    - field artifact record
-    - field spec record
-    - embedded field record
-    - value record
-    - rendering hint record, where applicable
-    - family-specific helpers or validators, where applicable
-- Put cross-family sealed interfaces and shared records in parent or common packages.
+The single most common failure mode is to emit every type into one flat
+package (or to collapse the families into a few aggregate classes). Both are
+wrong. The source tree MUST follow the package layout below.
+
+**Hard rules.**
+
+- The model MUST NOT be one flat package. If more than a handful of types
+  land directly in `org.metadatacenter.cedar.model`, the layout is wrong.
+- Generate the per-family types for every family; do NOT collapse families
+  into aggregate files such as `FieldRecords`, `EmbeddedRecords`, or
+  `Values`. There is no `XxxRecords` file. One top-level Java file per
+  public record, interface, or enum (already required under Model Design).
+- There are 21 field families; cover all of them, each in its own package.
+  They are enumerated in `grammar.md` (Concrete Field Artifacts) and listed
+  in `bindings.md`: Text, IntegerNumber, RealNumber, Boolean, Date, Time,
+  DateTime, ControlledTerm, SingleValuedEnum, MultiValuedEnum, Link, Email,
+  PhoneNumber, Orcid, Ror, Doi, PubMedId, Rrid, NihGrantId, Language, and
+  AttributeValue.
+- Honour the per-family structural exceptions: `EmbeddedBooleanField` and
+  `EmbeddedSingleValuedEnumField` omit `[Cardinality]`;
+  `EmbeddedMultiValuedEnumField`'s embedding default is a sequence of
+  `EnumValue`; `AttributeValueField` carries no default value at either
+  layer.
+
+**Each field-family package** (e.g. `…model.field.text`) contains that
+family's, and only that family's:
+
+- typed field id (`TextFieldId`)
+- field artifact record (`TextField`)
+- field spec record (`TextFieldSpec`)
+- embedded field record (`EmbeddedTextField`)
+- value record (`TextValue`)
+- rendering hint record, where applicable (`TextRenderingHint`)
+- family-specific helpers or validators, where applicable
+
+**Cross-family and non-family types** are NOT placed at the top level
+either; they go in purpose-named sub-packages. The full layout (rooted at
+`org.metadatacenter.cedar.model`):
+
+```
+org.metadatacenter.cedar.model
+├── field
+│   ├── text                     (TextFieldId, TextField, TextFieldSpec,
+│   │                             EmbeddedTextField, TextValue, TextRenderingHint)
+│   ├── integernumber
+│   ├── realnumber
+│   ├── booleanfield             (avoid the Java keyword `boolean`)
+│   ├── date
+│   ├── time
+│   ├── datetime
+│   ├── controlledterm
+│   ├── singlevaluedenum
+│   ├── multivaluedenum
+│   ├── link
+│   ├── email
+│   ├── phonenumber
+│   ├── orcid
+│   ├── ror
+│   ├── doi
+│   ├── pubmedid
+│   ├── rrid
+│   ├── nihgrantid
+│   ├── language
+│   ├── attributevalue
+│   └── (Field, EmbeddedField, FieldSpec, FieldId, Value unions + isXxx: the
+│        cross-family sealed interfaces that range over the families)
+├── leaves                       (Iri, LanguageTag, ModelVersion, Token,
+│                                 EmbeddedArtifactKey, PromptKey, Version,
+│                                 IsoDateTimeStamp, and other typed primitives)
+├── metadata                     (CatalogMetadata, LifecycleMetadata,
+│                                 SchemaArtifactVersioning, Annotation,
+│                                 AnnotationValue + variants, Status)
+├── embedded                     (EmbeddedArtifact union, EmbeddedTemplate,
+│                                 EmbeddedPresentationComponent, Cardinality,
+│                                 Property, ValueRequirement, Visibility,
+│                                 Editability, AlternativePrompt, Section,
+│                                 Collapsibility, TemplateMember)
+├── presentation                 (PresentationComponent union + variants:
+│                                 RichTextComponent, ImageComponent,
+│                                 YoutubeVideoComponent, SectionBreakComponent,
+│                                 PageBreakComponent)
+├── instance                     (TemplateInstance, FieldValue,
+│                                 NestedTemplateInstance, InstanceValue)
+├── serialize                    (CedarMapper / decode-encode, validators;
+│                                 the only place JsonNode is used)
+└── Template, Artifact, SchemaArtifact, CedarConstructionException
+                                 (the few genuinely root-level types)
+```
+
+Only a small number of genuinely top-level constructs (`Template`,
+`Artifact`, `SchemaArtifact`, the construction exception) belong directly in
+the root package; everything else lives in one of the sub-packages above.
+
+**Self-check.** After generation, no sub-package should be empty and the
+root package should hold only a handful of files. A root package containing
+dozens of types means the layout was not applied; regenerate into the tree
+above.
 
 ## Typing Rules
 
