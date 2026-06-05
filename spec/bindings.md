@@ -556,12 +556,14 @@ MUST NOT emit `null` or empty strings in place of an absent optional.
 Use `JSON.stringify` with no `null`-injection logic; the property is
 naturally absent from the serialised output.
 
-**Java idiom.** Prefer `@Nullable T` over `Optional<T>` in record
-components. Jackson handles `null`/missing properties on records
-cleanly with `@JsonInclude(JsonInclude.Include.NON_NULL)` at either
-the field or class level. `Optional<T>` works but interacts awkwardly
-with records (Jackson must be configured to recognise empty
-`Optional`s) and adds a layer of allocation per access.
+**Java idiom.** Use `@Nullable T` for the *stored* record component, but
+do not expose that `null` at the API surface (see the null-free
+accessors guidance below). Jackson handles `null`/missing properties on
+records cleanly with `@JsonInclude(JsonInclude.Include.NON_NULL)` at
+either the field or class level. `Optional<T>` as a record *component*
+interacts awkwardly with records (Jackson must be configured to
+recognise empty `Optional`s) and adds an allocation per access, so
+prefer it as an *accessor return type* rather than a stored field.
 
 ```java
 public record Cardinality(
@@ -590,6 +592,59 @@ or use a custom `model_dump_json` wrapper to make this implicit.
 **Validation guidance.** Decoders MUST treat `"prop": null` as an
 encoding error (per [`serialization.md`](serialization.md) §4.2),
 distinct from omission of the property.
+
+**Null-free accessors.** The abstract model and the wire form are
+already free of `null`: an absent optional is *omitted*, never encoded
+as `null`, and decoders reject `null` (per
+[`serialization.md`](serialization.md) §4.2). A binding SHOULD carry
+that property through to its public API, so that callers never handle a
+raw `null` / `None` / `undefined`. The stored representation MAY use the
+language's cheapest absence form (Java `@Nullable`, Python `T | None`,
+TypeScript `prop?:`); the recommendation here is about the *accessor
+surface*, not the field storage.
+
+Optional slots fall into two kinds, which call for two accessor shapes:
+
+- **Defaulted-optional.** Absence has a defined meaning given elsewhere
+  in the spec, so there is always a well-defined effective value. These
+  slots SHOULD be exposed through a *total* accessor that resolves the
+  default, returning the value type directly (never an optional): the
+  caller never sees absence because the spec already answered what
+  absence means. The defaulted-optional slots are:
+
+  | Slot | Absent means |
+  |---|---|
+  | `[Visibility]` | `"visible"` |
+  | `[Editability]` | `"editable"` |
+  | `[ValueRequirement]` | `"optional"` |
+  | `[Cardinality]` | `min 1`, `max 1` |
+  | `[Collapsibility]` | `"none"` |
+
+  For example, `effectiveVisibility()` returns `Visibility`, not
+  `Optional<Visibility>`.
+
+  Resolve the default only in the accessor; do **not** write it into the
+  stored field on construction or decode. Normalising an absent slot to
+  its default in storage (e.g. storing `Visibility.VISIBLE` when the
+  property was absent) would re-emit the property on encode, turning an
+  omitted slot into a present one and breaking round-trip equality
+  ([`serialization.md`](serialization.md) §4.2). Absence is preserved in
+  storage; the default is supplied at read time.
+
+- **Genuinely-optional.** Absence is itself meaningful information (the
+  value really is not present), e.g. `[HelpText]`, `[Description]`,
+  `[defaultValue]`, `[PromptOverride]`, `[HelpTextOverride]`,
+  `[Property]`, `[PromptKey]`, `[RecommendedKey]`,
+  `[RecommendedProperty]`, `[Header]`, `[Footer]`, and a value's
+  `[Label]`. These SHOULD be exposed through an option-typed accessor
+  (`Optional<T>` in Java, `T | None` in Python, a narrowed `T |
+  undefined` in TypeScript), so the type system forces the caller to
+  handle absence without ever surfacing a bare `null`.
+
+This is also why `Optional<T>` is recommended as an *accessor return
+type* but not as a stored record component (§2.6 Java idiom): the
+encapsulation keeps storage cheap and Jackson-clean while the contract
+stays null-free.
 
 ### 2.7 String enum
 
