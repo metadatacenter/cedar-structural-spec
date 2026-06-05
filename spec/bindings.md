@@ -159,9 +159,20 @@ comment at all (in which case `kind` is the default per
 [`wire-grammar.md`](wire-grammar.md) §1.3). Each member is an object
 production whose shape includes a `"kind": "MemberName"` literal
 property. Examples: `Value`, `FieldSpec`, `EmbeddedArtifact`,
-`ControlledTermSource`, `PresentationComponent`, `InstanceValue`,
-`SchemaArtifact`, `Artifact`,
+`TemplateMember`, `ControlledTermSource`, `PresentationComponent`,
+`InstanceValue`, `SchemaArtifact`, `Artifact`,
 `ExternalAuthorityValue`, `DateValue`.
+
+> **`TemplateMember` and `Section`.** A `Template`'s `members` is a
+> sequence of `TemplateMember`, the union of `EmbeddedArtifact` and
+> `Section` (grammar.md §Sections). A `Section` is a `kind`-tagged
+> grouping member (`{"kind": "Section", "label": …, "members": […]}`)
+> that recursively contains further `TemplateMember` constructs. It
+> carries no `EmbeddedArtifactKey` and contributes no instance data, so
+> a binding decodes it like any other tagged-union member but excludes
+> it when collecting embedded artifacts for instance matching. Both
+> `Template.members` and `Section.members` therefore hold
+> `TemplateMember`, not `EmbeddedArtifact`.
 
 **TypeScript idiom.** A discriminated (tagged) union of interfaces, all
 sharing a `kind: "..."` field as their literal-typed discriminant.
@@ -201,7 +212,7 @@ public sealed interface Value permits TextValue, IntegerNumberValue { }
 @JsonTypeName("TextValue")
 public record TextValue(
         @JsonProperty("value") String value,
-        @JsonProperty("lang") @JsonInclude(NON_ABSENT) Optional<String> lang)
+        @JsonProperty("lang") @JsonInclude(NON_NULL) @Nullable String lang)
         implements Value {
     @JsonCreator
     public TextValue { }
@@ -267,12 +278,28 @@ construction.
 
 *Example.* `EmbeddedArtifact` is a sealed union over `EmbeddedField`
 and `EmbeddedPresentationComponent`, with `EmbeddedField` itself
-sealed over the 20 family records (`EmbeddedTextField`,
+sealed over the 21 family records (`EmbeddedTextField`,
 `EmbeddedIntegerNumberField`, etc.). The Jackson registration on
-`EmbeddedArtifact` should list every leaf record (all 20
+`EmbeddedArtifact` should list every leaf record (all 21
 `EmbeddedXxxField` records plus every `EmbeddedXxxComponent`
 record) in `@JsonSubTypes`, not the intermediate `EmbeddedField`
 interface.
+
+**Java note: `TemplateMember` and the recursive `Section` record.**
+`Template.members` (and `Section.members`) is a `List<TemplateMember>`,
+where `TemplateMember` is a sealed union of `EmbeddedArtifact` and
+`Section`. Model it with the same flat dispatch table: `TemplateMember`'s
+`@JsonSubTypes` should enumerate `Section` plus every leaf
+`EmbeddedArtifact` record (the 21 `EmbeddedXxxField` records and the
+`EmbeddedXxxComponent` records), rather than nesting through the
+`EmbeddedArtifact` interface. `Section` is itself a `record` carrying
+`label`, optional `description`, optional `collapsibility`, and its own
+`List<TemplateMember>` — a recursive component, which Java records and
+Jackson handle without special treatment. `Section` carries no `key`
+and yields no instance values, so the routine that flattens a template
+to a `Map<EmbeddedArtifactKey, EmbeddedArtifact>` for instance matching
+recurses into `Section.members` but contributes no entry for the
+`Section` itself.
 
 ### 2.3 Position-discriminated union
 
@@ -329,7 +356,8 @@ the variant.
 
 **What it is.** A wire production written as `T ::: string` (or
 `number`) where `T` names a specialised role for the primitive — `Iri`,
-`FieldId`, `TemplateId`, `OrcidIri`, `LanguageTag`, `Bcp47Tag`, etc.
+`FieldId`, `TemplateId`, `OrcidIri`, `LanguageTag`, `Bcp47Tag`,
+`EmbeddedArtifactKey`, `PromptKey`, etc.
 On the wire these collapse to the underlying primitive; in the
 abstract grammar they are typed roles whose constraints (IRI
 well-formedness, BCP 47, ASCII identifier shape) MUST be enforced at
@@ -362,7 +390,7 @@ export function iri(value: string): Iri {
 ```
 
 cedar-ts's `FieldId` family uses this form with a per-family `kind`
-discriminant so the twenty families remain distinguishable in the type
+discriminant so the twenty-one families remain distinguishable in the type
 system.
 
 *Option B — branded type.* A lighter alternative; the value is a bare
@@ -408,8 +436,8 @@ For richer runtime validation, a Pydantic `BaseModel` wrapper or an
 
 **Validation guidance.** All typed primitive wrappers MUST enforce their
 syntactic constraints (RFC 3987 for IRI; BCP 47 for language tags; the
-ASCII pattern `[A-Za-z][A-Za-z0-9_-]*` for `EmbeddedArtifactKey`;
-SemVer for `Version` / `ModelVersion`) at the constructor.
+ASCII pattern `[A-Za-z][A-Za-z0-9_-]*` for `EmbeddedArtifactKey` and
+`PromptKey`; SemVer for `Version` / `ModelVersion`) at the constructor.
 
 **Worked example: `Iri` and `FieldId`.** `Iri` wire form: `"https://example.org/x"`.
 `FieldId` wire form: also `"https://example.org/x"` — the family is
@@ -568,7 +596,8 @@ distinct from omission of the property.
 **What it is.** A wire production `T ::: "a" | "b" | …` whose values
 are drawn from a fixed set. All values are `lowerCamelCase` per
 [`serialization.md`](serialization.md) §3.3. Examples: `Status`,
-`ValueRequirement`, `Visibility`, `DateValueType`, `DateComponentOrder`,
+`ValueRequirement`, `Visibility`, `Editability`, `Collapsibility`,
+`DateValueType`, `DateComponentOrder`,
 `TimeFormat`, `TimePrecision`, `DateTimeValueType`,
 `TimezoneRequirement`, `RealNumberDatatypeKind` (three values), the
 flat-string rendering hints (`TextRenderingHint`,
@@ -797,6 +826,19 @@ localization fallback (e.g., one language overridden, others falling
 through) is **not** part of the precedence rule. Bindings MUST NOT
 synthesise such fallback.
 
+**Prompt resolution with `promptKey`.** The rendered prompt has a
+third input beyond `Field.prompt` and `promptOverride`: an embedding
+MAY carry a `promptKey` that selects one of the referenced field's
+curated `AlternativePrompt` entries (grammar.md §Alternative Prompts).
+`promptKey` and `promptOverride` are mutually exclusive on a single
+embedding (a binding SHOULD reject an embedding carrying both at
+construction). A resolved-prompt accessor therefore needs the resolved
+`Field` to look the key up, and the precedence is: `promptOverride` if
+present; else the `AlternativePrompt` whose `key` equals `promptKey`;
+else `Field.prompt`. A `promptKey` matching no `AlternativePrompt` on
+the referenced field is a validation error
+([`validation.md`](validation.md)).
+
 ---
 
 ## 3. Naming Conventions per Language
@@ -923,24 +965,37 @@ any TypeScript-specific idiom not covered explicitly in this document.
 High-level structure (the `src/` tree mirrors the grammar layering):
 
 - `leaves/` — primitive validators and typed leaves (`Iri`,
-  `LanguageTag`, `IsoDateTimeStamp`, ASCII-id, BCP 47, SemVer, integer).
+  `LanguageTag`, `IsoDateTimeStamp`, ASCII-id, BCP 47, SemVer, integer)
+  and `CedarConstructionError`.
 - `multilingual.ts` — `MultilingualString` and `LangString`.
-- `values/` — the `Value` family. Each `Value` variant carries its
-  family-specific content directly (lexical form, language tag,
-  datatype, or boolean payload, as appropriate); there is no separate
-  `Literal` layer.
-- `identity.ts` — artifact identifiers (`FieldId`, `TemplateId`,
+- `identifiers.ts` — artifact identifiers (`FieldId`, `TemplateId`,
   `PresentationComponentId`, `TemplateInstanceId`).
-- `metadata/` — `LifecycleMetadata`, `SchemaArtifactVersioning`, `Annotation`.
-- `field-specs/` — `FieldSpec` family.
-- `fields.ts` — `Field` family.
-- `embedded/` — `EmbeddedField`, `EmbeddedTemplate`,
-  `EmbeddedPresentationComponent`, plus `Cardinality`, `Property`,
-  `PromptOverride`, `Visibility`, `ValueRequirement`.
+- `field-families/` — one vertical-slice file per field family
+  (`text-field.ts`, …, 21 in all), following the §4 locality
+  convention. Each holds that family's typed id, `Value`, `FieldSpec`,
+  reusable `Field` artifact, and `EmbeddedField` type, plus shared
+  helpers (`embedded-field-common.ts`, `rendering-hints.ts`, etc.). The
+  `Field` and `EmbeddedField` unions and their `isField` /
+  `isEmbeddedField` guards are assembled here too. (There is no
+  separate `values/`, `field-specs/`, or `fields.ts`; those live inside
+  the per-family files.)
+- `metadata/` — `CatalogMetadata`, `LifecycleMetadata`,
+  `SchemaArtifactVersioning`, `Annotation`.
+- `embedded/` — non-field embedding constructs and per-embedding config:
+  `embedded-template.ts`, `embedded-presentation-component.ts`,
+  `cardinality.ts`, `property.ts`, `requirement.ts` (`ValueRequirement`),
+  `visibility.ts`, `editability.ts`, `alternative-prompt.ts`
+  (`AlternativePrompt` / `PromptKey`), and `section.ts` (`Section`,
+  `Collapsibility`, `TemplateMember`). (`PromptOverride` collapses to a
+  `MultilingualString` on the wire and is carried directly on the
+  `EmbeddedField` types rather than as its own module.)
 - `presentation/` — `PresentationComponent` family.
 - `instances/` — `TemplateInstance`, `FieldValue`,
   `NestedTemplateInstance`.
 - `template.ts` — `Template`.
+- `serialize/` — wire-form serialize/parse codecs (per-family field and
+  embedded-field codecs, embedded-config, values, metadata,
+  collapsed-wrappers, the `parseArtifact` / `serialize` entry points).
 - `index.ts` — public API surface.
 
 Conventions adopted by cedar-ts (already documented in §2 above):
