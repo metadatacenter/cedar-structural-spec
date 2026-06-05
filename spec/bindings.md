@@ -37,7 +37,7 @@ the wire round-trip and the construction-time invariants.
 
 The reference TypeScript implementation is
 [cedar-ts](https://github.com/metadatacenter/cedar-ts) (npm package
-`@metadatacenter/cedar-model`); see §5. For idioms not covered
+`@metadatacenter/cedar-model`); see §6. For idioms not covered
 explicitly here, cedar-ts is the source of truth on the TS side.
 
 ---
@@ -72,7 +72,7 @@ the wire grammar. For every category we give:
 > **Forward references.** §2 mentions cedar-ts module names
 > (`leaves/`, `embedded/`, etc.) and a few productions
 > (`EmbeddedArtifact`, `Template.members`) before they are introduced
-> in detail. The cedar-ts module layout is in §5; the productions
+> in detail. The cedar-ts module layout is in §6; the productions
 > themselves are defined in [`grammar.md`](grammar.md) and
 > [`wire-grammar.md`](wire-grammar.md).
 
@@ -952,7 +952,78 @@ PEP 8 conformance on the Python surface.
 
 ---
 
-## 4. Codebase Organisation
+## 4. Documentation Conventions
+
+A binding's public surface SHOULD be comprehensively documented with
+the host language's native doc-comment vehicle, so that a developer
+working from IDE tooltips or generated API docs never has to consult
+the spec to use a type correctly. The doc comments are the binding's
+user-facing contract; treat them as part of the deliverable, not an
+afterthought.
+
+**Per-language vehicle.**
+
+- **TypeScript:** TSDoc (`/** … */`) on every exported type, interface,
+  factory function, and type guard. Use `@param`, `@returns`,
+  `@throws`, `@remarks`, and `@example` tags. TSDoc renders in editors
+  and feeds API-doc generators (TypeDoc).
+- **Java:** Javadoc (`/** … */`) on every public class, record,
+  record component (via `@param` on the canonical constructor), enum,
+  and method. Use `@param`, `@return`, `@throws`, and `{@code …}` /
+  `{@link …}`. Document each `@throws CedarConstructionException` with
+  the condition that triggers it.
+- **Python:** PEP 257 docstrings on every public class, model, factory
+  function, and accessor. Pick one style (Google or NumPy) and apply it
+  uniformly; document `Args:`, `Returns:`, and `Raises:`.
+
+**What every documented element MUST cover.** Regardless of language,
+the doc comment for a binding type or member SHOULD state:
+
+1. **The grammar production it realizes.** Name the abstract production
+   (and link to [`grammar.md`](grammar.md) where the doc system
+   supports links), so a reader can trace the type back to the model.
+2. **Construction-time invariants and the exception raised.** Every
+   constraint the constructor enforces (lexical form, uniqueness,
+   numeric ordering, mutual exclusion, etc.; see §2.9) and the single
+   construction exception type it throws on violation. A reader MUST be
+   able to learn, from the doc comment alone, what makes construction
+   fail.
+3. **Absence and default semantics for optional slots.** For a
+   *defaulted-optional* slot, document the effective value when absent
+   and point to the total accessor that resolves it; for a
+   *genuinely-optional* slot, document that absence is meaningful and is
+   exposed through an option-typed accessor (see §2.6). Doc comments
+   MUST NOT describe an absent optional as holding `null`.
+4. **An illustrative value.** Where it aids understanding, include a
+   short wire-form or construction example (`@example` / `{@code}` /
+   doctest-style snippet).
+
+**Worked example (Java).** A documented `Cardinality` record:
+
+```java
+/**
+ * Permitted number of values for an embedded artifact
+ * (grammar.md §Cardinality). Wire form: {@code {"min": 0, "max": 5}}.
+ *
+ * @param min the minimum number of values; MUST be >= 0
+ * @param max the maximum number of values, or {@code null} for no upper
+ *            bound (unbounded); when present MUST be >= 0 and >= {@code min}
+ * @throws CedarConstructionException if {@code min < 0}, {@code max < 0},
+ *         or {@code min > max}
+ */
+public record Cardinality(
+        @JsonProperty("min") int min,
+        @JsonProperty("max") @JsonInclude(NON_NULL) @Nullable Integer max) { … }
+```
+
+The reference TypeScript binding ([cedar-ts](https://github.com/metadatacenter/cedar-ts);
+see §6) is the worked reference for the TSDoc form. A binding's own
+README SHOULD state which doc-comment style it follows and how its API
+docs are generated.
+
+---
+
+## 5. Codebase Organisation
 
 Bindings SHOULD organise the source tree so that **everything specific
 to a single field family lives together**. A field family is the
@@ -1010,7 +1081,7 @@ like; only family-specific code is constrained by this guideline.
 
 ---
 
-## 5. The Reference TypeScript Binding
+## 6. The Reference TypeScript Binding
 
 The reference TypeScript implementation is
 [cedar-ts](https://github.com/metadatacenter/cedar-ts), published as
@@ -1068,7 +1139,7 @@ Conventions adopted by cedar-ts (already documented in §2 above):
 
 ---
 
-## 6. Open Issues per Language
+## 7. Open Issues per Language
 
 **Java.**
 
@@ -1114,7 +1185,7 @@ Conventions adopted by cedar-ts (already documented in §2 above):
 
 ---
 
-## 7. Reading `wire-grammar.md` as a Binding Implementer
+## 8. Reading `wire-grammar.md` as a Binding Implementer
 
 A short cheat-sheet that maps `wire-grammar.md` notation to the
 meta-categories above, so an implementer encountering a production can
@@ -1138,7 +1209,7 @@ enforce at construction (§2.9).
 
 ---
 
-## 8. Cross-References
+## 9. Cross-References
 
 - Abstract grammar: [`grammar.md`](grammar.md)
 - JSON wire shapes: [`wire-grammar.md`](wire-grammar.md)
