@@ -17,7 +17,7 @@
     }
   },
   "templateRef": "https://example.org/templates/multi-valued-enum",
-  "values": [
+  "members": [
     {
       "kind": "FieldValue",
       "key": "field1",

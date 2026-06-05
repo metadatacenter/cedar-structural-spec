@@ -17,7 +17,7 @@
     }
   },
   "templateRef": "https://example.org/templates/text",
-  "values": [
+  "members": [
     {
       "kind": "FieldValue",
       "key": "field1",

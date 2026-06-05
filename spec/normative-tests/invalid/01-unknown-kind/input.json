@@ -17,7 +17,7 @@
     }
   },
   "templateRef": "https://example.org/templates/patient-observation",
-  "values": [
+  "members": [
     {
       "kind": "FieldValue",
       "key": "severity",

@@ -568,7 +568,7 @@ The `members` array MUST preserve order. The `EmbeddedArtifactKey` values within
 { "kind": "NestedTemplateInstance", "key": "<EmbeddedArtifactKey>", "values": ["<InstanceValue>*"] }
 ```
 
-The `values` array of a `TemplateInstance` MUST satisfy the structural invariants defined in [`grammar.md`](grammar.md) §Instances: a given `EmbeddedArtifactKey` appears as the `key` of at most one `FieldValue`; a given `EmbeddedArtifactKey` does not appear as the `key` of both a `FieldValue` and a `NestedTemplateInstance`; multiple `NestedTemplateInstance` entries sharing a `key` are permitted.
+The `members` array of a `TemplateInstance` (and of a `NestedTemplateInstance`) MUST satisfy the structural invariants defined in [`grammar.md`](grammar.md) §Instances: a given `EmbeddedArtifactKey` appears as the `key` of at most one `FieldValue`; a given `EmbeddedArtifactKey` does not appear as the `key` of both a `FieldValue` and a `NestedTemplateInstance`; multiple `NestedTemplateInstance` entries sharing a `key` are permitted.
 
 ## 7. Round-Tripping
 

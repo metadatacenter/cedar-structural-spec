@@ -17,7 +17,7 @@
     }
   },
   "templateRef": "https://example.org/templates/nih-grant-id",
-  "values": [
+  "members": [
     {
       "kind": "FieldValue",
       "key": "field1",

@@ -2276,7 +2276,7 @@ TemplateInstance ::: object {
   metadata: CatalogMetadata
   templateRef: TemplateId
   label?: Label
-  values: array<InstanceValue>
+  members: array<InstanceValue>
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
   // metadata is CatalogMetadata; instances do not carry schema
@@ -2298,9 +2298,9 @@ FieldValue ::: object {
 NestedTemplateInstance ::: object {
   "kind": "NestedTemplateInstance"
   key: EmbeddedArtifactKey
-  values: array<InstanceValue>
+  members: array<InstanceValue>
 }
-  // values MAY be empty
+  // members MAY be empty
 ```
 
 ---
@@ -2377,7 +2377,7 @@ Conventions:
 2. `CatalogMetadata` → `metadata`
 3. `TemplateId` → `templateRef`
 4. `[Label]` → `label?`
-5. `InstanceValue*` → `values`
+5. `InstanceValue*` → `members`
 
 ### 14.2 Field artifacts
 
@@ -2827,7 +2827,7 @@ The ten new rendering hints introduced for previously hint-less families each ca
 
 **`NestedTemplateInstance`** (`nested_template_instance`):
 0. `EmbeddedArtifactKey` → `key`
-1. `InstanceValue*` → `values`
+1. `InstanceValue*` → `members`
 
 ### 14.12 Collapsed-wrapper productions
 

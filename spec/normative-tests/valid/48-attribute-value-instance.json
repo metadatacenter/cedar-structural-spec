@@ -17,7 +17,7 @@
     }
   },
   "templateRef": "https://example.org/templates/attribute-value",
-  "values": [
+  "members": [
     {
       "kind": "FieldValue",
       "key": "field1",

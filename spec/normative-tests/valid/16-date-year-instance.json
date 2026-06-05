@@ -17,7 +17,7 @@
     }
   },
   "templateRef": "https://example.org/templates/date-year",
-  "values": [
+  "members": [
     {
       "kind": "FieldValue",
       "key": "field1",

@@ -17,7 +17,7 @@
     }
   },
   "templateRef": "https://example.org/templates/time",
-  "values": [
+  "members": [
     {
       "kind": "FieldValue",
       "key": "field1",

@@ -17,7 +17,7 @@
     }
   },
   "templateRef": "https://example.org/templates/integer-number",
-  "values": [
+  "members": [
     {
       "kind": "FieldValue",
       "key": "field1",
