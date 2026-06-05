@@ -31,9 +31,9 @@ Embedding terms:
 Instance terms:
 
 - `TemplateInstance`
-- `InstanceValue`
-- `FieldValue`
-- `NestedTemplateInstance`
+- `InstanceEntry`
+- `FieldEntry`
+- `TemplateEntry`
 
 Typing terms:
 

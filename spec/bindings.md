@@ -160,7 +160,7 @@ comment at all (in which case `kind` is the default per
 production whose shape includes a `"kind": "MemberName"` literal
 property. Examples: `Value`, `FieldSpec`, `EmbeddedArtifact`,
 `TemplateMember`, `ControlledTermSource`, `PresentationComponent`,
-`InstanceValue`, `SchemaArtifact`, `Artifact`,
+`InstanceEntry`, `SchemaArtifact`, `Artifact`,
 `ExternalAuthorityValue`, `DateValue`.
 
 > **`TemplateMember` and `Section`.** A `Template`'s `members` is a
@@ -1116,8 +1116,8 @@ High-level structure (the `src/` tree mirrors the grammar layering):
   `MultilingualString` on the wire and is carried directly on the
   `EmbeddedField` types rather than as its own module.)
 - `presentation/` — `PresentationComponent` family.
-- `instances/` — `TemplateInstance`, `FieldValue`,
-  `NestedTemplateInstance`.
+- `instances/` — `TemplateInstance`, `FieldEntry`,
+  `TemplateEntry`.
 - `template.ts` — `Template`.
 - `serialize/` — wire-form serialize/parse codecs (per-family field and
   embedded-field codecs, embedded-config, values, metadata,

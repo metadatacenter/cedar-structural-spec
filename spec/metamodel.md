@@ -26,11 +26,11 @@ An `EmbeddedArtifact` contextualises a reusable artifact within a specific `Temp
 
 An `EmbeddedArtifactKey` is the local identifier of an `EmbeddedArtifact` within its containing `Template`. It is the mechanism that connects template structure to instance structure.
 
-A `TemplateInstance` is an artifact that records data conforming to a `Template`. It contains `FieldValue` and `NestedTemplateInstance` constructs keyed by `EmbeddedArtifactKey`, corresponding to the data-bearing embedded artifacts of the referenced template.
+A `TemplateInstance` is an artifact that records data conforming to a `Template`. It contains `FieldEntry` and `TemplateEntry` constructs keyed by `EmbeddedArtifactKey`, corresponding to the data-bearing embedded artifacts of the referenced template.
 
-The diagram below sketches how the principal categories connect at runtime. Schema-side classes (definitions) are on the right; instance-side classes (data records) are on the left. The horizontal arrows show the two cross-side links: a `TemplateInstance` is bound to its `Template` by IRI (`templateRef`), and each `FieldValue` is joined to its corresponding `EmbeddedField` by an `EmbeddedArtifactKey`. The schema-side downward chain (`Template` → `EmbeddedField` → `Field` → `FieldSpec`) is the structural surface a template author defines; the instance-side downward chain (`TemplateInstance` → `FieldValue` → `Value`) is the runtime data the schema admits.
+The diagram below sketches how the principal categories connect at runtime. Schema-side classes (definitions) are on the right; instance-side classes (data records) are on the left. The horizontal arrows show the two cross-side links: a `TemplateInstance` is bound to its `Template` by IRI (`templateRef`), and each `FieldEntry` is joined to its corresponding `EmbeddedField` by an `EmbeddedArtifactKey`. The schema-side downward chain (`Template` → `EmbeddedField` → `Field` → `FieldSpec`) is the structural surface a template author defines; the instance-side downward chain (`TemplateInstance` → `FieldEntry` → `Value`) is the runtime data the schema admits.
 
-![Relationships between Template, EmbeddedField, Field, FieldSpec, TemplateInstance, FieldValue, and Value](diagrams/template-field-relationships.svg)
+![Relationships between Template, EmbeddedField, Field, FieldSpec, TemplateInstance, FieldEntry, and Value](diagrams/template-field-relationships.svg)
 
 For the within-`Field` typed-variant hierarchy (the 20 concrete field families and their abstract groupings), see the next section.
 

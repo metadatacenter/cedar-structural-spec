@@ -73,7 +73,7 @@ families). Each pair exercises:
 
 - the per-family `EmbeddedXxxField.kind`
 - the per-family typed identifier slot (`artifactRef`)
-- the per-family `Value` arm at `FieldValue.values[*]`
+- the per-family `Value` arm at `FieldEntry.values[*]`
 - the four §9 deviations from the standard embedded-field template:
   - `EmbeddedBooleanField` and `EmbeddedSingleValuedEnumField` omit
     `cardinality`

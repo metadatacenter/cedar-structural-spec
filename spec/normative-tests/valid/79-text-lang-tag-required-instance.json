@@ -17,9 +17,9 @@
     }
   },
   "templateRef": "https://example.org/templates/text-lang-tag-required",
-  "members": [
+  "entries": [
     {
-      "kind": "FieldValue",
+      "kind": "FieldEntry",
       "key": "title",
       "values": [
         {

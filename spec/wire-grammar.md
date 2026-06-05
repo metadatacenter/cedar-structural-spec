@@ -136,7 +136,7 @@ small wire-size saving.
 
 *Case 1 — polymorphic-union member always carries `kind`.* `TextValue`
 is a member of the `Value` union (which uses `discriminator: kind`).
-At the polymorphic `FieldValue.values[*]` position the wire form is:
+At the polymorphic `FieldEntry.values[*]` position the wire form is:
 
 ```json
 { "kind": "TextValue", "value": "Hello", "lang": "en" }
@@ -2276,7 +2276,7 @@ TemplateInstance ::: object {
   metadata: CatalogMetadata
   templateRef: TemplateId
   label?: Label
-  members: array<InstanceValue>
+  members: array<InstanceEntry>
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
   // metadata is CatalogMetadata; instances do not carry schema
@@ -2284,21 +2284,21 @@ TemplateInstance ::: object {
   // label, when present, is a user-supplied name for this instance,
   // shown in catalog listings or detail views
 
-InstanceValue ::: FieldValue | NestedTemplateInstance
+InstanceEntry ::: FieldEntry | TemplateEntry
   // discriminator: kind
 
-FieldValue ::: object {
-  "kind": "FieldValue"
+FieldEntry ::: object {
+  "kind": "FieldEntry"
   key: EmbeddedArtifactKey
   values: nonEmptyArray<Value>
 }
   // values MUST be non-empty (per grammar's Value+; absence of a value is
-  // represented by omitting the FieldValue entirely)
+  // represented by omitting the FieldEntry entirely)
 
-NestedTemplateInstance ::: object {
-  "kind": "NestedTemplateInstance"
+TemplateEntry ::: object {
+  "kind": "TemplateEntry"
   key: EmbeddedArtifactKey
-  members: array<InstanceValue>
+  members: array<InstanceEntry>
 }
   // members MAY be empty
 ```
@@ -2377,7 +2377,7 @@ Conventions:
 2. `CatalogMetadata` → `metadata`
 3. `TemplateId` → `templateRef`
 4. `[Label]` → `label?`
-5. `InstanceValue*` → `members`
+5. `InstanceEntry*` → `members`
 
 ### 14.2 Field artifacts
 
@@ -2821,13 +2821,13 @@ The ten new rendering hints introduced for previously hint-less families each ca
 
 ### 14.11 Instances
 
-**`FieldValue`** (`field_value`):
+**`FieldEntry`** (`field_entry`):
 0. `EmbeddedArtifactKey` → `key`
 1. `Value+` → `values`
 
-**`NestedTemplateInstance`** (`nested_template_instance`):
+**`TemplateEntry`** (`template_entry`):
 0. `EmbeddedArtifactKey` → `key`
-1. `InstanceValue*` → `members`
+1. `InstanceEntry*` → `members`
 
 ### 14.12 Collapsed-wrapper productions
 

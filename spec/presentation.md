@@ -43,9 +43,9 @@ It does **not** carry a value requirement, cardinality, default value, prompt ov
 
 ## Instance Semantics
 
-`PresentationComponent` does not produce `InstanceValue`.
+`PresentationComponent` does not produce `InstanceEntry`.
 
-Conforming implementations MUST NOT create `FieldValue`, `NestedTemplateInstance`, or any other `InstanceValue` for a `PresentationComponent`. The `EmbeddedArtifactKey` of an `EmbeddedPresentationComponent` MUST NOT appear as the key of any `InstanceValue` in a conforming `TemplateInstance`.
+Conforming implementations MUST NOT create `FieldEntry`, `TemplateEntry`, or any other `InstanceEntry` for a `PresentationComponent`. The `EmbeddedArtifactKey` of an `EmbeddedPresentationComponent` MUST NOT appear as the key of any `InstanceEntry` in a conforming `TemplateInstance`.
 
 ## Help-Text Rendering
 

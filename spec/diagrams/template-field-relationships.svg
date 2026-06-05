@@ -99,19 +99,19 @@
         marker-end="url(#arrow-open)" fill="none" />
   <text class="role" x="965" y="178" text-anchor="middle">artifactRef</text>
 
-  <!-- FieldValue  (left, instance) -->
+  <!-- FieldEntry  (left, instance) -->
   <g>
     <rect class="box" x="120" y="220" width="200" height="54" rx="5" />
-    <text class="title instance" x="220" y="253">FieldValue</text>
+    <text class="title instance" x="220" y="253">FieldEntry</text>
   </g>
 
-  <!-- TemplateInstance ──◆ contains ──→ FieldValue (composition).
+  <!-- TemplateInstance ──◆ contains ──→ FieldEntry (composition).
        Label sits LEFT of the line. -->
   <line class="line" x1="220" y1="124" x2="220" y2="220"
         marker-start="url(#diamond-filled)" />
   <text class="role" x="205" y="178" text-anchor="end">contains</text>
 
-  <!-- FieldValue ──keyed by──→ EmbeddedField  (semantic join). Two-line
+  <!-- FieldEntry ──keyed by──→ EmbeddedField  (semantic join). Two-line
        label ABOVE, centered between the two boxes. -->
   <line class="line-dash" x1="320" y1="247" x2="540" y2="247"
         marker-end="url(#arrow-open)" />
@@ -151,7 +151,7 @@
     <text class="title instance" x="220" y="413">Value</text>
   </g>
 
-  <!-- FieldValue ──◆ contains ──→ Value (composition, 1..*).
+  <!-- FieldEntry ──◆ contains ──→ Value (composition, 1..*).
        Label LEFT of the line. -->
   <line class="line" x1="220" y1="274" x2="220" y2="380"
         marker-start="url(#diamond-filled)" />

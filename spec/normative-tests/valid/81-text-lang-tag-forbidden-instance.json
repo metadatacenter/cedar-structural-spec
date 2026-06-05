@@ -17,9 +17,9 @@
     }
   },
   "templateRef": "https://example.org/templates/text-lang-tag-forbidden",
-  "members": [
+  "entries": [
     {
-      "kind": "FieldValue",
+      "kind": "FieldEntry",
       "key": "slug",
       "values": [
         {

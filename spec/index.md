@@ -4,7 +4,7 @@ This specification defines the structural model for the CEDAR Template Model and
 
 It separates schema definition, presentation structure, reusable artifacts, contextual embedding, and instance data, and is layered as an abstract grammar paired with a JSON wire grammar, encoding rules, host-language bindings, and a normative validation algorithm.
 
-The core concepts are `Artifact`, `SchemaArtifact`, `Template`, `Field`, `PresentationComponent`, `EmbeddedArtifact`, `TemplateInstance`, and `InstanceValue`. Every concrete artifact carries a top-level `ModelVersion` identifying the version of the CEDAR structural model it conforms to.
+The core concepts are `Artifact`, `SchemaArtifact`, `Template`, `Field`, `PresentationComponent`, `EmbeddedArtifact`, `TemplateInstance`, and `InstanceEntry`. Every concrete artifact carries a top-level `ModelVersion` identifying the version of the CEDAR structural model it conforms to.
 
 ## Scope
 
@@ -32,7 +32,7 @@ This specification defines:
 - [bindings.md](bindings.md) — host-language idioms (TypeScript, Java, Python) and codebase-organisation guidance.
 - [validation.md](validation.md) — the canonical validation algorithm, with per-step error reports.
 - [presentation.md](presentation.md) — the `PresentationComponent` family.
-- [instances.md](instances.md) — `TemplateInstance` and `InstanceValue` semantics, including the explicit "defaults are not part of instances" rule.
+- [instances.md](instances.md) — `TemplateInstance` and `InstanceEntry` semantics, including the explicit "defaults are not part of instances" rule.
 - [rdf-projection.md](rdf-projection.md) — the derived projection from CEDAR `Value` instances to RDF.
 - [index-of-productions.md](index-of-productions.md) — auto-generated A–Z index of every production in the specification.
 

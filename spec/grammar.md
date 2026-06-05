@@ -774,7 +774,7 @@ The carried `Property` is subject to the same well-formedness rules as any other
 
 Every concrete `EmbeddedField` variant follows the same structural pattern. Each carries: an `EmbeddedArtifactKey` uniquely identifying the embedding site within the containing `Template`; a typed field reference identifying the reusable `Field` being embedded; an optional `ValueRequirement` specifying whether a value is required, recommended, or optional; an optional `Cardinality` bounding the permitted number of values; an optional `Visibility` controlling whether the field is shown in rendered interfaces; an optional `defaultValue` providing an embedding-specific default whose type is the family-specific `Value` type (e.g. `TextValue` for `EmbeddedTextField`, `DateValue` for `EmbeddedDateField`); an optional `PromptOverride` allowing the template to override the field's prompt at this embedding site; an optional `Property` associating a semantic property IRI with the embedding site; an optional `PromptKey` selecting one of the referenced field's curated `AlternativePrompt` entries (see [Alternative Prompts](#alternative-prompts)); and an optional `Editability` controlling whether the field's value may be edited (see [Editability](#editability)). The only variation across concrete `EmbeddedField` variants is the typed field reference and the typed default value, both of which match the value family of the referenced field.
 
-`EmbeddedBooleanField` and `EmbeddedSingleValuedEnumField` are the two exceptions to this pattern: each omits the `[Cardinality]` slot. A boolean field is inherently single-valued, and its `ValueRequirement` slot already distinguishes the meaningful states (required, recommended, optional). A `SingleValuedEnumField` is similarly single-valued by construction; multi-valued enum embedding is expressed only through `EmbeddedMultiValuedEnumField`. `EmbeddedMultiValuedEnumField` further differs in that its embedding-level default is a sequence (`EnumValue*`) rather than a single optional value, parallel to how multi-valued enum instance values appear as a sequence in `FieldValue`.
+`EmbeddedBooleanField` and `EmbeddedSingleValuedEnumField` are the two exceptions to this pattern: each omits the `[Cardinality]` slot. A boolean field is inherently single-valued, and its `ValueRequirement` slot already distinguishes the meaningful states (required, recommended, optional). A `SingleValuedEnumField` is similarly single-valued by construction; multi-valued enum embedding is expressed only through `EmbeddedMultiValuedEnumField`. `EmbeddedMultiValuedEnumField` further differs in that its embedding-level default is a sequence (`EnumValue*`) rather than a single optional value, parallel to how multi-valued enum instance values appear as a sequence in `FieldEntry`.
 
 ```ebnf
 EmbeddedTextField ::= embedded_text_field(
@@ -1451,7 +1451,7 @@ This specification narrows the supported numeric kinds to four (one integer kind
 
 ## Values
 
-This section defines the `Value` types that represent instance-level data. `Value` constructs appear in `FieldValue` instances and as typed default values in `EmbeddedArtifact` properties. The value types are defined here independently of the `FieldSpec` productions that constrain them; the normative mapping between each `FieldSpec` and its permitted `Value` form is given in the [Field Spec And Value Correspondence](#field-spec-and-value-correspondence) section.
+This section defines the `Value` types that represent instance-level data. `Value` constructs appear in `FieldEntry` instances and as typed default values in `EmbeddedArtifact` properties. The value types are defined here independently of the `FieldSpec` productions that constrain them; the normative mapping between each `FieldSpec` and its permitted `Value` form is given in the [Field Spec And Value Correspondence](#field-spec-and-value-correspondence) section.
 
 ```ebnf
 Value ::= TextValue
@@ -1499,7 +1499,7 @@ BooleanValue ::= boolean_value(
 
 `IntegerNumberValue`'s lexical form MUST be a base-10 integer literal (per the `IntegerLexicalForm` primitive in §Primitive String Types). `RealNumberValue`'s lexical form is a base-10 real-valued literal whose admissible form depends on the carried datatype: `decimal` admits an arbitrary-precision decimal lexical form; `float` and `double` admit IEEE 754-style lexical forms (including special values such as `INF`, `-INF`, and `NaN`).
 
-`NumericValue` is the abstract category admitting `IntegerNumberValue` and `RealNumberValue`; the two are distinct concrete value types and a `FieldValue` carrying numeric content discriminates between them by `kind`.
+`NumericValue` is the abstract category admitting `IntegerNumberValue` and `RealNumberValue`; the two are distinct concrete value types and a `FieldEntry` carrying numeric content discriminates between them by `kind`.
 
 The lexical form of any string-bearing value SHOULD be in Unicode Normalization Form C.
 
@@ -1697,7 +1697,7 @@ Embedded artifact properties define the contextual information carried by an `Em
 
 ### Embedded Artifact Key
 
-An `EmbeddedArtifactKey` is the local identifier of an `EmbeddedArtifact` within a `Template`. It is the key by which an embedded field, embedded template, or embedded presentation component is distinguished from other embedded artifacts in the same template. This key is also the mechanism that connects template structure to instance structure: `FieldValue` and `NestedTemplateInstance` use `EmbeddedArtifactKey` to identify which embedded artifact in the template they correspond to.
+An `EmbeddedArtifactKey` is the local identifier of an `EmbeddedArtifact` within a `Template`. It is the key by which an embedded field, embedded template, or embedded presentation component is distinguished from other embedded artifacts in the same template. This key is also the mechanism that connects template structure to instance structure: `FieldEntry` and `TemplateEntry` use `EmbeddedArtifactKey` to identify which embedded artifact in the template they correspond to.
 
 ```ebnf
 EmbeddedArtifactKey ::= embedded_artifact_key(
@@ -1822,7 +1822,7 @@ The shape is uniform across layers: every default at every layer is the family's
 
 There is no mechanism for an embedding to *unset* a field-level default. An embedding that wishes to override a field-level default with no default at all is not expressible in this version of the model.
 
-**Defaults are UI/UX initialisation only.** A default value's sole role is to seed an instance's value at creation time, so that a user-facing form can pre-fill the corresponding input. Defaults do not appear in the wire form of `TemplateInstance` artifacts and do not affect the [RDF projection](rdf-projection.md). When an instance is created and the user accepts the default without modification, the resulting `FieldValue` carries the default value as if the user had typed it in by hand; from the instance's perspective the default and a user-supplied identical value are indistinguishable. When an instance is created and the user does not supply a value (and the field is not required), the corresponding `FieldValue` is omitted entirely; the default does not appear by virtue of having existed.
+**Defaults are UI/UX initialisation only.** A default value's sole role is to seed an instance's value at creation time, so that a user-facing form can pre-fill the corresponding input. Defaults do not appear in the wire form of `TemplateInstance` artifacts and do not affect the [RDF projection](rdf-projection.md). When an instance is created and the user accepts the default without modification, the resulting `FieldEntry` carries the default value as if the user had typed it in by hand; from the instance's perspective the default and a user-supplied identical value are indistinguishable. When an instance is created and the user does not supply a value (and the field is not required), the corresponding `FieldEntry` is omitted entirely; the default does not appear by virtue of having existed.
 
 ### Prompt Override
 
@@ -2456,13 +2456,13 @@ The current rendering vocabulary is explicit but deliberately small: numeric fie
 - `radio` (a Yes / No radio pair) and `dropdown` (a Yes / No dropdown with no initial selection) admit three observable states (Yes selected, No selected, and neither selected) and so faithfully represent the unset case.
 - `checkbox` and `toggle` admit only two observable states (`checked` / `unchecked`, or `on` / `off`) and so cannot distinguish *false* from *unset*. They SHOULD be used only when the field's `ValueRequirement` is `required` (so unset is not a valid resting state) or when the surrounding application is content to interpret unset as `false`.
 
-The unset state is structurally represented in the value model by *absence of a `FieldValue`* for the embedding's key, not by a third value within `BooleanValue`. `BooleanValue.value` carries `true | false` only.
+The unset state is structurally represented in the value model by *absence of a `FieldEntry`* for the embedding's key, not by a third value within `BooleanValue`. `BooleanValue.value` carries `true | false` only.
 
 ## Presentation Components
 
 A `PresentationComponent` is a reusable artifact that contributes presentation or instructional structure to a rendered template without introducing data-bearing content. It is distinct from `SchemaArtifact`: where `Template` and `Field` define the structure and semantics of instance data, `PresentationComponent` exists purely to guide, organise, or annotate the rendered form: for example by embedding rich text instructions, illustrative images, video content, or structural breaks between sections.
 
-`PresentationComponent` carries its own identity, metadata, and lifecycle information as an `Artifact`, making it independently reusable across multiple templates. It appears within a template only through `EmbeddedPresentationComponent`, which contributes no `InstanceValue` and is therefore invisible to the instance model. A conforming `TemplateInstance` MUST NOT contain an `InstanceValue` for an `EmbeddedPresentationComponent`.
+`PresentationComponent` carries its own identity, metadata, and lifecycle information as an `Artifact`, making it independently reusable across multiple templates. It appears within a template only through `EmbeddedPresentationComponent`, which contributes no `InstanceEntry` and is therefore invisible to the instance model. A conforming `TemplateInstance` MUST NOT contain an `InstanceEntry` for an `EmbeddedPresentationComponent`.
 
 The following concrete variants are defined:
 
@@ -2527,9 +2527,9 @@ The `Iri` slot on `ImageComponent` and `YoutubeVideoComponent` identifies the im
 
 ## Field Spec And Value Correspondence
 
-The `FieldSpec` carried by a `Field` determines the `Value` form that MUST appear in any `FieldValue` corresponding to an embedding of that field. This is a normative constraint: a `FieldValue` that carries a `Value` of the wrong form for the referenced field's `FieldSpec` is non-conforming.
+The `FieldSpec` carried by a `Field` determines the `Value` form that MUST appear in any `FieldEntry` corresponding to an embedding of that field. This is a normative constraint: a `FieldEntry` that carries a `Value` of the wrong form for the referenced field's `FieldSpec` is non-conforming.
 
-The correspondence is applied through the `EmbeddedArtifactKey` chain. A `FieldValue` in a `TemplateInstance` carries an `EmbeddedArtifactKey` that identifies an `EmbeddedField` in the referenced `Template`. That `EmbeddedField` references a reusable `Field`, which carries a `FieldSpec`. It is that `FieldSpec` that determines the permitted `Value` form for the `FieldValue`. The correspondence therefore spans the full path from instance value through embedding context to reusable field definition.
+The correspondence is applied through the `EmbeddedArtifactKey` chain. A `FieldEntry` in a `TemplateInstance` carries an `EmbeddedArtifactKey` that identifies an `EmbeddedField` in the referenced `Template`. That `EmbeddedField` references a reusable `Field`, which carries a `FieldSpec`. It is that `FieldSpec` that determines the permitted `Value` form for the `FieldEntry`. The correspondence therefore spans the full path from instance value through embedding context to reusable field definition.
 
 The table below gives the complete correspondence. The Field Family column identifies the abstract category in the `Field` hierarchy to which the concrete field belongs; families group field kinds that share related value semantics. Where a field is a direct subclass of `Field` with no intermediate abstract category, this column is left blank.
 
@@ -2557,7 +2557,7 @@ The table below gives the complete correspondence. The Field Family column ident
 | | `LanguageFieldSpec` | `LanguageValue` |
 | | `AttributeValueFieldSpec` | `AttributeValue` |
 
-The two concrete enum field specs share a single value type, `EnumValue`. The cardinality distinction (single versus multiple) is not visible in the value type itself but in the count of values permitted per `FieldValue`: a `SingleValuedEnumFieldSpec` permits exactly one `EnumValue`, while a `MultiValuedEnumFieldSpec` permits one or more (subject to the embedding's `Cardinality`). This cardinality constraint is enforced at validation rather than through distinct value types.
+The two concrete enum field specs share a single value type, `EnumValue`. The cardinality distinction (single versus multiple) is not visible in the value type itself but in the count of values permitted per `FieldEntry`: a `SingleValuedEnumFieldSpec` permits exactly one `EnumValue`, while a `MultiValuedEnumFieldSpec` permits one or more (subject to the embedding's `Cardinality`). This cardinality constraint is enforced at validation rather than through distinct value types.
 
 ## Instances
 
@@ -2565,7 +2565,7 @@ A `TemplateInstance` is an `Artifact` that records data conforming to a specific
 
 Because `TemplateInstance` is a full `Artifact`, it carries `CatalogMetadata`: a `TemplateInstanceId`, descriptive metadata, and lifecycle metadata. This means instances are independently identifiable, catalogable artifacts in their own right rather than anonymous data records. They can be referenced, catalogued, and tracked through their lifecycle metadata. Unlike the schema artifacts (`Field` and `Template`), a `TemplateInstance` is not independently versioned: it carries no `SchemaArtifactVersioning`, and its relationship to schema is expressed by its `TemplateId` reference to one specific (versioned) `Template`.
 
-A `TemplateInstance` contains zero or more `InstanceValue` constructs, each keyed by an `EmbeddedArtifactKey` identifying the corresponding embedded artifact in the referenced template. There are two forms: `FieldValue`, which carries one or more typed values for an `EmbeddedField`, and `NestedTemplateInstance`, which carries a nested collection of `InstanceValue` constructs for an `EmbeddedTemplate`. `EmbeddedPresentationComponent` constructs produce no `InstanceValue` and are absent from the instance model entirely.
+A `TemplateInstance` contains zero or more `InstanceEntry` constructs, each keyed by an `EmbeddedArtifactKey` identifying the corresponding embedded artifact in the referenced template. There are two forms: `FieldEntry`, which carries one or more typed values for an `EmbeddedField`, and `TemplateEntry`, which carries a nested collection of `InstanceEntry` constructs for an `EmbeddedTemplate`. `EmbeddedPresentationComponent` constructs produce no `InstanceEntry` and are absent from the instance model entirely.
 
 ```ebnf
 TemplateInstance ::= template_instance(
@@ -2574,34 +2574,34 @@ TemplateInstance ::= template_instance(
                        CatalogMetadata
                        TemplateId
                        [Label]
-                       InstanceValue*
+                       InstanceEntry*
                      )
 
-InstanceValue ::= FieldValue
-                | NestedTemplateInstance
+InstanceEntry ::= FieldEntry
+                | TemplateEntry
 
-FieldValue ::= field_value(
+FieldEntry ::= field_entry(
                  EmbeddedArtifactKey
                  Value+
                )
 
-NestedTemplateInstance ::= nested_template_instance(
-                             EmbeddedArtifactKey
-                             InstanceValue*
-                           )
+TemplateEntry ::= template_entry(
+                    EmbeddedArtifactKey
+                    InstanceEntry*
+                  )
 ```
 
-`TemplateId` is the persistent schema link that ties a `TemplateInstance` to the `Template` it was created from. It is the basis for all validation and interpretation of instance content: the `EmbeddedArtifactKey` values in `FieldValue` and `NestedTemplateInstance` constructs are only meaningful in relation to the embedded artifacts of that specific template.
+`TemplateId` is the persistent schema link that ties a `TemplateInstance` to the `Template` it was created from. It is the basis for all validation and interpretation of instance content: the `EmbeddedArtifactKey` values in `FieldEntry` and `TemplateEntry` constructs are only meaningful in relation to the embedded artifacts of that specific template.
 
-Each `FieldValue`'s `EmbeddedArtifactKey` MUST identify an `EmbeddedField` in the referenced `Template`. Each `NestedTemplateInstance`'s `EmbeddedArtifactKey` MUST identify an `EmbeddedTemplate`. An `EmbeddedArtifactKey` that identifies an `EmbeddedPresentationComponent` MUST NOT appear as the key of any `InstanceValue`. The full instance alignment constraints are specified in `spec/validation.md`.
+Each `FieldEntry`'s `EmbeddedArtifactKey` MUST identify an `EmbeddedField` in the referenced `Template`. Each `TemplateEntry`'s `EmbeddedArtifactKey` MUST identify an `EmbeddedTemplate`. An `EmbeddedArtifactKey` that identifies an `EmbeddedPresentationComponent` MUST NOT appear as the key of any `InstanceEntry`. The full instance alignment constraints are specified in `spec/validation.md`.
 
-To make the abstract structure concrete, consider a `Template` containing two `EmbeddedTextField` constructs keyed `title` and `description`, and one `EmbeddedTemplate` keyed `study_arm` with a maximum cardinality of three. A conforming `TemplateInstance` for that template would contain two `FieldValue` constructs (one keyed `title` carrying a `TextValue`, one keyed `description` carrying a `TextValue`) and between one and three `NestedTemplateInstance` constructs each keyed `study_arm`, where each `NestedTemplateInstance` contains its own `InstanceValue` constructs corresponding to the embedded artifacts of the nested template.
+To make the abstract structure concrete, consider a `Template` containing two `EmbeddedTextField` constructs keyed `title` and `description`, and one `EmbeddedTemplate` keyed `study_arm` with a maximum cardinality of three. A conforming `TemplateInstance` for that template would contain two `FieldEntry` constructs (one keyed `title` carrying a `TextValue`, one keyed `description` carrying a `TextValue`) and between one and three `TemplateEntry` constructs each keyed `study_arm`, where each `TemplateEntry` contains its own `InstanceEntry` constructs corresponding to the embedded artifacts of the nested template.
 
-For multi-valued `EmbeddedField`, all values for a single field occurrence are collected within a single `FieldValue` using `Value*`. For multi-valued `EmbeddedTemplate`, multiplicity is represented by multiple `NestedTemplateInstance` constructs sharing the same `EmbeddedArtifactKey` within the containing `TemplateInstance`. This asymmetry reflects the structural difference between scalar repetition (multiple values for one field) and structural repetition (multiple complete nested instances for one embedded template). In both cases the number of values or instances MUST satisfy the [Cardinality](#cardinality) constraints defined by the corresponding `EmbeddedField` or `EmbeddedTemplate`; see `spec/validation.md` for the normative multiplicity rules. `NestedTemplateInstance` is the recursive construct that supports arbitrarily deep nested template structure: because a `NestedTemplateInstance` itself contains `InstanceValue*`, and `InstanceValue` may contain further `NestedTemplateInstance` constructs, template nesting can be as deep as the schema requires.
+For multi-valued `EmbeddedField`, all values for a single field occurrence are collected within a single `FieldEntry` using `Value*`. For multi-valued `EmbeddedTemplate`, multiplicity is represented by multiple `TemplateEntry` constructs sharing the same `EmbeddedArtifactKey` within the containing `TemplateInstance`. This asymmetry reflects the structural difference between scalar repetition (multiple values for one field) and structural repetition (multiple complete nested instances for one embedded template). In both cases the number of values or instances MUST satisfy the [Cardinality](#cardinality) constraints defined by the corresponding `EmbeddedField` or `EmbeddedTemplate`; see `spec/validation.md` for the normative multiplicity rules. `TemplateEntry` is the recursive construct that supports arbitrarily deep nested template structure: because a `TemplateEntry` itself contains `InstanceEntry*`, and `InstanceEntry` may contain further `TemplateEntry` constructs, template nesting can be as deep as the schema requires.
 
 Instance conformance may be enforced at data-entry time, preventing submission of a non-conforming instance, or retrospectively, by validating existing instances against their referenced template. Both modes apply the same conformance rules; the distinction is an implementation concern rather than a model-level distinction.
 
-Absence of a value for an optional field is represented by omitting the `FieldValue` entirely rather than including an empty one; hence `FieldValue` requires `Value+`. Note that concrete serializations and authoring tools may have their own conventions for representing absence: for example, a JSON serialization may choose to omit a key entirely or include it with a null value, but such distinctions are a concern of the serialization layer and do not affect the abstract model defined here.
+Absence of a value for an optional field is represented by omitting the `FieldEntry` entirely rather than including an empty one; hence `FieldEntry` requires `Value+`. Note that concrete serializations and authoring tools may have their own conventions for representing absence: for example, a JSON serialization may choose to omit a key entirely or include it with a null value, but such distinctions are a concern of the serialization layer and do not affect the abstract model defined here.
 
 ## Open Questions
 

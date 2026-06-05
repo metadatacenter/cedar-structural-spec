@@ -325,7 +325,7 @@ Both fields are single-valued ([`is_multi`](#2-conventions) = false), so `encode
 
 ### 3.4 Encoding the Instance
 
-`encode_template_instance(I, T)` reuses the template context and maps each `FieldValue` using `encode_field_value` → `encode_value`.
+`encode_template_instance(I, T)` reuses the template context and maps each `FieldEntry` using `encode_field_value` → `encode_value`.
 
 ```javascript
 {
@@ -1557,8 +1557,8 @@ Nested `AttributeValue` constructs produce nested objects. Multiple `AttributeVa
 A template instance is encoded by reusing the template's `@context`, writing instance identity and provenance metadata, and then encoding each field value and nested template instance slot. The template `T` is required as a parameter because the context and embedded artifact structure are derived from it rather than from the instance itself.
 
 ```javascript
-let fvs  = [ IV in I.instance_values | IV is FieldValue ]
-let ntis = [ IV in I.instance_values | IV is NestedTemplateInstance ]
+let fvs  = [ IV in I.instance_values | IV is FieldEntry ]
+let ntis = [ IV in I.instance_values | IV is TemplateEntry ]
 let emb_fields     = [ E in T.embedded_artifacts | E is EmbeddedField ]
 let emb_templates  = [ E in T.embedded_artifacts | E is EmbeddedTemplate ]
 
@@ -1576,13 +1576,13 @@ merge(
 )
 ```
 
-where `fv(EF)` denotes the `FieldValue` in `fvs` whose key equals `EF.key`, and `ntis_for(ET)` denotes `[ NTI in ntis | NTI.key = ET.key ]`.
+where `fv(EF)` denotes the `FieldEntry` in `fvs` whose key equals `EF.key`, and `ntis_for(ET)` denotes `[ NTI in ntis | NTI.key = ET.key ]`.
 
 **Calls:** [`encode_template_context`](#encode_template_contextt-template--object), [`encode_artifact_metadata`](#encode_artifact_metadatam-artifactmetadata--object), [`encode_field_value`](#encode_field_valuefv-fieldvalue-ef-embeddedfield--object-or-array), [`encode_nested_template_instance_slot`](#encode_nested_template_instance_slotntis-nestedtemplateinstance-et-embeddedtemplate--object-or-array)
 
 ---
 
-### `encode_field_value(FV: FieldValue, EF: EmbeddedField) → Object or Array`
+### `encode_field_value(FV: FieldEntry, EF: EmbeddedField) → Object or Array`
 
 Encodes a single field's data within an instance. When the field is multi-valued (per [`is_multi(EF)`](#2-conventions)) the result is a JSON array of encoded values; when single-valued it is a single encoded value object.
 
@@ -1600,7 +1600,7 @@ else:
 
 ---
 
-### `encode_nested_template_instance_slot(NTIs: NestedTemplateInstance+, ET: EmbeddedTemplate) → Object or Array`
+### `encode_nested_template_instance_slot(NTIs: TemplateEntry+, ET: EmbeddedTemplate) → Object or Array`
 
 Encodes a nested template slot within a parent instance. Multi-valued embeddings (per [`is_multi(ET)`](#2-conventions)) produce a JSON array of encoded child instances; single-valued embeddings produce a single child instance object. Encoding recurses through `encode_template_instance`.
 

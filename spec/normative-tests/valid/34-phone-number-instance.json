@@ -17,9 +17,9 @@
     }
   },
   "templateRef": "https://example.org/templates/phone-number",
-  "members": [
+  "entries": [
     {
-      "kind": "FieldValue",
+      "kind": "FieldEntry",
       "key": "field1",
       "values": [
         {

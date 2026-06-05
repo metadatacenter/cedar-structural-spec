@@ -17,9 +17,9 @@
     }
   },
   "templateRef": "https://example.org/templates/patient-observation",
-  "members": [
+  "entries": [
     {
-      "kind": "FieldValue",
+      "kind": "FieldEntry",
       "key": "severity",
       "values": [
         {
@@ -29,7 +29,7 @@
       ]
     },
     {
-      "kind": "FieldValue",
+      "kind": "FieldEntry",
       "key": "observed",
       "values": [
         {
@@ -39,7 +39,7 @@
       ]
     },
     {
-      "kind": "FieldValue",
+      "kind": "FieldEntry",
       "key": "occurrences",
       "values": [
         {
@@ -49,7 +49,7 @@
       ]
     },
     {
-      "kind": "FieldValue",
+      "kind": "FieldEntry",
       "key": "diagnosis",
       "values": [
         {

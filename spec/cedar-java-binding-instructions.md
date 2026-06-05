@@ -99,8 +99,8 @@ org.metadatacenter.cedar.model
 │                                 RichTextComponent, ImageComponent,
 │                                 YoutubeVideoComponent, SectionBreakComponent,
 │                                 PageBreakComponent)
-├── instance                     (TemplateInstance, FieldValue,
-│                                 NestedTemplateInstance, InstanceValue)
+├── instance                     (TemplateInstance, FieldEntry,
+│                                 TemplateEntry, InstanceEntry)
 ├── serialize                    (CedarMapper / decode-encode, validators;
 │                                 the only place JsonNode is used)
 └── Template, Artifact, SchemaArtifact, CedarConstructionException

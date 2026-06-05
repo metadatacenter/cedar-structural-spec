@@ -434,9 +434,9 @@ A default value is a value used to pre-populate a field at instance-creation tim
 
 Every concrete field family carries an optional default at both layers, with one exception: `AttributeValueField` carries no default at either layer (an `AttributeValue` is a per-instance pairing of a name and a value, and a default is not meaningful).
 
-**Defaults are UI/UX initialisation only.** A default's sole role is to seed an instance's value at creation time. Defaults do not appear in the wire form of `TemplateInstance` artifacts and do not affect the [RDF projection](rdf-projection.md). When an instance is created and the user accepts the default without modification, the resulting `FieldValue` carries the default value as if the user had typed it in by hand; from the instance's perspective the default and a user-supplied identical value are indistinguishable. When an instance is created and the user does not supply a value (and the field is not required), the corresponding `FieldValue` is omitted entirely — the default does not appear by virtue of having existed.
+**Defaults are UI/UX initialisation only.** A default's sole role is to seed an instance's value at creation time. Defaults do not appear in the wire form of `TemplateInstance` artifacts and do not affect the [RDF projection](rdf-projection.md). When an instance is created and the user accepts the default without modification, the resulting `FieldEntry` carries the default value as if the user had typed it in by hand; from the instance's perspective the default and a user-supplied identical value are indistinguishable. When an instance is created and the user does not supply a value (and the field is not required), the corresponding `FieldEntry` is omitted entirely — the default does not appear by virtue of having existed.
 
-**Wire form.** Both layers use the same `Value`-typed wire shape: there is no `DefaultValue` wrapper. Every `Value` is a member of the `Value` polymorphic union, so per the kind rule ([`wire-grammar.md`](wire-grammar.md) §1.5) every `defaultValue` carries a `kind` discriminator — at both layers, regardless of whether the enclosing context already pins the family. The discriminator is structurally redundant at slots whose enclosing `XxxFieldSpec.kind` or `EmbeddedXxxField.kind` already determines the family, but is retained for uniformity with `Value`'s appearance at the polymorphic positions where the kind genuinely discriminates (e.g. `FieldValue.values[*]` in instances).
+**Wire form.** Both layers use the same `Value`-typed wire shape: there is no `DefaultValue` wrapper. Every `Value` is a member of the `Value` polymorphic union, so per the kind rule ([`wire-grammar.md`](wire-grammar.md) §1.5) every `defaultValue` carries a `kind` discriminator — at both layers, regardless of whether the enclosing context already pins the family. The discriminator is structurally redundant at slots whose enclosing `XxxFieldSpec.kind` or `EmbeddedXxxField.kind` already determines the family, but is retained for uniformity with `Value`'s appearance at the polymorphic positions where the kind genuinely discriminates (e.g. `FieldEntry.values[*]` in instances).
 
 `MultiValuedEnumFieldSpec.defaultValues` and `EmbeddedMultiValuedEnumField.defaultValue` are the two slots whose wire form is a JSON array rather than a single object: each carries an array of tagged `EnumValue` entries.
 
@@ -552,23 +552,23 @@ The `members` array MUST preserve order. The `EmbeddedArtifactKey` values within
   "metadata": "<CatalogMetadata>",
   "templateRef": "<TemplateId>",
   "label": [{ "value": "Optional user-supplied instance label", "lang": "en" }],
-  "values": ["<InstanceValue>*"]
+  "values": ["<InstanceEntry>*"]
 }
 ```
 
 `TemplateInstance.metadata` is `CatalogMetadata`; instances do not carry schema versioning, so there is no top-level `versioning` slot. The optional `label` slot, when present, carries a user-supplied name for the instance, shown in catalog listings or detail views.
 
 ```json
-{ "kind": "FieldValue", "key": "<EmbeddedArtifactKey>", "values": ["<Value>+"] }
+{ "kind": "FieldEntry", "key": "<EmbeddedArtifactKey>", "values": ["<Value>+"] }
 ```
 
-`FieldValue.values` MUST be a non-empty array; absence of a value is represented by omitting the `FieldValue` entirely.
+`FieldEntry.values` MUST be a non-empty array; absence of a value is represented by omitting the `FieldEntry` entirely.
 
 ```json
-{ "kind": "NestedTemplateInstance", "key": "<EmbeddedArtifactKey>", "values": ["<InstanceValue>*"] }
+{ "kind": "TemplateEntry", "key": "<EmbeddedArtifactKey>", "values": ["<InstanceEntry>*"] }
 ```
 
-The `members` array of a `TemplateInstance` (and of a `NestedTemplateInstance`) MUST satisfy the structural invariants defined in [`grammar.md`](grammar.md) §Instances: a given `EmbeddedArtifactKey` appears as the `key` of at most one `FieldValue`; a given `EmbeddedArtifactKey` does not appear as the `key` of both a `FieldValue` and a `NestedTemplateInstance`; multiple `NestedTemplateInstance` entries sharing a `key` are permitted.
+The `members` array of a `TemplateInstance` (and of a `TemplateEntry`) MUST satisfy the structural invariants defined in [`grammar.md`](grammar.md) §Instances: a given `EmbeddedArtifactKey` appears as the `key` of at most one `FieldEntry`; a given `EmbeddedArtifactKey` does not appear as the `key` of both a `FieldEntry` and a `TemplateEntry`; multiple `TemplateEntry` entries sharing a `key` are permitted.
 
 ## 7. Round-Tripping
 
@@ -613,7 +613,7 @@ drift apart.
 The example is deliberately compact rather than minimal: every wire
 shape this spec defines that is reachable from a `Template` appears
 at least once. The companion `TemplateInstance` exercises every value
-shape that is reachable from a `FieldValue`. Smaller variations
+shape that is reachable from a `FieldEntry`. Smaller variations
 (empty `members`, no annotations, single-language `title`) are
 straightforward subsets of the larger artifact and are not
 separately illustrated.
@@ -661,7 +661,7 @@ they exercise specific rules:
   enclosing `EmbeddedXxxField.kind` already fixes the family
   (everywhere except `EmbeddedDateField`), but is retained for
   uniformity with `Value`'s appearance at polymorphic positions
-  such as `FieldValue.values[*]` in instances.
+  such as `FieldEntry.values[*]` in instances.
 - **Identifier IRIs.** Every `artifactRef` is an IRI string that
   belongs to a field of the family declared by the surrounding
   `kind` (§6.1, §9.1 category 3). A conforming encoder verifies this
@@ -681,13 +681,13 @@ Per the kind rule (§1.5 of `wire-grammar.md`), every member of a
 position. Two examples illustrate.
 
 *Example 1 — `Value` at a polymorphic position.* In a
-`TemplateInstance`, the `FieldValue.values` slot is a
+`TemplateInstance`, the `FieldEntry.values` slot is a
 `nonEmptyArray<Value>`. The decoder uses the array element's `kind`
 to pick the union arm:
 
 ```json
 {
-  "kind": "FieldValue",
+  "kind": "FieldEntry",
   "key": "severity",
   "values": [ { "kind": "EnumValue", "value": "severe" } ]
 }
@@ -753,15 +753,15 @@ Notes:
   `CatalogMetadata`. Instances do not carry schema versioning, so
   there is no top-level `versioning` slot — the schema's version
   is fixed by `templateRef`.
-- **`FieldValue.values` is non-empty.** Per the abstract grammar's
-  `Value+` constraint, every `FieldValue` carries at least one value;
+- **`FieldEntry.values` is non-empty.** Per the abstract grammar's
+  `Value+` constraint, every `FieldEntry` carries at least one value;
   absence of a value for a key is represented by **omitting the
-  `FieldValue` entry entirely** (the `comment` key here). This is the
+  `FieldEntry` entry entirely** (the `comment` key here). This is the
   reason `valueRequirement` is enforced at instance-validation time
   rather than wire-shape time: the wire grammar does not require a
-  `FieldValue` for every `EmbeddedField`.
-- **`FieldValue.values[*]` carries `kind`.** The values inside
-  `FieldValue.values` are members of the `Value` polymorphic union;
+  `FieldEntry` for every `EmbeddedField`.
+- **`FieldEntry.values[*]` carries `kind`.** The values inside
+  `FieldEntry.values` are members of the `Value` polymorphic union;
   every entry carries its `kind` discriminator (per §1.5 of
   `wire-grammar.md`). The same `kind`-bearing shape appears at every
   other `Value` slot — `EmbeddedXxxField.defaultValue` in the

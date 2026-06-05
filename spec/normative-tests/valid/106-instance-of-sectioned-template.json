@@ -17,9 +17,9 @@
     }
   },
   "templateRef": "https://example.org/templates/patient-intake",
-  "members": [
+  "entries": [
     {
-      "kind": "FieldValue",
+      "kind": "FieldEntry",
       "key": "given_name",
       "values": [
         {
@@ -30,7 +30,7 @@
       ]
     },
     {
-      "kind": "FieldValue",
+      "kind": "FieldEntry",
       "key": "family_name",
       "values": [
         {
@@ -41,7 +41,7 @@
       ]
     },
     {
-      "kind": "FieldValue",
+      "kind": "FieldEntry",
       "key": "primary_diagnosis",
       "values": [
         {
@@ -52,7 +52,7 @@
       ]
     },
     {
-      "kind": "FieldValue",
+      "kind": "FieldEntry",
       "key": "medication_name",
       "values": [
         {

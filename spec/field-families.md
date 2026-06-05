@@ -4,7 +4,7 @@ This is a navigation index for the 21 concrete field families defined by the spe
 
 - **Field artifact** — the family's `XxxField`, a standalone reusable artifact.
 - **Field spec** — the family's `XxxFieldSpec`, carried by the standalone `Field` artifact.
-- **Value** — the family's instance-value production (`XxxValue`), carried by a `FieldValue` in a `TemplateInstance`.
+- **Value** — the family's instance-value production (`XxxValue`), carried by a `FieldEntry` in a `TemplateInstance`.
 - **Embedded form** — the family's `EmbeddedXxxField`, used inside a `Template`'s `members` to reference the standalone field.
 
 The conformance fixture column points at the per-family Template + Instance pair under [`normative-tests/valid/`](normative-tests/README.md) and the standalone Field artifact.

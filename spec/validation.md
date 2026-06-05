@@ -100,7 +100,7 @@ If an embedding defines minimum and maximum cardinality, the minimum cardinality
 
 `ValueRequirement` and `Cardinality` are orthogonal: `ValueRequirement` governs whether any values must be supplied at all; `Cardinality` governs the permitted count if values are supplied.
 
-If an embedding is marked `"required"`, its minimum cardinality MUST be at least one. For `EmbeddedTemplate`, this means at least one `NestedTemplateInstance` keyed to that embedding MUST be present in the `TemplateInstance`.
+If an embedding is marked `"required"`, its minimum cardinality MUST be at least one. For `EmbeddedTemplate`, this means at least one `TemplateEntry` keyed to that embedding MUST be present in the `TemplateInstance`.
 
 If an embedding is marked `"recommended"`, absence of a value MUST NOT by itself cause conformance failure, though implementations MAY issue warnings or other authoring guidance.
 
@@ -128,15 +128,15 @@ An `EmbeddedField` is **multi-valued** if its effective maximum cardinality is g
 
 ### Instance Alignment
 
-Each `FieldValue` in a `TemplateInstance` MUST reference the `EmbeddedArtifactKey` of an `EmbeddedField` in the referenced `Template`.
+Each `FieldEntry` in a `TemplateInstance` MUST reference the `EmbeddedArtifactKey` of an `EmbeddedField` in the referenced `Template`.
 
-Each `NestedTemplateInstance` in a `TemplateInstance` MUST reference the `EmbeddedArtifactKey` of an `EmbeddedTemplate` in the referenced `Template`.
+Each `TemplateEntry` in a `TemplateInstance` MUST reference the `EmbeddedArtifactKey` of an `EmbeddedTemplate` in the referenced `Template`.
 
-`TemplateInstance` MUST NOT contain an `InstanceValue` for an `EmbeddedPresentationComponent`.
+`TemplateInstance` MUST NOT contain an `InstanceEntry` for an `EmbeddedPresentationComponent`.
 
 ### Field Spec Compatibility
 
-Values in a `FieldValue` MUST satisfy the `FieldSpec` and any field-spec-specific properties of the referenced `Field`.
+Values in a `FieldEntry` MUST satisfy the `FieldSpec` and any field-spec-specific properties of the referenced `Field`.
 
 The contained values MUST follow the `FieldSpec`-to-`Value` correspondence defined in [`grammar.md`](grammar.md):
 
@@ -218,8 +218,8 @@ For date-time values:
 
 For enum values:
 
-- A `FieldValue` for a `SingleValuedEnumFieldSpec` MUST contain exactly one `EnumValue`
-- A `FieldValue` for a `MultiValuedEnumFieldSpec` MUST contain one or more `EnumValue` constructs (subject to the `Cardinality` of the embedding)
+- A `FieldEntry` for a `SingleValuedEnumFieldSpec` MUST contain exactly one `EnumValue`
+- A `FieldEntry` for a `MultiValuedEnumFieldSpec` MUST contain one or more `EnumValue` constructs (subject to the `Cardinality` of the embedding)
 - Each `EnumValue.value` (a `Token`) MUST equal the canonical `Token` of one of the referenced spec's `PermissibleValue` entries
 - The `Token` strings of an `EnumFieldSpec`'s `PermissibleValue+` MUST be unique within that spec
 - `SingleValuedEnumFieldSpec.defaultValue`, if present, MUST be an `EnumValue` whose `value` equals the `Token` of one of its `PermissibleValue` entries
@@ -268,16 +268,16 @@ The model carries default values at two layers, and validation rules apply unifo
 The well-formedness conditions:
 
 - A default value, at either layer, MUST be the family-specific `Value` type as given in [grammar.md](grammar.md#defaults).
-- A default MUST satisfy every well-formedness condition that a corresponding `FieldValue` would satisfy for the same `FieldSpec` (length bounds, numeric bounds, datatype consistency, lexical-form constraints, and so on).
+- A default MUST satisfy every well-formedness condition that a corresponding `FieldEntry` would satisfy for the same `FieldSpec` (length bounds, numeric bounds, datatype consistency, lexical-form constraints, and so on).
 - Enum defaults at either layer MUST be `EnumValue` constructs (single for `SingleValuedEnumField`/`Spec`, a possibly-empty list for `MultiValuedEnumField`/`Spec`) whose `value` equals the `Token` of one of the spec's `PermissibleValue` entries; the multi-valued list MUST NOT contain duplicate `value` entries.
 - When both a field-level and an embedding-level default are present for the same field, the embedding-level default takes precedence (see [grammar.md](grammar.md#defaults)).
 - `AttributeValueFieldSpec` and `EmbeddedAttributeValueField` carry no defaults at either layer.
 
 For multiplicity:
 
-- if an `EmbeddedField` is single-valued, its corresponding `FieldValue` MUST NOT contain more than one value
-- if an `EmbeddedField` is multi-valued, the number of values in its `FieldValue` MUST satisfy the embedding cardinality constraints
-- if an `EmbeddedTemplate` has multiplicity greater than one, the number of corresponding `NestedTemplateInstance` constructs MUST satisfy the embedding cardinality constraints
+- if an `EmbeddedField` is single-valued, its corresponding `FieldEntry` MUST NOT contain more than one value
+- if an `EmbeddedField` is multi-valued, the number of values in its `FieldEntry` MUST satisfy the embedding cardinality constraints
+- if an `EmbeddedTemplate` has multiplicity greater than one, the number of corresponding `TemplateEntry` constructs MUST satisfy the embedding cardinality constraints
 
 
 ### Rendering Hint Compatibility
@@ -642,7 +642,7 @@ Let `fieldSpec` = the `FieldSpec` of the `Field` referenced by `embedded`.
 
 1. Verify `defaultValue` is of the family-specific `Value` type for `fieldSpec`: `TextValue` for `TextFieldSpec`, `IntegerNumberValue` for `IntegerNumberFieldSpec`, `RealNumberValue` for `RealNumberFieldSpec`, `BooleanValue` for `BooleanFieldSpec`, `DateValue` for `DateFieldSpec`, `TimeValue` for `TimeFieldSpec`, `DateTimeValue` for `DateTimeFieldSpec`, `ControlledTermValue` for `ControlledTermFieldSpec`, `EnumValue` for `SingleValuedEnumFieldSpec`, a sequence of `EnumValue` for `MultiValuedEnumFieldSpec`, `LinkValue` for `LinkFieldSpec`, `EmailValue` for `EmailFieldSpec`, `PhoneNumberValue` for `PhoneNumberFieldSpec`, the corresponding external-authority `Value` types for the external-authority field specs, and `LanguageValue` for `LanguageFieldSpec`. `AttributeValueFieldSpec` does not admit a default value.
    *On failure:* `wireShape` at `<embedded>/defaultValue`, production naming `embedded`'s family, message `"defaultValue must be a <FamilyValue> (got <kind>)"`.
-2. Apply the family-specific `validate_xxx_value(defaultValue, fieldSpec)` procedure to `defaultValue`. The default value MUST satisfy every constraint that a `FieldValue` carrying the same `Value` would satisfy. Errors reported by the inner subroutine are surfaced verbatim, with the path rooted at `<embedded>/defaultValue`.
+2. Apply the family-specific `validate_xxx_value(defaultValue, fieldSpec)` procedure to `defaultValue`. The default value MUST satisfy every constraint that a `FieldEntry` carrying the same `Value` would satisfy. Errors reported by the inner subroutine are surfaced verbatim, with the path rooted at `<embedded>/defaultValue`.
 3. If `embedded` is an `EmbeddedSingleValuedEnumField`: verify `defaultValue` is a single `EnumValue` (not a sequence).
    *On failure:* `wireShape` at `<embedded>/defaultValue`, production `EmbeddedSingleValuedEnumField`, message `"defaultValue must be a single EnumValue, not a sequence"`.
 4. If `embedded` is an `EmbeddedMultiValuedEnumField`: verify `defaultValue` is a (possibly empty) sequence of `EnumValue` constructs and that no two entries share the same `value`.
@@ -682,11 +682,11 @@ Entry point for instance validation.
 1. Run [`validate_model_version(instance.model_version)`](#fn-validate-model-version).
 2. Run [`validate_instance_alignment(instance, template)`](#fn-validate-instance-alignment).
 3. Run [`validate_field_presence_and_cardinality(instance, template)`](#fn-validate-field-presence-and-cardinality).
-4. For each `fieldValue` in `instance.instance_values` where `fieldValue` is a `FieldValue`:
+4. For each `fieldValue` in `instance.instance_values` where `fieldValue` is a `FieldEntry`:
    1. Let `embeddedField` = the `EmbeddedField` in `template` whose key = `fieldValue.key`.
    2. Run [`validate_field_value(fieldValue, embeddedField)`](#fn-validate-field-value).
 5. Run [`validate_nested_template_presence_and_cardinality(instance, template)`](#fn-validate-nested-template-presence-and-cardinality).
-6. For each `nestedInstance` in `instance.instance_values` where `nestedInstance` is a `NestedTemplateInstance`:
+6. For each `nestedInstance` in `instance.instance_values` where `nestedInstance` is a `TemplateEntry`:
    1. Let `embeddedTemplate` = the `EmbeddedTemplate` in `template` whose key = `nestedInstance.key`.
    2. Let `referencedTemplate` = the `Template` identified by `embeddedTemplate.artifactRef`.
    3. Run [`validate_instance(nestedInstance, referencedTemplate)`](#fn-validate-instance).
@@ -702,12 +702,12 @@ Applies the [Instance Alignment](#instance-alignment) rules.
 1. Let `field_keys` = `{ embedded.key | embedded ∈ template.embedded_artifacts, embedded is EmbeddedField }`.
 2. Let `template_keys` = `{ embedded.key | embedded ∈ template.embedded_artifacts, embedded is EmbeddedTemplate }`.
 3. Let `pc_keys` = `{ embedded.key | embedded ∈ template.embedded_artifacts, embedded is EmbeddedPresentationComponent }`.
-4. For each `fieldValue` in `instance.instance_values` where `fieldValue` is a `FieldValue`: verify `fieldValue.key ∈ field_keys`.
-   *On failure:* `structural` at `<instance>/values/<i>/key`, production `FieldValue`, message `"FieldValue.key does not identify any EmbeddedField in the referenced Template"`.
-5. For each `nestedInstance` in `instance.instance_values` where `nestedInstance` is a `NestedTemplateInstance`: verify `nestedInstance.key ∈ template_keys`.
-   *On failure:* `structural` at `<instance>/values/<i>/key`, production `NestedTemplateInstance`, message `"NestedTemplateInstance.key does not identify any EmbeddedTemplate in the referenced Template"`.
+4. For each `fieldValue` in `instance.instance_values` where `fieldValue` is a `FieldEntry`: verify `fieldValue.key ∈ field_keys`.
+   *On failure:* `structural` at `<instance>/values/<i>/key`, production `FieldEntry`, message `"FieldEntry.key does not identify any EmbeddedField in the referenced Template"`.
+5. For each `nestedInstance` in `instance.instance_values` where `nestedInstance` is a `TemplateEntry`: verify `nestedInstance.key ∈ template_keys`.
+   *On failure:* `structural` at `<instance>/values/<i>/key`, production `TemplateEntry`, message `"TemplateEntry.key does not identify any EmbeddedTemplate in the referenced Template"`.
 6. For each `instanceValue` in `instance.instance_values`: verify `instanceValue.key ∉ pc_keys`.
-   *On failure:* `structural` at `<instance>/values/<i>/key`, production naming `instanceValue`'s kind, message `"InstanceValue keyed to an EmbeddedPresentationComponent — presentation components do not produce instance values"`.
+   *On failure:* `structural` at `<instance>/values/<i>/key`, production naming `instanceValue`'s kind, message `"InstanceEntry keyed to an EmbeddedPresentationComponent — presentation components do not produce instance values"`.
 
 ---
 
@@ -722,26 +722,26 @@ For each `embeddedField` in `template.embedded_artifacts` where `embeddedField` 
 1. Let `eff_min` = `embeddedField.cardinality.min_cardinality` if present, else `1`.
 2. Let `eff_max` = `embeddedField.cardinality.max_cardinality` if present, else `1`. If `eff_max` is `UnboundedCardinality`, let `eff_max = ∞`.
 3. Let `req` = `embeddedField.value_requirement` if present, else `"optional"`.
-4. Let `fieldValue` = the `FieldValue` in `instance` with key = `embeddedField.key`, or `absent` if none exists.
+4. Let `fieldValue` = the `FieldEntry` in `instance` with key = `embeddedField.key`, or `absent` if none exists.
 5. If `req = "required"`:
    1. Verify `fieldValue ≠ absent`.
       *On failure:* `structural` at `<instance>/values`, production `TemplateInstance`, message `"required field <embeddedField.key> is missing from the instance"`.
    2. Verify `count(fieldValue.values) ≥ eff_min`.
-      *On failure:* `structural` at `<fieldValue>/values`, production `FieldValue`, message `"value count below required minimum cardinality (got <n>, expected ≥ <eff_min>)"`.
+      *On failure:* `structural` at `<fieldValue>/values`, production `FieldEntry`, message `"value count below required minimum cardinality (got <n>, expected ≥ <eff_min>)"`.
    3. If `eff_max ≠ ∞`: verify `count(fieldValue.values) ≤ eff_max`.
-      *On failure:* `structural` at `<fieldValue>/values`, production `FieldValue`, message `"value count above maximum cardinality (got <n>, expected ≤ <eff_max>)"`.
+      *On failure:* `structural` at `<fieldValue>/values`, production `FieldEntry`, message `"value count above maximum cardinality (got <n>, expected ≤ <eff_max>)"`.
 6. If `req = "recommended"` or `req = "optional"`:
    1. If `fieldValue ≠ absent`:
       1. Verify `count(fieldValue.values) ≥ eff_min`.
-         *On failure:* `structural` at `<fieldValue>/values`, production `FieldValue`, message `"value count below minimum cardinality (got <n>, expected ≥ <eff_min>)"`.
+         *On failure:* `structural` at `<fieldValue>/values`, production `FieldEntry`, message `"value count below minimum cardinality (got <n>, expected ≥ <eff_min>)"`.
       2. If `eff_max ≠ ∞`: verify `count(fieldValue.values) ≤ eff_max`.
-         *On failure:* `structural` at `<fieldValue>/values`, production `FieldValue`, message `"value count above maximum cardinality (got <n>, expected ≤ <eff_max>)"`.
+         *On failure:* `structural` at `<fieldValue>/values`, production `FieldEntry`, message `"value count above maximum cardinality (got <n>, expected ≤ <eff_max>)"`.
 
 ---
 
 #### Field Value Validation
 
-##### `validate_field_value(fieldValue: FieldValue, embeddedField: EmbeddedField)` {#fn-validate-field-value}
+##### `validate_field_value(fieldValue: FieldEntry, embeddedField: EmbeddedField)` {#fn-validate-field-value}
 
 1. Let `fieldSpec` = the `FieldSpec` of the `Field` referenced by `embeddedField`.
 2. For each `value` in `fieldValue.values`: run [`validate_value(value, fieldSpec)`](#fn-validate-value).
@@ -943,18 +943,18 @@ For each `embeddedTemplate` in `template.embedded_artifacts` where `embeddedTemp
 1. Let `eff_min` = `embeddedTemplate.cardinality.min_cardinality` if present, else `1`.
 2. Let `eff_max` = `embeddedTemplate.cardinality.max_cardinality` if present, else `1`. If `eff_max` is `UnboundedCardinality`, let `eff_max = ∞`.
 3. Let `req` = `embeddedTemplate.value_requirement` if present, else `"optional"`.
-4. Let `n` = `count({ nestedInstance | nestedInstance ∈ instance.instance_values, nestedInstance is NestedTemplateInstance, nestedInstance.key = embeddedTemplate.key })`.
+4. Let `n` = `count({ nestedInstance | nestedInstance ∈ instance.instance_values, nestedInstance is TemplateEntry, nestedInstance.key = embeddedTemplate.key })`.
 5. If `req = "required"`:
    1. Verify `n ≥ eff_min`.
-      *On failure:* `structural` at `<instance>/values`, production `TemplateInstance`, message `"required NestedTemplateInstance count below minimum (got <n>, expected ≥ <eff_min>) for key '<embeddedTemplate.key>'"`.
+      *On failure:* `structural` at `<instance>/values`, production `TemplateInstance`, message `"required TemplateEntry count below minimum (got <n>, expected ≥ <eff_min>) for key '<embeddedTemplate.key>'"`.
    2. If `eff_max ≠ ∞`: verify `n ≤ eff_max`.
-      *On failure:* `structural` at `<instance>/values`, production `TemplateInstance`, message `"NestedTemplateInstance count above maximum (got <n>, expected ≤ <eff_max>) for key '<embeddedTemplate.key>'"`.
+      *On failure:* `structural` at `<instance>/values`, production `TemplateInstance`, message `"TemplateEntry count above maximum (got <n>, expected ≤ <eff_max>) for key '<embeddedTemplate.key>'"`.
 6. If `req = "recommended"` or `req = "optional"`:
    1. If `n > 0`:
       1. Verify `n ≥ eff_min`.
-         *On failure:* `structural` at `<instance>/values`, production `TemplateInstance`, message `"NestedTemplateInstance count below minimum (got <n>, expected ≥ <eff_min>) for key '<embeddedTemplate.key>'"`.
+         *On failure:* `structural` at `<instance>/values`, production `TemplateInstance`, message `"TemplateEntry count below minimum (got <n>, expected ≥ <eff_min>) for key '<embeddedTemplate.key>'"`.
       2. If `eff_max ≠ ∞`: verify `n ≤ eff_max`.
-         *On failure:* `structural` at `<instance>/values`, production `TemplateInstance`, message `"NestedTemplateInstance count above maximum (got <n>, expected ≤ <eff_max>) for key '<embeddedTemplate.key>'"`.
+         *On failure:* `structural` at `<instance>/values`, production `TemplateInstance`, message `"TemplateEntry count above maximum (got <n>, expected ≤ <eff_max>) for key '<embeddedTemplate.key>'"`.
 
 ---
 
