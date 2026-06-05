@@ -71,6 +71,8 @@ no behaviour to attach to it, so favour structural types and plain functions:
 - Never use `null` in the public model, and never emit `null` for an absent optional on the wire. Decoders reject `"prop": null` (per `serialization.md`).
 - Keep the public surface null-free per the `bindings.md` "Optional component" guidance. For defaulted-optional slots (`Visibility`, `Editability`, `ValueRequirement`, `Cardinality`, `Collapsibility`), provide a total accessor/helper that resolves the defined default and returns the value type directly. For genuinely-optional slots, the property is simply `prop?: T` and callers narrow on `undefined`.
 - Do **not** normalise a default into stored state for an absent slot (e.g. storing `'visible'` when `visibility` was absent); that would re-emit an omitted property and break round-trip equality (`serialization.md`). Resolve defaults at read time; preserve absence in storage.
+- Repeated components (`X*` / `X+`) are `readonly T[]` and are **never optional and never `null`**: an absent or empty repetition is the empty array `[]`, not `undefined`/`null`. Type them `readonly T[]` (not `readonly T[] | undefined`); default a missing input to `[]`; `Object.freeze` the stored array. Callers iterate without a presence check. (Only scalar optionals use `prop?: T`.) For `X+` (one-or-more), additionally validate non-empty at construction.
+- Empty `X*` slots round-trip as absent: on encode, omit an empty repeated slot (e.g. `altPrompts`, `annotations`, `examples`, `members`); on decode, an omitted such slot becomes `[]`. Never emit `null` for an array.
 
 ## Constructors And Widening Inputs
 
