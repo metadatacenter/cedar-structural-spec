@@ -1155,11 +1155,11 @@ Concrete serializations need not preserve the per-family identifier distinctions
 
 ## Artifact Metadata
 
-Artifact metadata defines descriptive information, lifecycle information, versioning, and annotations. `CatalogMetadata` is uniform across every artifact kind and provides the common catalog-oriented metadata carried by all artifacts other than identity: descriptive properties (preferred catalog label, description, identifier, alternative labels), lifecycle metadata, and annotations. Schema artifacts (`Field`, `Template`) additionally carry `SchemaArtifactVersioning` as a separate top-level slot recording version, status, and lineage.
+Artifact metadata defines descriptive information, lifecycle information, versioning, and annotations. `CatalogMetadata` is uniform across every artifact kind and provides the common catalog-oriented metadata carried by all artifacts other than identity: descriptive properties (preferred catalog label, description, external identifier, alternative labels), lifecycle metadata, and annotations. Schema artifacts (`Field`, `Template`) additionally carry `SchemaArtifactVersioning` as a separate top-level slot recording version, status, and lineage.
 
 ### Aggregate Structure
 
-This subsection identifies how the metadata categories are grouped at the artifact level. `CatalogMetadata` carries the catalog-oriented properties of an artifact (descriptive properties such as preferred catalog label, description, identifier, and alternative labels; lifecycle metadata; and annotations) directly as members. It is uniform across every artifact kind: `Field`, `Template`, `PresentationComponent`, and `TemplateInstance` all carry the same `CatalogMetadata` shape.
+This subsection identifies how the metadata categories are grouped at the artifact level. `CatalogMetadata` carries the catalog-oriented properties of an artifact (descriptive properties such as preferred catalog label, description, external identifier, and alternative labels; lifecycle metadata; and annotations) directly as members. It is uniform across every artifact kind: `Field`, `Template`, `PresentationComponent`, and `TemplateInstance` all carry the same `CatalogMetadata` shape.
 
 The schema artifacts (`Field` and `Template`) additionally carry [`SchemaArtifactVersioning`](#versioning) as a separate top-level slot on the artifact itself; non-schema artifacts (`PresentationComponent`, `TemplateInstance`) do not carry versioning.
 
@@ -1169,7 +1169,7 @@ The schema artifacts (`Field` and `Template`) additionally carry [`SchemaArtifac
 CatalogMetadata ::= catalog_metadata(
                       [PreferredLabel]
                       [Description]
-                      [Identifier]
+                      [ExternalSourceId]
                       AlternativeLabel*
                       LifecycleMetadata
                       Annotation*
@@ -1185,16 +1185,20 @@ Description ::= description(
                   MultilingualString
                 )
 
-Identifier ::= identifier(
-                 string
-               )
+ExternalSourceId ::= external_source_id(
+                         string
+                       )
 
 AlternativeLabel ::= alternative_label(
                        MultilingualString
                      )
 ```
 
-`Description` carries a [`MultilingualString`](#multilingual-strings) value: human-readable text that may be presented in one or more natural languages. `Identifier` carries an arbitrary Unicode string value: it is a technical user-supplied key intended for integration with external systems and is not a human-display label, so it is not multilingual. `PreferredLabel` is defined in the [Controlled Term Value](#controlled-term-value) section. `AlternativeLabel` is a [`MultilingualString`](#multilingual-strings): each entry is itself a localization set for one alternative phrasing of the artifact's catalog-discovery label.
+`Description` carries a [`MultilingualString`](#multilingual-strings) value: human-readable text that may be presented in one or more natural languages.
+
+`ExternalSourceId` records the low-level identifier of the source artifact this CEDAR artifact was imported or derived from in a third-party system. The motivating case is caDSR Common Data Elements, whose identifiers look like `38323673434`. It carries an arbitrary Unicode string value, not a [`MultilingualString`](#multilingual-strings), because it is a technical key rather than human-display text. It is **intentionally not an IRI**: a third-party system's identifier cannot be assumed to be an IRI, so the model does not constrain its form and does not interpret it. It is therefore distinct from the artifact's own identity, which is its IRI (`Field.id`, `Template.id`, etc.); `ExternalSourceId` is *some other* system's identifier for the same artifact. The slot is single-valued: the model assumes a CEDAR artifact derives from exactly one source artifact in the third-party system. It is a first-class slot rather than an [`Annotation`](#annotations) because this third-party-source identity is important and predates the general annotation mechanism; arbitrary additional external metadata still belongs in `Annotation`.
+
+`PreferredLabel` is defined in the [Controlled Term Value](#controlled-term-value) section. `AlternativeLabel` is a [`MultilingualString`](#multilingual-strings): each entry is itself a localization set for one alternative phrasing of the artifact's catalog-discovery label.
 
 ### Lifecycle Metadata
 
@@ -1412,7 +1416,7 @@ NonNegativeInteger ::= non_negative_integer(
 
 ### Multilingual Strings
 
-`LangString` and `MultilingualString` are the constructs used at every grammar position that carries human-display text. They distinguish localizations of one conceptual string from technical Unicode-string keys (which remain plain `string`-valued; see [`Identifier`](#descriptive-metadata) and the controlled-term-source identifiers in [Controlled Term Sources](#controlled-term-sources)).
+`LangString` and `MultilingualString` are the constructs used at every grammar position that carries human-display text. They distinguish localizations of one conceptual string from technical Unicode-string keys (which remain plain `string`-valued; see [`ExternalSourceId`](#descriptive-metadata) and the controlled-term-source identifiers in [Controlled Term Sources](#controlled-term-sources)).
 
 ```ebnf
 LangString ::= lang_string(

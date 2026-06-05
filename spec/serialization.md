@@ -261,7 +261,7 @@ Each `Value` family is encoded as a tagged object that carries its content direc
 
 ### 6.4 Metadata and annotations
 
-`LifecycleMetadata`, `SchemaArtifactVersioning`, and `CatalogMetadata` are singleton-only productions (never members of any `discriminator: kind` union per §4.4), so they encode as untagged JSON objects. The descriptive properties of an artifact (`preferredLabel`, `description`, `identifier`, `altLabels`) sit directly on `CatalogMetadata` rather than under a `descriptiveMetadata` wrapper. On schema artifacts, `SchemaArtifactVersioning` appears as a separate top-level `versioning` slot on the artifact rather than nested inside `metadata`.
+`LifecycleMetadata`, `SchemaArtifactVersioning`, and `CatalogMetadata` are singleton-only productions (never members of any `discriminator: kind` union per §4.4), so they encode as untagged JSON objects. The descriptive properties of an artifact (`preferredLabel`, `description`, `externalSourceId`, `altLabels`) sit directly on `CatalogMetadata` rather than under a `descriptiveMetadata` wrapper. On schema artifacts, `SchemaArtifactVersioning` appears as a separate top-level `versioning` slot on the artifact rather than nested inside `metadata`.
 
 ```json
 {

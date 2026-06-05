@@ -132,7 +132,7 @@ encode_X(x: X) → JSON-kind
 
 **Accessor Notation**
 
-Dot notation is used on grammar constructs, e.g. `T.schema_artifact_metadata` or `E.embedded_artifact_key`. Where a grammar construct wraps a primitive string (e.g. `Identifier ::= identifier(string)`), write `D.identifier.string` to reach the string value.
+Dot notation is used on grammar constructs, e.g. `T.schema_artifact_metadata` or `E.embedded_artifact_key`. Where a grammar construct wraps a primitive string (e.g. `ExternalSourceId ::= external_source_id(string)`), write `D.external_source_id.string` to reach the string value.
 
 **Helper Functions**
 

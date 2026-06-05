@@ -228,7 +228,7 @@ The wrappers fall into four groups by inner type:
   `PreviousVersion`, `DerivedFrom`, `CreatedBy`, `ModifiedBy`.
 - **Other strings** (`string`): `LanguageTag`, `LexicalForm`,
   `IsoDateTimeStamp`, `OntologyAcronym`, `ValueSetIdentifier`,
-  `Notation`, `Identifier`, `AttributeName`, `HtmlContent`,
+  `Notation`, `ExternalSourceId`, `AttributeName`, `HtmlContent`,
   `EmbeddedArtifactKey`, `ValidationRegex`, `Token`,
   `Version`, `ModelVersion`, `CreatedOn`, `ModifiedOn`.
 - **Numbers**: `NonNegativeInteger`, `MinCardinality`, `MaxCardinality`,
@@ -675,20 +675,20 @@ IRI string.
 ### 5.1 Aggregate structure
 
 `CatalogMetadata` is flat on the wire: its descriptive properties
-(`preferredLabel`, `description`, `identifier`, `altLabels`), its
+(`preferredLabel`, `description`, `externalSourceId`, `altLabels`), its
 `lifecycle` slot, and its `annotations` slot are all direct
 members of the same object — there is no `descriptiveMetadata`
 wrapper.
 
 ```
 Description ::: MultilingualString
-Identifier ::: string
+ExternalSourceId ::: string
 AlternativeLabel ::: MultilingualString
 
 CatalogMetadata ::: object {
   preferredLabel?: PreferredLabel
   description?: Description
-  identifier?: Identifier
+  externalSourceId?: ExternalSourceId
   altLabels?: array<AlternativeLabel>
   lifecycle: LifecycleMetadata
   annotations?: array<Annotation>
@@ -2444,7 +2444,7 @@ canonical ordering common to the family.)
 **`CatalogMetadata`** (`catalog_metadata`):
 0. `[PreferredLabel]` → `preferredLabel?`
 1. `[Description]` → `description?`
-2. `[Identifier]` → `identifier?`
+2. `[ExternalSourceId]` → `externalSourceId?`
 3. `AlternativeLabel*` → `altLabels?` (SHOULD-omitted when empty per §1.7 rule 4)
 4. `LifecycleMetadata` → `lifecycle`
 5. `Annotation*` → `annotations?` (SHOULD-omitted when empty)
@@ -2840,7 +2840,7 @@ The single-component wrapper productions enumerated in §1.6 — every
 IRIs, `Name`, `Description`, `PreferredLabel`, `AlternativeLabel`,
 `Label`, `Prompt`, `PromptOverride`, `PropertyLabel`, `OntologyName`, `OntologyAcronym`,
 `OntologyIri`, `RootTermIri`, `RootTermLabel`, `ValueSetIdentifier`,
-`ValueSetName`, `ValueSetIri`, `Notation`, `Identifier`,
+`ValueSetName`, `ValueSetIri`, `Notation`, `ExternalSourceId`,
 `AttributeName`, `EmbeddedArtifactKey`, `ValidationRegex`, `Token`,
 `Header`, `Footer`, `Version`, `ModelVersion`, `CreatedOn`,
 `CreatedBy`, `ModifiedOn`, `ModifiedBy`, `PreviousVersion`,
