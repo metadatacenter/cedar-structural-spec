@@ -184,6 +184,13 @@ above.
 - Do not rely on Jackson behavior if it weakens the public type model.
 - Preserve exact wire `kind` names and property names.
 
+## Serialization Formats
+
+- JSON (`serialization.md`) is the normative, canonical interchange format. Implement read and write for JSON first; it is the only format used for cross-implementation exchange and conformance.
+- Also provide YAML read and write as a convenience surface. YAML MUST be a faithful 1:1 view of the canonical JSON wire form: the same property names, the same `kind` discriminators, the same omit-when-absent and empty-list-omission rules. YAML is not a second wire format and MUST NOT introduce a YAML-native schema, aliases, anchors, or any shape that differs from the JSON encoding.
+- Implement YAML as a thin adapter over the same model and the same Jackson configuration, not as an independent codec. Use `com.fasterxml.jackson.dataformat:jackson-dataformat-yaml` (`YAMLFactory`) with the same `ObjectMapper` module/annotation setup as JSON, so the two formats share one mapping and cannot drift. Do not hand-write a separate YAML serializer against the model.
+- Round-trip fidelity is required in both directions and across formats: decoding a YAML document and re-encoding it as JSON MUST yield JSON equivalent to decoding the equivalent JSON document directly, and vice versa. A value decoded from JSON and a value decoded from the equivalent YAML MUST be equal.
+
 ## Validation
 
 - Implement collected validation errors matching the spec's `category`, `path`, `production`, and `message` shape.
@@ -193,6 +200,7 @@ above.
 ## Acceptance Criteria
 
 - All valid normative fixtures decode to typed records and re-encode to JSON-tree equivalent output (property-order-independent). An absent optional MUST round-trip as absent: it is omitted on encode, never emitted as `null` or as its resolved default (`serialization.md`).
+- YAML round-trips equivalently: encoding a fixture to YAML and decoding it back yields a record equal to the one decoded from the original JSON, and decoding the JSON and the YAML forms of a fixture yields equal records. Tests MUST cover at least one JSON-to-YAML-to-record-to-JSON cycle per top-level artifact kind.
 - All invalid normative fixtures report at least the expected errors.
 - Maven tests must cover valid round-trips and invalid expected-error manifests.
 - The source tree must demonstrate the package-per-family layout before considering the task done.

@@ -110,6 +110,9 @@ libraries:
 - Reject unknown properties (`model_config = ConfigDict(extra="forbid")`), `null`-valued optionals, and lexically invalid leaf values, reporting before or during construction.
 - Typed primitives collapse to bare JSON primitives on the wire; reconstruct the typed form on parse from the value plus the field's declared type.
 - Python `int` is unbounded, so large `NonNegativeInteger` values need no special handling on the model side; the encoder must still emit the string-fallback form when the wire grammar requires it for out-of-range integers.
+- JSON (`serialization.md`) is the normative, canonical interchange format; implement it first. Also provide YAML read and write as a convenience surface. YAML MUST be a faithful 1:1 view of the canonical JSON wire form: the same property names, `kind` discriminators, and omit-when-absent and empty-collection-omission rules. YAML is not a second wire format and MUST NOT introduce a YAML-native schema, anchors, or any differing shape.
+- Implement YAML as a thin adapter over the existing model layer, not as an independent codec: encode with `model.model_dump(mode="json", by_alias=True, exclude_none=True)` (omitting empty collections as for JSON) and `yaml.safe_dump` the resulting dict; on read, `yaml.safe_load` to a dict and feed it to the same `Model.model_validate(...)`. Use `yaml.safe_dump` / `yaml.safe_load` (e.g. PyYAML); do not emit anchors or non-JSON-shaped YAML.
+- Round-trip fidelity is required across formats: a model decoded from JSON and the same model decoded from the equivalent YAML MUST be equal, and re-encoding either to JSON MUST be equivalent.
 
 ## Validation
 
@@ -120,6 +123,7 @@ libraries:
 ## Acceptance Criteria
 
 - All valid normative fixtures decode to typed models and re-encode to JSON-tree equivalent output (property-order-independent). An absent optional must round-trip as absent: it is omitted on encode, never emitted as `null` or as its resolved default (`serialization.md`).
+- YAML round-trips equivalently: encoding a fixture to YAML and decoding it back yields a model equal to the one decoded from the original JSON, and the JSON and YAML forms of a fixture decode to equal models. Tests must cover at least one JSON-to-YAML-to-model-to-JSON cycle per top-level artifact kind.
 - All invalid normative fixtures report at least the expected errors.
 - The test suite (e.g. pytest) must cover valid round-trips and invalid expected-error manifests, walking the `spec/normative-tests/` fixtures.
 - Type checking (e.g. `mypy` or `pyright` in strict mode) must pass, and the public API must be exported from the package's `__init__.py`.

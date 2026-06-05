@@ -101,6 +101,9 @@ no behaviour to attach to it, so favour structural types and plain functions:
 - Preserve exact wire `kind` names and property names; do not alias.
 - Decode rejects unknown properties, `null`-valued optionals, and lexically invalid leaf values, reporting before or during construction.
 - Typed primitive wrappers collapse to bare JSON primitives on the wire (an `Iri` serialises to a string); reconstruct the typed form on parse from the value plus the static type at the use site.
+- JSON (`serialization.md`) is the normative, canonical interchange format; implement it first. Also provide YAML read and write as a convenience surface. YAML MUST be a faithful 1:1 view of the canonical JSON wire form: the same property names, `kind` discriminators, and omit-when-absent and empty-list-omission rules. YAML is not a second wire format and MUST NOT introduce a YAML-native schema, anchors, or any differing shape.
+- Implement YAML as a thin adapter over the existing serialize/parse layer, not as an independent codec: serialize to the same plain JSON-compatible value and then stringify it as YAML (e.g. via the `yaml` package), and on read parse YAML to a plain value and feed it to the same `parseArtifact`. The two formats share one mapping and cannot drift.
+- Round-trip fidelity is required across formats: a value decoded from JSON and the same value decoded from the equivalent YAML MUST be structurally equal, and re-encoding either to JSON MUST be equivalent.
 
 ## Validation
 
@@ -111,6 +114,7 @@ no behaviour to attach to it, so favour structural types and plain functions:
 ## Acceptance Criteria
 
 - All valid normative fixtures decode to typed model values and re-encode to JSON-tree equivalent output (property-order-independent). An absent optional must round-trip as absent: it is omitted on encode, never emitted as `null` or as its resolved default (`serialization.md`).
+- YAML round-trips equivalently: encoding a fixture to YAML and decoding it back yields a value equal to the one decoded from the original JSON, and the JSON and YAML forms of a fixture decode to equal values. Tests must cover at least one JSON-to-YAML-to-value-to-JSON cycle per top-level artifact kind.
 - All invalid normative fixtures report at least the expected errors.
 - The test suite (e.g. Vitest) must cover valid round-trips and invalid expected-error manifests, walking the `spec/normative-tests/` fixtures.
 - `tsc --noEmit` must pass with `strict` enabled, and the public API must be exported from a single `index.ts`.
