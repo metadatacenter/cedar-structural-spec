@@ -354,17 +354,14 @@ MultilingualString ::: nonEmptyArray<LangString>
   // lang tags MUST be unique within the array (case-folded comparison)
 ```
 
-### 2.3 Numeric datatype kind
+### 2.3 Numeric datatypes
 
-```
-RealNumberDatatypeKind ::: "decimal" | "float" | "double"
-  // CEDAR-native enum naming the three real-number kinds.
-  // The mapping to XSD datatype IRIs is defined separately in
-  // rdf-projection.md and is out of scope for the wire form.
-```
-
-`IntegerNumberValue` is fixed to a single integer category and carries
-no datatype slot on the wire. Temporal `Value` variants
+Each of the four numeric `Value` variants (`IntegerValue`,
+`DecimalValue`, `FloatValue`, `DoubleValue`) fixes its datatype by its
+`kind` and carries no datatype slot on the wire. The mapping from each
+variant to its XSD datatype IRI (`xsd:integer`, `xsd:decimal`,
+`xsd:float`, `xsd:double`) is defined separately in `rdf-projection.md`
+and is out of scope for the wire form. Temporal `Value` variants
 (`FullDateValue`, `TimeValue`, `DateTimeValue`) likewise carry no
 datatype slot — the temporal category is fixed by the variant's
 `kind`.
@@ -374,28 +371,27 @@ datatype slot — the temporal category is fixed by the variant's
 ## 3. Values
 
 ```
-Value ::: TextValue | NumericValue | BooleanValue
+Value ::: TextValue
+        | IntegerValue | DecimalValue | FloatValue | DoubleValue
+        | BooleanValue
         | DateValue | TimeValue | DateTimeValue
         | ControlledTermValue | EnumValue | LinkValue
         | EmailValue | PhoneNumberValue | ExternalAuthorityValue
         | LanguageValue | AttributeValue
   // discriminator: kind
-  // NumericValue, DateValue, and ExternalAuthorityValue are themselves
+  // DateValue and ExternalAuthorityValue are themselves
   // unions; their members supply the kind discriminator directly
-
-NumericValue ::: IntegerNumberValue | RealNumberValue
-  // discriminator: kind
 ```
 
 ### 3.1 Scalar values
 
 Scalar `Value` variants carry their content directly. There is no inner
 literal wrapper. `TextValue` carries an optional `lang` for
-language-tagged text; `IntegerNumberValue` carries a base-10 integer
-lexical form (datatype is fixed at `xsd:integer` and not carried);
-`RealNumberValue` carries a real-valued lexical form paired with the
-required `datatype` enum (`decimal | float | double`); `BooleanValue`
-carries a JSON boolean.
+language-tagged text. Each of the four numeric variants carries a
+base-10 lexical form and no datatype slot — the datatype is fixed by
+the variant's `kind` (`IntegerValue` → `xsd:integer`, `DecimalValue` →
+`xsd:decimal`, `FloatValue` → `xsd:float`, `DoubleValue` →
+`xsd:double`). `BooleanValue` carries a JSON boolean.
 
 ```
 TextValue ::: object {
@@ -406,20 +402,31 @@ TextValue ::: object {
   // lang, when present, MUST be a well-formed BCP 47 tag
   // value MUST be in Unicode Normalization Form C
 
-IntegerNumberValue ::: object {
-  "kind": "IntegerNumberValue"
+IntegerValue ::: object {
+  "kind": "IntegerValue"
   value: LexicalForm
 }
-  // value is a base-10 integer lexical form
-  // datatype is implicit (xsd:integer) and not carried on the wire
+  // value is a base-10 integer lexical form (xsd:integer)
 
-RealNumberValue ::: object {
-  "kind": "RealNumberValue"
+DecimalValue ::: object {
+  "kind": "DecimalValue"
   value: LexicalForm
-  datatype: RealNumberDatatypeKind
 }
-  // value is a base-10 real-valued lexical form
-  // datatype names the XSD datatype (xsd:decimal, xsd:float, or xsd:double)
+  // value is a base-10 arbitrary-precision decimal lexical form (xsd:decimal)
+
+FloatValue ::: object {
+  "kind": "FloatValue"
+  value: LexicalForm
+}
+  // value is an IEEE 754 single-precision lexical form (xsd:float);
+  // admits INF, -INF, NaN
+
+DoubleValue ::: object {
+  "kind": "DoubleValue"
+  value: LexicalForm
+}
+  // value is an IEEE 754 double-precision lexical form (xsd:double);
+  // admits INF, -INF, NaN
 
 BooleanValue ::: object {
   "kind": "BooleanValue"
@@ -626,8 +633,10 @@ which in every case is `Iri`. The wire grammar therefore lists `FieldId
 ```
 FieldId ::: Iri
 TextFieldId ::: Iri
-IntegerNumberFieldId ::: Iri
-RealNumberFieldId ::: Iri
+IntegerFieldId ::: Iri
+DecimalFieldId ::: Iri
+FloatFieldId ::: Iri
+DoubleFieldId ::: Iri
 BooleanFieldId ::: Iri
 DateFieldId ::: Iri
 TimeFieldId ::: Iri
@@ -856,8 +865,10 @@ carries a `kind` discriminator on the wire.
 | Embedded field | `defaultValue` wire form |
 |---|---|
 | `EmbeddedTextField` | `TextValue`: `{ "kind": "TextValue", "value": …, "lang"?: … }` |
-| `EmbeddedIntegerNumberField` | `IntegerNumberValue`: `{ "kind": "IntegerNumberValue", "value": … }` |
-| `EmbeddedRealNumberField` | `RealNumberValue`: `{ "kind": "RealNumberValue", "value": …, "datatype": … }` |
+| `EmbeddedIntegerField` | `IntegerValue`: `{ "kind": "IntegerValue", "value": … }` |
+| `EmbeddedDecimalField` | `DecimalValue`: `{ "kind": "DecimalValue", "value": … }` |
+| `EmbeddedFloatField` | `FloatValue`: `{ "kind": "FloatValue", "value": … }` |
+| `EmbeddedDoubleField` | `DoubleValue`: `{ "kind": "DoubleValue", "value": … }` |
 | `EmbeddedBooleanField` | `BooleanValue`: `{ "kind": "BooleanValue", "value": … }` (`value` is a JSON boolean) |
 | `EmbeddedDateField` | one of the `DateValue` arms: `{ "kind": "YearValue" \| "YearMonthValue" \| "FullDateValue", "value": … }` |
 | `EmbeddedTimeField` | `TimeValue`: `{ "kind": "TimeValue", "value": … }` |
@@ -888,8 +899,10 @@ rule). The wire shapes are identical to the embedding-level table
 above, with the following per-family details:
 
 - `TextFieldSpec.defaultValue?: TextValue`
-- `IntegerNumberFieldSpec.defaultValue?: IntegerNumberValue`
-- `RealNumberFieldSpec.defaultValue?: RealNumberValue`
+- `IntegerFieldSpec.defaultValue?: IntegerValue`
+- `DecimalFieldSpec.defaultValue?: DecimalValue`
+- `FloatFieldSpec.defaultValue?: FloatValue`
+- `DoubleFieldSpec.defaultValue?: DoubleValue`
 - `BooleanFieldSpec.defaultValue?: BooleanValue`
 - `DateFieldSpec.defaultValue?: DateValue` (the arm MUST be consistent with `dateValueType`)
 - `TimeFieldSpec.defaultValue?: TimeValue`
@@ -969,19 +982,18 @@ The `Field`-side slot `altPrompts?: array<AlternativePrompt>` carries the curate
 ## 7. Field Specs
 
 ```
-FieldSpec ::: TextFieldSpec | NumericFieldSpec | BooleanFieldSpec
+FieldSpec ::: TextFieldSpec
+            | IntegerFieldSpec | DecimalFieldSpec | FloatFieldSpec | DoubleFieldSpec
+            | BooleanFieldSpec
             | TemporalFieldSpec
             | ControlledTermFieldSpec | EnumFieldSpec | LinkFieldSpec
             | ContactFieldSpec | ExternalAuthorityFieldSpec
             | LanguageFieldSpec
             | AttributeValueFieldSpec
   // discriminator: kind
-  // NumericFieldSpec, TemporalFieldSpec, EnumFieldSpec, ContactFieldSpec,
+  // TemporalFieldSpec, EnumFieldSpec, ContactFieldSpec,
   // and ExternalAuthorityFieldSpec are unions; their members supply
   // the kind discriminator directly
-
-NumericFieldSpec ::: IntegerNumberFieldSpec | RealNumberFieldSpec
-  // discriminator: kind
 
 TextFieldSpec ::: object {
   "kind": "TextFieldSpec"
@@ -999,25 +1011,44 @@ LangTagRequirement ::: "langTagRequired" | "langTagOptional" | "langTagForbidden
   // the kind rule (§1.5): `{ "kind": "TextValue", "value": ..., "lang"?: ... }`.
   // See §6.5 for default-value semantics across all field families.
 
-IntegerNumberFieldSpec ::: object {
-  "kind": "IntegerNumberFieldSpec"
-  defaultValue?: IntegerNumberValue
+IntegerFieldSpec ::: object {
+  "kind": "IntegerFieldSpec"
+  defaultValue?: IntegerValue
   unit?: Unit
-  minValue?: IntegerNumberMinValue
-  maxValue?: IntegerNumberMaxValue
+  minValue?: IntegerMinValue
+  maxValue?: IntegerMaxValue
   renderingHint?: NumericRenderingHint
-  examples?: array<IntegerNumberValue>
+  examples?: array<IntegerValue>
 }
 
-RealNumberFieldSpec ::: object {
-  "kind": "RealNumberFieldSpec"
-  datatype: RealNumberDatatypeKind
-  defaultValue?: RealNumberValue
+DecimalFieldSpec ::: object {
+  "kind": "DecimalFieldSpec"
+  defaultValue?: DecimalValue
   unit?: Unit
-  minValue?: RealNumberMinValue
-  maxValue?: RealNumberMaxValue
+  minValue?: DecimalMinValue
+  maxValue?: DecimalMaxValue
   renderingHint?: NumericRenderingHint
-  examples?: array<RealNumberValue>
+  examples?: array<DecimalValue>
+}
+
+FloatFieldSpec ::: object {
+  "kind": "FloatFieldSpec"
+  defaultValue?: FloatValue
+  unit?: Unit
+  minValue?: FloatMinValue
+  maxValue?: FloatMaxValue
+  renderingHint?: NumericRenderingHint
+  examples?: array<FloatValue>
+}
+
+DoubleFieldSpec ::: object {
+  "kind": "DoubleFieldSpec"
+  defaultValue?: DoubleValue
+  unit?: Unit
+  minValue?: DoubleMinValue
+  maxValue?: DoubleMaxValue
+  renderingHint?: NumericRenderingHint
+  examples?: array<DoubleValue>
 }
 
 BooleanFieldSpec ::: object {
@@ -1036,10 +1067,14 @@ MinLength ::: number
 MaxLength ::: number
 ValidationRegex ::: string
 DecimalPlaces ::: number
-IntegerNumberMinValue ::: IntegerNumberValue
-IntegerNumberMaxValue ::: IntegerNumberValue
-RealNumberMinValue ::: RealNumberValue
-RealNumberMaxValue ::: RealNumberValue
+IntegerMinValue ::: IntegerValue
+IntegerMaxValue ::: IntegerValue
+DecimalMinValue ::: DecimalValue
+DecimalMaxValue ::: DecimalValue
+FloatMinValue ::: FloatValue
+FloatMaxValue ::: FloatValue
+DoubleMinValue ::: DoubleValue
+DoubleMaxValue ::: DoubleValue
 ```
 
 ### 7.1 Temporal field specs
@@ -1408,7 +1443,9 @@ Placeholder ::: MultilingualString
 ## 8. Field artifacts
 
 ```
-Field ::: TextField | NumericField | BooleanField
+Field ::: TextField
+        | IntegerField | DecimalField | FloatField | DoubleField
+        | BooleanField
         | DateField | TimeField | DateTimeField
         | ControlledTermField
         | SingleValuedEnumField | MultiValuedEnumField
@@ -1416,10 +1453,6 @@ Field ::: TextField | NumericField | BooleanField
         | OrcidField | RorField | DoiField | PubMedIdField
         | RridField | NihGrantIdField
         | LanguageField | AttributeValueField
-  // discriminator: kind
-  // NumericField is itself a union of IntegerNumberField and RealNumberField
-
-NumericField ::: IntegerNumberField | RealNumberField
   // discriminator: kind
 
 TemporalField ::: DateField | TimeField | DateTimeField
@@ -1451,13 +1484,13 @@ TextField ::: object {
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
-IntegerNumberField ::: object {
-  "kind": "IntegerNumberField"
-  id: IntegerNumberFieldId
+IntegerField ::: object {
+  "kind": "IntegerField"
+  id: IntegerFieldId
   modelVersion: ModelVersion
   metadata: CatalogMetadata
   versioning: SchemaArtifactVersioning
-  fieldSpec: IntegerNumberFieldSpec
+  fieldSpec: IntegerFieldSpec
   prompt: Prompt
   helpText?: HelpText
   altPrompts?: array<AlternativePrompt>
@@ -1466,13 +1499,43 @@ IntegerNumberField ::: object {
 }
   // modelVersion is a SemanticVersion 2.0.0 lexical form
 
-RealNumberField ::: object {
-  "kind": "RealNumberField"
-  id: RealNumberFieldId
+DecimalField ::: object {
+  "kind": "DecimalField"
+  id: DecimalFieldId
   modelVersion: ModelVersion
   metadata: CatalogMetadata
   versioning: SchemaArtifactVersioning
-  fieldSpec: RealNumberFieldSpec
+  fieldSpec: DecimalFieldSpec
+  prompt: Prompt
+  helpText?: HelpText
+  altPrompts?: array<AlternativePrompt>
+  recommendedKey?: EmbeddedArtifactKey
+  recommendedProperty?: Property
+}
+  // modelVersion is a SemanticVersion 2.0.0 lexical form
+
+FloatField ::: object {
+  "kind": "FloatField"
+  id: FloatFieldId
+  modelVersion: ModelVersion
+  metadata: CatalogMetadata
+  versioning: SchemaArtifactVersioning
+  fieldSpec: FloatFieldSpec
+  prompt: Prompt
+  helpText?: HelpText
+  altPrompts?: array<AlternativePrompt>
+  recommendedKey?: EmbeddedArtifactKey
+  recommendedProperty?: Property
+}
+  // modelVersion is a SemanticVersion 2.0.0 lexical form
+
+DoubleField ::: object {
+  "kind": "DoubleField"
+  id: DoubleFieldId
+  modelVersion: ModelVersion
+  metadata: CatalogMetadata
+  versioning: SchemaArtifactVersioning
+  fieldSpec: DoubleFieldSpec
   prompt: Prompt
   helpText?: HelpText
   altPrompts?: array<AlternativePrompt>
@@ -1780,7 +1843,8 @@ EmbeddedArtifact ::: EmbeddedField | EmbeddedTemplate
   // discriminator: kind
 
 EmbeddedField ::: EmbeddedTextField
-                | EmbeddedIntegerNumberField | EmbeddedRealNumberField
+                | EmbeddedIntegerField | EmbeddedDecimalField
+                | EmbeddedFloatField | EmbeddedDoubleField
                 | EmbeddedBooleanField
                 | EmbeddedDateField | EmbeddedTimeField | EmbeddedDateTimeField
                 | EmbeddedControlledTermField
@@ -1809,14 +1873,14 @@ EmbeddedTextField ::: object {
   editability?: Editability
 }
 
-EmbeddedIntegerNumberField ::: object {
-  "kind": "EmbeddedIntegerNumberField"
+EmbeddedIntegerField ::: object {
+  "kind": "EmbeddedIntegerField"
   key: EmbeddedArtifactKey
-  artifactRef: IntegerNumberFieldId
+  artifactRef: IntegerFieldId
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
-  defaultValue?: IntegerNumberValue
+  defaultValue?: IntegerValue
   promptOverride?: PromptOverride
   helpTextOverride?: HelpTextOverride
   property?: Property
@@ -1824,14 +1888,44 @@ EmbeddedIntegerNumberField ::: object {
   editability?: Editability
 }
 
-EmbeddedRealNumberField ::: object {
-  "kind": "EmbeddedRealNumberField"
+EmbeddedDecimalField ::: object {
+  "kind": "EmbeddedDecimalField"
   key: EmbeddedArtifactKey
-  artifactRef: RealNumberFieldId
+  artifactRef: DecimalFieldId
   valueRequirement?: ValueRequirement
   cardinality?: Cardinality
   visibility?: Visibility
-  defaultValue?: RealNumberValue
+  defaultValue?: DecimalValue
+  promptOverride?: PromptOverride
+  helpTextOverride?: HelpTextOverride
+  property?: Property
+  promptKey?: PromptKey
+  editability?: Editability
+}
+
+EmbeddedFloatField ::: object {
+  "kind": "EmbeddedFloatField"
+  key: EmbeddedArtifactKey
+  artifactRef: FloatFieldId
+  valueRequirement?: ValueRequirement
+  cardinality?: Cardinality
+  visibility?: Visibility
+  defaultValue?: FloatValue
+  promptOverride?: PromptOverride
+  helpTextOverride?: HelpTextOverride
+  property?: Property
+  promptKey?: PromptKey
+  editability?: Editability
+}
+
+EmbeddedDoubleField ::: object {
+  "kind": "EmbeddedDoubleField"
+  key: EmbeddedArtifactKey
+  artifactRef: DoubleFieldId
+  valueRequirement?: ValueRequirement
+  cardinality?: Cardinality
+  visibility?: Visibility
+  defaultValue?: DoubleValue
   promptOverride?: PromptOverride
   helpTextOverride?: HelpTextOverride
   property?: Property
@@ -2386,7 +2480,7 @@ Every concrete `Field` production has the same six-component shape:
 with an optional `HelpText` slot, an optional repeated `AlternativePrompt*`
 slot, and two optional advisory slots, `RecommendedKey` and
 `RecommendedProperty`. For all of `TextField`,
-`IntegerNumberField`, `RealNumberField`, `BooleanField`, `DateField`,
+`IntegerField`, `DecimalField`, `FloatField`, `DoubleField`, `BooleanField`, `DateField`,
 `TimeField`, `DateTimeField`, `ControlledTermField`,
 `SingleValuedEnumField`, `MultiValuedEnumField`, `LinkField`,
 `EmailField`, `PhoneNumberField`, `OrcidField`, `RorField`,
@@ -2505,12 +2599,17 @@ inside `metadata`.
 0. `LexicalForm` → `value`
 1. `[LanguageTag]` → `lang?`
 
-**`IntegerNumberValue`** (`integer_number_value`):
-0. `LexicalForm` → `value`
+**`IntegerValue`** (`integer_value`):
+0. `IntegerLexicalForm` → `value`
 
-**`RealNumberValue`** (`real_number_value`):
-0. `LexicalForm` → `value`
-1. `RealNumberDatatypeKind` → `datatype`
+**`DecimalValue`** (`decimal_value`):
+0. `DecimalLexicalForm` → `value`
+
+**`FloatValue`** (`float_value`):
+0. `FloatLexicalForm` → `value`
+
+**`DoubleValue`** (`double_value`):
+0. `DoubleLexicalForm` → `value`
 
 **`BooleanValue`** (`boolean_value`):
 0. `boolean` → `value`
@@ -2591,22 +2690,37 @@ inside `metadata`.
 5. `[TextRenderingHint]` → `renderingHint?`
 6. `TextValue*` → `examples?` (SHOULD-omitted when empty per §1.7 rule 4)
 
-**`IntegerNumberFieldSpec`** (`integer_number_field_spec`):
-0. `[IntegerNumberValue]` → `defaultValue?`
+**`IntegerFieldSpec`** (`integer_field_spec`):
+0. `[IntegerValue]` → `defaultValue?`
 1. `[Unit]` → `unit?`
-2. `[IntegerNumberMinValue]` → `minValue?`
-3. `[IntegerNumberMaxValue]` → `maxValue?`
+2. `[IntegerMinValue]` → `minValue?`
+3. `[IntegerMaxValue]` → `maxValue?`
 4. `[NumericRenderingHint]` → `renderingHint?`
-5. `IntegerNumberValue*` → `examples?` (SHOULD-omitted when empty per §1.7 rule 4)
+5. `IntegerValue*` → `examples?` (SHOULD-omitted when empty per §1.7 rule 4)
 
-**`RealNumberFieldSpec`** (`real_number_field_spec`):
-0. `RealNumberDatatypeKind` → `datatype`
-1. `[RealNumberValue]` → `defaultValue?`
-2. `[Unit]` → `unit?`
-3. `[RealNumberMinValue]` → `minValue?`
-4. `[RealNumberMaxValue]` → `maxValue?`
-5. `[NumericRenderingHint]` → `renderingHint?`
-6. `RealNumberValue*` → `examples?` (SHOULD-omitted when empty per §1.7 rule 4)
+**`DecimalFieldSpec`** (`decimal_field_spec`):
+0. `[DecimalValue]` → `defaultValue?`
+1. `[Unit]` → `unit?`
+2. `[DecimalMinValue]` → `minValue?`
+3. `[DecimalMaxValue]` → `maxValue?`
+4. `[NumericRenderingHint]` → `renderingHint?`
+5. `DecimalValue*` → `examples?` (SHOULD-omitted when empty per §1.7 rule 4)
+
+**`FloatFieldSpec`** (`float_field_spec`):
+0. `[FloatValue]` → `defaultValue?`
+1. `[Unit]` → `unit?`
+2. `[FloatMinValue]` → `minValue?`
+3. `[FloatMaxValue]` → `maxValue?`
+4. `[NumericRenderingHint]` → `renderingHint?`
+5. `FloatValue*` → `examples?` (SHOULD-omitted when empty per §1.7 rule 4)
+
+**`DoubleFieldSpec`** (`double_field_spec`):
+0. `[DoubleValue]` → `defaultValue?`
+1. `[Unit]` → `unit?`
+2. `[DoubleMinValue]` → `minValue?`
+3. `[DoubleMaxValue]` → `maxValue?`
+4. `[NumericRenderingHint]` → `renderingHint?`
+5. `DoubleValue*` → `examples?` (SHOULD-omitted when empty per §1.7 rule 4)
 
 **`BooleanFieldSpec`** (`boolean_field_spec`):
 0. `[BooleanValue]` → `defaultValue?`

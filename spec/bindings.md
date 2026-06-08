@@ -185,11 +185,11 @@ export interface TextValue {
   readonly value: string;
   readonly lang?: LanguageTag;
 }
-export interface IntegerNumberValue {
-  readonly kind: 'IntegerNumberValue';
+export interface IntegerValue {
+  readonly kind: 'IntegerValue';
   readonly value: string;
 }
-export type Value = TextValue | IntegerNumberValue /* | … */;
+export type Value = TextValue | IntegerValue /* | … */;
 
 export function textValue(value: string, lang?: LanguageTag): TextValue {
   return lang === undefined
@@ -205,9 +205,9 @@ Jackson's polymorphic-type annotations using the property name `kind`.
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "kind")
 @JsonSubTypes({
     @JsonSubTypes.Type(value = TextValue.class, name = "TextValue"),
-    @JsonSubTypes.Type(value = IntegerNumberValue.class, name = "IntegerNumberValue")
+    @JsonSubTypes.Type(value = IntegerValue.class, name = "IntegerValue")
 })
-public sealed interface Value permits TextValue, IntegerNumberValue { }
+public sealed interface Value permits TextValue, IntegerValue { }
 
 @JsonTypeName("TextValue")
 public record TextValue(
@@ -218,11 +218,11 @@ public record TextValue(
     public TextValue { }
 }
 
-@JsonTypeName("IntegerNumberValue")
-public record IntegerNumberValue(@JsonProperty("value") String value)
+@JsonTypeName("IntegerValue")
+public record IntegerValue(@JsonProperty("value") String value)
         implements Value {
     @JsonCreator
-    public IntegerNumberValue { }
+    public IntegerValue { }
 }
 ```
 
@@ -240,12 +240,12 @@ class TextValue(BaseModel):
     value: str
     lang: str | None = None
 
-class IntegerNumberValue(BaseModel):
+class IntegerValue(BaseModel):
     model_config = ConfigDict(frozen=True)
-    kind: Literal["IntegerNumberValue"] = "IntegerNumberValue"
+    kind: Literal["IntegerValue"] = "IntegerValue"
     value: str
 
-Value = Annotated[Union[TextValue, IntegerNumberValue], Discriminator("kind")]
+Value = Annotated[Union[TextValue, IntegerValue], Discriminator("kind")]
 ```
 
 For complex roots, wrap in a `pydantic.RootModel[Value]` to permit
@@ -256,7 +256,7 @@ value is not a known member. Encoders MUST emit `kind` with the exact
 production name (no aliasing). The construction-time invariants of
 each variant apply normally.
 
-**Worked example: `Value` (subset: `TextValue | IntegerNumberValue`).** Wire
+**Worked example: `Value` (subset: `TextValue | IntegerValue`).** Wire
 shape: `{"kind": "TextValue", "value": "hi"}`. All three idioms decode
 that JSON to a value whose static type is `Value` and whose runtime
 narrowing predicate (`value.kind === 'TextValue'` / `instanceof TextValue`
@@ -278,9 +278,9 @@ construction.
 
 *Example.* `EmbeddedArtifact` is a sealed union over `EmbeddedField`
 and `EmbeddedPresentationComponent`, with `EmbeddedField` itself
-sealed over the 21 family records (`EmbeddedTextField`,
-`EmbeddedIntegerNumberField`, etc.). The Jackson registration on
-`EmbeddedArtifact` should list every leaf record (all 21
+sealed over the 23 family records (`EmbeddedTextField`,
+`EmbeddedIntegerField`, etc.). The Jackson registration on
+`EmbeddedArtifact` should list every leaf record (all 23
 `EmbeddedXxxField` records plus every `EmbeddedXxxComponent`
 record) in `@JsonSubTypes`, not the intermediate `EmbeddedField`
 interface.
@@ -321,7 +321,7 @@ the rendering hint encodes without a `kind` tag.
 > `discriminator: kind`. The umbrella `FieldSpec` union is a good
 > example of the latter: every actual use site (`XxxField.fieldSpec`)
 > is typed with the per-family concrete production (`TextFieldSpec`,
-> `IntegerNumberFieldSpec`, …) so the variant could in principle be
+> `IntegerFieldSpec`, …) so the variant could in principle be
 > recovered positionally, but `FieldSpec` is `discriminator: kind` so
 > every member still carries `"kind"` on the wire per the kind rule
 > (§1.5). Use this section only for productions explicitly flagged
@@ -390,7 +390,7 @@ export function iri(value: string): Iri {
 ```
 
 cedar-ts's `FieldId` family uses this form with a per-family `kind`
-discriminant so the twenty-one families remain distinguishable in the type
+discriminant so the twenty-three families remain distinguishable in the type
 system.
 
 *Option B — branded type.* A lighter alternative; the value is a bare
@@ -654,7 +654,7 @@ are drawn from a fixed set. All values are `lowerCamelCase` per
 `ValueRequirement`, `Visibility`, `Editability`, `Collapsibility`,
 `DateValueType`, `DateComponentOrder`,
 `TimeFormat`, `TimePrecision`, `DateTimeValueType`,
-`TimezoneRequirement`, `RealNumberDatatypeKind` (three values), the
+`TimezoneRequirement`, the
 flat-string rendering hints (`TextRenderingHint`,
 `SingleValuedEnumRenderingHint`, `MultiValuedEnumRenderingHint`,
 `BooleanRenderingHint`).
@@ -1027,8 +1027,8 @@ docs are generated.
 
 Bindings SHOULD organise the source tree so that **everything specific
 to a single field family lives together**. A field family is the
-twenty-one-way grouping introduced in `grammar.md` §3.2: `TextField`,
-`IntegerNumberField`, `RealNumberField`, `BooleanField`, `DateField`,
+twenty-three-way grouping introduced in `grammar.md` §3.2: `TextField`,
+`IntegerField`, `DecimalField`, `FloatField`, `DoubleField`, `BooleanField`, `DateField`,
 `TimeField`, `DateTimeField`, `ControlledTermField`,
 `SingleValuedEnumField`, `MultiValuedEnumField`, `LinkField`,
 `EmailField`, `PhoneNumberField`, `OrcidField`, `RorField`, `DoiField`,

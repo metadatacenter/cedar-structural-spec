@@ -1,6 +1,6 @@
 {
   "kind": "Template",
-  "id": "https://example.org/templates/integer-number",
+  "id": "https://example.org/templates/integer",
   "modelVersion": "2.0.0",
   "metadata": {
     "lifecycle": {
@@ -22,9 +22,9 @@
   ],
   "members": [
     {
-      "kind": "EmbeddedIntegerNumberField",
+      "kind": "EmbeddedIntegerField",
       "key": "field1",
-      "artifactRef": "https://example.org/fields/integer-number-1",
+      "artifactRef": "https://example.org/fields/integer-1",
       "valueRequirement": "required",
       "cardinality": {
         "min": 1,
@@ -32,7 +32,7 @@
       },
       "visibility": "visible",
       "defaultValue": {
-        "kind": "IntegerNumberValue",
+        "kind": "IntegerValue",
         "value": "0"
       },
       "property": {

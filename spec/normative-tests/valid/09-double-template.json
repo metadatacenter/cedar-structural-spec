@@ -1,6 +1,6 @@
 {
   "kind": "Template",
-  "id": "https://example.org/templates/real-number-double",
+  "id": "https://example.org/templates/double",
   "modelVersion": "2.0.0",
   "metadata": {
     "lifecycle": {
@@ -22,7 +22,7 @@
   ],
   "members": [
     {
-      "kind": "EmbeddedRealNumberField",
+      "kind": "EmbeddedDoubleField",
       "key": "field1",
       "artifactRef": "https://example.org/fields/real-number-double-1",
       "valueRequirement": "required",
@@ -32,9 +32,8 @@
       },
       "visibility": "visible",
       "defaultValue": {
-        "kind": "RealNumberValue",
-        "value": "0.0",
-        "datatype": "double"
+        "kind": "DoubleValue",
+        "value": "0.0"
       },
       "property": {
         "iri": "https://example.org/properties/real-number-double"

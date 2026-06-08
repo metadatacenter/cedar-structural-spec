@@ -34,11 +34,13 @@ Each `Value` variant projects to a single RDF term. The "RDF term" column gives 
 |---|---|---|
 | `TextValue { value, lang }` (lang present) | `"value"@lang` (`rdf:langString`) | none |
 | `TextValue { value }` (lang absent) | `"value"^^xsd:string` | none |
-| `IntegerNumberValue { value }` | `"value"^^xsd:integer` | none |
-| `RealNumberValue { value, datatype }` | `"value"^^xsd:<datatype>` | none |
+| `IntegerValue { value }` | `"value"^^xsd:integer` | none |
+| `DecimalValue { value }` | `"value"^^xsd:decimal` | none |
+| `FloatValue { value }` | `"value"^^xsd:float` | none |
+| `DoubleValue { value }` | `"value"^^xsd:double` | none |
 | `BooleanValue { value }` | `"value"^^xsd:boolean` (`"true"` or `"false"`) | none |
 
-For `RealNumberValue`, the `<datatype>` placeholder is the lexical name of the carried `RealNumberDatatypeKind` (`decimal`, `float`, or `double`), expanded against `xsd:`.
+Each numeric value type projects to a single fixed XSD datatype determined by its `kind`; no datatype component is carried or interpreted.
 
 When the originating `TextFieldSpec` carries `LangTagRequirement`, the projection is pinned to a single RDF literal shape: `"langTagRequired"` always projects to `rdf:langString` literals; `"langTagForbidden"` always projects to `xsd:string` literals. `"langTagOptional"` (the default) admits either shape and projects each `TextValue` according to whether its `lang` slot is present.
 

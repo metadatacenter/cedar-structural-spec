@@ -81,10 +81,10 @@ families). Each pair exercises:
     `defaultValue`
   - `EmbeddedAttributeValueField` omits `defaultValue`
 
-Extra fixtures are included for the two `RealNumberValue` `datatype`
-variants (`decimal`, `double`) and for two of the three `DateValue`
-arms (`YearValue`, `YearMonthValue` — the third, `FullDateValue`, is
-covered by `13-date`).
+Extra fixtures are included for each of the four numeric value types
+(`IntegerValue`, `DecimalValue`, `FloatValue`, `DoubleValue`) and for
+two of the three `DateValue` arms (`YearValue`, `YearMonthValue` — the
+third, `FullDateValue`, is covered by `13-date`).
 
 **`49`–`72` Per-family Field artifacts.** One `Field` artifact JSON
 per family, exercising every slot of its `XxxFieldSpec` at least once
@@ -94,12 +94,12 @@ this group:
 
 - `49-text-field`: minLength, maxLength, validationRegex, default-
   Value, renderingHint, all populated.
-- `50-integer-number-field`: unit (with label), minValue, maxValue,
+- `50-integer-field`: unit (with label), minValue, maxValue,
   numericRenderingHint with decimalPlaces.
-- `51-real-number-decimal-field` / `52-real-number-double-field`:
-  the two `RealNumberDatatypeKind` variants with appropriate
+- `51-decimal-field` / `52-double-field` / `110-float-field`:
+  the decimal, double, and float families with appropriate
   `minValue` / `maxValue` lexical forms (including `INF`/`-INF` for
-  the `double` datatype).
+  the `float` and `double` families).
 - `57`–`60`: the four `ControlledTermSource` discriminator variants
   (`OntologySource`, `BranchSource`, `ClassSource`, `ValueSetSource`).
 - `61-single-valued-enum-field`: `permissibleValues` with all four

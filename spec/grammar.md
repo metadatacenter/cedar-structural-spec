@@ -69,7 +69,7 @@ A conceptual overview of the model (describing the principal categories, their r
 - [Scalar and Datatype Leaves](#scalar-and-datatype-leaves)
   - [Primitive String Types](#primitive-string-types)
   - [Core IRI and String Types](#core-iri-and-string-types)
-  - [Numeric Datatype Kind](#numeric-datatype-kind)
+  - [Numeric Datatypes](#numeric-datatypes)
 - [Values](#values)
   - [Scalar Values](#scalar-values)
   - [Temporal Values](#temporal-values)
@@ -287,7 +287,10 @@ The following productions introduce the abstract field categories. [`Field`](#pr
 
 ```ebnf
 Field ::= TextField
-        | NumericField
+        | IntegerField
+        | DecimalField
+        | FloatField
+        | DoubleField
         | BooleanField
         | TemporalField
         | ControlledTermField
@@ -297,9 +300,6 @@ Field ::= TextField
         | ExternalAuthorityField
         | LanguageField
         | AttributeValueField
-
-NumericField ::= IntegerNumberField
-               | RealNumberField
 
 TemporalField ::= DateField
                 | TimeField
@@ -342,12 +342,14 @@ EmbeddedArtifact ::= EmbeddedField
 
 #### EmbeddedField
 
-[`EmbeddedField`](#prod-EmbeddedField) is the abstract category for embeddings of reusable `Field` artifacts. Its concrete variants are one-to-one with the concrete `Field` variants: `EmbeddedTextField` embeds a `TextField`, `EmbeddedDateField` embeds a `DateField`, and so on for all twenty-one field families. The concrete variants are defined in [Concrete Embedded Fields](#concrete-embedded-fields) below.
+[`EmbeddedField`](#prod-EmbeddedField) is the abstract category for embeddings of reusable `Field` artifacts. Its concrete variants are one-to-one with the concrete `Field` variants: `EmbeddedTextField` embeds a `TextField`, `EmbeddedDateField` embeds a `DateField`, and so on for all twenty-three field families. The concrete variants are defined in [Concrete Embedded Fields](#concrete-embedded-fields) below.
 
 ```ebnf
 EmbeddedField ::= EmbeddedTextField
-                | EmbeddedIntegerNumberField
-                | EmbeddedRealNumberField
+                | EmbeddedIntegerField
+                | EmbeddedDecimalField
+                | EmbeddedFloatField
+                | EmbeddedDoubleField
                 | EmbeddedBooleanField
                 | EmbeddedDateField
                 | EmbeddedTimeField
@@ -427,7 +429,7 @@ Sections carry no instance data and are **transparent** to instance matching. A 
 
 Each concrete `Field` variant carries six components: a typed artifact identifier that permanently identifies the reusable field; a `ModelVersion` identifying the version of the CEDAR structural model the artifact conforms to; `CatalogMetadata` providing the descriptive, lifecycle, and annotation metadata used in catalog and registry contexts; `SchemaArtifactVersioning` providing the version, status, and lineage information common to all schema artifacts; a typed `FieldSpec` that specifies the value semantics and configuration for that field category; and a `Prompt` that carries the rendered prompt text (a label, question, or instruction) shown to users at data-entry time. The identifier, `FieldSpec`, and `Prompt` are specific to each concrete variant; `ModelVersion`, `CatalogMetadata`, and `SchemaArtifactVersioning` are uniform across all fields. Each concrete `Field` MAY additionally carry an optional `HelpText`, an optional repeated `AlternativePrompt*` slot carrying a field-owner-curated set of alternative prompt wordings (see [Alternative Prompts](#alternative-prompts)), and two optional advisory slots, `RecommendedKey` and `RecommendedProperty`. The groupings below mirror the abstract `Field` hierarchy defined in Core Structure.
 
-`TextField`, `BooleanField`, and the two numeric field families (`IntegerNumberField` and `RealNumberField`) are the simple scalar field specs. Each carries the most basic value semantics: free text, `true` / `false`, exact integer values, and real-valued numbers respectively.
+`TextField`, `BooleanField`, and the four numeric field families (`IntegerField`, `DecimalField`, `FloatField`, and `DoubleField`) are the simple scalar field specs. Each carries the most basic value semantics: free text, `true` / `false`, exact integers, exact decimals, and single- and double-precision floating-point numbers respectively.
 
 ```ebnf
 TextField ::= text_field(
@@ -457,34 +459,62 @@ BooleanField ::= boolean_field(
                 )
 ```
 
-The numeric field variants correspond to the `NumericField` abstract category. They share the broader concept of numeric content but split semantically: `IntegerNumberField` carries arbitrary-precision integer values (no fractional part); `RealNumberField` carries real-valued numbers (decimal arbitrary precision, or IEEE 754 single- or double-precision floating point). The split is principled: integer arithmetic is exact and closed under the usual operations, whereas real-valued arithmetic carries approximation concerns. See [Field Specs](#field-specs) for the per-family configuration.
+There are four numeric field families, each a standalone scalar field that carries values of one numeric datatype: `IntegerField` (`xsd:integer`), `DecimalField` (`xsd:decimal`), `FloatField` (`xsd:float`), and `DoubleField` (`xsd:double`). Each family's datatype is fixed by the family itself, not carried as a configurable component: an `IntegerField` always carries integer values, a `DoubleField` always carries double-precision values, and so on. Consequently a numeric value, default, bound, or example need never declare its own datatype — the enclosing family determines it structurally.
+
+The four families partition the numeric space along two axes. `IntegerField` is the only family with no fractional part; its values are exact arbitrary-precision integers. The other three are fractional-capable: `DecimalField` carries exact arbitrary-precision decimals, while `FloatField` and `DoubleField` carry IEEE 754 single- and double-precision floating-point numbers, which trade exactness for bounded storage and admit the special values `INF`, `-INF`, and `NaN`. Sign and range restrictions are expressed via each family's min/max bounds rather than as additional types; bit-precision distinctions beyond `float`/`double` are not modelled. See [Field Specs](#field-specs) for the per-family configuration.
 
 ```ebnf
-IntegerNumberField ::= integer_number_field(
-                         IntegerNumberFieldId
-                         ModelVersion
-                         CatalogMetadata
-                         SchemaArtifactVersioning
-                         IntegerNumberFieldSpec
-                         Prompt
-                         [HelpText]
-                         AlternativePrompt*
-                         [RecommendedKey]
-                         [RecommendedProperty]
-                       )
+IntegerField ::= integer_field(
+                   IntegerFieldId
+                   ModelVersion
+                   CatalogMetadata
+                   SchemaArtifactVersioning
+                   IntegerFieldSpec
+                   Prompt
+                   [HelpText]
+                   AlternativePrompt*
+                   [RecommendedKey]
+                   [RecommendedProperty]
+                 )
 
-RealNumberField ::= real_number_field(
-                      RealNumberFieldId
-                      ModelVersion
-                      CatalogMetadata
-                      SchemaArtifactVersioning
-                      RealNumberFieldSpec
-                      Prompt
-                      [HelpText]
-                      AlternativePrompt*
-                      [RecommendedKey]
-                      [RecommendedProperty]
-                    )
+DecimalField ::= decimal_field(
+                   DecimalFieldId
+                   ModelVersion
+                   CatalogMetadata
+                   SchemaArtifactVersioning
+                   DecimalFieldSpec
+                   Prompt
+                   [HelpText]
+                   AlternativePrompt*
+                   [RecommendedKey]
+                   [RecommendedProperty]
+                 )
+
+FloatField ::= float_field(
+                 FloatFieldId
+                 ModelVersion
+                 CatalogMetadata
+                 SchemaArtifactVersioning
+                 FloatFieldSpec
+                 Prompt
+                 [HelpText]
+                 AlternativePrompt*
+                 [RecommendedKey]
+                 [RecommendedProperty]
+               )
+
+DoubleField ::= double_field(
+                  DoubleFieldId
+                  ModelVersion
+                  CatalogMetadata
+                  SchemaArtifactVersioning
+                  DoubleFieldSpec
+                  Prompt
+                  [HelpText]
+                  AlternativePrompt*
+                  [RecommendedKey]
+                  [RecommendedProperty]
+                )
 ```
 
 The temporal field variants correspond to the `TemporalField` abstract category. Each is typed to a distinct temporal semantic (date, time of day, or combined date-time) and carries its own `FieldSpec` with precision and rendering options appropriate to that category.
@@ -791,33 +821,61 @@ EmbeddedTextField ::= embedded_text_field(
                         [Editability]
                       )
 
-EmbeddedIntegerNumberField ::= embedded_integer_number_field(
-                                 EmbeddedArtifactKey
-                                 IntegerNumberFieldId
-                                 [ValueRequirement]
-                                 [Cardinality]
-                                 [Visibility]
-                                 [IntegerNumberValue]
-                                 [PromptOverride]
-                                 [HelpTextOverride]
-                                 [Property]
-                                 [PromptKey]
-                                 [Editability]
-                               )
+EmbeddedIntegerField ::= embedded_integer_field(
+                           EmbeddedArtifactKey
+                           IntegerFieldId
+                           [ValueRequirement]
+                           [Cardinality]
+                           [Visibility]
+                           [IntegerValue]
+                           [PromptOverride]
+                           [HelpTextOverride]
+                           [Property]
+                           [PromptKey]
+                           [Editability]
+                         )
 
-EmbeddedRealNumberField ::= embedded_real_number_field(
-                              EmbeddedArtifactKey
-                              RealNumberFieldId
-                              [ValueRequirement]
-                              [Cardinality]
-                              [Visibility]
-                              [RealNumberValue]
-                              [PromptOverride]
-                              [HelpTextOverride]
-                              [Property]
-                              [PromptKey]
-                              [Editability]
-                            )
+EmbeddedDecimalField ::= embedded_decimal_field(
+                           EmbeddedArtifactKey
+                           DecimalFieldId
+                           [ValueRequirement]
+                           [Cardinality]
+                           [Visibility]
+                           [DecimalValue]
+                           [PromptOverride]
+                           [HelpTextOverride]
+                           [Property]
+                           [PromptKey]
+                           [Editability]
+                         )
+
+EmbeddedFloatField ::= embedded_float_field(
+                         EmbeddedArtifactKey
+                         FloatFieldId
+                         [ValueRequirement]
+                         [Cardinality]
+                         [Visibility]
+                         [FloatValue]
+                         [PromptOverride]
+                         [HelpTextOverride]
+                         [Property]
+                         [PromptKey]
+                         [Editability]
+                       )
+
+EmbeddedDoubleField ::= embedded_double_field(
+                          EmbeddedArtifactKey
+                          DoubleFieldId
+                          [ValueRequirement]
+                          [Cardinality]
+                          [Visibility]
+                          [DoubleValue]
+                          [PromptOverride]
+                          [HelpTextOverride]
+                          [Property]
+                          [PromptKey]
+                          [Editability]
+                        )
 
 EmbeddedBooleanField ::= embedded_boolean_field(
                            EmbeddedArtifactKey
@@ -1079,8 +1137,10 @@ Identifiers serve two roles: at the **definition site** of a reusable artifact (
 
 ```ebnf
 FieldId ::= TextFieldId
-          | IntegerNumberFieldId
-          | RealNumberFieldId
+          | IntegerFieldId
+          | DecimalFieldId
+          | FloatFieldId
+          | DoubleFieldId
           | BooleanFieldId
           | DateFieldId
           | TimeFieldId
@@ -1102,9 +1162,13 @@ FieldId ::= TextFieldId
 
 TextFieldId ::= text_field_id( Iri )
 
-IntegerNumberFieldId ::= integer_number_field_id( Iri )
+IntegerFieldId ::= integer_field_id( Iri )
 
-RealNumberFieldId ::= real_number_field_id( Iri )
+DecimalFieldId ::= decimal_field_id( Iri )
+
+FloatFieldId ::= float_field_id( Iri )
+
+DoubleFieldId ::= double_field_id( Iri )
 
 BooleanFieldId ::= boolean_field_id( Iri )
 
@@ -1371,6 +1435,26 @@ implementations can validate inputs unambiguously.
   permitted. Magnitude is unbounded. The using context may further
   restrict the sign, so `NonNegativeInteger` rejects values with a
   leading minus sign; signed bounds productions accept it.
+- **`DecimalLexicalForm`**: a base-10 arbitrary-precision decimal
+  literal, corresponding to the XSD `decimal` lexical form
+  ([XSD 1.1 §3.3.3](https://www.w3.org/TR/xmlschema11-2/#decimal)): an
+  optional sign followed by a finite sequence of digits that MAY
+  contain a single decimal point. No exponent and no special values
+  (`INF` / `NaN`) are permitted. Precision is unbounded. Examples:
+  `0`, `-3.14`, `100.0`, `.5`.
+- **`FloatLexicalForm`**: an IEEE 754 single-precision lexical form,
+  corresponding to the XSD `float` lexical form
+  ([XSD 1.1 §3.3.5](https://www.w3.org/TR/xmlschema11-2/#float)): a
+  decimal mantissa with an optional `e`/`E` exponent, or one of the
+  special values `INF`, `-INF`, `NaN`. Examples: `3.14`, `1.0E-9`,
+  `INF`, `NaN`.
+- **`DoubleLexicalForm`**: an IEEE 754 double-precision lexical form,
+  corresponding to the XSD `double` lexical form
+  ([XSD 1.1 §3.3.6](https://www.w3.org/TR/xmlschema11-2/#double)). Its
+  lexical space is identical in shape to `FloatLexicalForm` (decimal
+  mantissa with optional exponent, plus `INF`, `-INF`, `NaN`); the two
+  differ only in the precision of the value space each maps onto.
+  Examples: `3.141592653589793`, `1.0E-300`, `-INF`, `NaN`.
 
 ### Core IRI and String Types
 
@@ -1437,17 +1521,13 @@ The `'und'` (undetermined) BCP 47 subtag MAY be used to denote a `LangString` wh
 
 `MultilingualString` differs from a single language-tagged scalar value (such as `TextValue` with a `LanguageTag`) in that it carries an unweighted localization *set*: multiple language tags coexist for the same conceptual string at metadata positions such as `Template.header` or `CatalogMetadata.preferredLabel`.
 
-### Numeric Datatype Kind
+### Numeric Datatypes
 
-`IntegerNumberValue` is fixed to a single integer category; its datatype is implicit and is not a configurable component of the production. `RealNumberValue` carries an explicit `RealNumberDatatypeKind` chosen from three alternatives: `decimal`, `float`, or `double`. The kind names are CEDAR-native enum values; their corresponding XSD datatype IRIs are defined externally to the abstract grammar by [`rdf-projection.md`](rdf-projection.md).
+This specification supports exactly four numeric datatypes, each carried by its own field and value family rather than selected by a configurable datatype component: `IntegerValue` (`xsd:integer`), `DecimalValue` (`xsd:decimal`), `FloatValue` (`xsd:float`), and `DoubleValue` (`xsd:double`). Because the family fixes the datatype, no numeric value, default, bound, or example carries a datatype component of its own; the mapping from each family to its XSD datatype IRI is defined externally to the abstract grammar by [`rdf-projection.md`](rdf-projection.md).
 
-```ebnf
-RealNumberDatatypeKind ::= "decimal" | "float" | "double"
-```
+`integer` denotes exact arbitrary-precision integers and `decimal` exact arbitrary-precision decimals. `float` and `double` denote IEEE 754 single- and double-precision floating-point numbers respectively.
 
-`decimal` denotes exact arbitrary-precision decimal numbers. `float` and `double` denote IEEE 754 single- and double-precision floating-point numbers respectively.
-
-This specification narrows the supported numeric kinds to four (one integer kind plus the three real-number kinds). Earlier drafts admitted the full XSD numeric hierarchy (16 datatypes including `long`, `short`, `byte`, the signed/unsigned bounded subtypes, and the sign-constrained subtypes such as `nonNegativeInteger`); those are not part of the conforming set. Sign and range constraints are expressed via `IntegerNumberMinValue` / `IntegerNumberMaxValue` (or the real-valued equivalents). Bit-precision distinctions are not modelled at the type level; `decimal` covers exact arbitrary precision when needed, and `float` / `double` cover IEEE 754 single- and double-precision when storage precision matters.
+This specification narrows the supported numeric datatypes to these four. Earlier drafts admitted the full XSD numeric hierarchy (16 datatypes including `long`, `short`, `byte`, the signed/unsigned bounded subtypes, and the sign-constrained subtypes such as `nonNegativeInteger`); those are not part of the conforming set. Sign and range constraints are expressed via each numeric family's min/max bounds. Bit-precision distinctions are not modelled at the type level; `decimal` covers exact arbitrary precision when needed, and `float` / `double` cover IEEE 754 single- and double-precision when storage precision matters.
 
 ## Values
 
@@ -1455,7 +1535,10 @@ This section defines the `Value` types that represent instance-level data. `Valu
 
 ```ebnf
 Value ::= TextValue
-        | NumericValue
+        | IntegerValue
+        | DecimalValue
+        | FloatValue
+        | DoubleValue
         | BooleanValue
         | DateValue
         | TimeValue
@@ -1468,14 +1551,11 @@ Value ::= TextValue
         | ExternalAuthorityValue
         | LanguageValue
         | AttributeValue
-
-NumericValue ::= IntegerNumberValue
-               | RealNumberValue
 ```
 
 ### Scalar Values
 
-`TextValue`, `BooleanValue`, and the two numeric value forms (`IntegerNumberValue` and `RealNumberValue`) are the simplest value types. Each carries the family-specific content directly: a lexical form for the string-bearing variants, a boolean payload for `BooleanValue`. `TextValue` carries an optional `LanguageTag`; when present, the value is a language-tagged string, when absent, a plain string. `IntegerNumberValue` carries a base-10 integer lexical form; its category is implicit and not carried as a component. `RealNumberValue` carries a base-10 real-valued lexical form paired with an explicit `RealNumberDatatypeKind` (`decimal`, `float`, or `double`).
+`TextValue`, `BooleanValue`, and the four numeric value forms (`IntegerValue`, `DecimalValue`, `FloatValue`, and `DoubleValue`) are the simplest value types. Each carries the family-specific content directly: a lexical form for the string-bearing variants, a boolean payload for `BooleanValue`. `TextValue` carries an optional `LanguageTag`; when present, the value is a language-tagged string, when absent, a plain string. The four numeric value types each carry a base-10 lexical form; the datatype is fixed by the value type and is not carried as a component.
 
 ```ebnf
 TextValue ::= text_value(
@@ -1483,23 +1563,30 @@ TextValue ::= text_value(
                 [LanguageTag]
               )
 
-IntegerNumberValue ::= integer_number_value(
-                         LexicalForm
-                       )
+IntegerValue ::= integer_value(
+                   IntegerLexicalForm
+                 )
 
-RealNumberValue ::= real_number_value(
-                      LexicalForm
-                      RealNumberDatatypeKind
-                    )
+DecimalValue ::= decimal_value(
+                   DecimalLexicalForm
+                 )
+
+FloatValue ::= float_value(
+                 FloatLexicalForm
+               )
+
+DoubleValue ::= double_value(
+                  DoubleLexicalForm
+                )
 
 BooleanValue ::= boolean_value(
                    boolean
                  )
 ```
 
-`IntegerNumberValue`'s lexical form MUST be a base-10 integer literal (per the `IntegerLexicalForm` primitive in §Primitive String Types). `RealNumberValue`'s lexical form is a base-10 real-valued literal whose admissible form depends on the carried datatype: `decimal` admits an arbitrary-precision decimal lexical form; `float` and `double` admit IEEE 754-style lexical forms (including special values such as `INF`, `-INF`, and `NaN`).
+`IntegerValue`'s lexical form MUST be a base-10 integer literal (per the `IntegerLexicalForm` primitive in §Primitive String Types). `DecimalValue`'s lexical form is an arbitrary-precision base-10 decimal literal (`DecimalLexicalForm`). `FloatValue` and `DoubleValue` carry IEEE 754-style lexical forms (`FloatLexicalForm` and `DoubleLexicalForm`), which additionally admit the special values `INF`, `-INF`, and `NaN`.
 
-`NumericValue` is the abstract category admitting `IntegerNumberValue` and `RealNumberValue`; the two are distinct concrete value types and a `FieldEntry` carrying numeric content discriminates between them by `kind`.
+The four numeric value types are distinct concrete `Value` variants; a `FieldEntry` carrying numeric content discriminates among them by `kind`.
 
 The lexical form of any string-bearing value SHOULD be in Unicode Normalization Form C.
 
@@ -1788,8 +1875,10 @@ The two default-value types match: at each layer the slot is typed with the fami
 | Family | Field-level slot (on `XxxFieldSpec`) | Embedding-level slot (on `EmbeddedXxxField`) |
 |---|---|---|
 | Text | `[TextValue]` | `[TextValue]` |
-| IntegerNumber | `[IntegerNumberValue]` | `[IntegerNumberValue]` |
-| RealNumber | `[RealNumberValue]` | `[RealNumberValue]` |
+| Integer | `[IntegerValue]` | `[IntegerValue]` |
+| Decimal | `[DecimalValue]` | `[DecimalValue]` |
+| Float | `[FloatValue]` | `[FloatValue]` |
+| Double | `[DoubleValue]` | `[DoubleValue]` |
 | Boolean | `[BooleanValue]` | `[BooleanValue]` |
 | Date | `[DateValue]` | `[DateValue]` (polymorphic: `YearValue \| YearMonthValue \| FullDateValue`) |
 | Time | `[TimeValue]` | `[TimeValue]` |
@@ -1927,7 +2016,10 @@ One might ask why `FieldSpec` exists as a separate construct rather than folding
 
 ```ebnf
 FieldSpec ::= TextFieldSpec
-            | NumericFieldSpec
+            | IntegerFieldSpec
+            | DecimalFieldSpec
+            | FloatFieldSpec
+            | DoubleFieldSpec
             | BooleanFieldSpec
             | TemporalFieldSpec
             | ControlledTermFieldSpec
@@ -1937,9 +2029,6 @@ FieldSpec ::= TextFieldSpec
             | ExternalAuthorityFieldSpec
             | LanguageFieldSpec
             | AttributeValueFieldSpec
-
-NumericFieldSpec ::= IntegerNumberFieldSpec
-                   | RealNumberFieldSpec
 
 TextFieldSpec ::= text_field_spec(
                     [TextValue]
@@ -1955,24 +2044,41 @@ LangTagRequirement ::= "langTagRequired"
                      | "langTagOptional"
                      | "langTagForbidden"
 
-IntegerNumberFieldSpec ::= integer_number_field_spec(
-                             [IntegerNumberValue]
-                             [Unit]
-                             [IntegerNumberMinValue]
-                             [IntegerNumberMaxValue]
-                             [NumericRenderingHint]
-                             IntegerNumberValue*  // examples
-                           )
+IntegerFieldSpec ::= integer_field_spec(
+                       [IntegerValue]
+                       [Unit]
+                       [IntegerMinValue]
+                       [IntegerMaxValue]
+                       [NumericRenderingHint]
+                       IntegerValue*  // examples
+                     )
 
-RealNumberFieldSpec ::= real_number_field_spec(
-                          RealNumberDatatypeKind
-                          [RealNumberValue]
-                          [Unit]
-                          [RealNumberMinValue]
-                          [RealNumberMaxValue]
-                          [NumericRenderingHint]
-                          RealNumberValue*  // examples
-                        )
+DecimalFieldSpec ::= decimal_field_spec(
+                       [DecimalValue]
+                       [Unit]
+                       [DecimalMinValue]
+                       [DecimalMaxValue]
+                       [NumericRenderingHint]
+                       DecimalValue*  // examples
+                     )
+
+FloatFieldSpec ::= float_field_spec(
+                     [FloatValue]
+                     [Unit]
+                     [FloatMinValue]
+                     [FloatMaxValue]
+                     [NumericRenderingHint]
+                     FloatValue*  // examples
+                   )
+
+DoubleFieldSpec ::= double_field_spec(
+                      [DoubleValue]
+                      [Unit]
+                      [DoubleMinValue]
+                      [DoubleMaxValue]
+                      [NumericRenderingHint]
+                      DoubleValue*  // examples
+                    )
 
 Unit ::= unit(
            Iri
@@ -1991,21 +2097,37 @@ ValidationRegex ::= validation_regex(
                       string
                     )
 
-IntegerNumberMinValue ::= integer_number_min_value(
-                            IntegerNumberValue
-                          )
+IntegerMinValue ::= integer_min_value(
+                      IntegerValue
+                    )
 
-IntegerNumberMaxValue ::= integer_number_max_value(
-                            IntegerNumberValue
-                          )
+IntegerMaxValue ::= integer_max_value(
+                      IntegerValue
+                    )
 
-RealNumberMinValue ::= real_number_min_value(
-                         RealNumberValue
-                       )
+DecimalMinValue ::= decimal_min_value(
+                      DecimalValue
+                    )
 
-RealNumberMaxValue ::= real_number_max_value(
-                         RealNumberValue
-                       )
+DecimalMaxValue ::= decimal_max_value(
+                      DecimalValue
+                    )
+
+FloatMinValue ::= float_min_value(
+                    FloatValue
+                  )
+
+FloatMaxValue ::= float_max_value(
+                    FloatValue
+                  )
+
+DoubleMinValue ::= double_min_value(
+                     DoubleValue
+                   )
+
+DoubleMaxValue ::= double_max_value(
+                     DoubleValue
+                   )
 
 BooleanFieldSpec ::= boolean_field_spec(
                        [BooleanValue]
@@ -2141,11 +2263,11 @@ AttributeValueFieldSpec ::= attribute_value_field_spec()
 
 `Unit` denotes an identified measurement or quantity unit optionally paired with a human-readable label.
 
-The current placement of `Unit` on `IntegerNumberFieldSpec` and `RealNumberFieldSpec` is a pragmatic compromise. A later revision may introduce a distinct `QuantityFieldSpec` to model numeric values with fixed units more explicitly.
+The current placement of `Unit` on the four numeric field specs (`IntegerFieldSpec`, `DecimalFieldSpec`, `FloatFieldSpec`, `DoubleFieldSpec`) is a pragmatic compromise. A later revision may introduce a distinct `QuantityFieldSpec` to model numeric values with fixed units more explicitly.
 
-`IntegerNumberMinValue` and `IntegerNumberMaxValue` specify inclusive lower and upper bounds on the integer values that an `IntegerNumberField` accepts. Both are expressed as `IntegerNumberValue` constructs. `RealNumberMinValue` and `RealNumberMaxValue` are the analogous bounds on `RealNumberField` and carry `RealNumberValue` constructs whose `RealNumberDatatypeKind` matches the field's declared datatype.
+Each numeric family carries its own inclusive lower- and upper-bound productions. `IntegerMinValue` / `IntegerMaxValue` bound an `IntegerField` and are expressed as `IntegerValue` constructs; `DecimalMinValue` / `DecimalMaxValue`, `FloatMinValue` / `FloatMaxValue`, and `DoubleMinValue` / `DoubleMaxValue` are the analogous bounds on `DecimalField`, `FloatField`, and `DoubleField`, each carrying its family's own `Value` type. Because the bound's value type is fixed by the family, its datatype always agrees with the field's; no separate datatype-matching rule is required.
 
-A `RealNumberFieldSpec` MAY use the family-shared `NumericRenderingHint`; if it carries a non-zero `decimalPlaces` rendering hint, the hint applies to display rounding only and does not constrain the lexical form of submitted values. `IntegerNumberFieldSpec` MAY also use `NumericRenderingHint`; a `decimalPlaces` value other than `0` on an integer field is harmless (display only) and SHOULD be omitted when not meaningful.
+Any of the four numeric field specs MAY use the family-shared `NumericRenderingHint`. On `DecimalFieldSpec`, `FloatFieldSpec`, and `DoubleFieldSpec`, a non-zero `decimalPlaces` hint applies to display rounding only and does not constrain the lexical form of submitted values. On `IntegerFieldSpec`, a `decimalPlaces` value other than `0` is harmless (display only) and SHOULD be omitted when not meaningful.
 
 `EnumFieldSpec` is refined along a single dimension: cardinality. `SingleValuedEnumFieldSpec` permits exactly one selection; `MultiValuedEnumFieldSpec` permits zero or more simultaneous selections (subject to the embedding's `Cardinality`). The two specs share a common option model: every permissible value is a `PermissibleValue` carrying a canonical `Token` key together with optional human-readable `Label` and `Description` localizations and zero or more `Meaning` entries that bind the token to ontology terms. The `Token` strings of a spec's permissible values MUST be unique within that spec; the spec's `PermissibleValue+` is the closed set of values an instance may carry.
 
@@ -2449,7 +2571,7 @@ Temporal semantics are also split structurally: `DateFieldSpec`, `TimeFieldSpec`
 
 The current rendering vocabulary is explicit but deliberately small: numeric fields use `NumericRenderingHint` (which carries an optional `DecimalPlaces` for display-time rounding); date fields use `DateRenderingHint` (with optional `DateComponentOrder`); time fields use `TimeRenderingHint` (with optional `TimeFormat`); and date-time fields use `DateTimeRenderingHint` (also with optional `TimeFormat`).
 
-`DecimalPlaces` is a presentation concern, not a value-semantics constraint. Conforming consumers SHOULD use it to control display rounding and MAY use it as a UX-level input nicety (e.g., limiting the number of digits an end-user can type after the decimal point). It does not constrain the lexical form of a submitted `RealNumberValue`; conforming validators MUST NOT reject a value purely on grounds of decimal-places mismatch with the rendering hint. The slot is meaningful for `RealNumberFieldSpec`; on `IntegerNumberFieldSpec` it is harmless and conventionally omitted.
+`DecimalPlaces` is a presentation concern, not a value-semantics constraint. Conforming consumers SHOULD use it to control display rounding and MAY use it as a UX-level input nicety (e.g., limiting the number of digits an end-user can type after the decimal point). It does not constrain the lexical form of a submitted numeric value; conforming validators MUST NOT reject a value purely on grounds of decimal-places mismatch with the rendering hint. The slot is meaningful for `DecimalFieldSpec`, `FloatFieldSpec`, and `DoubleFieldSpec`; on `IntegerFieldSpec` it is harmless and conventionally omitted.
 
 `BooleanRenderingHint` admits four widget choices (`checkbox`, `toggle`, `radio`, and `dropdown`) distinguished by how they handle the **unset** state of a boolean field. A boolean field has three observable states at the UI: a value of `true`, a value of `false`, and *no value supplied* (the user has not yet asserted either). The four widget choices differ in whether they can faithfully represent the unset state:
 
@@ -2536,8 +2658,10 @@ The table below gives the complete correspondence. The Field Family column ident
 | Field Family | `FieldSpec` | `Value` |
 |---|---|---|
 | | `TextFieldSpec` | `TextValue` |
-| `NumericField` | `IntegerNumberFieldSpec` | `IntegerNumberValue` |
-| `NumericField` | `RealNumberFieldSpec` | `RealNumberValue` |
+| | `IntegerFieldSpec` | `IntegerValue` |
+| | `DecimalFieldSpec` | `DecimalValue` |
+| | `FloatFieldSpec` | `FloatValue` |
+| | `DoubleFieldSpec` | `DoubleValue` |
 | | `BooleanFieldSpec` | `BooleanValue` |
 | `TemporalField` | `DateFieldSpec` | `DateValue` |
 | `TemporalField` | `TimeFieldSpec` | `TimeValue` |
@@ -2607,4 +2731,4 @@ Absence of a value for an optional field is represented by omitting the `FieldEn
 
 - Should embedded artifacts always refer to reusable artifacts by explicit reference construct, or does the CEDAR model require some embeddings to support inline artifact definition?
 - Should `PresentationComponent` remain a direct subclass of `Artifact`, or should a later revision introduce an intermediate superclass for reusable non-schema artifacts? This would make the distinction between reusable schema artifacts such as `Template` and `Field` and reusable non-schema artifacts such as rich text, images, videos, and section breaks more explicit in the hierarchy.
-- Should a later revision introduce a distinct `QuantityFieldSpec` rather than attaching optional `Unit` information directly to `IntegerNumberFieldSpec` and `RealNumberFieldSpec`? The current model permits fixed units on both numeric field families as a pragmatic compromise, but a dedicated quantity field spec may provide a cleaner semantic distinction for numeric values that are intrinsically unit-bearing.
+- Should a later revision introduce a distinct `QuantityFieldSpec` rather than attaching optional `Unit` information directly to the four numeric field specs (`IntegerFieldSpec`, `DecimalFieldSpec`, `FloatFieldSpec`, `DoubleFieldSpec`)? The current model permits fixed units on all four numeric field families as a pragmatic compromise, but a dedicated quantity field spec may provide a cleaner semantic distinction for numeric values that are intrinsically unit-bearing.

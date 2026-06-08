@@ -36,7 +36,7 @@ no behaviour to attach to it, so favour structural types and plain functions:
 
 ## Code Organization
 
-- There are 21 field families; cover all of them. They are enumerated in `grammar.md` (Concrete Field Artifacts) and listed in `bindings.md`: Text, IntegerNumber, RealNumber, Boolean, Date, Time, DateTime, ControlledTerm, SingleValuedEnum, MultiValuedEnum, Link, Email, PhoneNumber, Orcid, Ror, Doi, PubMedId, Rrid, NihGrantId, Language, and AttributeValue.
+- There are 23 field families; cover all of them. They are enumerated in `grammar.md` (Concrete Field Artifacts) and listed in `bindings.md`: Text, Integer, Decimal, Float, Double, Boolean, Date, Time, DateTime, ControlledTerm, SingleValuedEnum, MultiValuedEnum, Link, Email, PhoneNumber, Orcid, Ror, Doi, PubMedId, Rrid, NihGrantId, Language, and AttributeValue.
 - Honour the per-family structural exceptions: `EmbeddedBooleanField` and `EmbeddedSingleValuedEnumField` omit the cardinality slot; `EmbeddedMultiValuedEnumField`'s embedding default is a sequence of `EnumValue`; `AttributeValueField` carries no default value at either layer.
 - Use **one source file per field family** (kebab-case): `text-field.ts`, `integer-number-field.ts`, `controlled-term-field.ts`, etc. Each family file exports that family's:
     - typed field id interface + its constructor (`TextFieldId` / `textFieldId`)

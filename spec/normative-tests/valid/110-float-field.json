@@ -1,6 +1,6 @@
 {
-  "kind": "IntegerNumberField",
-  "id": "https://example.org/fields/integer-number-1",
+  "kind": "FloatField",
+  "id": "https://example.org/fields/float-1",
   "modelVersion": "2.0.0",
   "metadata": {
     "lifecycle": {
@@ -15,30 +15,18 @@
     "status": "draft"
   },
   "fieldSpec": {
-    "kind": "IntegerNumberFieldSpec",
+    "kind": "FloatFieldSpec",
     "defaultValue": {
-      "kind": "IntegerNumberValue",
-      "value": "10"
-    },
-    "unit": {
-      "iri": "http://qudt.org/vocab/unit/M",
-      "label": [
-        {
-          "value": "Metre",
-          "lang": "en"
-        }
-      ]
+      "kind": "FloatValue",
+      "value": "0.0"
     },
     "minValue": {
-      "kind": "IntegerNumberValue",
-      "value": "0"
+      "kind": "FloatValue",
+      "value": "-INF"
     },
     "maxValue": {
-      "kind": "IntegerNumberValue",
-      "value": "1000"
-    },
-    "renderingHint": {
-      "decimalPlaces": 0
+      "kind": "FloatValue",
+      "value": "INF"
     }
   },
   "prompt": [

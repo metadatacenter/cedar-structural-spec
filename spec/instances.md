@@ -66,7 +66,7 @@ Textual instance values MAY include language tags.
 
 `TextValue` carries a lexical form and an optional language tag.
 
-Numeric instance values carry a lexical form together with the corresponding XSD datatype: `IntegerNumberValue` is fixed at `xsd:integer`; `RealNumberValue` carries an explicit datatype (`xsd:decimal`, `xsd:float`, or `xsd:double`).
+Numeric instance values carry a lexical form; the XSD datatype is fixed by the value type: `IntegerValue` (`xsd:integer`), `DecimalValue` (`xsd:decimal`), `FloatValue` (`xsd:float`), and `DoubleValue` (`xsd:double`).
 
 Date, time, and date-time instance values are represented separately by `DateValue`, `TimeValue`, and `DateTimeValue`, each carrying its own lexical form. Within `DateValue`, `YearValue` and `YearMonthValue` carry plain strings matching `YYYY` and `YYYY-MM` respectively; `FullDateValue` carries an `xsd:date` lexical form.
 

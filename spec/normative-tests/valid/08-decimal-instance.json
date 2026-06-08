@@ -1,6 +1,6 @@
 {
   "kind": "TemplateInstance",
-  "id": "https://example.org/instances/integer-number-1",
+  "id": "https://example.org/instances/decimal-1",
   "modelVersion": "2.0.0",
   "metadata": {
     "preferredLabel": [
@@ -16,15 +16,15 @@
       "modifiedBy": "https://example.org/users/alice"
     }
   },
-  "templateRef": "https://example.org/templates/integer-number",
+  "templateRef": "https://example.org/templates/decimal",
   "entries": [
     {
       "kind": "FieldEntry",
       "key": "field1",
       "values": [
         {
-          "kind": "IntegerNumberValue",
-          "value": "42"
+          "kind": "DecimalValue",
+          "value": "3.14"
         }
       ]
     }

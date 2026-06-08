@@ -1,6 +1,6 @@
 {
   "kind": "TemplateInstance",
-  "id": "https://example.org/instances/real-number-decimal-1",
+  "id": "https://example.org/instances/float-1",
   "modelVersion": "2.0.0",
   "metadata": {
     "preferredLabel": [
@@ -16,16 +16,15 @@
       "modifiedBy": "https://example.org/users/alice"
     }
   },
-  "templateRef": "https://example.org/templates/real-number-decimal",
+  "templateRef": "https://example.org/templates/float",
   "entries": [
     {
       "kind": "FieldEntry",
       "key": "field1",
       "values": [
         {
-          "kind": "RealNumberValue",
-          "value": "3.14",
-          "datatype": "decimal"
+          "kind": "FloatValue",
+          "value": "NaN"
         }
       ]
     }

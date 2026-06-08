@@ -1,6 +1,6 @@
 {
   "kind": "Template",
-  "id": "https://example.org/templates/real-number-decimal",
+  "id": "https://example.org/templates/decimal",
   "modelVersion": "2.0.0",
   "metadata": {
     "lifecycle": {
@@ -22,9 +22,9 @@
   ],
   "members": [
     {
-      "kind": "EmbeddedRealNumberField",
+      "kind": "EmbeddedDecimalField",
       "key": "field1",
-      "artifactRef": "https://example.org/fields/real-number-1",
+      "artifactRef": "https://example.org/fields/decimal-1",
       "valueRequirement": "required",
       "cardinality": {
         "min": 1,
@@ -32,9 +32,8 @@
       },
       "visibility": "visible",
       "defaultValue": {
-        "kind": "RealNumberValue",
-        "value": "0.0",
-        "datatype": "decimal"
+        "kind": "DecimalValue",
+        "value": "0.0"
       },
       "property": {
         "iri": "https://example.org/properties/real-number-decimal"

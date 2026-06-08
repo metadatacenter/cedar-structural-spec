@@ -1,6 +1,6 @@
 {
   "kind": "TemplateInstance",
-  "id": "https://example.org/instances/real-number-double-1",
+  "id": "https://example.org/instances/double-1",
   "modelVersion": "2.0.0",
   "metadata": {
     "preferredLabel": [
@@ -16,16 +16,15 @@
       "modifiedBy": "https://example.org/users/alice"
     }
   },
-  "templateRef": "https://example.org/templates/real-number-double",
+  "templateRef": "https://example.org/templates/double",
   "entries": [
     {
       "kind": "FieldEntry",
       "key": "field1",
       "values": [
         {
-          "kind": "RealNumberValue",
-          "value": "INF",
-          "datatype": "double"
+          "kind": "DoubleValue",
+          "value": "INF"
         }
       ]
     }

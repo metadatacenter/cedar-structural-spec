@@ -37,9 +37,9 @@ libraries:
 
 ## Code Organization
 
-- There are 21 field families; cover all of them. They are enumerated in `grammar.md` (Concrete Field Artifacts) and listed in `bindings.md`: Text, IntegerNumber, RealNumber, Boolean, Date, Time, DateTime, ControlledTerm, SingleValuedEnum, MultiValuedEnum, Link, Email, PhoneNumber, Orcid, Ror, Doi, PubMedId, Rrid, NihGrantId, Language, and AttributeValue.
+- There are 23 field families; cover all of them. They are enumerated in `grammar.md` (Concrete Field Artifacts) and listed in `bindings.md`: Text, Integer, Decimal, Float, Double, Boolean, Date, Time, DateTime, ControlledTerm, SingleValuedEnum, MultiValuedEnum, Link, Email, PhoneNumber, Orcid, Ror, Doi, PubMedId, Rrid, NihGrantId, Language, and AttributeValue.
 - Honour the per-family structural exceptions: the embedded boolean and single-valued-enum fields omit the cardinality slot; the embedded multi-valued-enum field's embedding default is a sequence of `EnumValue`; the attribute-value field carries no default value at either layer.
-- Use **one module per field family** (snake_case): `cedar/field/text_field.py`, `cedar/field/integer_number_field.py`, `cedar/field/controlled_term_field.py`, etc. Each family module defines that family's:
+- Use **one module per field family** (snake_case): `cedar/field/text_field.py`, `cedar/field/integer_field.py`, `cedar/field/controlled_term_field.py`, etc. Each family module defines that family's:
     - typed field id
     - value model + factory
     - field spec model + factory
@@ -88,7 +88,7 @@ libraries:
     - `multilingual_string(input)` accepting a bare `str`, a `(value, lang)` pair, a `{lang: value}` mapping, or a list of these
     - `text_value(value, lang=None)`
 - Factories validate the same invariants as the model and never return a partially valid object.
-- Provide convenience constructors where they read well: `LangString.of(value, lang)`, `MultilingualString.en(value)`, `TextValue.of(value)`, `IntegerNumberValue.of(123)`, `EnumValue.of(token)`.
+- Provide convenience constructors where they read well: `LangString.of(value, lang)`, `MultilingualString.en(value)`, `TextValue.of(value)`, `IntegerValue.of(123)`, `EnumValue.of(token)`.
 - Avoid an untyped generic factory that erases the family-specific model; factories should reinforce the typed binding shape.
 
 ## Docstrings

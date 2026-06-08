@@ -30,9 +30,9 @@ wrong. The source tree MUST follow the package layout below.
   into aggregate files such as `FieldRecords`, `EmbeddedRecords`, or
   `Values`. There is no `XxxRecords` file. One top-level Java file per
   public record, interface, or enum (already required under Model Design).
-- There are 21 field families; cover all of them, each in its own package.
+- There are 23 field families; cover all of them, each in its own package.
   They are enumerated in `grammar.md` (Concrete Field Artifacts) and listed
-  in `bindings.md`: Text, IntegerNumber, RealNumber, Boolean, Date, Time,
+  in `bindings.md`: Text, Integer, Decimal, Float, Double, Boolean, Date, Time,
   DateTime, ControlledTerm, SingleValuedEnum, MultiValuedEnum, Link, Email,
   PhoneNumber, Orcid, Ror, Doi, PubMedId, Rrid, NihGrantId, Language, and
   AttributeValue.
@@ -169,8 +169,8 @@ above.
 - For common value records, provide factories such as:
     - `TextValue.of(String value)`
     - `TextValue.of(String value, LanguageTag lang)`
-    - `IntegerNumberValue.of(long value)`
-    - `IntegerNumberValue.of(BigInteger value)`
+    - `IntegerValue.of(long value)`
+    - `IntegerValue.of(BigInteger value)`
     - `EnumValue.of(String token)`
 - For field-family records, provide family-specific factories or builders when canonical record construction would be verbose or error-prone.
 - Factories must validate the same invariants as canonical constructors.

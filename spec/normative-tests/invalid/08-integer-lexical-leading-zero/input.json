@@ -23,7 +23,7 @@
       "key": "n",
       "values": [
         {
-          "kind": "IntegerNumberValue",
+          "kind": "IntegerValue",
           "value": "007"
         }
       ]

@@ -166,7 +166,7 @@ The full list of productions that collapse this way is given in §1.6 of [`wire-
 - All single-`Iri` wrappers (artifact identifiers and references, `PropertyIri`, the typed external-authority IRIs, `OntologyIri`, etc.) flatten to a plain JSON string.
 - All single-`NonNegativeInteger` wrappers (`MinLength`, `MaxLength`, `MinCardinality`, `MaxCardinality`, `DecimalPlaces`, `MaxTraversalDepth`) flatten to a plain JSON number.
 - Plain-`string` wrappers (`Identifier`, `Notation`, `OntologyAcronym`, `ValueSetIdentifier`, `HtmlContent`) flatten to a plain JSON string.
-- Enum-style productions (`Status`, `ValueRequirement`, `Visibility`, `DateValueType`, `TimePrecision`, `DateTimeValueType`, `TimezoneRequirement`, `DateComponentOrder`, `TimeFormat`, `TextRenderingHint`, `SingleValuedEnumRenderingHint`, `MultiValuedEnumRenderingHint`, `BooleanRenderingHint`, `RealNumberDatatypeKind`) flatten to a JSON string drawn from a fixed set.
+- Enum-style productions (`Status`, `ValueRequirement`, `Visibility`, `DateValueType`, `TimePrecision`, `DateTimeValueType`, `TimezoneRequirement`, `DateComponentOrder`, `TimeFormat`, `TextRenderingHint`, `SingleValuedEnumRenderingHint`, `MultiValuedEnumRenderingHint`, `BooleanRenderingHint`) flatten to a JSON string drawn from a fixed set.
 
 ### 5.1 Lexical-form preservation
 
@@ -193,7 +193,7 @@ Every artifact identifier is encoded as a plain JSON string carrying the IRI. Th
 "https://example.org/fields/title"
 ```
 
-A `FieldId` appears only in two grammar positions: as `Field.id` (the artifact's own identity) and as `EmbeddedField.artifactRef` (a reference to the embedded artifact). Both surrounding constructs carry a `kind` discriminator that conveys the field family. The twenty-one permitted family-bearing `kind` values for `Field` variants are: `"TextField"`, `"IntegerNumberField"`, `"RealNumberField"`, `"BooleanField"`, `"DateField"`, `"TimeField"`, `"DateTimeField"`, `"ControlledTermField"`, `"SingleValuedEnumField"`, `"MultiValuedEnumField"`, `"LinkField"`, `"EmailField"`, `"PhoneNumberField"`, `"OrcidField"`, `"RorField"`, `"DoiField"`, `"PubMedIdField"`, `"RridField"`, `"NihGrantIdField"`, `"LanguageField"`, or `"AttributeValueField"`. The corresponding `EmbeddedField` variants prefix `Embedded` (e.g. `"EmbeddedTextField"`).
+A `FieldId` appears only in two grammar positions: as `Field.id` (the artifact's own identity) and as `EmbeddedField.artifactRef` (a reference to the embedded artifact). Both surrounding constructs carry a `kind` discriminator that conveys the field family. The twenty-three permitted family-bearing `kind` values for `Field` variants are: `"TextField"`, `"IntegerField"`, `"DecimalField"`, `"FloatField"`, `"DoubleField"`, `"BooleanField"`, `"DateField"`, `"TimeField"`, `"DateTimeField"`, `"ControlledTermField"`, `"SingleValuedEnumField"`, `"MultiValuedEnumField"`, `"LinkField"`, `"EmailField"`, `"PhoneNumberField"`, `"OrcidField"`, `"RorField"`, `"DoiField"`, `"PubMedIdField"`, `"RridField"`, `"NihGrantIdField"`, `"LanguageField"`, or `"AttributeValueField"`. The corresponding `EmbeddedField` variants prefix `Embedded` (e.g. `"EmbeddedTextField"`).
 
 The IRI placed at a `FieldId` position MUST belong to a field of the family declared by the surrounding `kind`. This is a structural-invariant constraint (per §9.1 category 3); a conforming encoder enforces it before emitting the wire form, and a conforming decoder reports a structural error against `path` if it is violated.
 
@@ -220,10 +220,10 @@ Each `Value` family is encoded as a tagged object that carries its content direc
 { "kind": "TextValue", "value": "Jane Smith", "lang": "en" }
 ```
 ```json
-{ "kind": "IntegerNumberValue", "value": "42" }
+{ "kind": "IntegerValue", "value": "42" }
 ```
 ```json
-{ "kind": "RealNumberValue", "value": "3.14", "datatype": "decimal" }
+{ "kind": "DecimalValue", "value": "3.14" }
 ```
 ```json
 { "kind": "BooleanValue", "value": true }
@@ -323,7 +323,7 @@ Each concrete `FieldSpec` is encoded as a tagged object whose `"kind"` matches t
 { "kind": "TextFieldSpec", "minLength": 1, "maxLength": 200, "renderingHint": "singleLine" }
 ```
 ```json
-{ "kind": "IntegerNumberFieldSpec", "minValue": { "kind": "IntegerNumberValue", "value": "0" } }
+{ "kind": "IntegerFieldSpec", "minValue": { "kind": "IntegerValue", "value": "0" } }
 ```
 ```json
 { "kind": "DateFieldSpec", "dateValueType": "fullDate", "renderingHint": { "componentOrder": "dayMonthYear" } }
@@ -374,7 +374,7 @@ Every `XxxFieldSpec` (except `AttributeValueFieldSpec`) MAY additionally carry a
 
 ### 6.7 Field artifacts and embedded artifacts
 
-A `Field` artifact (shown for the text family; the other twenty families substitute `"IntegerNumberField"`, `"RealNumberField"`, `"BooleanField"`, `"DateField"`, etc. for `kind`):
+A `Field` artifact (shown for the text family; the other twenty-two families substitute `"IntegerField"`, `"DecimalField"`, `"FloatField"`, `"DoubleField"`, `"BooleanField"`, `"DateField"`, etc. for `kind`):
 
 ```json
 {
@@ -392,7 +392,7 @@ The `modelVersion` property is a top-level property of every concrete artifact (
 
 The `kind` value MUST match the family of the nested `fieldSpec`. Conforming encoders MUST ensure that the IRI placed at `id` belongs to a field of the same family.
 
-An `EmbeddedField` (shown for the text family; substitute `"EmbeddedIntegerNumberField"`, `"EmbeddedRealNumberField"`, `"EmbeddedBooleanField"`, `"EmbeddedDateField"`, etc. for the other twenty families):
+An `EmbeddedField` (shown for the text family; substitute `"EmbeddedIntegerField"`, `"EmbeddedDecimalField"`, `"EmbeddedFloatField"`, `"EmbeddedDoubleField"`, `"EmbeddedBooleanField"`, `"EmbeddedDateField"`, etc. for the other twenty-two families):
 
 ```json
 {
@@ -454,11 +454,11 @@ Examples by family — at every layer (field-level on `XxxFieldSpec.defaultValue
 "defaultValue": { "kind": "TextValue", "value": "Stanford University" }
 "defaultValue": { "kind": "TextValue", "value": "Bonjour", "lang": "fr" }
 
-// IntegerNumberValue
-"defaultValue": { "kind": "IntegerNumberValue", "value": "42" }
+// IntegerValue
+"defaultValue": { "kind": "IntegerValue", "value": "42" }
 
-// RealNumberValue
-"defaultValue": { "kind": "RealNumberValue", "value": "3.14", "datatype": "decimal" }
+// DecimalValue
+"defaultValue": { "kind": "DecimalValue", "value": "3.14" }
 
 // BooleanValue
 "defaultValue": { "kind": "BooleanValue", "value": true }
@@ -654,8 +654,8 @@ they exercise specific rules:
   every `EmbeddedXxxField` carries a `kind` discriminator per the
   rule in [`wire-grammar.md`](wire-grammar.md) §1.5 — for example
   `{ "kind": "EnumValue", "value": "moderate" }` on
-  `EmbeddedSingleValuedEnumField`, `{ "kind": "IntegerNumberValue",
-  "value": "1" }` on `EmbeddedIntegerNumberField`, and `{ "kind":
+  `EmbeddedSingleValuedEnumField`, `{ "kind": "IntegerValue",
+  "value": "1" }` on `EmbeddedIntegerField`, and `{ "kind":
   "FullDateValue", "value": "2026-01-01" }` on `EmbeddedDateField`.
   The discriminator is structurally redundant at slots whose
   enclosing `EmbeddedXxxField.kind` already fixes the family
@@ -713,9 +713,9 @@ positions:
 
 The same pattern applies at every other singleton-`Value` slot:
 `EmbeddedTextField.defaultValue` carries `"kind": "TextValue"`,
-`EmbeddedIntegerNumberField.defaultValue` carries `"kind":
-"IntegerNumberValue"`, `IntegerNumberFieldSpec.minValue` carries
-`"kind": "IntegerNumberValue"`, and so on. The wire-size cost is
+`EmbeddedIntegerField.defaultValue` carries `"kind":
+"IntegerValue"`, `IntegerFieldSpec.minValue` carries
+`"kind": "IntegerValue"`, and so on. The wire-size cost is
 small (one extra short property per `Value` object) and the
 simplification at the spec level is that there is exactly one
 encoding rule for `Value`, applicable everywhere.
@@ -766,7 +766,7 @@ Notes:
   `wire-grammar.md`). The same `kind`-bearing shape appears at every
   other `Value` slot — `EmbeddedXxxField.defaultValue` in the
   template above, `TextFieldSpec.defaultValue` on a standalone
-  `TextField`, the `IntegerNumberFieldSpec.minValue`/`maxValue`
+  `TextField`, the `IntegerFieldSpec.minValue`/`maxValue`
   bounds — because the rule is uniform across positions.
 
 ### 8.4 Round-tripping

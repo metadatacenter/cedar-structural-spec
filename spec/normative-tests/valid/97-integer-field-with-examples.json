@@ -1,5 +1,5 @@
 {
-  "kind": "IntegerNumberField",
+  "kind": "IntegerField",
   "id": "https://example.org/fields/age",
   "modelVersion": "2.0.0",
   "metadata": {
@@ -15,26 +15,26 @@
     "status": "draft"
   },
   "fieldSpec": {
-    "kind": "IntegerNumberFieldSpec",
+    "kind": "IntegerFieldSpec",
     "minValue": {
-      "kind": "IntegerNumberValue",
+      "kind": "IntegerValue",
       "value": "0"
     },
     "maxValue": {
-      "kind": "IntegerNumberValue",
+      "kind": "IntegerValue",
       "value": "120"
     },
     "examples": [
       {
-        "kind": "IntegerNumberValue",
+        "kind": "IntegerValue",
         "value": "0"
       },
       {
-        "kind": "IntegerNumberValue",
+        "kind": "IntegerValue",
         "value": "42"
       },
       {
-        "kind": "IntegerNumberValue",
+        "kind": "IntegerValue",
         "value": "120"
       }
     ]

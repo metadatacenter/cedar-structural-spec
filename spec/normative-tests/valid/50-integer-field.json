@@ -1,6 +1,6 @@
 {
-  "kind": "RealNumberField",
-  "id": "https://example.org/fields/real-number-decimal-1",
+  "kind": "IntegerField",
+  "id": "https://example.org/fields/integer-1",
   "modelVersion": "2.0.0",
   "metadata": {
     "lifecycle": {
@@ -15,34 +15,30 @@
     "status": "draft"
   },
   "fieldSpec": {
-    "kind": "RealNumberFieldSpec",
-    "datatype": "decimal",
+    "kind": "IntegerFieldSpec",
     "defaultValue": {
-      "kind": "RealNumberValue",
-      "value": "1.0",
-      "datatype": "decimal"
+      "kind": "IntegerValue",
+      "value": "10"
     },
     "unit": {
-      "iri": "http://qudt.org/vocab/unit/PERCENT",
+      "iri": "http://qudt.org/vocab/unit/M",
       "label": [
         {
-          "value": "Percent",
+          "value": "Metre",
           "lang": "en"
         }
       ]
     },
     "minValue": {
-      "kind": "RealNumberValue",
-      "value": "0.0",
-      "datatype": "decimal"
+      "kind": "IntegerValue",
+      "value": "0"
     },
     "maxValue": {
-      "kind": "RealNumberValue",
-      "value": "100.0",
-      "datatype": "decimal"
+      "kind": "IntegerValue",
+      "value": "1000"
     },
     "renderingHint": {
-      "decimalPlaces": 2
+      "decimalPlaces": 0
     }
   },
   "prompt": [

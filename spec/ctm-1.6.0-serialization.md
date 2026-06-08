@@ -180,7 +180,7 @@ Two embedded fields:
 | Key | Property IRI | ValueRequirement | FieldSpec |
 |---|---|---|---|
 | `title` | `https://schema.org/name` | `"required"` | `TextFieldSpec` (single line) |
-| `count` | `https://example.org/sampleCount` | `Optional` | `IntegerNumberFieldSpec` |
+| `count` | `https://example.org/sampleCount` | `Optional` | `IntegerFieldSpec` |
 
 **Instance — "Sample 42"**
 
@@ -191,7 +191,7 @@ Two embedded fields:
 | Based on | the template above |
 | Created / modified | `2024-03-10T09:30:00Z` by `https://orcid.example.org/0000-0001-2345-6789` |
 | `title` value | `TextValue` — `"Mouse Sample 42"` |
-| `count` value | `NumericValue` — `5` (`xsd:integer`) |
+| `count` value | `IntegerValue` — `5` (`xsd:integer`) |
 
 ---
 
@@ -298,7 +298,7 @@ Both fields are single-valued ([`is_multi`](#2-conventions) = false), so `encode
 }
 ```
 
-**`count` field** — `encode_integer_number_field_spec` applies `NUMBER_VALUE_SHAPE` and emits `"xsd:integer"` for the datatype slot (an integer-number field's category is fixed). `encode_embedding_constraints` sets `requiredValue: false` (Optional).
+**`count` field** — `encode_numeric_field_spec` applies `NUMBER_VALUE_SHAPE` and emits `"xsd:integer"` for the `numberType` slot (an `IntegerField`'s datatype is fixed by its family). `encode_embedding_constraints` sets `requiredValue: false` (Optional).
 
 ```javascript
 {
@@ -349,7 +349,7 @@ Both fields are single-valued ([`is_multi`](#2-conventions) = false), so `encode
   // encode_field_value → encode_text_value (no language tag)
   "title": { "@value": "Mouse Sample 42" },
 
-  // encode_field_value → encode_integer_number_value
+  // encode_field_value → encode_numeric_value
   "count": { "@value": "5", "@type": "xsd:integer" }
 }
 ```
@@ -901,30 +901,16 @@ Returns the string corresponding to the hint value:
 
 ---
 
-### `encode_integer_number_field_spec(FT: IntegerNumberFieldSpec, E: EmbeddedField) → Object`
+### `encode_numeric_field_spec(FT, E: EmbeddedField) → Object`
 
-Integer-number fields hold base-10 integer lexical values. The `numberType` key is always written and carries `"xsd:integer"`; the integer category is fixed by the field family.
+Applies to all four numeric field specs (`IntegerFieldSpec`, `DecimalFieldSpec`, `FloatFieldSpec`, `DoubleFieldSpec`). The `numberType` key is always written and carries the fixed XSD datatype IRI for the family — the family itself determines it, so no datatype component is read from the field spec:
 
-**Value shape:** `NUMBER_VALUE_SHAPE` | **Required:** `["@value"]`
-
-**`_valueConstraints` extras:**
-
-| Key | Value | Condition |
-|---|---|---|
-| `"numberType"` | `"xsd:integer"` | Always present |
-| `"unitOfMeasure"` | `iri(FT.unit.iri)` | Omit if absent |
-| `"minValue"` | `FT.integer_number_min_value.integer_number_value.value (as integer)` | Omit if absent |
-| `"maxValue"` | `FT.integer_number_max_value.integer_number_value.value (as integer)` | Omit if absent |
-
-**`_ui` extras:** `{ "inputType": "numeric" }`
-
-`Unit` carries an `Iri` in the Structural Model; CTM 1.6.0 `unitOfMeasure` is a plain string. The IRI string value is used directly.
-
-**Calls:** [`encode_embedding_constraints`](#encode_embedding_constraintse-embeddedfield--object), [`encode_embedding_ui`](#encode_embedding_uie-embeddedfield--object)
-
-### `encode_real_number_field_spec(FT: RealNumberFieldSpec, E: EmbeddedField) → Object`
-
-Real-number fields hold lexical values for one of three real-number kinds (`decimal`, `float`, `double`). The `numberType` key carries the corresponding XSD datatype IRI string.
+| Field spec | `numberType` |
+|---|---|
+| `IntegerFieldSpec` | `"xsd:integer"` |
+| `DecimalFieldSpec` | `"xsd:decimal"` |
+| `FloatFieldSpec` | `"xsd:float"` |
+| `DoubleFieldSpec` | `"xsd:double"` |
 
 **Value shape:** `NUMBER_VALUE_SHAPE` | **Required:** `["@value"]`
 
@@ -932,26 +918,20 @@ Real-number fields hold lexical values for one of three real-number kinds (`deci
 
 | Key | Value | Condition |
 |---|---|---|
-| `"numberType"` | `encode_real_number_datatype(FT.datatype)` | Always present |
+| `"numberType"` | the fixed IRI for `FT`'s family (table above) | Always present |
 | `"unitOfMeasure"` | `iri(FT.unit.iri)` | Omit if absent |
-| `"minValue"` | `FT.real_number_min_value.real_number_value.value (as number)` | Omit if absent |
-| `"maxValue"` | `FT.real_number_max_value.real_number_value.value (as number)` | Omit if absent |
+| `"minValue"` | `FT.min_value.value` (as integer for `IntegerFieldSpec`, otherwise as number) | Omit if absent |
+| `"maxValue"` | `FT.max_value.value` (as integer for `IntegerFieldSpec`, otherwise as number) | Omit if absent |
 
 A `decimalPlaces` hint, when present on the field's `NumericRenderingHint`, is emitted under `_ui` rather than `_valueConstraints`.
 
 **`_ui` extras:** `{ "inputType": "numeric", "decimalPlaces": FT.rendering_hint.decimal_places (as integer; omit if absent) }`
 
-**Calls:** [`encode_embedding_constraints`](#encode_embedding_constraintse-embeddedfield--object), [`encode_embedding_ui`](#encode_embedding_uie-embeddedfield--object), [`encode_real_number_datatype`](#encode_real_number_datataked-realnumberdatatypekind--string)
+`Unit` carries an `Iri` in the Structural Model; CTM 1.6.0 `unitOfMeasure` is a plain string. The IRI string value is used directly.
 
-### `encode_real_number_datatype(K: RealNumberDatatypeKind) → String`
+**Calls:** [`encode_embedding_constraints`](#encode_embedding_constraintse-embeddedfield--object), [`encode_embedding_ui`](#encode_embedding_uie-embeddedfield--object)
 
-Returns the XSD datatype IRI string corresponding to the CEDAR-native `RealNumberDatatypeKind`:
-
-| `RealNumberDatatypeKind` | Returns |
-|---|---|
-| `"decimal"` | `"xsd:decimal"` |
-| `"float"` | `"xsd:float"` |
-| `"double"` | `"xsd:double"` |
+**Decode direction.** When reading CTM 1.6.0 back into the Structural Model, the `_valueConstraints.numberType` IRI selects the target family: `"xsd:integer"` → `IntegerField`, `"xsd:decimal"` → `DecimalField`, `"xsd:float"` → `FloatField`, `"xsd:double"` → `DoubleField`. The four IRIs above are the only conforming values; any other `numberType` (e.g. `"xsd:long"`, `"xsd:nonNegativeInteger"`) is outside the conforming numeric set and MUST be rejected (or, for a lenient importer, mapped by the migration table in `notes/scalar-type-alignment.md` with the appropriate bound added).
 
 ---
 
@@ -1366,8 +1346,10 @@ Dispatches to the encoding function for the `Value` kind:
 | `Value` kind | Encoding function |
 |---|---|
 | `TextValue` | `encode_text_value(V)` |
-| `IntegerNumberValue` | `encode_integer_number_value(V)` |
-| `RealNumberValue` | `encode_real_number_value(V)` |
+| `IntegerValue` | `encode_numeric_value(V)` |
+| `DecimalValue` | `encode_numeric_value(V)` |
+| `FloatValue` | `encode_numeric_value(V)` |
+| `DoubleValue` | `encode_numeric_value(V)` |
 | `BooleanValue` | `encode_boolean_value(V)` |
 | `DateValue` | `encode_date_value(V)` |
 | `TimeValue` | `encode_time_value(V)` |
@@ -1381,7 +1363,7 @@ Dispatches to the encoding function for the `Value` kind:
 | `LanguageValue` | `encode_language_value(V)` |
 | `AttributeValue` | `encode_attribute_value(V)` |
 
-**Calls:** [`encode_text_value`](#encode_text_valuev-textvalue--object), [`encode_integer_number_value`](#encode_integer_number_valuev-integernumbervalue--object), [`encode_real_number_value`](#encode_real_number_valuev-realnumbervalue--object), `encode_boolean_value`, [`encode_date_value`](#encode_date_valuev-datevalue--object), [`encode_time_value`](#encode_time_valuev-timevalue--object), [`encode_datetime_value`](#encode_datetime_valuev-datetimevalue--object), [`encode_controlled_term_value`](#encode_controlled_term_valuev-controlledtermvalue--object), [`encode_enum_value`](#encode_enum_valuev-enumvalue--object), [`encode_link_value`](#encode_link_valuev-linkvalue--object), [`encode_email_value`](#encode_email_valuev-emailvalue--object), [`encode_phone_number_value`](#encode_phone_number_valuev-phonenumbervalue--object), [`encode_external_authority_value`](#encode_external_authority_valuev-externalauthorityvalue--object), [`encode_attribute_value`](#encode_attribute_valuev-attributevalue--object)
+**Calls:** [`encode_text_value`](#encode_text_valuev-textvalue--object), [`encode_numeric_value`](#encode_numeric_valuev--object), `encode_boolean_value`, [`encode_date_value`](#encode_date_valuev-datevalue--object), [`encode_time_value`](#encode_time_valuev-timevalue--object), [`encode_datetime_value`](#encode_datetime_valuev-datetimevalue--object), [`encode_controlled_term_value`](#encode_controlled_term_valuev-controlledtermvalue--object), [`encode_enum_value`](#encode_enum_valuev-enumvalue--object), [`encode_link_value`](#encode_link_valuev-linkvalue--object), [`encode_email_value`](#encode_email_valuev-emailvalue--object), [`encode_phone_number_value`](#encode_phone_number_valuev-phonenumbervalue--object), [`encode_external_authority_value`](#encode_external_authority_valuev-externalauthorityvalue--object), [`encode_attribute_value`](#encode_attribute_valuev-attributevalue--object)
 
 ---
 
@@ -1396,27 +1378,25 @@ Returns a JSON object whose keys depend on whether `V` carries a language tag:
 
 ---
 
-### `encode_integer_number_value(V: IntegerNumberValue) → Object`
+### `encode_numeric_value(V) → Object`
 
-Integer-number instance values carry a base-10 integer lexical form. The XSD datatype IRI is fixed at `"xsd:integer"`.
+Applies to all four numeric instance value types (`IntegerValue`, `DecimalValue`, `FloatValue`, `DoubleValue`). Each carries a base-10 lexical form; the XSD datatype IRI is fixed by the value type:
 
-```javascript
-{
-  "@value": V.value.unicode_string,
-  "@type":  "xsd:integer"
-}
-```
-
-### `encode_real_number_value(V: RealNumberValue) → Object`
-
-Real-number instance values carry both a lexical form and an explicit `RealNumberDatatypeKind`. The kind is mapped to the corresponding XSD datatype IRI string by `encode_real_number_datatype`.
+| Value type | `@type` |
+|---|---|
+| `IntegerValue` | `"xsd:integer"` |
+| `DecimalValue` | `"xsd:decimal"` |
+| `FloatValue` | `"xsd:float"` |
+| `DoubleValue` | `"xsd:double"` |
 
 ```javascript
 {
   "@value": V.value.unicode_string,
-  "@type":  encode_real_number_datatype(V.datatype)
+  "@type":  the fixed IRI for V's type (table above)
 }
 ```
+
+**Decode direction.** On read-back, the `@type` IRI selects the value type: `"xsd:integer"` → `IntegerValue`, `"xsd:decimal"` → `DecimalValue`, `"xsd:float"` → `FloatValue`, `"xsd:double"` → `DoubleValue`. Any other `@type` on a numeric field is outside the conforming set and is handled as described under [`encode_numeric_field_spec`](#encode_numeric_field_specft-e-embeddedfield--object).
 
 ---
 

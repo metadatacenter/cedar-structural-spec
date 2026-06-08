@@ -43,7 +43,7 @@
       "key": "occurrences",
       "values": [
         {
-          "kind": "IntegerNumberValue",
+          "kind": "IntegerValue",
           "value": "3"
         }
       ]

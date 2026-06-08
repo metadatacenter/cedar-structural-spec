@@ -143,8 +143,10 @@ The contained values MUST follow the `FieldSpec`-to-`Value` correspondence defin
 | FieldSpec | Required Value type |
 |---|---|
 | `TextFieldSpec` | `TextValue` |
-| `IntegerNumberFieldSpec` | `IntegerNumberValue` |
-| `RealNumberFieldSpec` | `RealNumberValue` |
+| `IntegerFieldSpec` | `IntegerValue` |
+| `DecimalFieldSpec` | `DecimalValue` |
+| `FloatFieldSpec` | `FloatValue` |
+| `DoubleFieldSpec` | `DoubleValue` |
 | `BooleanFieldSpec` | `BooleanValue` |
 | `DateFieldSpec` | `DateValue` (`YearValue` / `YearMonthValue` / `FullDateValue` per `dateValueType`) |
 | `TimeFieldSpec` | `TimeValue` |
@@ -180,20 +182,29 @@ For text values:
 - if `LangTagRequirement` is `"langTagForbidden"`, each `TextValue` MUST NOT carry a `lang` slot
 - `TextFieldSpec.defaultValue`, if present, MUST satisfy any defined `LangTagRequirement`
 
-For integer-number values:
+For integer values:
 
-- `IntegerNumberValue` MUST carry a base-10 integer lexical form; its datatype is implicitly `xsd:integer`
-- if both `IntegerNumberMinValue` and `IntegerNumberMaxValue` are present on the field spec, `IntegerNumberMinValue` MUST NOT exceed `IntegerNumberMaxValue`
-- if `IntegerNumberMinValue` is present, each `IntegerNumberValue` MUST be greater than or equal to that minimum
-- if `IntegerNumberMaxValue` is present, each `IntegerNumberValue` MUST be less than or equal to that maximum
+- `IntegerValue` MUST carry a base-10 integer lexical form (`xsd:integer`)
+- if both `IntegerMinValue` and `IntegerMaxValue` are present on the field spec, `IntegerMinValue` MUST NOT exceed `IntegerMaxValue`
+- if `IntegerMinValue` is present, each `IntegerValue` MUST be greater than or equal to that minimum
+- if `IntegerMaxValue` is present, each `IntegerValue` MUST be less than or equal to that maximum
 
-For real-number values:
+For decimal values:
 
-- `RealNumberValue` MUST carry a real-valued lexical form together with a `RealNumberDatatypeKind` (one of `decimal`, `float`, or `double`)
-- a `RealNumberValue`'s datatype MUST equal the `datatype` declared on the enclosing `RealNumberFieldSpec`
-- if both `RealNumberMinValue` and `RealNumberMaxValue` are present on the field spec, `RealNumberMinValue` MUST NOT exceed `RealNumberMaxValue`
-- if `RealNumberMinValue` is present, each `RealNumberValue` MUST be greater than or equal to that minimum
-- if `RealNumberMaxValue` is present, each `RealNumberValue` MUST be less than or equal to that maximum
+- `DecimalValue` MUST carry an arbitrary-precision decimal lexical form (`xsd:decimal`)
+- if both `DecimalMinValue` and `DecimalMaxValue` are present on the field spec, `DecimalMinValue` MUST NOT exceed `DecimalMaxValue`
+- if `DecimalMinValue` is present, each `DecimalValue` MUST be greater than or equal to that minimum
+- if `DecimalMaxValue` is present, each `DecimalValue` MUST be less than or equal to that maximum
+
+For float and double values:
+
+- `FloatValue` MUST carry an IEEE 754 single-precision lexical form (`xsd:float`); `DoubleValue` MUST carry an IEEE 754 double-precision lexical form (`xsd:double`). Both admit the special values `INF`, `-INF`, and `NaN`.
+- if both the family's min and max bounds are present on the field spec (`FloatMinValue` / `FloatMaxValue`, or `DoubleMinValue` / `DoubleMaxValue`), the minimum MUST NOT exceed the maximum
+- if the family's min bound is present, each value MUST be greater than or equal to that minimum
+- if the family's max bound is present, each value MUST be less than or equal to that maximum
+- all bound comparisons follow IEEE 754 ordering: `NaN` is unordered with respect to every value (including itself), so a `NaN`-valued bound is never satisfied by a finite value and a `NaN` value never falls within a finite bound
+
+Because each numeric family's bounds and values are of that family's own `Value` type, a value's datatype always agrees with the enclosing field spec's by construction; no separate datatype-matching condition is required.
 
 For boolean values:
 
@@ -290,7 +301,7 @@ Any rendering hint used by the model MUST be compatible with the associated `Fie
 | `SingleValuedEnumRenderingHint` | `SingleValuedEnumFieldSpec` |
 | `MultiValuedEnumRenderingHint` | `MultiValuedEnumFieldSpec` |
 | `BooleanRenderingHint` | `BooleanFieldSpec` |
-| `NumericRenderingHint` | `IntegerNumberFieldSpec`, `RealNumberFieldSpec` |
+| `NumericRenderingHint` | `IntegerFieldSpec`, `DecimalFieldSpec`, `FloatFieldSpec`, `DoubleFieldSpec` |
 | `DateRenderingHint` | `DateFieldSpec` |
 | `TimeRenderingHint` | `TimeFieldSpec` |
 | `DateTimeRenderingHint` | `DateTimeFieldSpec` |
@@ -462,28 +473,30 @@ For each step below, two failure modes are possible:
 *On failure (family mismatch):* `structural` at `<embedded>/artifactRef`, production naming `embedded`'s family, message `"artifactRef resolves to an artifact of the wrong family (expected <Family>, got <ResolvedFamily>)"`.
 
 1. If `embedded` is an `EmbeddedTextField`: verify `embedded.artifactRef` is a `TextFieldId` identifying an existing `TextField`.
-2. If `embedded` is an `EmbeddedIntegerNumberField`: verify `embedded.artifactRef` is an `IntegerNumberFieldId` identifying an existing `IntegerNumberField`.
-3. If `embedded` is an `EmbeddedRealNumberField`: verify `embedded.artifactRef` is a `RealNumberFieldId` identifying an existing `RealNumberField`.
-4. If `embedded` is an `EmbeddedBooleanField`: verify `embedded.artifactRef` is a `BooleanFieldId` identifying an existing `BooleanField`.
-5. If `embedded` is an `EmbeddedDateField`: verify `embedded.artifactRef` is a `DateFieldId` identifying an existing `DateField`.
-6. If `embedded` is an `EmbeddedTimeField`: verify `embedded.artifactRef` is a `TimeFieldId` identifying an existing `TimeField`.
-7. If `embedded` is an `EmbeddedDateTimeField`: verify `embedded.artifactRef` is a `DateTimeFieldId` identifying an existing `DateTimeField`.
-8. If `embedded` is an `EmbeddedControlledTermField`: verify `embedded.artifactRef` is a `ControlledTermFieldId` identifying an existing `ControlledTermField`.
-9. If `embedded` is an `EmbeddedSingleValuedEnumField`: verify `embedded.artifactRef` is a `SingleValuedEnumFieldId` identifying an existing `SingleValuedEnumField`.
-10. If `embedded` is an `EmbeddedMultiValuedEnumField`: verify `embedded.artifactRef` is a `MultiValuedEnumFieldId` identifying an existing `MultiValuedEnumField`.
-11. If `embedded` is an `EmbeddedLinkField`: verify `embedded.artifactRef` is a `LinkFieldId` identifying an existing `LinkField`.
-12. If `embedded` is an `EmbeddedEmailField`: verify `embedded.artifactRef` is an `EmailFieldId` identifying an existing `EmailField`.
-13. If `embedded` is an `EmbeddedPhoneNumberField`: verify `embedded.artifactRef` is a `PhoneNumberFieldId` identifying an existing `PhoneNumberField`.
-14. If `embedded` is an `EmbeddedOrcidField`: verify `embedded.artifactRef` is an `OrcidFieldId` identifying an existing `OrcidField`.
-15. If `embedded` is an `EmbeddedRorField`: verify `embedded.artifactRef` is a `RorFieldId` identifying an existing `RorField`.
-16. If `embedded` is an `EmbeddedDoiField`: verify `embedded.artifactRef` is a `DoiFieldId` identifying an existing `DoiField`.
-17. If `embedded` is an `EmbeddedPubMedIdField`: verify `embedded.artifactRef` is a `PubMedIdFieldId` identifying an existing `PubMedIdField`.
-18. If `embedded` is an `EmbeddedRridField`: verify `embedded.artifactRef` is an `RridFieldId` identifying an existing `RridField`.
-19. If `embedded` is an `EmbeddedNihGrantIdField`: verify `embedded.artifactRef` is a `NihGrantIdFieldId` identifying an existing `NihGrantIdField`.
-20. If `embedded` is an `EmbeddedLanguageField`: verify `embedded.artifactRef` is a `LanguageFieldId` identifying an existing `LanguageField`.
-21. If `embedded` is an `EmbeddedAttributeValueField`: verify `embedded.artifactRef` is an `AttributeValueFieldId` identifying an existing `AttributeValueField`.
-22. If `embedded` is an `EmbeddedTemplate`: verify `embedded.artifactRef` is a `TemplateId` identifying an existing `Template`.
-23. If `embedded` is an `EmbeddedPresentationComponent`: verify `embedded.artifactRef` is a `PresentationComponentId` identifying an existing `PresentationComponent`.
+2. If `embedded` is an `EmbeddedIntegerField`: verify `embedded.artifactRef` is an `IntegerFieldId` identifying an existing `IntegerField`.
+3. If `embedded` is an `EmbeddedDecimalField`: verify `embedded.artifactRef` is a `DecimalFieldId` identifying an existing `DecimalField`.
+4. If `embedded` is an `EmbeddedFloatField`: verify `embedded.artifactRef` is a `FloatFieldId` identifying an existing `FloatField`.
+5. If `embedded` is an `EmbeddedDoubleField`: verify `embedded.artifactRef` is a `DoubleFieldId` identifying an existing `DoubleField`.
+6. If `embedded` is an `EmbeddedBooleanField`: verify `embedded.artifactRef` is a `BooleanFieldId` identifying an existing `BooleanField`.
+7. If `embedded` is an `EmbeddedDateField`: verify `embedded.artifactRef` is a `DateFieldId` identifying an existing `DateField`.
+8. If `embedded` is an `EmbeddedTimeField`: verify `embedded.artifactRef` is a `TimeFieldId` identifying an existing `TimeField`.
+9. If `embedded` is an `EmbeddedDateTimeField`: verify `embedded.artifactRef` is a `DateTimeFieldId` identifying an existing `DateTimeField`.
+10. If `embedded` is an `EmbeddedControlledTermField`: verify `embedded.artifactRef` is a `ControlledTermFieldId` identifying an existing `ControlledTermField`.
+11. If `embedded` is an `EmbeddedSingleValuedEnumField`: verify `embedded.artifactRef` is a `SingleValuedEnumFieldId` identifying an existing `SingleValuedEnumField`.
+12. If `embedded` is an `EmbeddedMultiValuedEnumField`: verify `embedded.artifactRef` is a `MultiValuedEnumFieldId` identifying an existing `MultiValuedEnumField`.
+13. If `embedded` is an `EmbeddedLinkField`: verify `embedded.artifactRef` is a `LinkFieldId` identifying an existing `LinkField`.
+14. If `embedded` is an `EmbeddedEmailField`: verify `embedded.artifactRef` is an `EmailFieldId` identifying an existing `EmailField`.
+15. If `embedded` is an `EmbeddedPhoneNumberField`: verify `embedded.artifactRef` is a `PhoneNumberFieldId` identifying an existing `PhoneNumberField`.
+16. If `embedded` is an `EmbeddedOrcidField`: verify `embedded.artifactRef` is an `OrcidFieldId` identifying an existing `OrcidField`.
+17. If `embedded` is an `EmbeddedRorField`: verify `embedded.artifactRef` is a `RorFieldId` identifying an existing `RorField`.
+18. If `embedded` is an `EmbeddedDoiField`: verify `embedded.artifactRef` is a `DoiFieldId` identifying an existing `DoiField`.
+19. If `embedded` is an `EmbeddedPubMedIdField`: verify `embedded.artifactRef` is a `PubMedIdFieldId` identifying an existing `PubMedIdField`.
+20. If `embedded` is an `EmbeddedRridField`: verify `embedded.artifactRef` is an `RridFieldId` identifying an existing `RridField`.
+21. If `embedded` is an `EmbeddedNihGrantIdField`: verify `embedded.artifactRef` is a `NihGrantIdFieldId` identifying an existing `NihGrantIdField`.
+22. If `embedded` is an `EmbeddedLanguageField`: verify `embedded.artifactRef` is a `LanguageFieldId` identifying an existing `LanguageField`.
+23. If `embedded` is an `EmbeddedAttributeValueField`: verify `embedded.artifactRef` is an `AttributeValueFieldId` identifying an existing `AttributeValueField`.
+24. If `embedded` is an `EmbeddedTemplate`: verify `embedded.artifactRef` is a `TemplateId` identifying an existing `Template`.
+25. If `embedded` is an `EmbeddedPresentationComponent`: verify `embedded.artifactRef` is a `PresentationComponentId` identifying an existing `PresentationComponent`.
 
 ---
 
@@ -544,8 +557,7 @@ Applies the [Field Spec Compatibility](#field-spec-compatibility) rules. See als
 Dispatch on the kind of `fieldSpec`:
 
 - If `fieldSpec` is `TextFieldSpec`: run [`validate_text_field_spec(fieldSpec)`](#fn-validate-text-field-spec).
-- If `fieldSpec` is `IntegerNumberFieldSpec`: run [`validate_integer_number_field_spec(fieldSpec)`](#fn-validate-integer-number-field-spec).
-- If `fieldSpec` is `RealNumberFieldSpec`: run [`validate_real_number_field_spec(fieldSpec)`](#fn-validate-real-number-field-spec).
+- If `fieldSpec` is `IntegerFieldSpec`, `DecimalFieldSpec`, `FloatFieldSpec`, or `DoubleFieldSpec`: run [`validate_numeric_field_spec(fieldSpec)`](#fn-validate-numeric-field-spec).
 - If `fieldSpec` is `SingleValuedEnumFieldSpec` or `MultiValuedEnumFieldSpec`: run [`validate_enum_field_spec(fieldSpec)`](#fn-validate-enum-field-spec).
 - If `fieldSpec` is `LanguageFieldSpec`: run [`validate_language_field_spec(fieldSpec)`](#fn-validate-language-field-spec).
 - All other field specs have no additional schema-level well-formedness checks beyond structural grammar conformance.
@@ -563,17 +575,12 @@ After the family-specific dispatch, if `fieldSpec.examples` is present and `fiel
 
 ---
 
-##### `validate_integer_number_field_spec(fieldSpec: IntegerNumberFieldSpec)` {#fn-validate-integer-number-field-spec}
+##### `validate_numeric_field_spec(fieldSpec)` {#fn-validate-numeric-field-spec}
 
-1. If both `fieldSpec.min_value` and `fieldSpec.max_value` are present: verify `fieldSpec.min_value ≤ fieldSpec.max_value`.
-   *On failure:* `structural` at `<fieldSpec>/minValue`, production `IntegerNumberFieldSpec`, message `"minValue must not exceed maxValue"`.
+Applies to `IntegerFieldSpec`, `DecimalFieldSpec`, `FloatFieldSpec`, and `DoubleFieldSpec`. Each carries its bounds and values as its own family's `Value` type, so the bound and the values it constrains always share a datatype; the only schema-level condition is bound ordering.
 
----
-
-##### `validate_real_number_field_spec(fieldSpec: RealNumberFieldSpec)` {#fn-validate-real-number-field-spec}
-
-1. If both `fieldSpec.min_value` and `fieldSpec.max_value` are present: verify `fieldSpec.min_value ≤ fieldSpec.max_value`.
-   *On failure:* `structural` at `<fieldSpec>/minValue`, production `RealNumberFieldSpec`, message `"minValue must not exceed maxValue"`.
+1. If both `fieldSpec.min_value` and `fieldSpec.max_value` are present: verify `fieldSpec.min_value ≤ fieldSpec.max_value` under the family's numeric ordering (IEEE 754 ordering for `FloatFieldSpec` / `DoubleFieldSpec`).
+   *On failure:* `structural` at `<fieldSpec>/minValue`, production naming `fieldSpec`'s kind, message `"minValue must not exceed maxValue"`.
 
 ---
 
@@ -618,11 +625,11 @@ Applies the example-list well-formedness rules. Run when `fieldSpec.examples` is
 
 Let `examples` = `fieldSpec.examples`.
 
-1. For each `example` in `examples`: verify `example` is of the family-specific `Value` type for `fieldSpec`: `TextValue` for `TextFieldSpec`, `IntegerNumberValue` for `IntegerNumberFieldSpec`, `RealNumberValue` for `RealNumberFieldSpec`, `BooleanValue` for `BooleanFieldSpec`, `DateValue` for `DateFieldSpec`, `TimeValue` for `TimeFieldSpec`, `DateTimeValue` for `DateTimeFieldSpec`, `ControlledTermValue` for `ControlledTermFieldSpec`, `EnumValue` for both `SingleValuedEnumFieldSpec` and `MultiValuedEnumFieldSpec`, `LinkValue` for `LinkFieldSpec`, `EmailValue` for `EmailFieldSpec`, `PhoneNumberValue` for `PhoneNumberFieldSpec`, the corresponding external-authority `Value` type for the external-authority field specs, and `LanguageValue` for `LanguageFieldSpec`.
+1. For each `example` in `examples`: verify `example` is of the family-specific `Value` type for `fieldSpec`: `TextValue` for `TextFieldSpec`, `IntegerValue` for `IntegerFieldSpec`, `DecimalValue` for `DecimalFieldSpec`, `FloatValue` for `FloatFieldSpec`, `DoubleValue` for `DoubleFieldSpec`, `BooleanValue` for `BooleanFieldSpec`, `DateValue` for `DateFieldSpec`, `TimeValue` for `TimeFieldSpec`, `DateTimeValue` for `DateTimeFieldSpec`, `ControlledTermValue` for `ControlledTermFieldSpec`, `EnumValue` for both `SingleValuedEnumFieldSpec` and `MultiValuedEnumFieldSpec`, `LinkValue` for `LinkFieldSpec`, `EmailValue` for `EmailFieldSpec`, `PhoneNumberValue` for `PhoneNumberFieldSpec`, the corresponding external-authority `Value` type for the external-authority field specs, and `LanguageValue` for `LanguageFieldSpec`.
    *On failure:* `wireShape` at `<fieldSpec>/examples/<i>`, production naming `fieldSpec`'s kind, message `"examples entry must be a <FamilyValue> (got <kind>)"`.
 2. For each `example` in `examples`: verify it satisfies every constraint the spec imposes on values of its family. The same constraints that govern an instance value or a `defaultValue` apply here:
    - For `TextFieldSpec`: each example's lexical form MUST match `validationRegex` (if present), and its length MUST fall within `[minLength, maxLength]` (if present). When `langTagRequirement` is present, each example's `TextValue.lang` MUST satisfy the requirement.
-   - For `IntegerNumberFieldSpec` / `RealNumberFieldSpec`: each example MUST fall within `[minValue, maxValue]` (if present).
+   - For `IntegerFieldSpec` / `DecimalFieldSpec` / `FloatFieldSpec` / `DoubleFieldSpec`: each example MUST fall within `[minValue, maxValue]` (if present).
    - For `DateFieldSpec`: each example's `DateValue` arm MUST match `dateValueType`.
    - For `TimeFieldSpec`: each example's lexical form MUST match the declared `timePrecision`.
    - For `DateTimeFieldSpec`: each example's lexical form MUST match the declared `dateTimeValueType`.
@@ -640,7 +647,7 @@ Duplicate entries within `examples` are not normatively forbidden. Authors SHOUL
 
 Let `fieldSpec` = the `FieldSpec` of the `Field` referenced by `embedded`.
 
-1. Verify `defaultValue` is of the family-specific `Value` type for `fieldSpec`: `TextValue` for `TextFieldSpec`, `IntegerNumberValue` for `IntegerNumberFieldSpec`, `RealNumberValue` for `RealNumberFieldSpec`, `BooleanValue` for `BooleanFieldSpec`, `DateValue` for `DateFieldSpec`, `TimeValue` for `TimeFieldSpec`, `DateTimeValue` for `DateTimeFieldSpec`, `ControlledTermValue` for `ControlledTermFieldSpec`, `EnumValue` for `SingleValuedEnumFieldSpec`, a sequence of `EnumValue` for `MultiValuedEnumFieldSpec`, `LinkValue` for `LinkFieldSpec`, `EmailValue` for `EmailFieldSpec`, `PhoneNumberValue` for `PhoneNumberFieldSpec`, the corresponding external-authority `Value` types for the external-authority field specs, and `LanguageValue` for `LanguageFieldSpec`. `AttributeValueFieldSpec` does not admit a default value.
+1. Verify `defaultValue` is of the family-specific `Value` type for `fieldSpec`: `TextValue` for `TextFieldSpec`, `IntegerValue` for `IntegerFieldSpec`, `DecimalValue` for `DecimalFieldSpec`, `FloatValue` for `FloatFieldSpec`, `DoubleValue` for `DoubleFieldSpec`, `BooleanValue` for `BooleanFieldSpec`, `DateValue` for `DateFieldSpec`, `TimeValue` for `TimeFieldSpec`, `DateTimeValue` for `DateTimeFieldSpec`, `ControlledTermValue` for `ControlledTermFieldSpec`, `EnumValue` for `SingleValuedEnumFieldSpec`, a sequence of `EnumValue` for `MultiValuedEnumFieldSpec`, `LinkValue` for `LinkFieldSpec`, `EmailValue` for `EmailFieldSpec`, `PhoneNumberValue` for `PhoneNumberFieldSpec`, the corresponding external-authority `Value` types for the external-authority field specs, and `LanguageValue` for `LanguageFieldSpec`. `AttributeValueFieldSpec` does not admit a default value.
    *On failure:* `wireShape` at `<embedded>/defaultValue`, production naming `embedded`'s family, message `"defaultValue must be a <FamilyValue> (got <kind>)"`.
 2. Apply the family-specific `validate_xxx_value(defaultValue, fieldSpec)` procedure to `defaultValue`. The default value MUST satisfy every constraint that a `FieldEntry` carrying the same `Value` would satisfy. Errors reported by the inner subroutine are surfaced verbatim, with the path rooted at `<embedded>/defaultValue`.
 3. If `embedded` is an `EmbeddedSingleValuedEnumField`: verify `defaultValue` is a single `EnumValue` (not a sequence).
@@ -664,7 +671,7 @@ For each step below, *on failure:* `structural` at the rendering-hint slot's pat
 1. If `embedded` carries a `TextRenderingHint`: verify `fieldSpec` is `TextFieldSpec`.
 2. If `embedded` carries a `SingleValuedEnumRenderingHint`: verify `fieldSpec` is `SingleValuedEnumFieldSpec`.
 3. If `embedded` carries a `MultiValuedEnumRenderingHint`: verify `fieldSpec` is `MultiValuedEnumFieldSpec`.
-4. If `embedded` carries a `NumericRenderingHint`: verify `fieldSpec` is `IntegerNumberFieldSpec` or `RealNumberFieldSpec`.
+4. If `embedded` carries a `NumericRenderingHint`: verify `fieldSpec` is `IntegerFieldSpec`, `DecimalFieldSpec`, `FloatFieldSpec`, or `DoubleFieldSpec`.
 5. If `embedded` carries a `DateRenderingHint`: verify `fieldSpec` is `DateFieldSpec`.
 6. If `embedded` carries a `TimeRenderingHint`: verify `fieldSpec` is `TimeFieldSpec`.
 7. If `embedded` carries a `DateTimeRenderingHint`: verify `fieldSpec` is `DateTimeFieldSpec`.
@@ -753,8 +760,9 @@ For each `embeddedField` in `template.embedded_artifacts` where `embeddedField` 
 Dispatch on the kind of `fieldSpec`:
 
 - `TextFieldSpec` → [`validate_text_value(value, fieldSpec)`](#fn-validate-text-value)
-- `IntegerNumberFieldSpec` → [`validate_integer_number_value(value, fieldSpec)`](#fn-validate-integer-number-value)
-- `RealNumberFieldSpec` → [`validate_real_number_value(value, fieldSpec)`](#fn-validate-real-number-value)
+- `IntegerFieldSpec` → [`validate_integer_value(value, fieldSpec)`](#fn-validate-integer-value)
+- `DecimalFieldSpec` → [`validate_decimal_value(value, fieldSpec)`](#fn-validate-decimal-value)
+- `FloatFieldSpec` or `DoubleFieldSpec` → [`validate_binary_float_value(value, fieldSpec)`](#fn-validate-binary-float-value)
 - `BooleanFieldSpec` → [`validate_boolean_value(value, fieldSpec)`](#fn-validate-boolean-value)
 - `DateFieldSpec` → [`validate_date_value(value, fieldSpec)`](#fn-validate-date-value)
 - `TimeFieldSpec` → [`validate_time_value(value, fieldSpec)`](#fn-validate-time-value)
@@ -786,29 +794,40 @@ Dispatch on the kind of `fieldSpec`:
 
 ---
 
-##### `validate_integer_number_value(value: IntegerNumberValue, fieldSpec: IntegerNumberFieldSpec)` {#fn-validate-integer-number-value}
+##### `validate_integer_value(value: IntegerValue, fieldSpec: IntegerFieldSpec)` {#fn-validate-integer-value}
 
 1. Verify `value.value` conforms to the `IntegerLexicalForm` (regex `^-?(0|[1-9][0-9]*)$`). Let `n` = its integer value.
-   *On failure:* `lexical` at `<value>/value`, production `IntegerNumberValue`, message `"value is not a well-formed IntegerLexicalForm"`.
+   *On failure:* `lexical` at `<value>/value`, production `IntegerValue`, message `"value is not a well-formed IntegerLexicalForm"`.
 2. If `fieldSpec.min_value` is present: verify `n ≥ fieldSpec.min_value.value` (compared as integers).
-   *On failure:* `structural` at `<value>/value`, production `IntegerNumberValue`, message `"value below IntegerNumberFieldSpec.minValue"`.
+   *On failure:* `structural` at `<value>/value`, production `IntegerValue`, message `"value below IntegerFieldSpec.minValue"`.
 3. If `fieldSpec.max_value` is present: verify `n ≤ fieldSpec.max_value.value` (compared as integers).
-   *On failure:* `structural` at `<value>/value`, production `IntegerNumberValue`, message `"value above IntegerNumberFieldSpec.maxValue"`.
+   *On failure:* `structural` at `<value>/value`, production `IntegerValue`, message `"value above IntegerFieldSpec.maxValue"`.
 
 ---
 
-##### `validate_real_number_value(value: RealNumberValue, fieldSpec: RealNumberFieldSpec)` {#fn-validate-real-number-value}
+##### `validate_decimal_value(value: DecimalValue, fieldSpec: DecimalFieldSpec)` {#fn-validate-decimal-value}
 
-1. Verify `value.datatype = fieldSpec.datatype` (one of `decimal`, `float`, `double`).
-   *On failure:* `structural` at `<value>/datatype`, production `RealNumberValue`, message `"datatype does not match the enclosing RealNumberFieldSpec.datatype"`.
-2. Verify `value.value` is a well-formed lexical form for that datatype. Let `n` = its numeric value.
-   *On failure:* `lexical` at `<value>/value`, production `RealNumberValue`, message `"value is not a well-formed lexical form for datatype <datatype>"`.
-3. If `fieldSpec.min_value` is present: verify `n ≥ fieldSpec.min_value.value` (compared as numbers under `fieldSpec.datatype`'s ordering).
-   *On failure:* `structural` at `<value>/value`, production `RealNumberValue`, message `"value below RealNumberFieldSpec.minValue"`.
-4. If `fieldSpec.max_value` is present: verify `n ≤ fieldSpec.max_value.value` (compared as numbers under `fieldSpec.datatype`'s ordering).
-   *On failure:* `structural` at `<value>/value`, production `RealNumberValue`, message `"value above RealNumberFieldSpec.maxValue"`.
+1. Verify `value.value` is a well-formed `DecimalLexicalForm` (an arbitrary-precision base-10 decimal literal, no exponent and no special values). Let `n` = its exact decimal value.
+   *On failure:* `lexical` at `<value>/value`, production `DecimalValue`, message `"value is not a well-formed DecimalLexicalForm"`.
+2. If `fieldSpec.min_value` is present: verify `n ≥ fieldSpec.min_value.value` (compared as exact decimals).
+   *On failure:* `structural` at `<value>/value`, production `DecimalValue`, message `"value below DecimalFieldSpec.minValue"`.
+3. If `fieldSpec.max_value` is present: verify `n ≤ fieldSpec.max_value.value` (compared as exact decimals).
+   *On failure:* `structural` at `<value>/value`, production `DecimalValue`, message `"value above DecimalFieldSpec.maxValue"`.
 
-**Comparison semantics for `float` and `double`.** The numeric value `n` MAY be `NaN`, `+INF`, or `-INF` (these are part of the `xsd:float` and `xsd:double` lexical spaces). The bound comparisons in steps 3 and 4 follow IEEE 754 ordering:
+---
+
+##### `validate_binary_float_value(value, fieldSpec)` {#fn-validate-binary-float-value}
+
+Applies to (`FloatValue`, `FloatFieldSpec`) and (`DoubleValue`, `DoubleFieldSpec`). Let `P` be the value production (`FloatValue` or `DoubleValue`) and `S` the field-spec kind (`FloatFieldSpec` or `DoubleFieldSpec`).
+
+1. Verify `value.value` is a well-formed lexical form for the family (`FloatLexicalForm` for `FloatValue`, `DoubleLexicalForm` for `DoubleValue`; both admit `INF`, `-INF`, `NaN`). Let `n` = its numeric value.
+   *On failure:* `lexical` at `<value>/value`, production `P`, message `"value is not a well-formed lexical form for <P>"`.
+2. If `fieldSpec.min_value` is present: verify `n ≥ fieldSpec.min_value.value` (under IEEE 754 ordering).
+   *On failure:* `structural` at `<value>/value`, production `P`, message `"value below <S>.minValue"`.
+3. If `fieldSpec.max_value` is present: verify `n ≤ fieldSpec.max_value.value` (under IEEE 754 ordering).
+   *On failure:* `structural` at `<value>/value`, production `P`, message `"value above <S>.maxValue"`.
+
+**Comparison semantics.** The numeric value `n` MAY be `NaN`, `+INF`, or `-INF` (these are part of the `xsd:float` and `xsd:double` lexical spaces). The bound comparisons in steps 2 and 3 follow IEEE 754 ordering:
 
 - If `n` is `NaN`, every comparison `n ≥ x` and `n ≤ x` is false. A `NaN` value therefore violates any present `minValue` or `maxValue` bound and reports the corresponding bound-failure error.
 - If `n` is `+INF`, then `n ≥ x` is true for every finite `x` and `n ≤ x` is true only when `x` is `+INF`.
