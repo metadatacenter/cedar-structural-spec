@@ -36,7 +36,7 @@ languages. New languages can be added by following the meta-pattern in
 the wire round-trip and the construction-time invariants.
 
 The reference TypeScript implementation is
-[cedar-ts](https://github.com/metadatacenter/cedar-ts) (npm package
+[cedar-ts](https://github.com/metadatacenter/cedar-ts) (package
 `@metadatacenter/cedar-model`); see §6. For idioms not covered
 explicitly here, cedar-ts is the source of truth on the TS side.
 
@@ -1084,8 +1084,11 @@ like; only family-specific code is constrained by this guideline.
 ## 6. The Reference TypeScript Binding
 
 The reference TypeScript implementation is
-[cedar-ts](https://github.com/metadatacenter/cedar-ts), published as
-`@metadatacenter/cedar-model` on npm. It is the source of truth for
+[cedar-ts](https://github.com/metadatacenter/cedar-ts), packaged as
+`@metadatacenter/cedar-model` (current release: v0.1.1). It is not yet
+published to the npm registry; until it is, install directly from
+GitHub (`npm install github:metadatacenter/cedar-ts`, optionally pinned
+to a tag such as `#v0.1.1`). It is the source of truth for
 any TypeScript-specific idiom not covered explicitly in this document.
 
 High-level structure (the `src/` tree mirrors the grammar layering):
@@ -1122,6 +1125,9 @@ High-level structure (the `src/` tree mirrors the grammar layering):
 - `serialize/` — wire-form serialize/parse codecs (per-family field and
   embedded-field codecs, embedded-config, values, metadata,
   collapsed-wrappers, the `parseArtifact` / `serialize` entry points).
+  Also provides `toYaml` / `fromYaml` helpers that render the same wire
+  form as YAML 1.2; these are a convenience of the TypeScript binding
+  only — JSON remains the sole encoding defined by this spec.
 - `index.ts` — public API surface.
 
 Conventions adopted by cedar-ts (already documented in §2 above):
